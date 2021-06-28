@@ -2,6 +2,6 @@ package tile
 
 import _ "github.com/rubenv/topojson"
 
-type TopojsonTile struct {
+type TopoJSONTile struct {
 	BaseTile
 }

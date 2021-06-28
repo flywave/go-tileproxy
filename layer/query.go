@@ -1,4 +1,4 @@
-package sources
+package layer
 
 import (
 	vec2d "github.com/flywave/go3d/float64/vec2"

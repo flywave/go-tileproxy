@@ -3,6 +3,7 @@ package sources
 import (
 	"image/color"
 
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/maths"
 )
 
@@ -19,30 +20,30 @@ type WMSSource struct {
 	ErrorHandler              func(error)
 }
 
-func (s *WMSSource) IsOpaque(query MapQuery) bool {
+func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
 	return false
 }
 
-func (s *WMSSource) GetMap(query MapQuery) {
+func (s *WMSSource) GetMap(query layer.MapQuery) {
 
 }
 
-func (s *WMSSource) getMap(query MapQuery) {
+func (s *WMSSource) getMap(query layer.MapQuery) {
 
 }
 
-func (s *WMSSource) getSubQuery(query MapQuery, format string) {
+func (s *WMSSource) getSubQuery(query layer.MapQuery, format string) {
 
 }
 
-func (s *WMSSource) getTransformed(query MapQuery, format string) {
+func (s *WMSSource) getTransformed(query layer.MapQuery, format string) {
 
 }
 
-func (s *WMSSource) isCompatible(other *WMSSource, query MapQuery) {
+func (s *WMSSource) isCompatible(other *WMSSource, query layer.MapQuery) {
 
 }
 
-func (s *WMSSource) CombinedLayer(other *WMSSource, query MapQuery) {
+func (s *WMSSource) CombinedLayer(other *WMSSource, query layer.MapQuery) {
 
 }

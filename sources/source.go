@@ -1,6 +1,10 @@
 package sources
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/flywave/go-tileproxy/layer"
+)
 
 var ErrInvalidBBOX = errors.New("Invalid BBOX ")
 
@@ -11,15 +15,15 @@ type Source interface {
 
 type MapSource interface {
 	Source
-	GetMap(query MapQuery)
+	GetMap(query layer.MapQuery)
 }
 
 type InfoSource interface {
 	Source
-	GetInfo(query MapQuery)
+	GetInfo(query layer.MapQuery)
 }
 
 type LegendSource interface {
 	Source
-	GetLegend(query MapQuery)
+	GetLegend(query layer.MapQuery)
 }

@@ -1,0 +1,120 @@
+package images
+
+import (
+	"image"
+	"math"
+
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-tileproxy/maths"
+	"github.com/flywave/imaging"
+	"github.com/fogleman/gg"
+)
+
+type TileMerger struct {
+	Grid [2]int
+	Size [2]uint32
+}
+
+func NewTileMerger(tile_grid [2]int, tile_size [2]uint32) *TileMerger {
+	return &TileMerger{Grid: tile_grid, Size: tile_size}
+}
+
+func (t *TileMerger) Merge(ordered_tiles []Source, image_opts *ImageOptions) Source {
+	if t.Grid[0] == 1 && t.Grid[1] == 1 {
+		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
+			tile := ordered_tiles[0]
+			return tile
+		}
+	}
+
+	src_size := t.srcSize()
+
+	result := CreateImage(src_size, image_opts)
+	dcresult := gg.NewContextForImage(result)
+
+	cacheable := true
+
+	for i, source := range ordered_tiles {
+		if source == nil {
+			continue
+		}
+
+		if !source.GetCacheable() {
+			cacheable = false
+		}
+
+		tile := source.GetImage()
+		pos := t.tileOffset(i)
+		tile = imaging.Resize(tile, int(t.Size[0]), int(t.Size[1]), imaging.Lanczos)
+		dcresult.DrawImage(tile, pos[0], pos[1])
+	}
+	return &ImageSource{image: result, size: src_size[:], Options: *image_opts, cacheable: cacheable}
+}
+
+func (t *TileMerger) srcSize() [2]uint32 {
+	width := uint32(t.Grid[0]) * t.Size[0]
+	height := uint32(t.Grid[1]) * t.Size[1]
+	return [2]uint32{width, height}
+}
+
+func (t *TileMerger) tileOffset(i int) [2]int {
+	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1]))}
+}
+
+type TileSplitter struct {
+	MetaImage image.Image
+	Options   *ImageOptions
+}
+
+func NewTileSplitter(meta_tile Source, image_opts *ImageOptions) *TileSplitter {
+	return &TileSplitter{MetaImage: meta_tile.GetImage(), Options: image_opts}
+}
+
+func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSource {
+	minx, miny := crop_coord[0], crop_coord[1]
+	maxx := minx + int(tile_size[0])
+	maxy := miny + int(tile_size[1])
+
+	mrect := t.MetaImage.Bounds()
+	var crop image.Image
+
+	if minx < 0 || miny < 0 || maxx > mrect.Dx() || maxy > mrect.Dy() {
+		crop = imaging.Crop(t.MetaImage, image.Rect(maths.MaxInt(minx, 0), maths.MaxInt(miny, 0), maths.MinInt(maxx, mrect.Dx()),
+			maths.MinInt(maxy, mrect.Dy())))
+
+		result := CreateImage(tile_size, t.Options)
+		dcresult := gg.NewContextForImage(result)
+
+		dcresult.DrawImage(crop, maths.AbsInt(maths.MinInt(minx, 0)), maths.AbsInt(maths.MinInt(miny, 0)))
+
+		crop = result
+	} else {
+		crop = imaging.Crop(t.MetaImage, image.Rect(minx, miny, maxx, maxy))
+	}
+	return &ImageSource{image: crop, size: tile_size[:], Options: *t.Options}
+}
+
+type TiledImage struct {
+	Tiles    []Source
+	TileGrid [2]int
+	TileSize [2]uint32
+	SrcBBox  vec2d.Rect
+	SrcSRS   maths.Proj
+}
+
+func NewTiledImage(tiles []Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs string) *TiledImage {
+	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: maths.NewSRSProj4(src_srs)}
+}
+
+func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
+	tm := NewTileMerger(t.TileGrid, t.TileSize)
+	return tm.Merge(t.Tiles, image_opts)
+}
+
+func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs string, out_size [2]uint32, image_opts *ImageOptions) Source {
+	transformer := NewImageTransformer(t.SrcSRS, maths.NewSRSProj4(req_srs), nil)
+	src_img := t.GetImage(image_opts)
+	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox,
+		image_opts)
+}

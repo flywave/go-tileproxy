@@ -44,7 +44,6 @@ func (p *PerHost) dialerForRequest(host string) Dialer {
 		}
 		return p.def
 	}
-
 	for _, zone := range p.bypassZones {
 		if strings.HasSuffix(host, zone) {
 			return p.bypass
@@ -69,7 +68,6 @@ func (p *PerHost) AddFromString(s string) {
 			continue
 		}
 		if strings.Contains(host, "/") {
-			// We assume that it's a CIDR address like 127.0.0.0/8
 			if _, net, err := net.ParseCIDR(host); err == nil {
 				p.AddNetwork(net)
 			}

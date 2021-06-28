@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/go-spatial/geom"
+	"github.com/flywave/go-geom/generic"
 )
 
 var UnknownConversionError = fmt.Errorf("do not know how to convert value to requested value")
@@ -22,8 +22,8 @@ type BaseTile struct {
 	cached    bool
 	xspan     float64
 	yspan     float64
-	extent    *geom.Extent
-	bufpext   *geom.Extent
+	extent    *generic.Extent
+	bufpext   *generic.Extent
 }
 
 func NewTileWithZXY(z, x, y uint) (t *BaseTile) {
@@ -60,7 +60,7 @@ func (t *BaseTile) Init() {
 
 	res := (max * 2) / math.Exp2(float64(t.Z))
 	t.cached = true
-	t.extent = &geom.Extent{
+	t.extent = &generic.Extent{
 		-max + (float64(t.X) * res),       // MinX
 		max - (float64(t.Y) * res),        // Miny
 		-max + (float64(t.X) * res) + res, // MaxX
@@ -69,7 +69,7 @@ func (t *BaseTile) Init() {
 	t.xspan = t.extent.MaxX() - t.extent.MinX()
 	t.yspan = t.extent.MaxY() - t.extent.MinY()
 
-	t.bufpext = &geom.Extent{
+	t.bufpext = &generic.Extent{
 		0 - t.Buffer, 0 - t.Buffer,
 		t.Extent + t.Buffer, t.Extent + t.Buffer,
 	}

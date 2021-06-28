@@ -18,7 +18,6 @@ func SOCKS5(network, addr string, auth *Auth, forward Dialer, resolver Resolver)
 		s.user = auth.User
 		s.password = auth.Password
 	}
-
 	return s, nil
 }
 

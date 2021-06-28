@@ -1,6 +1,6 @@
 package tile
 
-import "github.com/go-spatial/geom"
+import "github.com/flywave/go-geom/generic"
 
 const (
 	WebMercator = 3857
@@ -8,6 +8,6 @@ const (
 )
 
 var (
-	WebMercatorBounds = &geom.Extent{-20026376.39, -20048966.10, 20026376.39, 20048966.10}
-	WGS84Bounds       = &geom.Extent{-180.0, -85.0511, 180.0, 85.0511}
+	WebMercatorBounds = &generic.Extent{-20026376.39, -20048966.10, 20026376.39, 20048966.10}
+	WGS84Bounds       = &generic.Extent{-180.0, -85.0511, 180.0, 85.0511}
 )

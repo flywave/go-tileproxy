@@ -15,7 +15,6 @@ func SOCKS4(network, addr string, is4a bool, forward Dialer, resolver Resolver) 
 		forward:  forward,
 		resolver: resolver,
 	}
-
 	return s, nil
 }
 

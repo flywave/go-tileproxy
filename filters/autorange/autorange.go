@@ -142,6 +142,7 @@ func (f *Filter) Response(ctx context.Context, resp *http.Response) (context.Con
 	}
 
 	resp.ContentLength = length
+
 	resp.Header.Set("Content-Length", strconv.FormatInt(resp.ContentLength, 10))
 	resp.Header.Del("Content-Range")
 

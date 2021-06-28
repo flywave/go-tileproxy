@@ -6,28 +6,20 @@ import (
 )
 
 const (
-	Enable = "enable"
-
+	Enable    = "enable"
 	EnableOn  = "on"
 	EnableOff = "off"
 )
 
 const (
-	SubSystemSeparator = `:`
-	KvSeparator        = `=`
-	KvComment          = `#`
-	KvSpaceSeparator   = ` `
-	KvNewline          = "\n"
-	KvDoubleQuote      = `"`
-	KvSingleQuote      = `'`
-
-	Default = `_`
+	KvSeparator      = `=`
+	KvSpaceSeparator = ` `
+	KvDoubleQuote    = `"`
 )
 
 const (
-	EnvPrefix        = "TILEPROXY_"
-	EnvWordDelimiter = `_`
-	EnvProxy         = "TILEPROXY_PROXY"
+	EnvPrefix = "TILEPROXY_"
+	EnvProxy  = "TILEPROXY_PROXY"
 )
 
 type KV struct {

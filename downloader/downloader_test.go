@@ -9,7 +9,7 @@ import (
 
 func TestDownloadHtml(t *testing.T) {
 	var req *request.Request
-	req = request.NewRequest("http://finance.sina.com.cn/7x24/", "html", "", "GET", "", nil, nil, nil, nil)
+	req = request.NewRequest("http://site.baidu.com/", "html", "", "GET", "", nil, nil, nil, nil)
 
 	var dl Downloader
 	dl = NewHttpDownloader()

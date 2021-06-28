@@ -47,6 +47,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/infobloxopen/go-trees v0.0.0-20190313150506-2af4e13f9062 // indirect
+	github.com/jonas-p/go-shp v0.1.1 // indirect
 	github.com/json-iterator/go v1.1.11
 	github.com/juju/ratelimit v1.0.1
 	github.com/lucas-clemente/quic-go v0.21.0-rc.2

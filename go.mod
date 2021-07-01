@@ -8,6 +8,7 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/cloudflare/golibs v0.0.0-20201113145655-eb7a42c5e0be
+	github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148
 	github.com/flywave/go-geos v0.0.0-20210608062102-81fc76bf44c4
 	github.com/flywave/go-lerc v0.0.0-20191107120907-ad19c08efa45
 	github.com/flywave/go-proj v0.0.0-20210605132706-d05d11f58021

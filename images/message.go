@@ -11,7 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/flywave/go-tileproxy/maths"
+	"github.com/flywave/go-tileproxy/geo"
+
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
@@ -324,10 +325,10 @@ func (m *TextDraw) relativeTextBoxes(draw *gg.Context) ([4]int, [][4]int) {
 		text_box := [4]int{0, y_offset, int(text_w), int(text_h) + y_offset}
 		boxes = append(boxes, text_box)
 		total_bbox = [4]int{
-			maths.MinInt(total_bbox[0], text_box[0]),
-			maths.MinInt(total_bbox[1], text_box[1]),
-			maths.MaxInt(total_bbox[2], text_box[2]),
-			maths.MaxInt(total_bbox[3], text_box[3]),
+			geo.MinInt(total_bbox[0], text_box[0]),
+			geo.MinInt(total_bbox[1], text_box[1]),
+			geo.MaxInt(total_bbox[2], text_box[2]),
+			geo.MaxInt(total_bbox[3], text_box[3]),
 		}
 
 		y_offset += int(text_h) + m.linespacing

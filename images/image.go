@@ -12,10 +12,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/flywave/go-tileproxy/maths"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
+
+	"github.com/flywave/go-tileproxy/geo"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
@@ -307,7 +307,7 @@ func (s *BlankImageSource) GetBuffer(format *ImageFormat, in_image_opts *ImageOp
 }
 
 func bboxPositionInImage(bbox vec2d.Rect, size [2]int, src_bbox vec2d.Rect) ([2]int, [2]int, []float64) {
-	coordToPx := maths.MakeLinTransf(bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(size[0]), float64(size[1])}})
+	coordToPx := geo.MakeLinTransf(bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(size[0]), float64(size[1])}})
 	offsets := [4]int{0, size[1], size[0], 0}
 	sub_bbox := []float64{bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]}
 	if src_bbox.Min[0] > bbox.Min[0] {
@@ -330,7 +330,7 @@ func bboxPositionInImage(bbox vec2d.Rect, size [2]int, src_bbox vec2d.Rect) ([2]
 		xy := coordToPx([]float64{0, src_bbox.Max[1]})
 		offsets[3] = int(xy[1])
 	}
-	size_ := [2]int{maths.AbsInt(offsets[2] - offsets[0]), maths.AbsInt(offsets[1] - offsets[3])}
+	size_ := [2]int{geo.AbsInt(offsets[2] - offsets[0]), geo.AbsInt(offsets[1] - offsets[3])}
 	return size_, [2]int{offsets[0], offsets[3]}, sub_bbox
 }
 

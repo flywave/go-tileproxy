@@ -1,9 +1,9 @@
-package maths
+package geo
 
 import (
 	"math"
 
-	"github.com/flywave/go-tileproxy/maths/gcj02"
+	"github.com/flywave/go-tileproxy/geo/gcj02"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )

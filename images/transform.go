@@ -5,15 +5,16 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/flywave/go-tileproxy/maths"
+	"github.com/flywave/go-tileproxy/geo"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/imaging"
 )
 
 type ImageTransformer struct {
-	SrcSRS   maths.Proj
-	DstSRS   maths.Proj
+	SrcSRS   geo.Proj
+	DstSRS   geo.Proj
 	DstBBox  *vec2d.Rect
 	DstSize  *vec2d.Rect
 	MaxPxErr float64
@@ -40,12 +41,12 @@ func (t *ImageTransformer) noTransformationNeeded(srcSize [2]uint32, srcBBox vec
 	yres := (dstBBox.Min[1] - dstBBox.Min[1]) / float64(dstSize[1])
 	return (srcSize == dstSize &&
 		t.SrcSRS.Eq(t.DstSRS) &&
-		maths.BBoxEquals(srcBBox, dstBBox, xres/10, yres/10))
+		geo.BBoxEquals(srcBBox, dstBBox, xres/10, yres/10))
 }
 
 func (t *ImageTransformer) transformSimple(srcImg Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) Source {
 	srcQuad := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(srcImg.GetSize()[0]), float64(srcImg.GetSize()[1])}}
-	to_src_px := maths.MakeLinTransf(srcBBox, srcQuad)
+	to_src_px := geo.MakeLinTransf(srcBBox, srcQuad)
 
 	minxy := to_src_px([]float64{dstBBox.Min[0], dstBBox.Max[1]})
 	maxxy := to_src_px([]float64{dstBBox.Max[0], dstBBox.Min[1]})
@@ -92,7 +93,7 @@ func (t *ImageTransformer) transform(srcImg Source, srcBBox vec2d.Rect, dstSize 
 
 }
 
-func NewImageTransformer(srcSrs maths.Proj, dstSrs maths.Proj, max_px_err *float64) *ImageTransformer {
+func NewImageTransformer(srcSrs geo.Proj, dstSrs geo.Proj, max_px_err *float64) *ImageTransformer {
 	maxpxerr := 1.0
 	if max_px_err != nil {
 		maxpxerr = *max_px_err
@@ -100,7 +101,7 @@ func NewImageTransformer(srcSrs maths.Proj, dstSrs maths.Proj, max_px_err *float
 	return &ImageTransformer{SrcSRS: srcSrs, DstSRS: dstSrs, DstBBox: nil, DstSize: nil, MaxPxErr: maxpxerr}
 }
 
-func dstQuadToSrc(quad []float64, toDstW func([]float64) []float64, to_src_px func([]float64) []float64, srcSrs maths.Proj, dstSrs maths.Proj, px_offset float64) ([]float64, []float64) {
+func dstQuadToSrc(quad []float64, toDstW func([]float64) []float64, to_src_px func([]float64) []float64, srcSrs geo.Proj, dstSrs geo.Proj, px_offset float64) ([]float64, []float64) {
 	srcQuad := make([]float64, 0)
 	dest_pxs := [][]float64{{quad[0], quad[1]}, {quad[0], quad[3]},
 		{quad[2], quad[3]}, {quad[2], quad[1]}}
@@ -113,7 +114,7 @@ func dstQuadToSrc(quad []float64, toDstW func([]float64) []float64, to_src_px fu
 	return quad, srcQuad
 }
 
-func isGood(quad, srcQuad []float64, toDstW func([]float64) []float64, toSrcW func([]float64) []float64, srcSrs maths.Proj, dstSrs maths.Proj, maxErr float64) bool {
+func isGood(quad, srcQuad []float64, toDstW func([]float64) []float64, toSrcW func([]float64) []float64, srcSrs geo.Proj, dstSrs geo.Proj, maxErr float64) bool {
 	w := quad[2] - quad[0]
 	h := quad[3] - quad[1]
 
@@ -134,7 +135,7 @@ func isGood(quad, srcQuad []float64, toDstW func([]float64) []float64, toSrcW fu
 	return err < maxErr
 }
 
-func addMeshes(quads [][]float64, toDstW func([]float64) []float64, to_src_px func([]float64) []float64, toSrcW func([]float64) []float64, srcSrs maths.Proj, dstSrs maths.Proj, px_offset float64, maxErr float64, meshes map[[4]float64][]float64) {
+func addMeshes(quads [][]float64, toDstW func([]float64) []float64, to_src_px func([]float64) []float64, toSrcW func([]float64) []float64, srcSrs geo.Proj, dstSrs geo.Proj, px_offset float64, maxErr float64, meshes map[[4]float64][]float64) {
 	for _, quad := range quads {
 		quad, srcQuad := dstQuadToSrc(quad, toDstW, to_src_px, srcSrs, dstSrs, px_offset)
 		key := [4]float64{quad[0], quad[1], quad[2], quad[3]}
@@ -146,16 +147,16 @@ func addMeshes(quads [][]float64, toDstW func([]float64) []float64, to_src_px fu
 	}
 }
 
-func transformMeshes(srcSize [2]uint32, srcBBox vec2d.Rect, srcSrs maths.Proj, dstSize [2]uint32, dstBBox vec2d.Rect, dstSrs maths.Proj, maxPixelErr int32, useCenterPixel bool) interface{} {
+func transformMeshes(srcSize [2]uint32, srcBBox vec2d.Rect, srcSrs geo.Proj, dstSize [2]uint32, dstBBox vec2d.Rect, dstSrs geo.Proj, maxPixelErr int32, useCenterPixel bool) interface{} {
 	srcBBox = srcSrs.AlignBBox(srcBBox)
 	dstBBox = dstSrs.AlignBBox(dstBBox)
 
 	src_rect := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(srcSize[0]), float64(srcSize[1])}}
 	dst_rect := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(dstSize[0]), float64(dstSize[1])}}
 
-	to_src_px := maths.MakeLinTransf(srcBBox, src_rect)
-	toSrcW := maths.MakeLinTransf(src_rect, srcBBox)
-	toDstW := maths.MakeLinTransf(dst_rect, dstBBox)
+	to_src_px := geo.MakeLinTransf(srcBBox, src_rect)
+	toSrcW := geo.MakeLinTransf(src_rect, srcBBox)
+	toDstW := geo.MakeLinTransf(dst_rect, dstBBox)
 
 	var px_offset float64
 

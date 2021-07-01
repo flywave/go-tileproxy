@@ -3,8 +3,8 @@ package sources
 import (
 	"image/color"
 
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
-	"github.com/flywave/go-tileproxy/maths"
 )
 
 type WMSSource struct {
@@ -14,9 +14,9 @@ type WMSSource struct {
 	ExtReqParams              map[string]string
 	TransparentColor          color.Color
 	TransparentColorTolerance float64
-	Coverage                  maths.Coverage
-	ResRange                  maths.ResolutionRange
-	Extent                    maths.MapExtent
+	Coverage                  geo.Coverage
+	ResRange                  geo.ResolutionRange
+	Extent                    geo.MapExtent
 	ErrorHandler              func(error)
 }
 

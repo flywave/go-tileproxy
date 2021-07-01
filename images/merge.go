@@ -5,37 +5,37 @@ import (
 	"image"
 	"image/color"
 
-	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/go-tileproxy/geo"
 
-	"github.com/flywave/go-tileproxy/maths"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/fogleman/gg"
 )
 
 type Merger interface {
-	Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage) Source
+	Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source
 }
 
 type LayerMerger struct {
 	Merger
 	Layers    []Source
-	Coverages []maths.Coverage
+	Coverages []geo.Coverage
 	Cacheable bool
 }
 
-func (l *LayerMerger) Add(src Source, cov maths.Coverage) {
+func (l *LayerMerger) Add(src Source, cov geo.Coverage) {
 	l.Layers = append(l.Layers, src)
 	l.Coverages = append(l.Coverages, cov)
 }
 
-func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage) Source {
+func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source {
 	if l.Layers == nil {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
 
 	if len(l.Layers) == 1 {
 		layer_img := l.Layers[0]
-		var layer_coverage maths.Coverage
+		var layer_coverage geo.Coverage
 		if len(l.Coverages) > 0 {
 			layer_coverage = l.Coverages[0]
 		}
@@ -56,7 +56,7 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 	var opacity *float64
 	for i := range l.Layers {
 		layer_img := l.Layers[i]
-		var layer_coverage maths.Coverage
+		var layer_coverage geo.Coverage
 		if len(l.Coverages) > 0 {
 			layer_coverage = l.Coverages[i]
 		}
@@ -153,11 +153,11 @@ func (l *BandMerger) AddOps(dst_band, src_img, src_band int, factor float64) {
 		Factor:  factor,
 	})
 	if src, ok := l.MaxBand[src_img]; ok {
-		l.MaxBand[src_img] = maths.MaxInt(src, src_band)
+		l.MaxBand[src_img] = geo.MaxInt(src, src_band)
 	} else {
 		l.MaxBand[src_img] = src_band
 	}
-	l.MaxSrcImages = maths.MaxInt(src_img+1, l.MaxSrcImages)
+	l.MaxSrcImages = geo.MaxInt(src_img+1, l.MaxSrcImages)
 }
 
 func splitImage(img image.Image, mode ImageMode) (cha [][]uint32, rect image.Rectangle) {
@@ -234,7 +234,7 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 	return out
 }
 
-func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage) Source {
+func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source {
 	if len(l.Layers) < l.MaxSrcImages {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
@@ -308,7 +308,7 @@ func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.R
 	return &ImageSource{image: result, size: size, Options: *image_opts, cacheable: l.Cacheable}
 }
 
-func MergeImages(layers []Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs maths.Proj, merger Merger) Source {
+func MergeImages(layers []Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs geo.Proj, merger Merger) Source {
 	if merger == nil {
 		merger = &LayerMerger{}
 	}
@@ -338,7 +338,7 @@ func ConcatLegends(legends []Source, mode ImageMode, format ImageFormat, size []
 		for _, legend := range legends {
 			legend_position_y = append(legend_position_y, legend_height)
 			tmp_img := legend.GetImage()
-			legend_width = maths.MaxInt(legend_width, tmp_img.Bounds().Dx())
+			legend_width = geo.MaxInt(legend_width, tmp_img.Bounds().Dx())
 			legend_height += tmp_img.Bounds().Dy()
 		}
 

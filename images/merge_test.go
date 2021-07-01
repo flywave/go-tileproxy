@@ -5,8 +5,10 @@ import (
 	"image/color"
 	"testing"
 
+	"github.com/flywave/go-tileproxy/geo"
+
 	"github.com/flywave/go-geos"
-	"github.com/flywave/go-tileproxy/maths"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
@@ -25,12 +27,12 @@ func TestMergeSingleCoverage(t *testing.T) {
 
 	geom := geos.CreatePolygon([]geos.Coord{{X: 0, Y: 0}, {X: 0, Y: 10}, {X: 10, Y: 10}, {X: 10, Y: 0}, {X: 0, Y: 0}})
 
-	coverage1 := maths.NewGeomCoverage(geom, maths.NewSRSProj4("EPSG:3857"), true)
+	coverage1 := geo.NewGeomCoverage(geom, geo.NewSRSProj4("EPSG:3857"), true)
 
 	merger := &LayerMerger{}
 	merger.Add(img, coverage1)
 
-	result := merger.Merge(&img_opts, nil, vec2d.Rect{Min: vec2d.T{5, 0}, Max: vec2d.T{15, 10}}, maths.NewSRSProj4("EPSG:3857"), nil)
+	result := merger.Merge(&img_opts, nil, vec2d.Rect{Min: vec2d.T{5, 0}, Max: vec2d.T{15, 10}}, geo.NewSRSProj4("EPSG:3857"), nil)
 
 	ri := result.GetImage()
 

@@ -4,9 +4,10 @@ import (
 	"image"
 	"math"
 
+	"github.com/flywave/go-tileproxy/geo"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/maths"
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
 )
@@ -80,13 +81,13 @@ func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSou
 	var crop image.Image
 
 	if minx < 0 || miny < 0 || maxx > mrect.Dx() || maxy > mrect.Dy() {
-		crop = imaging.Crop(t.MetaImage, image.Rect(maths.MaxInt(minx, 0), maths.MaxInt(miny, 0), maths.MinInt(maxx, mrect.Dx()),
-			maths.MinInt(maxy, mrect.Dy())))
+		crop = imaging.Crop(t.MetaImage, image.Rect(geo.MaxInt(minx, 0), geo.MaxInt(miny, 0), geo.MinInt(maxx, mrect.Dx()),
+			geo.MinInt(maxy, mrect.Dy())))
 
 		result := CreateImage(tile_size, t.Options)
 		dcresult := gg.NewContextForImage(result)
 
-		dcresult.DrawImage(crop, maths.AbsInt(maths.MinInt(minx, 0)), maths.AbsInt(maths.MinInt(miny, 0)))
+		dcresult.DrawImage(crop, geo.AbsInt(geo.MinInt(minx, 0)), geo.AbsInt(geo.MinInt(miny, 0)))
 
 		crop = result
 	} else {
@@ -100,11 +101,11 @@ type TiledImage struct {
 	TileGrid [2]int
 	TileSize [2]uint32
 	SrcBBox  vec2d.Rect
-	SrcSRS   maths.Proj
+	SrcSRS   geo.Proj
 }
 
 func NewTiledImage(tiles []Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs string) *TiledImage {
-	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: maths.NewSRSProj4(src_srs)}
+	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: geo.NewSRSProj4(src_srs)}
 }
 
 func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
@@ -113,7 +114,7 @@ func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
 }
 
 func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs string, out_size [2]uint32, image_opts *ImageOptions) Source {
-	transformer := NewImageTransformer(t.SrcSRS, maths.NewSRSProj4(req_srs), nil)
+	transformer := NewImageTransformer(t.SrcSRS, geo.NewSRSProj4(req_srs), nil)
 	src_img := t.GetImage(image_opts)
 	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox,
 		image_opts)

@@ -1,11 +1,9 @@
 package layer
 
-import (
-	"github.com/flywave/go-tileproxy/maths"
-)
+import "github.com/flywave/go-tileproxy/geo"
 
 type MapLayer struct {
 	SupportMetaTiles bool
-	ResRange         maths.ResolutionRange
-	Coverage         maths.Coverage
+	ResRange         geo.ResolutionRange
+	Coverage         geo.Coverage
 }

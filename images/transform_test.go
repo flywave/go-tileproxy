@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/flywave/go-tileproxy/maths"
+	"github.com/flywave/go-tileproxy/geo"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/imaging"
 )
 
@@ -15,9 +17,9 @@ func TestImageTransform(t *testing.T) {
 	img_opts.Transparent = newBool(false)
 
 	src_img := CreateImageSourceFromImage(img, &img_opts)
-	src_srs := maths.NewSRSProj4("EPSG:31467")
+	src_srs := geo.NewSRSProj4("EPSG:31467")
 	dst_size := [2]uint32{100, 150}
-	dst_srs := maths.NewSRSProj4("EPSG:4326")
+	dst_srs := geo.NewSRSProj4("EPSG:4326")
 	dst_bbox := vec2d.Rect{Min: vec2d.T{0.2, 45.1}, Max: vec2d.T{8.3, 53.2}}
 	src_bbox := dst_srs.TransformRectTo(src_srs, dst_bbox, 16)
 

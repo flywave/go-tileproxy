@@ -5,9 +5,9 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/flywave/go-geos"
+	"github.com/flywave/go-tileproxy/geo"
 
-	"github.com/flywave/go-tileproxy/maths"
+	"github.com/flywave/go-geos"
 
 	"github.com/fogleman/gg"
 
@@ -58,7 +58,7 @@ func imageMaskFromGeom(size [2]int, bbox vec2d.Rect, polygons []*geos.Geometry) 
 		return dc.AsMask()
 	}
 
-	transf := maths.MakeLinTransf(bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(size[0]), float64(size[1])}})
+	transf := geo.MakeLinTransf(bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(size[0]), float64(size[1])}})
 
 	buffer := -0.1 * math.Min((bbox.Max[0]-bbox.Min[0])/float64(size[0]), (bbox.Max[1]-bbox.Min[1])/float64(size[1]))
 
@@ -111,20 +111,20 @@ func flattenToPolygons(geometry *geos.Geometry) []*geos.Geometry {
 	return nil
 }
 
-func maskPolygons(bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage) []*geos.Geometry {
+func maskPolygons(bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) []*geos.Geometry {
 	coverage = coverage.TransformTo(bbox_srs)
 	coverage = coverage.Intersection(bbox, bbox_srs)
 	return flattenToPolygons(coverage.GetGeom())
 }
 
-func maskImage(img image.Image, bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage) (image.Image, *image.Alpha) {
+func maskImage(img image.Image, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) (image.Image, *image.Alpha) {
 	geom := maskPolygons(bbox, bbox_srs, coverage)
 	size := [2]int{img.Bounds().Dx(), img.Bounds().Dy()}
 	mask := imageMaskFromGeom(size, bbox, geom)
 	return img, mask
 }
 
-func MaskImageSourceFromCoverage(img_source Source, bbox vec2d.Rect, bbox_srs maths.Proj, coverage maths.Coverage, image_opts *ImageOptions) Source {
+func MaskImageSourceFromCoverage(img_source Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, image_opts *ImageOptions) Source {
 	var opts *ImageOptions
 	if image_opts == nil {
 		opts = img_source.GetImageOptions()

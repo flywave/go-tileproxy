@@ -56,6 +56,10 @@ github.com/flywave/go3d v0.0.0-20210521003526-9185b600148d h1:Ll7Zg7ScZjQm5RhjS5
 github.com/flywave/go3d v0.0.0-20210521003526-9185b600148d/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
 github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs=
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
+github.com/flywave/ogc-specifications v0.2.4 h1:OpsV2WXK6UzhLpQc4mo5De60fp2H7Qbip69zfE24zTc=
+github.com/flywave/ogc-specifications v0.2.4/go.mod h1:iifthqr9LNaUCwm+tfwugfUE9V199uVmAsQoPMRDEDs=
+github.com/flywave/ogc-specifications v0.2.5 h1:SGWU50RlxExN3Irlt/vVGs9O2ljHf3JzKjWzVrMFrec=
+github.com/flywave/ogc-specifications v0.2.5/go.mod h1:iifthqr9LNaUCwm+tfwugfUE9V199uVmAsQoPMRDEDs=
 github.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=
 github.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/francoispqt/gojay v1.2.13/go.mod h1:ehT5mTG4ua4581f1++1WLG0vPdaA9HaiDsoyrBGkyDY=

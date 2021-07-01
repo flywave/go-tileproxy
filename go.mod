@@ -16,6 +16,7 @@ require (
 	github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e
 	github.com/flywave/go3d v0.0.0-20210521003526-9185b600148d
 	github.com/flywave/imaging v1.6.5
+	github.com/flywave/ogc-specifications v0.2.5 // indirect
 	github.com/fogleman/gg v1.3.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jonas-p/go-shp v0.1.1

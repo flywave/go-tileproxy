@@ -13,7 +13,7 @@ require (
 	github.com/flywave/go-lerc v0.0.0-20191107120907-ad19c08efa45
 	github.com/flywave/go-mapbox v0.0.0-20210624012915-79a7911c3c00
 	github.com/flywave/go-proj v0.0.0-20210605132706-d05d11f58021
-	github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e // indirect
+	github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e
 	github.com/flywave/go3d v0.0.0-20210521003526-9185b600148d
 	github.com/flywave/imaging v1.6.5
 	github.com/fogleman/gg v1.3.0

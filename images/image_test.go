@@ -3,6 +3,7 @@ package images
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -79,4 +80,23 @@ func TestBlankImageSource(t *testing.T) {
 	if !isPng(string(bi.GetBuffer(nil, nil))) {
 		t.FailNow()
 	}
+}
+
+func TestImagingBlend(t *testing.T) {
+	img_opts := *PNG_FORMAT
+	img_opts.BgColor = color.Transparent
+
+	image1, _ := imaging.Open("./flowers.png")
+
+	image2 := image.NewRGBA(image.Rect(0, 0, 600, 400))
+
+	for y := 0; y < 400; y++ {
+		for x := 0; x < 600; x++ {
+			image2.Set(x, y, color.RGBA{128, 128, 255, 255})
+		}
+	}
+
+	result := ImagingBlend(image1, image2, 0.7)
+
+	imaging.Save(result, "./test.png")
 }

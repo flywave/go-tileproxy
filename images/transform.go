@@ -155,6 +155,7 @@ func transformMeshes(srcSize [2]uint32, srcBBox vec2d.Rect, srcSrs geo.Proj, dst
 	dst_rect := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(dstSize[0]), float64(dstSize[1])}}
 
 	to_src_px := geo.MakeLinTransf(srcBBox, src_rect)
+
 	toSrcW := geo.MakeLinTransf(src_rect, srcBBox)
 	toDstW := geo.MakeLinTransf(dst_rect, dstBBox)
 

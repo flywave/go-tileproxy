@@ -367,11 +367,30 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 				result.Pix[i] = (uint8)(float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
 			}
 			break
+		case *image.RGBA:
+			im2 := imIn2.(*image.RGBA)
+			for i := 0; i < len(im1.Pix); i++ {
+				result.Pix[i] = (uint8)(float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
+			}
+			break
 		}
 	} else {
 		switch im1 := imIn1.(type) {
 		case *image.NRGBA:
 			im2 := imIn2.(*image.NRGBA)
+			for i := 0; i < len(im1.Pix); i++ {
+				temp := (float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
+				if temp <= 0.0 {
+					result.Pix[i] = 0
+				} else if temp >= 255.0 {
+					result.Pix[i] = 255
+				} else {
+					result.Pix[i] = uint8(temp)
+				}
+			}
+			break
+		case *image.RGBA:
+			im2 := imIn2.(*image.RGBA)
 			for i := 0; i < len(im1.Pix); i++ {
 				temp := (float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
 				if temp <= 0.0 {

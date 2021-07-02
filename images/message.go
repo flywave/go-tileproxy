@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
-	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/flywave/go-tileproxy/geo"
@@ -24,16 +21,8 @@ var (
 	font_paths string
 )
 
-func getCurrentDirectory() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return strings.Replace(dir, "\\", "/", -1)
-}
-
 func init() {
-	font_paths = getCurrentDirectory() + "/fonts"
+	font_paths = "./fonts"
 }
 
 func SetFontPath(p string) {
@@ -307,10 +296,10 @@ func (m *TextDraw) draw(ggctx *gg.Context, size []uint32) {
 			float64(h))
 		ggctx.Fill()
 	}
+	ggctx.SetColor(m.font_color)
+	ggctx.SetFontFace(m.font)
 
 	for i, text := range m.text {
-		ggctx.SetColor(m.font_color)
-		ggctx.SetFontFace(m.font)
 		_, h := boxes[i][2]-boxes[i][0], boxes[i][3]-boxes[i][1]
 		ggctx.DrawString(text, float64(boxes[i][0]), float64(boxes[i][1]+h))
 	}

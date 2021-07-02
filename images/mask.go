@@ -19,10 +19,10 @@ func drawPolygon(dc *gg.Context, pg *geos.Geometry, transf func([]float64) []flo
 		return
 	}
 	{
+		dc.SetColor(color.Opaque)
 		coords := pg.GetExteriorRing().GetCoords()
 		dc.NewSubPath()
 		cp := coords[0]
-		dc.SetColor(color.Transparent)
 
 		p := transf([]float64{cp.X, cp.Y})
 		dc.MoveTo(p[0], p[1])
@@ -31,15 +31,15 @@ func drawPolygon(dc *gg.Context, pg *geos.Geometry, transf func([]float64) []flo
 			p = transf([]float64{cp.X, cp.Y})
 			dc.LineTo(p[0], p[1])
 		}
-		dc.Fill()
 		dc.ClosePath()
+		dc.Fill()
 	}
 	nr := pg.GetNumInteriorRings()
 	for i := 0; i < nr; i++ {
 		coords := pg.GetInteriorRingN(i).GetCoords()
+		dc.SetColor(color.Transparent)
 		dc.NewSubPath()
 		cp := coords[0]
-		dc.SetColor(color.Opaque)
 		p := transf([]float64{cp.X, cp.Y})
 		dc.MoveTo(p[0], p[1])
 
@@ -47,8 +47,8 @@ func drawPolygon(dc *gg.Context, pg *geos.Geometry, transf func([]float64) []flo
 			p = transf([]float64{cp.X, cp.Y})
 			dc.LineTo(p[0], p[1])
 		}
-		dc.Fill()
 		dc.ClosePath()
+		dc.Fill()
 	}
 }
 

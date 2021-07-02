@@ -15,6 +15,7 @@ func TestTextDraw(t *testing.T) {
 }
 
 func TestExceptionImage(t *testing.T) {
+
 	img, _ := imaging.Open("./flowers.png")
 
 	imgs := CreateImageSourceFromImage(img, PNG_FORMAT)
@@ -26,5 +27,4 @@ func TestExceptionImage(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-
 }

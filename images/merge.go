@@ -90,7 +90,10 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 			if mask != nil {
 				dc.SetMask(mask)
 			}
+
 			dc.DrawImage(img, 0, 0)
+
+			result = dc.Image()
 		}
 	}
 

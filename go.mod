@@ -16,7 +16,7 @@ require (
 	github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e
 	github.com/flywave/go3d v0.0.0-20210521003526-9185b600148d
 	github.com/flywave/imaging v1.6.5
-	github.com/flywave/ogc-specifications v0.2.5 // indirect
+	github.com/flywave/ogc-specifications v0.2.5
 	github.com/fogleman/gg v1.3.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jonas-p/go-shp v0.1.1
@@ -33,7 +33,6 @@ require (
 	golang.org/x/sys v0.0.0-20210423082822-04245dca01da
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
 replace boringssl.googlesource.com/boringssl => github.com/google/boringssl v0.0.0-20210514210023-ddecaabdc8c9

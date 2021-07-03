@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/debug"
-	"github.com/flywave/go-tileproxy/storage"
 	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/kennygrant/sanitize"
@@ -51,7 +50,7 @@ type Collector struct {
 	CheckHead                bool
 	TraceHTTP                bool
 	Context                  context.Context
-	store                    storage.Storage
+	store                    Storage
 	debugger                 debug.Debugger
 	tileCallbacks            []*tileCallbackContainer
 	requestCallbacks         []RequestCallback
@@ -85,7 +84,7 @@ type tileCallbackContainer struct {
 }
 
 type cookieJarSerializer struct {
-	store storage.Storage
+	store Storage
 	lock  *sync.RWMutex
 }
 
@@ -284,7 +283,7 @@ func CheckHead() CollectorOption {
 func (c *Collector) Init() {
 	c.UserAgent = "crawler - https://github.com/flywave/go-tileproxy/crawler"
 	c.MaxDepth = 0
-	c.store = &storage.InMemoryStorage{}
+	c.store = &InMemoryStorage{}
 	c.store.Init()
 	c.MaxBodySize = 10 * 1024 * 1024
 	c.backend = &httpBackend{}
@@ -677,7 +676,7 @@ func (c *Collector) SetRequestTimeout(timeout time.Duration) {
 	c.backend.Client.Timeout = timeout
 }
 
-func (c *Collector) SetStorage(s storage.Storage) error {
+func (c *Collector) SetStorage(s Storage) error {
 	if err := s.Init(); err != nil {
 		return err
 	}
@@ -985,7 +984,7 @@ func isYesString(s string) bool {
 	return false
 }
 
-func createJar(s storage.Storage) http.CookieJar {
+func createJar(s Storage) http.CookieJar {
 	return &cookieJarSerializer{store: s, lock: &sync.RWMutex{}}
 }
 
@@ -996,17 +995,17 @@ func (j *cookieJarSerializer) SetCookies(u *url.URL, cookies []*http.Cookie) {
 
 	cnew := make([]*http.Cookie, len(cookies))
 	copy(cnew, cookies)
-	existing := storage.UnstringifyCookies(cookieStr)
+	existing := UnstringifyCookies(cookieStr)
 	for _, c := range existing {
-		if !storage.ContainsCookie(cnew, c.Name) {
+		if !ContainsCookie(cnew, c.Name) {
 			cnew = append(cnew, c)
 		}
 	}
-	j.store.SetCookies(u, storage.StringifyCookies(cnew))
+	j.store.SetCookies(u, StringifyCookies(cnew))
 }
 
 func (j *cookieJarSerializer) Cookies(u *url.URL) []*http.Cookie {
-	cookies := storage.UnstringifyCookies(j.store.Cookies(u))
+	cookies := UnstringifyCookies(j.store.Cookies(u))
 
 	now := time.Now()
 	cnew := make([]*http.Cookie, 0, len(cookies))

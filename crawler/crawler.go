@@ -33,7 +33,6 @@ type CollectorOption func(*Collector)
 
 type Collector struct {
 	UserAgent                string
-	MaxDepth                 int
 	AllowedDomains           []string
 	DisallowedDomains        []string
 	DisallowedURLFilters     []*regexp.Regexp
@@ -97,7 +96,6 @@ const ProxyURLKey key = iota
 var (
 	ErrForbiddenDomain     = errors.New("Forbidden domain")
 	ErrMissingURL          = errors.New("Missing URL")
-	ErrMaxDepth            = errors.New("Max depth limit reached")
 	ErrForbiddenURL        = errors.New("ForbiddenURL")
 	ErrNoURLFiltersMatch   = errors.New("No URLFilters match")
 	ErrAlreadyVisited      = errors.New("URL already visited")
@@ -141,12 +139,6 @@ var envMap = map[string]func(*Collector, string){
 			c.MaxBodySize = size
 		}
 	},
-	"MAX_DEPTH": func(c *Collector, val string) {
-		maxDepth, err := strconv.Atoi(val)
-		if err == nil {
-			c.MaxDepth = maxDepth
-		}
-	},
 	"PARSE_HTTP_ERROR_RESPONSE": func(c *Collector, val string) {
 		c.ParseHTTPErrorResponse = isYesString(val)
 	},
@@ -174,12 +166,6 @@ func NewCollector(options ...CollectorOption) *Collector {
 func UserAgent(ua string) CollectorOption {
 	return func(c *Collector) {
 		c.UserAgent = ua
-	}
-}
-
-func MaxDepth(depth int) CollectorOption {
-	return func(c *Collector) {
-		c.MaxDepth = depth
 	}
 }
 
@@ -282,7 +268,6 @@ func CheckHead() CollectorOption {
 
 func (c *Collector) Init() {
 	c.UserAgent = "crawler - https://github.com/flywave/go-tileproxy/crawler"
-	c.MaxDepth = 0
 	c.store = &InMemoryStorage{}
 	c.store.Init()
 	c.MaxBodySize = 10 * 1024 * 1024
@@ -527,9 +512,6 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 func (c *Collector) requestCheck(u string, parsedURL *url.URL, method string, requestData io.Reader, depth int, checkRevisit bool) error {
 	if u == "" {
 		return ErrMissingURL
-	}
-	if c.MaxDepth > 0 && c.MaxDepth < depth {
-		return ErrMaxDepth
 	}
 	if len(c.DisallowedURLFilters) > 0 {
 		if isMatchingFilter(c.DisallowedURLFilters, []byte(u)) {
@@ -856,7 +838,6 @@ func (c *Collector) Clone() *Collector {
 		ID:                     atomic.AddUint32(&collectorCounter, 1),
 		IgnoreRobotsTxt:        c.IgnoreRobotsTxt,
 		MaxBodySize:            c.MaxBodySize,
-		MaxDepth:               c.MaxDepth,
 		DisallowedURLFilters:   c.DisallowedURLFilters,
 		URLFilters:             c.URLFilters,
 		CheckHead:              c.CheckHead,

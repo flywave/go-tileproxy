@@ -203,19 +203,6 @@ var newCollectorTests = map[string]func(*testing.T){
 			}
 		}
 	},
-	"MaxDepth": func(t *testing.T) {
-		for _, depth := range []int{
-			12,
-			34,
-			0,
-		} {
-			c := NewCollector(MaxDepth(depth))
-
-			if got, want := c.MaxDepth, depth; got != want {
-				t.Fatalf("c.MaxDepth = %d, want %d", got, want)
-			}
-		}
-	},
 	"AllowedDomains": func(t *testing.T) {
 		for _, domains := range [][]string{
 			{"example.com", "example.net"},
@@ -957,50 +944,6 @@ func TestCollectorVisitWithCheckHead(t *testing.T) {
 	}
 	if requestMethodChain[0] != "HEAD" && requestMethodChain[1] != "GET" {
 		t.Errorf("Failed to perform a HEAD request before GET")
-	}
-}
-
-func TestCollectorDepth(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-	maxDepth := 2
-	c1 := NewCollector(
-		MaxDepth(maxDepth),
-		AllowURLRevisit(),
-	)
-	requestCount := 0
-	c1.OnResponse(func(resp *Response) {
-		requestCount++
-		if requestCount >= 10 {
-			return
-		}
-		c1.Visit(ts.URL)
-	})
-	c1.Visit(ts.URL)
-	if requestCount < 10 {
-		t.Errorf("Invalid number of requests: %d (expected 10) without using MaxDepth", requestCount)
-	}
-
-	c2 := c1.Clone()
-	requestCount = 0
-	c2.OnResponse(func(resp *Response) {
-		requestCount++
-		resp.Request.Visit(ts.URL)
-	})
-	c2.Visit(ts.URL)
-	if requestCount != 2 {
-		t.Errorf("Invalid number of requests: %d (expected 2) with using MaxDepth 2", requestCount)
-	}
-
-	c1.Visit(ts.URL)
-	if requestCount < 10 {
-		t.Errorf("Invalid number of requests: %d (expected 10) without using MaxDepth again", requestCount)
-	}
-
-	requestCount = 0
-	c2.Visit(ts.URL)
-	if requestCount != 2 {
-		t.Errorf("Invalid number of requests: %d (expected 2) with using MaxDepth 2 again", requestCount)
 	}
 }
 

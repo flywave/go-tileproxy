@@ -1,92 +1,58 @@
+// Copyright 2018 Adam Tauber
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package proxy
 
 import (
-	"errors"
-	"net"
+	"context"
+	"net/http"
 	"net/url"
-	"os"
+	"sync/atomic"
+
+	"github.com/flywave/go-tileproxy/crawler"
 )
 
-type Dialer interface {
-	Dial(network, addr string) (c net.Conn, err error)
+type roundRobinSwitcher struct {
+	proxyURLs []*url.URL
+	index     uint32
 }
 
-type Resolver interface {
-	LookupHost(host string) (addrs []string, err error)
+func (r *roundRobinSwitcher) GetProxy(pr *http.Request) (*url.URL, error) {
+	index := atomic.AddUint32(&r.index, 1) - 1
+	u := r.proxyURLs[index%uint32(len(r.proxyURLs))]
+
+	ctx := context.WithValue(pr.Context(), crawler.ProxyURLKey, u.String())
+	*pr = *pr.WithContext(ctx)
+	return u, nil
 }
 
-type Auth struct {
-	User, Password string
-}
-
-func FromEnvironment() Dialer {
-	allProxy := os.Getenv("all_proxy")
-	if len(allProxy) == 0 {
-		return Direct
+// RoundRobinProxySwitcher creates a proxy switcher function which rotates
+// ProxyURLs on every request.
+// The proxy type is determined by the URL scheme. "http", "https"
+// and "socks5" are supported. If the scheme is empty,
+// "http" is assumed.
+func RoundRobinProxySwitcher(ProxyURLs ...string) (crawler.ProxyFunc, error) {
+	if len(ProxyURLs) < 1 {
+		return nil, crawler.ErrEmptyProxyURL
 	}
-
-	proxyURL, err := url.Parse(allProxy)
-	if err != nil {
-		return Direct
-	}
-	proxy, err := FromURL(proxyURL, Direct, DummyResolver)
-	if err != nil {
-		return Direct
-	}
-
-	noProxy := os.Getenv("no_proxy")
-	if len(noProxy) == 0 {
-		return proxy
-	}
-
-	perHost := NewPerHost(proxy, Direct)
-	perHost.AddFromString(noProxy)
-	return perHost
-}
-
-var proxySchemes map[string]func(*url.URL, Dialer) (Dialer, error)
-
-func RegisterDialerType(scheme string, f func(*url.URL, Dialer) (Dialer, error)) {
-	if proxySchemes == nil {
-		proxySchemes = make(map[string]func(*url.URL, Dialer) (Dialer, error))
-	}
-	proxySchemes[scheme] = f
-}
-
-func FromURL(u *url.URL, forward Dialer, resolver Resolver) (Dialer, error) {
-	var auth *Auth
-	if u.User != nil {
-		auth = new(Auth)
-		auth.User = u.User.Username()
-		if p, ok := u.User.Password(); ok {
-			auth.Password = p
+	urls := make([]*url.URL, len(ProxyURLs))
+	for i, u := range ProxyURLs {
+		parsedU, err := url.Parse(u)
+		if err != nil {
+			return nil, err
 		}
+		urls[i] = parsedU
 	}
-
-	switch u.Scheme {
-	case "socks5", "socks":
-		return SOCKS5("tcp", u.Host, auth, forward, resolver)
-	case "socks4":
-		return SOCKS4("tcp", u.Host, false, forward, resolver)
-	case "socks4a":
-		return SOCKS4("tcp", u.Host, true, forward, resolver)
-	case "http":
-		return HTTP1("tcp", u.Host, auth, forward, resolver)
-	case "https":
-		return HTTPS("tcp", u.Host, auth, forward, resolver)
-	case "https+h2":
-		return HTTP2("tcp", u.Host, auth, forward, resolver)
-	case "ssh", "ssh2":
-		return SSH2("tcp", u.Host, auth, forward, resolver)
-	case "quic":
-		return QUIC("udp", u.Host, auth, forward, resolver)
-	}
-
-	if proxySchemes != nil {
-		if f, ok := proxySchemes[u.Scheme]; ok {
-			return f(u, forward)
-		}
-	}
-
-	return nil, errors.New("proxy: unknown scheme: " + u.Scheme)
+	return (&roundRobinSwitcher{urls, 0}).GetProxy, nil
 }

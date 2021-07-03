@@ -99,4 +99,6 @@ func TestImagingBlend(t *testing.T) {
 	result := ImagingBlend(image1, image2, 0.7)
 
 	imaging.Save(result, "./test.png")
+
+	defer os.Remove("./test.png")
 }

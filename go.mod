@@ -23,7 +23,6 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/paulmach/go.geo v0.0.0-20180829195134-22b514266d33 // indirect
 	github.com/rubenv/topojson v0.0.0-20180822134236-13be738db397
-	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/image v0.0.0-20210607152325-775e3b0c77b9
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed

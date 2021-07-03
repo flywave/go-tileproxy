@@ -824,8 +824,8 @@ func TestEnvSettings(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
 
-	os.Setenv("COLLY_USER_AGENT", "test")
-	defer os.Unsetenv("COLLY_USER_AGENT")
+	os.Setenv("TILEPROXY_USER_AGENT", "test")
+	defer os.Unsetenv("TILEPROXY_USER_AGENT")
 
 	c := NewCollector()
 

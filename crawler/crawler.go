@@ -906,7 +906,7 @@ func (c *Collector) checkRedirectFunc() func(req *http.Request, via []*http.Requ
 
 func (c *Collector) parseSettingsFromEnv() {
 	for _, e := range os.Environ() {
-		if !strings.HasPrefix(e, "COLLY_") {
+		if !strings.HasPrefix(e, "TILEPROXY_") {
 			continue
 		}
 		pair := strings.SplitN(e[6:], "=", 2)

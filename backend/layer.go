@@ -15,14 +15,10 @@ type Source interface {
 	Extension() string
 }
 
-type Cache interface {
-}
-
 type Layer interface {
 	Name() string
 	Title() string
 	Type() string
 	Path() string
-	Cache() Cache
 	Source() Source
 }

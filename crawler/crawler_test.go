@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"reflect"
 	"regexp"
 	"testing"
@@ -614,7 +613,6 @@ func TestCollectorPostURLRevisitCheck(t *testing.T) {
 	}
 }
 
-// TestCollectorURLRevisitDisallowed ensures that disallowed URL is not considered visited.
 func TestCollectorURLRevisitDomainDisallowed(t *testing.T) {
 	ts := newTestServer()
 	defer ts.Close()
@@ -719,84 +717,9 @@ func TestCollectorCookies(t *testing.T) {
 	}
 }
 
-func TestRobotsWhenAllowed(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-
-	c := NewCollector()
-	c.IgnoreRobotsTxt = false
-
-	c.OnResponse(func(resp *Response) {
-		if resp.StatusCode != 200 {
-			t.Fatalf("Wrong response code: %d", resp.StatusCode)
-		}
-	})
-
-	err := c.Visit(ts.URL + "/allowed")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestRobotsWhenDisallowed(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-
-	c := NewCollector()
-	c.IgnoreRobotsTxt = false
-
-	c.OnResponse(func(resp *Response) {
-		t.Fatalf("Received response: %d", resp.StatusCode)
-	})
-
-	err := c.Visit(ts.URL + "/disallowed")
-	if err.Error() != "URL blocked by robots.txt" {
-		t.Fatalf("wrong error message: %v", err)
-	}
-}
-
-func TestRobotsWhenDisallowedWithQueryParameter(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-
-	c := NewCollector()
-	c.IgnoreRobotsTxt = false
-
-	c.OnResponse(func(resp *Response) {
-		t.Fatalf("Received response: %d", resp.StatusCode)
-	})
-
-	err := c.Visit(ts.URL + "/allowed?q=1")
-	if err.Error() != "URL blocked by robots.txt" {
-		t.Fatalf("wrong error message: %v", err)
-	}
-}
-
-func TestIgnoreRobotsWhenDisallowed(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-
-	c := NewCollector()
-	c.IgnoreRobotsTxt = true
-
-	c.OnResponse(func(resp *Response) {
-		if resp.StatusCode != 200 {
-			t.Fatalf("Wrong response code: %d", resp.StatusCode)
-		}
-	})
-
-	err := c.Visit(ts.URL + "/disallowed")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-}
-
 func TestConnectionErrorOnRobotsTxtResultsInError(t *testing.T) {
 	ts := newTestServer()
-	ts.Close() // immediately close the server to force a connection error
+	ts.Close()
 
 	c := NewCollector()
 	c.IgnoreRobotsTxt = false
@@ -804,30 +727,6 @@ func TestConnectionErrorOnRobotsTxtResultsInError(t *testing.T) {
 
 	if err == nil {
 		t.Fatal("Error expected")
-	}
-}
-
-func TestEnvSettings(t *testing.T) {
-	ts := newTestServer()
-	defer ts.Close()
-
-	os.Setenv("TILEPROXY_USER_AGENT", "test")
-	defer os.Unsetenv("TILEPROXY_USER_AGENT")
-
-	c := NewCollector()
-
-	valid := false
-
-	c.OnResponse(func(resp *Response) {
-		if string(resp.Body) == "test" {
-			valid = true
-		}
-	})
-
-	c.Visit(ts.URL + "/user_agent")
-
-	if !valid {
-		t.Fatalf("Wrong user-agent from environment")
 	}
 }
 

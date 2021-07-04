@@ -267,7 +267,7 @@ func CheckHead() CollectorOption {
 }
 
 func (c *Collector) Init() {
-	c.UserAgent = "crawler - https://github.com/flywave/go-tileproxy/crawler"
+	c.UserAgent = "crawler"
 	c.store = &InMemoryStorage{}
 	c.store.Init()
 	c.MaxBodySize = 10 * 1024 * 1024

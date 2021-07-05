@@ -25,14 +25,14 @@ type WMSSource struct {
 	Coverage                  geo.Coverage
 	ResRange                  *geo.ResolutionRange
 	Extent                    *geo.MapExtent
-	ErrorHandler              func(error)
+	ErrorHandler              HTTPSourceErrorHandler
 	Opacity                   *float64
 }
 
 func NewWMSSource(client *client.WMSClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
 	transparent_color color.Color, transparent_color_tolerance *float64,
 	supported_srs *geo.SupportedSRS, supported_formats []string, fwd_req_params map[string]string,
-	error_handler func(error)) *WMSSource {
+	error_handler HTTPSourceErrorHandler) *WMSSource {
 	src := &WMSSource{Client: client, ImageOpts: image_opts, Coverage: coverage, ResRange: res_range, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, SupportsMetaTiles: false, ExtReqParams: fwd_req_params, ErrorHandler: error_handler}
 	if transparent_color != nil {
 		src.ImageOpts.Transparent = geo.NewBool(true)

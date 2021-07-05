@@ -14,7 +14,7 @@ type ArcGISSource struct {
 
 func NewArcGISSource(client *client.WMSClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
 	supported_srs *geo.SupportedSRS, supported_formats []string,
-	error_handler func(error)) *ArcGISSource {
+	error_handler HTTPSourceErrorHandler) *ArcGISSource {
 	return &ArcGISSource{WMSSource: WMSSource{Client: client, ImageOpts: image_opts, Coverage: coverage, ResRange: res_range, TransparentColor: nil, TransparentColorTolerance: nil, SupportedSRS: supported_srs, SupportedFormats: supported_formats, SupportsMetaTiles: false, ExtReqParams: nil, ErrorHandler: error_handler}}
 }
 

@@ -327,7 +327,7 @@ func MergeImages(layers []Source, image_opts *ImageOptions, size [2]uint32, bbox
 
 func ConcatLegends(legends []Source, mode ImageMode, format ImageFormat, size []uint32, bgcolor color.Color, transparent bool) Source {
 	if legends == nil {
-		return NewBlankImageSource([2]uint32{1, 1}, &ImageOptions{BgColor: bgcolor, Transparent: newBool(transparent)}, false)
+		return NewBlankImageSource([2]uint32{1, 1}, &ImageOptions{BgColor: bgcolor, Transparent: geo.NewBool(transparent)}, false)
 	}
 
 	if len(legends) == 1 {

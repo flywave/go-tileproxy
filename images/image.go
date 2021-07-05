@@ -257,7 +257,7 @@ func decodeImage(inputName string, reader io.Reader) image.Image {
 
 func SubImageSource(source *ImageSource, size [2]uint32, offset []uint32, image_opts *ImageOptions, cacheable bool) *ImageSource {
 	new_image_opts := *image_opts
-	new_image_opts.Transparent = newBool(true)
+	new_image_opts.Transparent = geo.NewBool(true)
 	img := CreateImage(size, &new_image_opts)
 
 	subimg := source.GetImage()
@@ -306,32 +306,32 @@ func (s *BlankImageSource) GetBuffer(format *ImageFormat, in_image_opts *ImageOp
 	return s.buf
 }
 
-func bboxPositionInImage(bbox vec2d.Rect, size [2]int, src_bbox vec2d.Rect) ([2]int, [2]int, []float64) {
+func BBoxPositionInImage(bbox vec2d.Rect, size [2]uint32, src_bbox vec2d.Rect) ([2]uint32, [2]uint32, vec2d.Rect) {
 	coordToPx := geo.MakeLinTransf(bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(size[0]), float64(size[1])}})
-	offsets := [4]int{0, size[1], size[0], 0}
-	sub_bbox := []float64{bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]}
+	offsets := [4]int{0, int(size[1]), int(size[0]), 0}
+	sub_bbox := vec2d.Rect{Min: vec2d.T{bbox.Min[0], bbox.Min[1]}, Max: vec2d.T{bbox.Max[0], bbox.Max[1]}}
 	if src_bbox.Min[0] > bbox.Min[0] {
-		sub_bbox[0] = src_bbox.Min[0]
+		sub_bbox.Min[0] = src_bbox.Min[0]
 		xy := coordToPx([]float64{src_bbox.Min[0], 0})
 		offsets[0] = int(xy[0])
 	}
 	if src_bbox.Min[1] > bbox.Min[1] {
-		sub_bbox[1] = src_bbox.Min[1]
+		sub_bbox.Min[1] = src_bbox.Min[1]
 		xy := coordToPx([]float64{0, src_bbox.Min[1]})
 		offsets[1] = int(xy[1])
 	}
 	if src_bbox.Max[0] < bbox.Max[0] {
-		sub_bbox[2] = src_bbox.Max[0]
+		sub_bbox.Max[0] = src_bbox.Max[0]
 		xy := coordToPx([]float64{src_bbox.Max[0], 0})
 		offsets[2] = int(xy[0])
 	}
 	if src_bbox.Max[1] < bbox.Max[1] {
-		sub_bbox[3] = src_bbox.Max[1]
+		sub_bbox.Max[1] = src_bbox.Max[1]
 		xy := coordToPx([]float64{0, src_bbox.Max[1]})
 		offsets[3] = int(xy[1])
 	}
-	size_ := [2]int{geo.AbsInt(offsets[2] - offsets[0]), geo.AbsInt(offsets[1] - offsets[3])}
-	return size_, [2]int{offsets[0], offsets[3]}, sub_bbox
+	size_ := [2]uint32{uint32(geo.AbsInt(offsets[2] - offsets[0])), uint32(geo.AbsInt(offsets[1] - offsets[3]))}
+	return size_, [2]uint32{uint32(offsets[0]), uint32(offsets[3])}, sub_bbox
 }
 
 var (

@@ -66,3 +66,15 @@ func UniqueStrings(slice []string) []string {
 	}
 	return ss
 }
+
+func EqualsStrings(stra, strb []string) bool {
+	if len(stra) != len(strb) {
+		return false
+	}
+	for _, s := range stra {
+		if !ContainsString(strb, s) {
+			return false
+		}
+	}
+	return true
+}

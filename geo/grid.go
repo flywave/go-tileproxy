@@ -266,7 +266,7 @@ func NewTileGrid(options TileGridOptions) *TileGrid {
 	}
 	var bbox *vec2d.Rect
 	if v, ok := options[TILEGRID_BBOX]; ok {
-		bbox = newRect(v.(vec2d.Rect))
+		bbox = NewRect(v.(vec2d.Rect))
 	}
 	var bbox_srs *SRSProj4
 	if v, ok := options[TILEGRID_BBOX_SRS]; ok {
@@ -295,15 +295,15 @@ func NewTileGrid(options TileGridOptions) *TileGrid {
 	}
 	var num_levels *int
 	if v, ok := options[TILEGRID_NUM_LEVELS]; ok {
-		num_levels = newInt(v.(int))
+		num_levels = NewInt(v.(int))
 	}
 	var min_res *float64
 	if v, ok := options[TILEGRID_MIN_RES]; ok {
-		min_res = newFloat64(v.(float64))
+		min_res = NewFloat64(v.(float64))
 	}
 	var max_res *float64
 	if v, ok := options[TILEGRID_MAX_RES]; ok {
-		max_res = newFloat64(v.(float64))
+		max_res = NewFloat64(v.(float64))
 	}
 	var stretch_factor float64
 	if v, ok := options[TILEGRID_MAX_STRETCH_FACTOR]; ok {
@@ -1149,7 +1149,7 @@ func (r *ResolutionRange) ScaleHint() (float64, float64) {
 	return min_res, max_res
 }
 
-func (r *ResolutionRange) Contains(bbox vec2d.Rect, size [2]uint32, srs *SRSProj4) bool {
+func (r *ResolutionRange) Contains(bbox vec2d.Rect, size [2]uint32, srs Proj) bool {
 	width, height := BBoxSize(bbox)
 	if srs.IsLatLong() {
 		width = deg_to_m(width)

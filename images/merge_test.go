@@ -14,7 +14,7 @@ import (
 
 func TestMergeSingleCoverage(t *testing.T) {
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(true)
+	img_opts.Transparent = geo.NewBool(true)
 	img_opts.BgColor = color.Transparent
 	img := CreateImageSource([2]uint32{10, 10}, &img_opts)
 

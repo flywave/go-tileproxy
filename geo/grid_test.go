@@ -370,7 +370,7 @@ func TestMetagridTiles(t *testing.T) {
 }
 
 func TestResolutionRangeMeter(t *testing.T) {
-	res_range := NewResolutionRange(newFloat64(1000), newFloat64(10))
+	res_range := NewResolutionRange(NewFloat64(1000), NewFloat64(10))
 	srs := NewSRSProj4("EPSG:900913")
 	if res_range.Contains(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100000, 100000}}, [2]uint32{10, 10}, srs) {
 		t.FailNow()
@@ -393,7 +393,7 @@ func TestResolutionRangeMeter(t *testing.T) {
 }
 
 func TestResolutionRangeDeg(t *testing.T) {
-	res_range := NewResolutionRange(newFloat64(100000), newFloat64(1000))
+	res_range := NewResolutionRange(NewFloat64(100000), NewFloat64(1000))
 	srs := NewSRSProj4("EPSG:4326")
 	if res_range.Contains(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, [2]uint32{10, 10}, srs) {
 		t.FailNow()
@@ -419,7 +419,7 @@ func TestResolutionRangeDeg(t *testing.T) {
 }
 
 func TestFromScale(t *testing.T) {
-	res_range := CacleResolutionRange(nil, nil, newFloat64(1e6), newFloat64(1e3))
+	res_range := CacleResolutionRange(nil, nil, NewFloat64(1e6), NewFloat64(1e3))
 	if (*res_range.Min - 280) > 0.01 {
 		t.FailNow()
 	}
@@ -579,23 +579,23 @@ func TestNOTileErrors(t *testing.T) {
 
 func TestMergeResolutions(t *testing.T) {
 	res_range := MergeResolutionRange(
-		CacleResolutionRange(nil, newFloat64(10), nil, nil), CacleResolutionRange(newFloat64(1000), nil, nil, nil))
+		CacleResolutionRange(nil, NewFloat64(10), nil, nil), CacleResolutionRange(NewFloat64(1000), nil, nil, nil))
 	if res_range != nil {
 		t.FailNow()
 	}
 
 	res_range = MergeResolutionRange(
-		CacleResolutionRange(newFloat64(10000), newFloat64(10), nil, nil), CacleResolutionRange(newFloat64(1000), nil, nil, nil))
+		CacleResolutionRange(NewFloat64(10000), NewFloat64(10), nil, nil), CacleResolutionRange(NewFloat64(1000), nil, nil, nil))
 	if *res_range.Min != 10000 || res_range.Max != nil {
 		t.FailNow()
 	}
 	res_range = MergeResolutionRange(
-		CacleResolutionRange(newFloat64(10000), newFloat64(10), nil, nil), CacleResolutionRange(newFloat64(1000), newFloat64(1), nil, nil))
+		CacleResolutionRange(NewFloat64(10000), NewFloat64(10), nil, nil), CacleResolutionRange(NewFloat64(1000), NewFloat64(1), nil, nil))
 	if *res_range.Min != 10000 || *res_range.Max != 1 {
 		t.FailNow()
 	}
 	res_range = MergeResolutionRange(
-		CacleResolutionRange(newFloat64(10000), newFloat64(10), nil, nil), CacleResolutionRange(nil, nil, nil, nil))
+		CacleResolutionRange(NewFloat64(10000), NewFloat64(10), nil, nil), CacleResolutionRange(nil, nil, nil, nil))
 	if res_range != nil {
 		t.FailNow()
 	}
@@ -606,7 +606,7 @@ func TestMergeResolutions(t *testing.T) {
 		t.FailNow()
 	}
 	res_range = MergeResolutionRange(
-		CacleResolutionRange(newFloat64(10000), newFloat64(10), nil, nil), nil)
+		CacleResolutionRange(NewFloat64(10000), NewFloat64(10), nil, nil), nil)
 	if res_range != nil {
 		t.FailNow()
 	}

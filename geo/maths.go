@@ -180,19 +180,19 @@ func AbsInt(x int) int {
 	return x
 }
 
-func newBool(v bool) *bool {
+func NewBool(v bool) *bool {
 	return &v
 }
 
-func newFloat64(v float64) *float64 {
+func NewFloat64(v float64) *float64 {
 	return &v
 }
 
-func newInt(v int) *int {
+func NewInt(v int) *int {
 	return &v
 }
 
-func newRect(r vec2d.Rect) *vec2d.Rect {
+func NewRect(r vec2d.Rect) *vec2d.Rect {
 	return &r
 }
 

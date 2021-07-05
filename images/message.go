@@ -29,10 +29,6 @@ func SetFontPath(p string) {
 	font_paths = p
 }
 
-func newBool(v bool) *bool {
-	return &v
-}
-
 func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, bgcolor color.Color,
 	transparent bool) {
 	eimg := NewExceptionImage(message, image_opts)
@@ -41,7 +37,7 @@ func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, b
 
 func GenAttributionImage(message string, size [2]uint32, image_opts *ImageOptions, inverse bool) {
 	if image_opts == nil {
-		image_opts = &ImageOptions{Transparent: newBool(true)}
+		image_opts = &ImageOptions{Transparent: geo.NewBool(true)}
 	}
 
 	aimg := NewAttributionImage(message, image_opts, &inverse)

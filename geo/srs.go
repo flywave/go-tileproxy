@@ -1,6 +1,7 @@
 package geo
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"path/filepath"
@@ -262,4 +263,65 @@ func MakeLinTransf(src_bbox, dst_bbox vec2d.Rect) func([]float64) []float64 {
 				(dst_bbox.Max[1]-dst_bbox.Min[1])/(src_bbox.Max[1]-src_bbox.Min[1])}
 	}
 	return f
+}
+
+type PreferredSrcSRS map[string][]Proj
+
+func (m PreferredSrcSRS) Add(target string, prefered_srs []Proj) {
+	m[target] = prefered_srs
+}
+
+func containsSrs(target string, srcs []Proj) (bool, Proj) {
+	for _, p := range srcs {
+		if p.GetDef() == target {
+			return true, p
+		}
+	}
+	return false, nil
+}
+
+func (m PreferredSrcSRS) PreferredSrc(target Proj, available_src []Proj) (Proj, error) {
+	if available_src == nil {
+		return nil, errors.New("no available src SRS")
+	}
+
+	if ok, p := containsSrs(target.GetDef(), available_src); ok {
+		return p, nil
+	}
+
+	if tv, ok := m[target.GetDef()]; ok {
+		for _, preferred := range tv {
+			if ok, p := containsSrs(preferred.GetDef(), available_src); ok {
+				return p, nil
+			}
+		}
+	}
+
+	for _, avail := range available_src {
+		if avail.IsLatLong() == target.IsLatLong() {
+			return avail, nil
+		}
+	}
+	return available_src[0], nil
+}
+
+type SupportedSRS struct {
+	Srs       []Proj
+	Preferred PreferredSrcSRS
+}
+
+func (s *SupportedSRS) BestSrs(target Proj) (Proj, error) {
+	return s.Preferred.PreferredSrc(target, s.Srs)
+}
+
+func (s *SupportedSRS) Eq(o *SupportedSRS) bool {
+	if len(s.Srs) != len(o.Srs) {
+		return false
+	}
+	for _, t := range s.Srs {
+		if ok, _ := containsSrs(t.GetDef(), o.Srs); !ok {
+			return false
+		}
+	}
+	return true
 }

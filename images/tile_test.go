@@ -2,6 +2,8 @@ package images
 
 import (
 	"testing"
+
+	"github.com/flywave/go-tileproxy/geo"
 )
 
 func TestTileMerge(t *testing.T) {
@@ -74,7 +76,7 @@ func TestTileSplitter(t *testing.T) {
 func TestBackgroundLargerCropWithTransparent(t *testing.T) {
 	img := CreateImageSource([2]uint32{356, 266}, PNG_FORMAT)
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(true)
+	img_opts.Transparent = geo.NewBool(true)
 	splitter := NewTileSplitter(img, &img_opts)
 
 	tile := splitter.GetTile([2]int{0, 0}, [2]uint32{256, 256})

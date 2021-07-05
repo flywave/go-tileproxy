@@ -14,7 +14,7 @@ import (
 func TestImageTransform(t *testing.T) {
 	img, _ := imaging.Open("./flowers.png")
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(false)
+	img_opts.Transparent = geo.NewBool(false)
 
 	src_img := CreateImageSourceFromImage(img, &img_opts)
 	src_srs := geo.NewSRSProj4("EPSG:31467")

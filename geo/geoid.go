@@ -43,3 +43,11 @@ func MSLToWGS84(h, lon, lat float64, g geoid.VerticalDatum) float64 {
 func WGS84ToMSL(lon, lat, altitude float64, g geoid.VerticalDatum) float64 {
 	return getGeoid(g).ConvertHeight(lat, lon, altitude, geoid.ELLIPSOIDTOGEOID)
 }
+
+func HAEToMSL(lon, lat, altitude, ellipsoidOffset float64, g geoid.VerticalDatum) float64 {
+	return getGeoid(g).ConvertHeight(lat, lon, altitude+ellipsoidOffset, geoid.ELLIPSOIDTOGEOID)
+}
+
+func MSLToHAE(h, lon, lat, ellipsoidOffset float64, g geoid.VerticalDatum) float64 {
+	return getGeoid(g).ConvertHeight(lat, lon, h, geoid.GEOIDTOELLIPSOID) + ellipsoidOffset
+}

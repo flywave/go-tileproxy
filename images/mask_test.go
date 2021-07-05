@@ -33,7 +33,7 @@ func coverage(geom *geos.Geometry, srs string) *geo.GeomCoverage {
 
 func TestMaskOutsideOfImageTransparent(t *testing.T) {
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(true)
+	img_opts.Transparent = geo.NewBool(true)
 	img := CreateImageSource([2]uint32{100, 100}, &img_opts)
 
 	result := MaskImageSourceFromCoverage(
@@ -48,7 +48,7 @@ func TestWKTMask(t *testing.T) {
 	geom := "POLYGON((2 2, 2 8, 8 8, 8 2, 2 2), (4 4, 4 6, 6 6, 6 4, 4 4))"
 
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(true)
+	img_opts.Transparent = geo.NewBool(true)
 	img := CreateImageSource([2]uint32{100, 100}, &img_opts)
 
 	result := MaskImageSourceFromCoverage(
@@ -63,7 +63,7 @@ func TestWKTMask(t *testing.T) {
 
 func TestGeosMask(t *testing.T) {
 	img_opts := *PNG_FORMAT
-	img_opts.Transparent = newBool(true)
+	img_opts.Transparent = geo.NewBool(true)
 	img := CreateImageSource([2]uint32{100, 100}, &img_opts)
 
 	geom := geos.CreatePolygon([]geos.Coord{{X: 0, Y: 0}, {X: 222000, Y: 0}, {X: 222000, Y: 222000}, {X: 0, Y: 222000}, {X: 0, Y: 0}})

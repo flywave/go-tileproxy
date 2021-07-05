@@ -34,8 +34,8 @@ func NewGlyphsCache(cache_dir string, file_ext string) *GlyphsCache {
 type Style struct {
 	BaseResource
 	style   string
-	sprites []uint64
-	glyphs  []uint64
+	sprites []string
+	glyphs  []string
 }
 
 func (l *Style) GetData() []byte {

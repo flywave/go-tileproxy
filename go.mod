@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/flywave/go-geoid v0.0.0-20210705011639-4a2c3d2f8d7f // indirect
 	github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148
 	github.com/flywave/go-geos v0.0.0-20210608062102-81fc76bf44c4
 	github.com/flywave/go-lerc v0.0.0-20191107120907-ad19c08efa45

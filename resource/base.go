@@ -28,32 +28,32 @@ func fileExists(filename string) (bool, error) {
 }
 
 func (c *LocalCache) Store(r Resource) error {
-	if r.stored() {
+	if r.IsStored() {
 		return nil
 	}
 
-	if r.location() == "" {
+	if r.GetLocation() == "" {
 		hash := r.Hash()
-		r.set_location(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
 	}
 
 	data := r.GetData()
 
-	if err := ioutil.WriteFile(r.location(), data, 0644); err != nil {
+	if err := ioutil.WriteFile(r.GetLocation(), data, 0644); err != nil {
 		return err
 	}
 
-	r.set_stored()
+	r.SetStored()
 
 	return nil
 }
 
 func (c *LocalCache) Load(r Resource) error {
 	hash := r.Hash()
-	r.set_location(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
 
-	if ok, _ := fileExists(r.location()); ok {
-		if f, err := os.Open(r.location()); err == nil {
+	if ok, _ := fileExists(r.GetLocation()); ok {
+		if f, err := os.Open(r.GetLocation()); err == nil {
 			bufs, e := ioutil.ReadAll(f)
 			if e != nil {
 				return e
@@ -76,10 +76,11 @@ type Resource interface {
 	Hash() []byte
 	GetData() []byte
 	SetData([]byte)
-	stored() bool
-	set_stored()
-	location() string
-	set_location(l string)
+	IsStored() bool
+	SetStored()
+	GetLocation() string
+	SetLocation(l string)
+	GetID() string
 }
 
 type BaseResource struct {
@@ -89,18 +90,26 @@ type BaseResource struct {
 	ID       string
 }
 
-func (r *BaseResource) stored() bool {
+func (r *BaseResource) IsStored() bool {
 	return r.Stored
 }
 
-func (r *BaseResource) set_stored() {
+func (r *BaseResource) SetStored() {
 	r.Stored = true
 }
 
-func (r *BaseResource) location() string {
+func (r *BaseResource) GetLocation() string {
 	return r.Location
 }
 
-func (r *BaseResource) set_location(l string) {
+func (r *BaseResource) SetLocation(l string) {
 	r.Location = l
+}
+
+func (r *BaseResource) GetID() string {
+	return r.ID
+}
+
+func (r *BaseResource) SetID(id string) {
+	r.ID = id
 }

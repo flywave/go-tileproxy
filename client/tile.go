@@ -6,6 +6,6 @@ type TileClient struct {
 	Client
 }
 
-func (c *TileClient) GetTile(tile_coord [3]uint32, format *images.ImageFormat) []byte {
+func (c *TileClient) GetTile(tile_coord [3]int, format *images.ImageFormat) []byte {
 	return nil
 }

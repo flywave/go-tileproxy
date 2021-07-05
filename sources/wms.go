@@ -119,7 +119,7 @@ func (s *WMSSource) getSubQuery(query *layer.MapQuery, format images.ImageFormat
 	if size[0] == 0 || size[1] == 0 {
 		return images.NewBlankImageSource(size, s.ImageOpts, false)
 	}
-	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: string(format), Dimensions: query.Dimensions}
+	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: format, Dimensions: query.Dimensions}
 	resp := s.Client.Retrieve(src_query, format)
 	src := images.CreateImageSource(query.Size, s.ImageOpts)
 	src.SetSource(bytes.NewBuffer(resp))
@@ -143,7 +143,7 @@ func (s *WMSSource) getTransformed(query *layer.MapQuery, format images.ImageFor
 		src_size = [2]uint32{uint32(float64(dst_size[1])*ratio + 0.5), dst_size[1]}
 	}
 
-	src_query := &layer.MapQuery{BBox: src_bbox, Size: src_size, Srs: src_srs, Format: string(format), Dimensions: query.Dimensions}
+	src_query := &layer.MapQuery{BBox: src_bbox, Size: src_size, Srs: src_srs, Format: format, Dimensions: query.Dimensions}
 	var img images.Source
 	if s.Coverage != nil && !s.Coverage.Contains(src_bbox, src_srs) {
 		img = s.getSubQuery(src_query, format)
@@ -244,7 +244,9 @@ type WMSLegendSource struct {
 
 func (s *WMSLegendSource) GetSize() []uint32 {
 	if s.Size == nil {
-
+		legend := s.GetLegend(&layer.LegendQuery{Format: "image/png", Scale: -1})
+		rect := legend.GetImage().Bounds()
+		s.Size = []uint32{uint32(rect.Dx()), uint32(rect.Dy())}
 	}
 	return s.Size[:]
 }

@@ -16,6 +16,7 @@ type MapQuery struct {
 	Transparent bool
 	TiledOnly   bool
 	Dimensions  int
+	Scale       int
 }
 
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {

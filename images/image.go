@@ -111,6 +111,12 @@ func CreateImageSourceFromImage(img image.Image, opts *ImageOptions) *ImageSourc
 	return ret
 }
 
+func CreateImageSourceFromBufer(buf []byte) *ImageSource {
+	ret := &ImageSource{}
+	ret.SetSource(bytes.NewBuffer(buf))
+	return ret
+}
+
 func (s *ImageSource) GetImageOptions() *ImageOptions {
 	return &s.Options
 }

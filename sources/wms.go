@@ -14,7 +14,7 @@ import (
 
 type WMSSource struct {
 	ImagerySource
-	Client                    client.Client
+	Client                    *client.WMSClient
 	ImageOpts                 *images.ImageOptions
 	SupportsMetaTiles         bool
 	SupportedSRS              *geo.SupportedSRS
@@ -29,7 +29,7 @@ type WMSSource struct {
 	Opacity                   *float64
 }
 
-func NewWMSSource(client client.Client, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
+func NewWMSSource(client *client.WMSClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
 	transparent_color color.Color, transparent_color_tolerance *float64,
 	supported_srs *geo.SupportedSRS, supported_formats []string, fwd_req_params map[string]string,
 	error_handler func(error)) *WMSSource {
@@ -200,27 +200,76 @@ func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSS
 	if !s.isCompatible(other, query) {
 		return nil
 	}
-
-	client := s.Client.CombinedClient(s.Client, query)
-	if client != nil {
+	c := s.Client.CombinedClient(s.Client, query)
+	var wclient *client.WMSClient
+	if c != nil {
+		wc, ok := c.(*client.WMSClient)
+		if !ok {
+			return nil
+		}
+		wclient = wc
+	} else {
 		return nil
 	}
 
-	return NewWMSSource(client, s.ImageOpts, s.Coverage, s.ResRange, s.TransparentColor, s.TransparentColorTolerance, s.SupportedSRS, s.SupportedFormats, s.ExtReqParams, s.ErrorHandler)
+	return NewWMSSource(wclient, s.ImageOpts, s.Coverage, s.ResRange, s.TransparentColor, s.TransparentColorTolerance, s.SupportedSRS, s.SupportedFormats, s.ExtReqParams, s.ErrorHandler)
 }
 
 type WMSInfoSource struct {
 	InfoSource
-	Client      client.Client
+	Client      *client.WMSClient
 	Coverage    geo.Coverage
-	Transformer func(feature []byte) interface{}
+	Transformer func(feature *resource.FeatureInfo) *resource.FeatureInfo
+}
+
+func (s *WMSInfoSource) GetInfo(query *layer.MapQuery) *resource.FeatureInfo {
+	if s.Coverage != nil && !s.Coverage.Contains(query.BBox, query.Srs) {
+		return nil
+	}
+	doc := s.Client.GetInfo(query)
+	if s.Transformer != nil {
+		doc = s.Transformer(doc)
+	}
+	return doc
 }
 
 type WMSLegendSource struct {
 	LegendSource
-	Clients    []client.Client
-	Identifier []string
+	Clients    []client.WMSClient
+	Identifier string
 	Cache      *resource.LegendCache
-	Size       [2]uint32
+	Size       []uint32
 	Static     bool
+}
+
+func (s *WMSLegendSource) GetSize() []uint32 {
+	if s.Size == nil {
+
+	}
+	return s.Size[:]
+}
+
+func (s *WMSLegendSource) GetLegend(query *layer.MapQuery) images.Source {
+	var legend *resource.Legend
+	if s.Static {
+		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: -1}
+	} else {
+		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
+	}
+	var error_occured bool
+	legends := make([]images.Source, 0)
+	if s.Cache.Load(legend) == nil {
+		error_occured = false
+		for _, client := range s.Clients {
+			legends = append(legends, client.GetLegend(query).Source)
+		}
+	}
+
+	format := utils.SplitMimeType(query.Format)
+	legend = &resource.Legend{Source: images.ConcatLegends(legends, images.RGBA, images.ImageFormat(format), nil, nil, false),
+		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
+	if !error_occured {
+		s.Cache.Store(legend)
+	}
+	return legend.Source
 }

@@ -9,10 +9,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/devork/geom v0.0.5/go.mod h1:8Wn8UNIJlX3waA51IiE8NHPWm1JFITeKJfxmYcK+hYg=
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
-github.com/flywave/go-geoid v0.0.0-20210606093922-a80b15fa80a0 h1:r611qNLxSaet/c40ykqKGxa69AZp14QP1XT5CDwmDBE=
-github.com/flywave/go-geoid v0.0.0-20210606093922-a80b15fa80a0/go.mod h1:ndXH2J5+CsynPtyL7oihZtN8rRxJ8kpqqwy2DOa86OQ=
 github.com/flywave/go-geoid v0.0.0-20210705011639-4a2c3d2f8d7f h1:mhpNxcGT0IbNxNIqX3Ik7jjjEEiYOyFVQjmRZx/aHsQ=
 github.com/flywave/go-geoid v0.0.0-20210705011639-4a2c3d2f8d7f/go.mod h1:ndXH2J5+CsynPtyL7oihZtN8rRxJ8kpqqwy2DOa86OQ=
+github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb h1:cfvIpGcu887EYg+ydfMj+hWSHHjxBBu066XK2+rKAQc=
+github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb/go.mod h1:ndXH2J5+CsynPtyL7oihZtN8rRxJ8kpqqwy2DOa86OQ=
 github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148 h1:CieqYxRICmTp8BgnDIJQzaKvrBHt55uy+1T46ytMz0M=
 github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148/go.mod h1:zBBwuspACsxCjH/Go44Ogi4hk9ie03VGSzkCbq8mCW4=
 github.com/flywave/go-geos v0.0.0-20210608062102-81fc76bf44c4 h1:ZE5T3mezTqTTxWVMqO3j1Bi9mdVq0uPmxAXDFfHmO8s=
@@ -51,7 +51,6 @@ github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/huandu/xstrings v1.3.0/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=
 github.com/imdario/mergo v0.3.9/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
-github.com/jonas-p/go-shp v0.1.1/go.mod h1:MRIhyxDQ6VVp0oYeD7yPGr5RSTNScUFKCDsI5DR7PtI=
 github.com/kennygrant/sanitize v1.2.4 h1:gN25/otpP5vAsO2djbMhF/LQX6R7+O1TB4yv8NzpJ3o=
 github.com/kennygrant/sanitize v1.2.4/go.mod h1:LGsjYYtgxbetdg5owWB2mpgUL6e2nfw2eObZ0u0qvak=
 github.com/kr/pretty v0.2.0 h1:s5hAObm+yFO5uHYt5dYjxi2rXrsnmRpJx4OYvIWUaQs=

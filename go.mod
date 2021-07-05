@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/flywave/go-geoid v0.0.0-20210705011639-4a2c3d2f8d7f // indirect
+	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
 	github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148
 	github.com/flywave/go-geos v0.0.0-20210608062102-81fc76bf44c4
 	github.com/flywave/go-lerc v0.0.0-20191107120907-ad19c08efa45
@@ -19,7 +19,6 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/jonas-p/go-shp v0.1.1
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/paulmach/go.geo v0.0.0-20180829195134-22b514266d33 // indirect

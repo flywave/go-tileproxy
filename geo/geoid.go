@@ -8,7 +8,7 @@ import (
 
 func init() {
 	dir := getCurrentDir()
-	geoid.SetGeoidPath(filepath.Join(dir, "../raster_data"))
+	geoid.SetGeoidPath(filepath.Join(dir, "../geoid_data"))
 }
 
 func geoid84_30() *geoid.Geoid {

@@ -18,10 +18,18 @@ func (c *WMSClient) CombinedClient(other Client, query *layer.MapQuery) Client {
 	return nil
 }
 
-func (c *WMSClient) GetInfo(query *layer.MapQuery) *resource.FeatureInfo {
+type WMSInfoClient struct {
+	Client
+}
+
+func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
 	return nil
 }
 
-func (c *WMSClient) GetLegend(query *layer.MapQuery) *resource.Legend {
+type WMSLegendClient struct {
+	Client
+}
+
+func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 	return nil
 }

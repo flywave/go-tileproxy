@@ -217,12 +217,12 @@ func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSS
 
 type WMSInfoSource struct {
 	InfoSource
-	Client      *client.WMSClient
+	Client      *client.WMSInfoClient
 	Coverage    geo.Coverage
 	Transformer func(feature *resource.FeatureInfo) *resource.FeatureInfo
 }
 
-func (s *WMSInfoSource) GetInfo(query *layer.MapQuery) *resource.FeatureInfo {
+func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
 	if s.Coverage != nil && !s.Coverage.Contains(query.BBox, query.Srs) {
 		return nil
 	}
@@ -235,7 +235,7 @@ func (s *WMSInfoSource) GetInfo(query *layer.MapQuery) *resource.FeatureInfo {
 
 type WMSLegendSource struct {
 	LegendSource
-	Clients    []client.WMSClient
+	Clients    []client.WMSLegendClient
 	Identifier string
 	Cache      *resource.LegendCache
 	Size       []uint32
@@ -249,7 +249,7 @@ func (s *WMSLegendSource) GetSize() []uint32 {
 	return s.Size[:]
 }
 
-func (s *WMSLegendSource) GetLegend(query *layer.MapQuery) images.Source {
+func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) images.Source {
 	var legend *resource.Legend
 	if s.Static {
 		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: -1}

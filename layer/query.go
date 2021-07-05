@@ -16,7 +16,6 @@ type MapQuery struct {
 	Transparent bool
 	TiledOnly   bool
 	Dimensions  int
-	Scale       int
 }
 
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {
@@ -41,5 +40,5 @@ type InfoQuery struct {
 type LegendQuery struct {
 	Query
 	Format string
-	Scale  float32
+	Scale  int
 }

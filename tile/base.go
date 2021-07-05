@@ -78,7 +78,6 @@ func (t *BaseTile) Init() {
 func (t *BaseTile) Deg2Num() (x, y int) {
 	x = int(math.Floor((t.Long + 180.0) / 360.0 * (math.Exp2(float64(t.Z)))))
 	y = int(math.Floor((1.0 - math.Log(math.Tan(t.Lat*math.Pi/180.0)+1.0/math.Cos(t.Lat*math.Pi/180.0))/math.Pi) / 2.0 * (math.Exp2(float64(t.Z)))))
-
 	return x, y
 }
 
@@ -95,7 +94,6 @@ func Tile2Lat(y, z uint64) float64 {
 	if y != 0 {
 		n = math.Pi - 2.0*math.Pi*float64(y)/math.Exp2(float64(z))
 	}
-
 	return 180.0 / math.Pi * math.Atan(0.5*(math.Exp(n)-math.Exp(-n)))
 }
 

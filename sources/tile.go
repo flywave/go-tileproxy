@@ -30,8 +30,7 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (images.Source, error) {
 		return nil, errors.New("SRS of cache and tile source do not match")
 	}
 
-	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size,
-		query.Srs) {
+	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return images.NewBlankImageSource(query.Size, s.ImageOpts, false), nil
 	}
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {

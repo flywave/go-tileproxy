@@ -68,3 +68,7 @@ type LegendQuery struct {
 	Format string
 	Scale  int
 }
+
+type StyleQuery struct {
+	Query
+}

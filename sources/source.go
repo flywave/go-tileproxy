@@ -31,5 +31,5 @@ type LegendSource interface {
 
 type StyleSource interface {
 	Source
-	GetStyle(query *layer.MapQuery)
+	GetStyle(query *layer.StyleQuery)
 }

@@ -13,9 +13,6 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-type WMTS100ExceptionHandler struct {
-}
-
 type WMTSTileRequestParams struct {
 	RequestParams
 }
@@ -81,12 +78,11 @@ func (r *WMTSTileRequestParams) GetDimensions() map[string][]string {
 
 type WMTSRequest struct {
 	BaseRequest
-	RequestHandlerName  string
-	FixedParams         map[string]string
-	ExpectedParam       []string
-	NonStrict           bool
-	NonStrictParams     mapset.Set
-	XMLExceptionHandler *WMTS100ExceptionHandler
+	RequestHandlerName string
+	FixedParams        map[string]string
+	ExpectedParam      []string
+	NonStrict          bool
+	NonStrictParams    mapset.Set
 }
 
 type WMTS100TileRequest struct {
@@ -97,7 +93,6 @@ func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, 
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
 	r.FixedParams = map[string]string{"request": "GetTile", "version": "1.0.0", "service": "WMTS"}
-	r.XMLExceptionHandler = &WMTS100ExceptionHandler{}
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
 		"tilematrix", "tilerow", "tilecol", "format"}
 }
@@ -164,7 +159,6 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "featureinfo"
 	r.FixedParams = map[string]string{"request": "GetFeatureInfo", "version": "1.0.0", "service": "WMTS"}
-	r.XMLExceptionHandler = &WMTS100ExceptionHandler{}
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
 		"tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
 	r.NonStrictParams = mapset.NewSet("format", "styles")
@@ -190,7 +184,6 @@ func (r *WMTS100CapabilitiesRequest) init(param interface{}, url string, validat
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "capabilities"
 	r.CapabilitiesTemplate = "wmts100capabilities.xml"
-	r.XMLExceptionHandler = nil
 	r.MimeType = "text/xml"
 	r.FixedParams = map[string]string{}
 }

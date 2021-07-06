@@ -8,7 +8,7 @@ import (
 
 type ParamPair []string
 
-type RequestParams map[string][]string
+type RequestParams http.Header
 
 func (p RequestParams) genDict(params []ParamPair) map[string][]string {
 	dict := make(map[string][]string)
@@ -102,9 +102,9 @@ type BaseRequest struct {
 	validate  bool
 }
 
-func (r *BaseRequest) init(param interface{}, url string, validate bool, http *http.Request) error {
+func (r *BaseRequest) init(param interface{}, url string, validate bool, ht *http.Request) error {
 	r.Delimiter = ","
-	r.Http = http
+	r.Http = ht
 	r.validate = validate
 
 	if param == nil {
@@ -115,6 +115,8 @@ func (r *BaseRequest) init(param interface{}, url string, validate bool, http *h
 		} else if pr, ok := param.([]ParamPair); ok {
 			r.Params = make(RequestParams)
 			r.Params.init(pr)
+		} else if pr, ok := param.(http.Header); ok {
+			r.Params = RequestParams(pr)
 		}
 	}
 	r.Url = url

@@ -108,5 +108,4 @@ func (r *TMSRequest) init() {
 	} else {
 		r.initRequest()
 	}
-
 }

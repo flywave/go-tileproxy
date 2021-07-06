@@ -30,18 +30,26 @@ func SetFontPath(p string) {
 }
 
 func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, bgcolor color.Color,
-	transparent bool) {
+	transparent bool) Source {
 	eimg := NewExceptionImage(message, image_opts)
-	eimg.Draw(nil, size[:], true)
+	src, err := eimg.Draw(nil, size[:], true)
+	if err != nil {
+		return nil
+	}
+	return src
 }
 
-func GenAttributionImage(message string, size [2]uint32, image_opts *ImageOptions, inverse bool) {
+func GenAttributionImage(message string, size [2]uint32, image_opts *ImageOptions, inverse bool) Source {
 	if image_opts == nil {
 		image_opts = &ImageOptions{Transparent: geo.NewBool(true)}
 	}
 
 	aimg := NewAttributionImage(message, image_opts, &inverse)
-	aimg.Draw(nil, size[:], true)
+	src, err := aimg.Draw(nil, size[:], true)
+	if err != nil {
+		return nil
+	}
+	return src
 }
 
 type MessageImage struct {

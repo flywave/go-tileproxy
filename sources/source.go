@@ -7,9 +7,9 @@ import (
 	"github.com/flywave/go-tileproxy/layer"
 )
 
-var ErrInvalidBBOX = errors.New("Invalid BBOX ")
+var ErrInvalidBBOX = errors.New("Invalid BBOX")
 
-var ErrInvalidSourceQuery = errors.New("Invalid source query ")
+var ErrInvalidSourceQuery = errors.New("Invalid source query")
 
 type Source interface {
 }

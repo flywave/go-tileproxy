@@ -104,8 +104,8 @@ type TiledImage struct {
 	SrcSRS   geo.Proj
 }
 
-func NewTiledImage(tiles []Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs string) *TiledImage {
-	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: geo.NewSRSProj4(src_srs)}
+func NewTiledImage(tiles []Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj) *TiledImage {
+	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: src_srs}
 }
 
 func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
@@ -113,8 +113,8 @@ func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
 	return tm.Merge(t.Tiles, image_opts)
 }
 
-func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs string, out_size [2]uint32, image_opts *ImageOptions) Source {
-	transformer := NewImageTransformer(t.SrcSRS, geo.NewSRSProj4(req_srs), nil)
+func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) Source {
+	transformer := NewImageTransformer(t.SrcSRS, req_srs, nil)
 	src_img := t.GetImage(image_opts)
 	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox,
 		image_opts)

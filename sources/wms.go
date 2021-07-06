@@ -270,6 +270,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) images.Source {
 	format := utils.SplitMimeType(query.Format)
 	legend = &resource.Legend{Source: images.ConcatLegends(legends, images.RGBA, images.ImageFormat(format), nil, nil, false),
 		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
+
 	if !error_occured {
 		s.Cache.Store(legend)
 	}

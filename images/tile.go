@@ -116,6 +116,5 @@ func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
 func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) Source {
 	transformer := NewImageTransformer(t.SrcSRS, req_srs, nil)
 	src_img := t.GetImage(image_opts)
-	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox,
-		image_opts)
+	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox, image_opts)
 }

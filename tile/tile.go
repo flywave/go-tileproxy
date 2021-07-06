@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/flywave/go-tileproxy/request"
 )
 
 const (
@@ -27,17 +25,18 @@ type Tile interface {
 	GetCookies() []*http.Cookie
 	Success() bool
 	ErrorMsg() string
-	SetRequest(r *request.Request) Tile
-	GetRequest() *request.Request
+	//SetRequest(r *request.Request) Tile
+	//GetRequest() *request.Request
 	GetUrlTag() string
 	SetBody(body []byte) Tile
 	GetBody() []byte
 }
 
+/**
 func NewTile(req *request.Request) Tile {
 	return nil
 }
-
+**/
 func IsFileExtTile(ext string) bool {
 	ext = strings.ToLower(ext)
 	for _, imgExt := range TILE_EXTENSIONS {

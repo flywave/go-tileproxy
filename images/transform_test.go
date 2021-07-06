@@ -39,13 +39,7 @@ func TestImageTransform(t *testing.T) {
 	errs := []float64{0.2, 0.5, 1, 2, 4, 6, 8, 12, 16}
 	for _, err := range errs {
 		transformer := &ImageTransformer{SrcSRS: src_srs, DstSRS: dst_srs, MaxPxErr: err}
-		result = transformer.Transform(
-			src_img,
-			src_bbox,
-			dst_size,
-			dst_bbox,
-			&img_opts)
-
+		result = transformer.Transform(src_img, src_bbox, dst_size, dst_bbox, &img_opts)
 		imaging.Save(result.GetImage(), fmt.Sprintf("./transform_%d.png", int(err*10)))
 	}
 }

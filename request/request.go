@@ -1,3 +1,170 @@
 package request
 
-type Request struct{}
+import (
+	"net/http"
+	"net/url"
+	"strings"
+)
+
+type ParamPair []string
+
+type RequestParams map[string][]string
+
+func (p RequestParams) genDict(params []ParamPair) map[string][]string {
+	dict := make(map[string][]string)
+	for _, pa := range params {
+		if len(pa) > 1 {
+			upkey := strings.ToUpper(pa[0])
+			dict[upkey] = pa[1:]
+		}
+	}
+	return dict
+}
+
+func (p RequestParams) init(params []ParamPair) {
+	dict := p.genDict(params)
+	for index, element := range dict {
+		p[index] = element
+	}
+}
+
+func (p RequestParams) Update(params []ParamPair) {
+	dict := p.genDict(params)
+	for index, element := range dict {
+		if _, ok := p[index]; ok {
+			p[index] = append(p[index], element...)
+		} else {
+			p[index] = element
+		}
+	}
+}
+
+func (p RequestParams) Get(key string) (val []string, ok bool) {
+	upkey := strings.ToUpper(key)
+	val, ok = p[upkey]
+	return
+}
+
+func (p RequestParams) GetOne(key string, defaults string) string {
+	upkey := strings.ToUpper(key)
+	val, ok := p[upkey]
+	if ok {
+		return val[0]
+	}
+	return defaults
+}
+
+func (p RequestParams) Set(key string, val []string) {
+	upkey := strings.ToUpper(key)
+	p[upkey] = val
+}
+
+func (p RequestParams) QueryString() string {
+	kv_pairs := []string{}
+	for key, values := range p {
+		value := strings.Join(values, ",")
+		kv_pairs = append(kv_pairs, key+"="+url.QueryEscape(value))
+	}
+	return strings.Join(kv_pairs, "&")
+}
+
+func (p RequestParams) copy() RequestParams {
+	map_copy := make(RequestParams)
+	for index, element := range p {
+		map_copy[index] = element
+	}
+	return map_copy
+}
+
+func (p RequestParams) WithDefaults(defaults RequestParams) RequestParams {
+	new := p.copy()
+	for key, value := range defaults {
+		if value != nil {
+			new[key] = value
+		}
+	}
+	return new
+}
+
+type Request interface {
+	Validate() error
+	ToString() string
+	QueryString() string
+	CompleteUrl() string
+}
+
+type BaseRequest struct {
+	Request
+	Params    RequestParams
+	Delimiter string
+	Url       string
+	Http      *http.Request
+	validate  bool
+}
+
+func (r *BaseRequest) init(param interface{}, url string, validate bool, http *http.Request) error {
+	r.Delimiter = ","
+	r.Http = http
+	r.validate = validate
+
+	if param == nil {
+		r.Params = make(RequestParams)
+	} else {
+		if ps, ok := param.(RequestParams); ok {
+			r.Params = ps
+		} else if pr, ok := param.([]ParamPair); ok {
+			r.Params = make(RequestParams)
+			r.Params.init(pr)
+		}
+	}
+	r.Url = url
+	if r.validate {
+		return r.Validate()
+	}
+	return nil
+}
+
+func (r *BaseRequest) ToString() string {
+	return r.CompleteUrl()
+}
+
+func (r *BaseRequest) GetRawParams() map[string][]string {
+	return map[string][]string(r.Params)
+}
+
+func (r *BaseRequest) QueryString() string {
+	return r.QueryString()
+}
+
+func (r *BaseRequest) CompleteUrl() string {
+	if r.Url == "" {
+		return r.QueryString()
+	}
+	delimiter := "?"
+	if strings.Contains(r.Url, "?") {
+		delimiter = "&"
+	}
+	if r.Url[len(r.Url)-1] == '?' {
+		delimiter = ""
+	}
+	return r.Url + delimiter + r.QueryString()
+}
+
+func (r *BaseRequest) CopyWithRequestParams(req *BaseRequest) *BaseRequest {
+	new_params := req.Params.WithDefaults(r.Params)
+	return &BaseRequest{Params: new_params, Url: r.Url}
+}
+
+func SplitMimeType(mime_type string) [3]string {
+	options := ""
+	mime_class := ""
+	if strings.Contains(mime_type, "/") {
+		strs := strings.Split(mime_type, "/")
+		mime_class, mime_type = strings.TrimSpace(strs[0]), strs[1]
+	}
+	if strings.Contains(mime_type, ";") {
+		strs := strings.Split(mime_type, ";")
+		mime_type, options = strings.TrimSpace(strs[0]), strings.TrimSpace(strs[1])
+	}
+	return [3]string{mime_class, mime_type, options}
+}

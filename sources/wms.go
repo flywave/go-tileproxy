@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/utils"
 )
@@ -267,7 +268,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) images.Source {
 		}
 	}
 
-	format := utils.SplitMimeType(query.Format)
+	format := request.SplitMimeType(query.Format)[0]
 	legend = &resource.Legend{Source: images.ConcatLegends(legends, images.RGBA, images.ImageFormat(format), nil, nil, false),
 		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
 

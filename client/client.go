@@ -59,3 +59,7 @@ type BaseClient struct {
 	Collector *crawler.Collector
 	Queue     *queue.Queue
 }
+
+func (c *BaseClient) GetCollector() *crawler.Collector {
+	return c.Collector
+}

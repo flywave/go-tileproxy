@@ -33,6 +33,7 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (images.Source, error) {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return images.NewBlankImageSource(query.Size, s.ImageOpts, false), nil
 	}
+
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
 		return images.NewBlankImageSource(query.Size, s.ImageOpts, false), nil
 	}

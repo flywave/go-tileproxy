@@ -1,8 +1,12 @@
 package resource
 
 import (
+	"bytes"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
+
+	"github.com/flywave/go-mapbox/style"
 
 	"github.com/flywave/go-tileproxy/images"
 )
@@ -33,17 +37,24 @@ func NewGlyphsCache(cache_dir string, file_ext string) *GlyphsCache {
 
 type Style struct {
 	BaseResource
-	style   string
-	sprites []string
-	glyphs  []string
+	style style.Style
 }
 
 func (l *Style) GetData() []byte {
-	return []byte(l.style)
+	var jdata []byte
+	buf := bytes.NewBuffer(jdata)
+	enc := json.NewEncoder(buf)
+	if err := enc.Encode(l.style); err != nil {
+		return nil
+	}
+	return buf.Bytes()
 }
 
 func (l *Style) SetData(buf []byte) {
-	l.style = string(buf)
+	dec := json.NewDecoder(bytes.NewBuffer(buf))
+	if err := dec.Decode(&l.style); err != nil {
+		return
+	}
 }
 
 func (l *Style) Hash() []byte {

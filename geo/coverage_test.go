@@ -66,9 +66,11 @@ func TestGeomCoverageEq(t *testing.T) {
 
 	g1 := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
 	g2 := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
+
 	c1 := NewGeomCoverage(g1, srs, false)
 	c2 := NewGeomCoverage(g2, srs, false)
 	c3 := NewGeomCoverage(g2, srs2, false)
+
 	if !c1.Equals(c2) {
 		t.FailNow()
 	}

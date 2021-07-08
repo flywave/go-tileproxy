@@ -13,6 +13,12 @@ import (
 	"github.com/flywave/go-tileproxy/queue"
 )
 
+const (
+	allowed1 = ""
+	allowed2 = ""
+	MAX_SIZE = 50
+)
+
 func createCollector(proxys []string) *crawler.Collector {
 	rp, err := CustomProxy(proxys)
 	if err != nil {
@@ -22,7 +28,6 @@ func createCollector(proxys []string) *crawler.Collector {
 	sc := crawler.NewCollector(
 		crawler.Debugger(&debug.LogDebugger{}),
 		crawler.AllowedDomains(allowed1, allowed2),
-		crawler.MaxDepth(2),
 		crawler.Async(true),
 	)
 	sc.SetProxyFunc(rp)

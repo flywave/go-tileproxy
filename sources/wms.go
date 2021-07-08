@@ -47,8 +47,7 @@ func NewWMSSource(client *client.WMSClient, image_opts *images.ImageOptions, cov
 }
 
 func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
-	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size,
-		query.Srs) {
+	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return false
 	}
 

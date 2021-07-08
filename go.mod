@@ -3,10 +3,10 @@ module github.com/flywave/go-tileproxy
 go 1.16
 
 require (
-	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82 // indirect
+	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deckarep/golang-set v1.7.1 // indirect
+	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
 	github.com/flywave/go-geom v0.0.0-20210701052944-b24be152a148
 	github.com/flywave/go-geos v0.0.0-20210608062102-81fc76bf44c4

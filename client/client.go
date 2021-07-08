@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/crawler"
-	"github.com/flywave/go-tileproxy/debug"
-	"github.com/flywave/go-tileproxy/extensions"
+	"github.com/flywave/go-tileproxy/crawler/debug"
+	"github.com/flywave/go-tileproxy/crawler/extensions"
 	"github.com/flywave/go-tileproxy/queue"
 )
 

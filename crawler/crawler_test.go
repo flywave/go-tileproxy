@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flywave/go-tileproxy/debug"
+	"github.com/flywave/go-tileproxy/crawler/debug"
 )
 
 var serverIndexResponse = []byte("hello world\n")

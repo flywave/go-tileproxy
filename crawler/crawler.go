@@ -23,7 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/flywave/go-tileproxy/debug"
+	"github.com/flywave/go-tileproxy/crawler/debug"
 
 	"github.com/kennygrant/sanitize"
 )

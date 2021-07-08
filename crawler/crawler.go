@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/debug"
-	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/kennygrant/sanitize"
 )
@@ -51,7 +50,6 @@ type Collector struct {
 	Context                  context.Context
 	store                    Storage
 	debugger                 debug.Debugger
-	tileCallbacks            []*tileCallbackContainer
 	requestCallbacks         []RequestCallback
 	responseCallbacks        []ResponseCallback
 	responseHeadersCallbacks []ResponseHeadersCallback
@@ -70,17 +68,11 @@ type ResponseHeadersCallback func(*Response)
 
 type ResponseCallback func(*Response)
 
-type TileCallback func(tile.Tile)
-
 type ErrorCallback func(*Response, error)
 
 type ScrapedCallback func(*Response)
 
 type ProxyFunc func(*http.Request) (*url.URL, error)
-
-type tileCallbackContainer struct {
-	Function TileCallback
-}
 
 type cookieJarSerializer struct {
 	store Storage
@@ -499,7 +491,6 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 
 	c.handleOnResponse(response)
 
-	err = c.handleOnTile(response)
 	if err != nil {
 		c.handleOnError(response, err, request, ctx)
 	}
@@ -571,11 +562,10 @@ func (c *Collector) isDomainAllowed(domain string) bool {
 
 func (c *Collector) String() string {
 	return fmt.Sprintf(
-		"Requests made: %d (%d responses) | Callbacks: OnRequest: %d, OnHTML: %d, OnResponse: %d, OnError: %d",
+		"Requests made: %d (%d responses) | Callbacks: OnRequest: %d, OnResponse: %d, OnError: %d",
 		atomic.LoadUint32(&c.requestCount),
 		atomic.LoadUint32(&c.responseCount),
 		len(c.requestCallbacks),
-		len(c.tileCallbacks),
 		len(c.responseCallbacks),
 		len(c.errorCallbacks),
 	)
@@ -606,17 +596,6 @@ func (c *Collector) OnResponse(f ResponseCallback) {
 		c.responseCallbacks = make([]ResponseCallback, 0, 4)
 	}
 	c.responseCallbacks = append(c.responseCallbacks, f)
-	c.lock.Unlock()
-}
-
-func (c *Collector) OnTile(f TileCallback) {
-	c.lock.Lock()
-	if c.tileCallbacks == nil {
-		c.tileCallbacks = make([]*tileCallbackContainer, 0, 4)
-	}
-	c.tileCallbacks = append(c.tileCallbacks, &tileCallbackContainer{
-		Function: f,
-	})
 	c.lock.Unlock()
 }
 
@@ -735,21 +714,6 @@ func (c *Collector) handleOnResponseHeaders(r *Response) {
 	}
 }
 
-func (c *Collector) handleOnTile(resp *Response) error {
-	if len(c.tileCallbacks) == 0 || !strings.Contains(strings.ToLower(resp.Headers.Get("Content-Type")), "html") {
-		return nil
-	}
-	for _, cc := range c.tileCallbacks {
-		if c.debugger != nil {
-			c.debugger.Event(createEvent("html", resp.Request.ID, c.ID, map[string]string{
-				"url": resp.Request.URL.String(),
-			}))
-		}
-		cc.Function(NewTile(bytes.NewBuffer(resp.Body)))
-	}
-	return nil
-}
-
 func (c *Collector) handleOnError(response *Response, err error, request *Request, ctx *Context) error {
 	if err == nil && (c.ParseHTTPErrorResponse || response.StatusCode < 203) {
 		return nil
@@ -851,7 +815,6 @@ func (c *Collector) Clone() *Collector {
 		Async:                  c.Async,
 		redirectHandler:        c.redirectHandler,
 		errorCallbacks:         make([]ErrorCallback, 0, 8),
-		tileCallbacks:          make([]*tileCallbackContainer, 0, 8),
 		scrapedCallbacks:       make([]ScrapedCallback, 0, 8),
 		lock:                   c.lock,
 		requestCallbacks:       make([]RequestCallback, 0, 8),

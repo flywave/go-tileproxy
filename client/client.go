@@ -13,27 +13,30 @@ import (
 	"github.com/flywave/go-tileproxy/queue"
 )
 
-const (
-	allowed1 = ""
-	allowed2 = ""
-	MAX_SIZE = 50
-)
+type Config struct {
+	URL               string
+	SkipSSL           bool
+	Threads           int
+	UserAgent         string
+	RandomDelay       int
+	DisableKeepAlives bool
+	Proxys            []string
+	RequestTimeout    time.Duration
+}
 
-func createCollector(proxys []string) *crawler.Collector {
-	rp, err := CustomProxy(proxys)
+func createCollector(config *Config) *crawler.Collector {
+	rp, err := CustomProxy(config.Proxys)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	sc := crawler.NewCollector(
 		crawler.Debugger(&debug.LogDebugger{}),
-		crawler.AllowedDomains(allowed1, allowed2),
 		crawler.Async(true),
 	)
 	sc.SetProxyFunc(rp)
-	sc.Limit(&crawler.LimitRule{DomainGlob: "*", Parallelism: 10, RandomDelay: 20 * time.Second})
+	sc.Limit(&crawler.LimitRule{DomainGlob: "*", Parallelism: config.Threads, RandomDelay: time.Duration(config.RandomDelay) * time.Second})
 	sc.WithTransport(&http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: config.SkipSSL},
 		Proxy:           http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   120 * time.Second,
@@ -44,13 +47,15 @@ func createCollector(proxys []string) *crawler.Collector {
 		IdleConnTimeout:       120 * time.Second,
 		TLSHandshakeTimeout:   30 * time.Second,
 		ExpectContinueTimeout: 10 * time.Second,
-		DisableKeepAlives:     true,
+		DisableKeepAlives:     config.DisableKeepAlives,
 	})
 
-	min5, _ := time.ParseDuration("10m")
-	sc.SetRequestTimeout(min5)
-
-	extensions.RandomUserAgent(sc)
+	sc.SetRequestTimeout(config.RequestTimeout)
+	if config.UserAgent != "" {
+		crawler.UserAgent(config.UserAgent)(sc)
+	} else {
+		extensions.RandomUserAgent(sc)
+	}
 	extensions.Referer(sc)
 
 	return sc
@@ -67,4 +72,8 @@ type BaseClient struct {
 
 func (c *BaseClient) GetCollector() *crawler.Collector {
 	return c.Collector
+}
+
+func (c *BaseClient) Sync() {
+	c.Collector.Wait()
 }

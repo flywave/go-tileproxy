@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/flywave/go-tileproxy/crawler"
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
@@ -85,16 +86,39 @@ func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMS
 
 type WMSInfoClient struct {
 	Client
+	RequestTemplate *request.ArcGISRequest
+	SupportedSrs    []geo.Proj
 }
 
 func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
 	return nil
 }
 
+func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQuery {
+	return nil
+}
+
+func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
+	return nil
+}
+
+func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
+	return ""
+}
+
 type WMSLegendClient struct {
 	Client
+	RequestTemplate *request.ArcGISRequest
 }
 
 func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 	return nil
+}
+
+func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) {
+
+}
+
+func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
+	return ""
 }

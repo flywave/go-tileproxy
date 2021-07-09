@@ -271,7 +271,7 @@ func (m PreferredSrcSRS) Add(target string, prefered_srs []Proj) {
 	m[target] = prefered_srs
 }
 
-func containsSrs(target string, srcs []Proj) (bool, Proj) {
+func ContainsSrs(target string, srcs []Proj) (bool, Proj) {
 	for _, p := range srcs {
 		if p.GetDef() == target {
 			return true, p
@@ -285,13 +285,13 @@ func (m PreferredSrcSRS) PreferredSrc(target Proj, available_src []Proj) (Proj, 
 		return nil, errors.New("no available src SRS")
 	}
 
-	if ok, p := containsSrs(target.GetDef(), available_src); ok {
+	if ok, p := ContainsSrs(target.GetDef(), available_src); ok {
 		return p, nil
 	}
 
 	if tv, ok := m[target.GetDef()]; ok {
 		for _, preferred := range tv {
-			if ok, p := containsSrs(preferred.GetDef(), available_src); ok {
+			if ok, p := ContainsSrs(preferred.GetDef(), available_src); ok {
 				return p, nil
 			}
 		}
@@ -319,7 +319,7 @@ func (s *SupportedSRS) Eq(o *SupportedSRS) bool {
 		return false
 	}
 	for _, t := range s.Srs {
-		if ok, _ := containsSrs(t.GetDef(), o.Srs); !ok {
+		if ok, _ := ContainsSrs(t.GetDef(), o.Srs); !ok {
 			return false
 		}
 	}

@@ -57,7 +57,7 @@ type InfoQuery struct {
 	BBox         vec2d.Rect
 	Size         [2]uint32
 	Srs          geo.Proj
-	Pos          [2]int
+	Pos          [2]float64
 	InfoFormat   string
 	Format       string
 	FeatureCount int

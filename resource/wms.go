@@ -40,3 +40,7 @@ func (l *Legend) Hash() []byte {
 }
 
 type FeatureInfo struct{}
+
+func CreateFeatureinfoDoc(data []byte, InfoFormat string) *FeatureInfo {
+	return nil
+}

@@ -219,7 +219,7 @@ func (r *ArcGISIdentifyRequestParams) GetSize() [2]int {
 	return [2]int{-1, -1}
 }
 
-func (r *ArcGISIdentifyRequestParams) SetSize(si [2]int) {
+func (r *ArcGISIdentifyRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
 	r.params.Set("imageDisplay", []string{width, height})

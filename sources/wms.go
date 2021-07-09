@@ -46,6 +46,10 @@ func NewWMSSource(client *client.WMSClient, image_opts *images.ImageOptions, cov
 	return src
 }
 
+func (s *WMSSource) GetClient() client.Client {
+	return s.Client
+}
+
 func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return false
@@ -216,6 +220,10 @@ type WMSInfoSource struct {
 	Client      *client.WMSInfoClient
 	Coverage    geo.Coverage
 	Transformer func(feature *resource.FeatureInfo) *resource.FeatureInfo
+}
+
+func (s *WMSInfoSource) GetClient() client.Client {
+	return s.Client
 }
 
 func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {

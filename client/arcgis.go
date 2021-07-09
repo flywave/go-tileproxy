@@ -51,7 +51,7 @@ func NewArcGISInfoClient() *ArcGISInfoClient {
 }
 
 func (c *ArcGISInfoClient) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
-	b, _ := geo.ContainsSrs(query.Srs.GetDef(), c.SupportedSrs)
+	b, _ := geo.ContainsSrs(query.Srs.GetDef(), c.SupportedSrs.Srs)
 	if c.SupportedSrs != nil && !b {
 		query = c.GetTransformedQuery(query)
 	}

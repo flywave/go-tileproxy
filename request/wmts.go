@@ -140,7 +140,7 @@ func (r *WMTSTileRequestParams) GetFormat() images.ImageFormat {
 }
 
 func (r *WMTSTileRequestParams) SetFormat(fmrt images.ImageFormat) {
-	r.params.Set("tilematrix", []string{fmrt.MimeType()})
+	r.params.Set("format", []string{fmrt.MimeType()})
 }
 
 func (r *WMTSTileRequestParams) GetFormatMimeType() string {
@@ -251,9 +251,9 @@ func (r *WMTSFeatureInfoRequestParams) GetPos() [2]int {
 	return [2]int{i, j}
 }
 
-func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]int) {
-	r.params.Set("i", []string{strconv.Itoa(pos[0])})
-	r.params.Set("j", []string{strconv.Itoa(pos[1])})
+func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
+	r.params.Set("i", []string{strconv.FormatFloat(pos[0], 'E', -1, 64)})
+	r.params.Set("j", []string{strconv.FormatFloat(pos[1], 'E', -1, 64)})
 }
 
 type WMTS100FeatureInfoRequest struct {
@@ -323,4 +323,38 @@ func MakeWMTSRequest(req *http.Request, validate bool) Request {
 		return r
 	}
 	return nil
+}
+
+type WMTSLegendRequestParams struct {
+	params RequestParams
+}
+
+func NewWMTSLegendRequestParams(params RequestParams) WMTSLegendRequestParams {
+	return WMTSLegendRequestParams{params: params}
+}
+
+func (r *WMTSLegendRequestParams) GetFormat() images.ImageFormat {
+	strs := SplitMimeType(r.params.GetOne("format", ""))
+	return images.ImageFormat(strs[1])
+}
+
+func (r *WMTSLegendRequestParams) SetFormat(fmrt images.ImageFormat) {
+	r.params.Set("format", []string{fmrt.MimeType()})
+}
+
+func (r *WMTSLegendRequestParams) SetScale(si int) {
+	scale := strconv.FormatInt(int64(si), 10)
+	r.params.Set("scale", []string{scale})
+}
+
+func (r *WMTSLegendRequestParams) GetScale() int {
+	if v, ok := r.params.Get("scale"); !ok {
+		return -1
+	} else {
+		vv, err := strconv.ParseInt(v[0], 10, 64)
+		if err != nil {
+			return -1
+		}
+		return int(vv)
+	}
 }

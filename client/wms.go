@@ -1,7 +1,12 @@
 package client
 
 import (
+	"bytes"
+	"math"
+	"strconv"
 	"strings"
+
+	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/crawler"
 	"github.com/flywave/go-tileproxy/geo"
@@ -87,23 +92,85 @@ func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMS
 type WMSInfoClient struct {
 	Client
 	RequestTemplate *request.ArcGISRequest
-	SupportedSrs    []geo.Proj
+	SupportedSrs    *geo.SupportedSRS
 }
 
 func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
-	return nil
+	b, _ := geo.ContainsSrs(query.Srs.GetDef(), c.SupportedSrs.Srs)
+	if c.SupportedSrs != nil && !b {
+		query = c.GetTransformedQuery(query)
+	}
+	resp := c.retrieve(query)
+	var info_format string
+
+	ifs, ok := c.RequestTemplate.Params["info_format"]
+	if !ok {
+		info_format = c.RequestTemplate.Params.GetOne("Content-type", "")
+	} else {
+		info_format = ifs[0]
+	}
+	if info_format == "" {
+		info_format = query.InfoFormat
+	}
+
+	return resource.CreateFeatureinfoDoc(resp, info_format)
 }
 
 func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQuery {
-	return nil
+	req_srs := query.Srs
+	req_bbox := query.BBox
+	req_coord := geo.MakeLinTransf(vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(query.Size[0]), float64(query.Size[1])}}, req_bbox)(query.Pos[:])
+
+	info_srs, _ := c.SupportedSrs.BestSrs(req_srs)
+	info_bbox := req_srs.TransformRectTo(info_srs, req_bbox, 16)
+
+	info_aratio := (info_bbox.Max[1] - info_bbox.Min[1]) / (info_bbox.Max[0] - info_bbox.Min[0])
+	info_size := [2]uint32{query.Size[0], uint32(info_aratio * float64(query.Size[0]))}
+
+	info_coord := req_srs.TransformTo(info_srs, []vec2d.T{{req_coord[0], req_coord[1]}})
+	info_pos := geo.MakeLinTransf(info_bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(info_size[0]), float64(info_size[1])}})(info_coord[0][:])
+	info_pos2 := [2]float64{math.Round(info_pos[0]), math.Round(info_pos[1])}
+
+	info_query := &layer.InfoQuery{
+		BBox:         info_bbox,
+		Size:         info_size,
+		Srs:          info_srs,
+		Pos:          info_pos2,
+		InfoFormat:   query.InfoFormat,
+		FeatureCount: query.FeatureCount,
+	}
+	return info_query
 }
 
 func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
-	return nil
+	url := c.queryURL(query)
+	return c.Client.Get(url).Body
 }
 
 func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
-	return ""
+	req := c.RequestTemplate
+	params := request.NewWMTSFeatureInfoRequestParams(req.GetParams())
+	params.SetBBox(query.BBox)
+	params.SetSize(query.Size)
+	params.SetPos(query.Pos)
+	params.SetSrs(query.Srs.GetDef())
+
+	if query.FeatureCount > 0 {
+		fc := strconv.FormatInt(int64(query.FeatureCount), 10)
+		req.GetParams().Set("feature_count", []string{fc})
+	}
+	req.GetParams().Set("query_layers", []string{req.GetParams().GetOne("layers", "")})
+	if _, ok := req.GetParams()["info_format"]; !ok && query.InfoFormat != "" {
+		req.GetParams().Set("info_format", []string{query.InfoFormat})
+	}
+
+	if query.Format != "" {
+		params.SetFormat(images.ImageFormat(query.Format))
+	} else {
+		params.SetFormat("image/png")
+	}
+
+	return req.CompleteUrl()
 }
 
 type WMSLegendClient struct {
@@ -112,13 +179,31 @@ type WMSLegendClient struct {
 }
 
 func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
-	return nil
+	resp := c.retrieve(query)
+	format := request.SplitMimeType(query.Format)[1]
+
+	src := &images.ImageSource{Options: images.ImageOptions{Format: images.ImageFormat(format)}}
+	src.SetSource(bytes.NewBuffer(resp))
+
+	return &resource.Legend{Source: src, Scale: query.Scale}
 }
 
-func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) {
-
+func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
+	url := c.queryURL(query)
+	return c.Client.Get(url).Body
 }
 
 func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
-	return ""
+	req := *c.RequestTemplate
+	params := request.NewWMTSLegendRequestParams(req.GetParams())
+
+	if query.Format != "" {
+		params.SetFormat(images.ImageFormat(query.Format))
+	} else {
+		params.SetFormat("image/png")
+	}
+	if query.Scale == -1 {
+		params.SetScale(query.Scale)
+	}
+	return req.CompleteUrl()
 }

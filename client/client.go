@@ -10,7 +10,6 @@ import (
 	"github.com/flywave/go-tileproxy/crawler"
 	"github.com/flywave/go-tileproxy/crawler/debug"
 	"github.com/flywave/go-tileproxy/crawler/extensions"
-	"github.com/flywave/go-tileproxy/queue"
 )
 
 type Config struct {
@@ -33,6 +32,7 @@ func createCollector(config *Config) *crawler.Collector {
 		crawler.Debugger(&debug.LogDebugger{}),
 		crawler.Async(true),
 	)
+
 	sc.SetProxyFunc(rp)
 	sc.Limit(&crawler.LimitRule{DomainGlob: "*", Parallelism: config.Threads, RandomDelay: time.Duration(config.RandomDelay) * time.Second})
 	sc.WithTransport(&http.Transport{
@@ -62,12 +62,15 @@ func createCollector(config *Config) *crawler.Collector {
 }
 
 type Client interface {
+	GetCollector() *crawler.Collector
+	Sync()
+	Open(url string, data []byte) *crawler.Response
+	Get(url string) *crawler.Response
 }
 
 type BaseClient struct {
 	Client
 	Collector *crawler.Collector
-	Queue     *queue.Queue
 }
 
 func (c *BaseClient) GetCollector() *crawler.Collector {
@@ -76,4 +79,8 @@ func (c *BaseClient) GetCollector() *crawler.Collector {
 
 func (c *BaseClient) Sync() {
 	c.Collector.Wait()
+}
+
+func (c *BaseClient) Get(url string) *crawler.Response {
+	return nil
 }

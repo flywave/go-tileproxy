@@ -11,14 +11,97 @@ import (
 
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/utils"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type WMTSTileRequestParams struct {
-	RequestParams
+	params RequestParams
+}
+
+func NewWMTSTileRequestParams(params RequestParams) WMTSTileRequestParams {
+	return WMTSTileRequestParams{params: params}
+}
+
+func (r *WMTSTileRequestParams) GetBBox() vec2d.Rect {
+	if v, ok := r.params.Get("bbox"); !ok {
+		return vec2d.Rect{}
+	} else {
+		if len(v) == 4 {
+			bbox := [4]float64{}
+			for i := range v {
+				v, err := strconv.ParseFloat(v[i], 64)
+				if err != nil {
+					return vec2d.Rect{}
+				}
+				bbox[i] = v
+			}
+			return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
+		} else if len(v) == 1 {
+			bstr := strings.Split(v[0], ",")
+			if len(bstr) == 4 {
+				bbox := [4]float64{}
+				for i := range bstr {
+					v, err := strconv.ParseFloat(bstr[i], 64)
+					if err != nil {
+						return vec2d.Rect{}
+					}
+					bbox[i] = v
+				}
+				return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
+			}
+		}
+	}
+	return vec2d.Rect{}
+}
+
+func (r *WMTSTileRequestParams) SetBBox(bbox vec2d.Rect) {
+	minx := strconv.FormatFloat(bbox.Min[0], 'E', -1, 64)
+	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
+	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
+	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
+	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
+}
+
+func (r *WMTSTileRequestParams) GetSize() [2]int {
+	if v, ok := r.params.Get("size"); !ok {
+		return [2]int{-1, -1}
+	} else {
+		if len(v) == 2 {
+			si := [2]int{}
+			for i := range v {
+				v, err := strconv.ParseInt(v[i], 10, 64)
+				if err != nil {
+					return si
+				}
+				si[i] = int(v)
+			}
+			return si
+		} else if len(v) == 1 {
+			bstr := strings.Split(v[0], ",")
+			if len(bstr) == 2 {
+				si := [2]int{}
+				for i := range bstr {
+					v, err := strconv.ParseInt(v[i], 10, 64)
+					if err != nil {
+						return si
+					}
+					si[i] = int(v)
+				}
+				return si
+			}
+		}
+	}
+	return [2]int{-1, -1}
+}
+
+func (r *WMTSTileRequestParams) SetSize(si [2]uint32) {
+	width := strconv.FormatInt(int64(si[0]), 10)
+	height := strconv.FormatInt(int64(si[1]), 10)
+	r.params.Set("size", []string{width, height})
 }
 
 func (r *WMTSTileRequestParams) GetLayer() string {
-	val, ok := r.Get("layer")
+	val, ok := r.params.Get("layer")
 	if ok {
 		return val[0]
 	}
@@ -26,19 +109,19 @@ func (r *WMTSTileRequestParams) GetLayer() string {
 }
 
 func (r *WMTSTileRequestParams) SetLayer(l string) {
-	r.Set("layer", []string{l})
+	r.params.Set("layer", []string{l})
 }
 
 func (r *WMTSTileRequestParams) GetCoord() [3]int {
-	x, err := strconv.Atoi(r.GetOne("tilecol", "-1"))
+	x, err := strconv.Atoi(r.params.GetOne("tilecol", "-1"))
 	if err != nil {
 		return [3]int{-1, -1, -1}
 	}
-	y, err := strconv.Atoi(r.GetOne("tilerow", "-1"))
+	y, err := strconv.Atoi(r.params.GetOne("tilerow", "-1"))
 	if err != nil {
 		return [3]int{-1, -1, -1}
 	}
-	z, err := strconv.Atoi(r.GetOne("tilematrix", "-1"))
+	z, err := strconv.Atoi(r.params.GetOne("tilematrix", "-1"))
 	if err != nil {
 		return [3]int{-1, -1, -1}
 	}
@@ -46,34 +129,52 @@ func (r *WMTSTileRequestParams) GetCoord() [3]int {
 }
 
 func (r *WMTSTileRequestParams) SetCoord(c [3]int) {
-	r.Set("tilecol", []string{strconv.Itoa(c[0])})
-	r.Set("tilerow", []string{strconv.Itoa(c[1])})
-	r.Set("tilematrix", []string{strconv.Itoa(c[2])})
+	r.params.Set("tilecol", []string{strconv.Itoa(c[0])})
+	r.params.Set("tilerow", []string{strconv.Itoa(c[1])})
+	r.params.Set("tilematrix", []string{strconv.Itoa(c[2])})
 }
 
 func (r *WMTSTileRequestParams) GetFormat() images.ImageFormat {
-	strs := SplitMimeType(r.GetOne("format", ""))
+	strs := SplitMimeType(r.params.GetOne("format", ""))
 	return images.ImageFormat(strs[1])
 }
 
 func (r *WMTSTileRequestParams) SetFormat(fmrt images.ImageFormat) {
-	r.Set("tilematrix", []string{fmrt.MimeType()})
+	r.params.Set("tilematrix", []string{fmrt.MimeType()})
 }
 
 func (r *WMTSTileRequestParams) GetFormatMimeType() string {
-	return r.GetOne("format", "")
+	return r.params.GetOne("format", "")
 }
 
 func (r *WMTSTileRequestParams) GetDimensions() map[string][]string {
 	expected_param := mapset.NewSet("version", "request", "layer", "style", "tilematrixset",
 		"tilematrix", "tilerow", "tilecol", "format", "service")
 	dimensions := make(map[string][]string)
-	for key, value := range r.RequestParams {
+	for key, value := range r.params {
 		if !expected_param.Contains(key) {
 			dimensions[strings.ToLower(key)] = value
 		}
 	}
 	return dimensions
+}
+
+func (r *WMTSTileRequestParams) Update(params map[string]string) {
+	for key, value := range params {
+		if _, ok := r.params[key]; !ok {
+			r.params[key] = []string{value}
+		} else {
+			r.params[key] = append(r.params[key], value)
+		}
+	}
+}
+
+func (r *WMTSTileRequestParams) GetSrs() string {
+	return r.params.GetOne("bboxSR", "EPSG:4326")
+}
+
+func (r *WMTSTileRequestParams) SetSrs(srs string) {
+	r.params.Set("bboxSR", []string{srs})
 }
 
 type WMTSRequest struct {
@@ -98,11 +199,11 @@ func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, 
 }
 
 func (r *WMTS100TileRequest) MakeRequest() map[string]interface{} {
-	params := (*WMTSTileRequestParams)(unsafe.Pointer(&r.Params))
+	params := &WMTSTileRequestParams{params: r.Params}
 	req := make(map[string]interface{})
-	req["layer"] = params.GetOne("layer", "")
-	req["tilematrixset"] = params.GetOne("tilematrixset", "")
-	req["format"] = images.ImageFormat(params.GetOne("format", ""))
+	req["layer"] = params.params.GetOne("layer", "")
+	req["tilematrixset"] = params.params.GetOne("tilematrixset", "")
+	req["format"] = images.ImageFormat(params.params.GetOne("format", ""))
 	req["tile"] = params.GetCoord()
 	req["origin"] = "nw"
 	req["dimensions"] = params.GetDimensions()
@@ -134,12 +235,16 @@ type WMTSFeatureInfoRequestParams struct {
 	WMTSTileRequestParams
 }
 
+func NewWMTSFeatureInfoRequestParams(params RequestParams) WMTSFeatureInfoRequestParams {
+	return WMTSFeatureInfoRequestParams{WMTSTileRequestParams: WMTSTileRequestParams{params: params}}
+}
+
 func (r *WMTSFeatureInfoRequestParams) GetPos() [2]int {
-	i, err := strconv.Atoi(r.GetOne("i", "-1"))
+	i, err := strconv.Atoi(r.params.GetOne("i", "-1"))
 	if err != nil {
 		return [2]int{-1, -1}
 	}
-	j, err := strconv.Atoi(r.GetOne("j", "-1"))
+	j, err := strconv.Atoi(r.params.GetOne("j", "-1"))
 	if err != nil {
 		return [2]int{-1, -1}
 	}
@@ -147,8 +252,8 @@ func (r *WMTSFeatureInfoRequestParams) GetPos() [2]int {
 }
 
 func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]int) {
-	r.Set("i", []string{strconv.Itoa(pos[0])})
-	r.Set("j", []string{strconv.Itoa(pos[1])})
+	r.params.Set("i", []string{strconv.Itoa(pos[0])})
+	r.params.Set("j", []string{strconv.Itoa(pos[1])})
 }
 
 type WMTS100FeatureInfoRequest struct {
@@ -168,7 +273,7 @@ func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 	ret := r.WMTS100TileRequest.MakeRequest()
 	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
 
-	ret["infoformat"] = params.GetOne("infoformat", "")
+	ret["infoformat"] = params.params.GetOne("infoformat", "")
 	ret["pos"] = params.GetPos()
 
 	return ret

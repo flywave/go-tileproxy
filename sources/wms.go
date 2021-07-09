@@ -108,7 +108,7 @@ func (s *WMSSource) getMap(query *layer.MapQuery) images.Source {
 	if s.Extent != nil && !s.Extent.Contains(&geo.MapExtent{BBox: query.BBox, Srs: query.Srs}) {
 		return s.getSubQuery(query, format)
 	}
-	resp := s.Client.Retrieve(query, format)
+	resp := s.Client.Retrieve(query, &format)
 	src := images.CreateImageSource(query.Size, s.ImageOpts)
 	src.SetSource(bytes.NewBuffer(resp))
 	return src
@@ -120,7 +120,7 @@ func (s *WMSSource) getSubQuery(query *layer.MapQuery, format images.ImageFormat
 		return images.NewBlankImageSource(size, s.ImageOpts, false)
 	}
 	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: format, Dimensions: query.Dimensions}
-	resp := s.Client.Retrieve(src_query, format)
+	resp := s.Client.Retrieve(src_query, &format)
 	src := images.CreateImageSource(query.Size, s.ImageOpts)
 	src.SetSource(bytes.NewBuffer(resp))
 	return images.SubImageSource(src, query.Size, offset[:], s.ImageOpts, false)
@@ -148,7 +148,7 @@ func (s *WMSSource) getTransformed(query *layer.MapQuery, format images.ImageFor
 	if s.Coverage != nil && !s.Coverage.Contains(src_bbox, src_srs) {
 		img = s.getSubQuery(src_query, format)
 	} else {
-		resp := s.Client.Retrieve(src_query, format)
+		resp := s.Client.Retrieve(src_query, &format)
 		img = images.CreateImageSource(src_size, s.ImageOpts)
 		img.SetSource(bytes.NewBuffer(resp))
 	}
@@ -203,11 +203,7 @@ func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSS
 	c := s.Client.CombinedClient(s.Client, query)
 	var wclient *client.WMSClient
 	if c != nil {
-		wc, ok := c.(*client.WMSClient)
-		if !ok {
-			return nil
-		}
-		wclient = wc
+		wclient = c
 	} else {
 		return nil
 	}

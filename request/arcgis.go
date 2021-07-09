@@ -12,20 +12,24 @@ import (
 )
 
 type ArcGISExportRequestParams struct {
-	RequestParams
+	params RequestParams
+}
+
+func NewArcGISExportRequestParams(params RequestParams) ArcGISExportRequestParams {
+	return ArcGISExportRequestParams{params: params}
 }
 
 func (r *ArcGISExportRequestParams) GetFormat() images.ImageFormat {
-	strs := SplitMimeType(r.GetOne("format", ""))
+	strs := SplitMimeType(r.params.GetOne("format", ""))
 	return images.ImageFormat(strs[1])
 }
 
 func (r *ArcGISExportRequestParams) SetFormat(fmrt images.ImageFormat) {
-	r.Set("tilematrix", []string{fmrt.MimeType()})
+	r.params.Set("tilematrix", []string{fmrt.MimeType()})
 }
 
 func (r *ArcGISExportRequestParams) GetBBox() vec2d.Rect {
-	if v, ok := r.Get("bbox"); !ok {
+	if v, ok := r.params.Get("bbox"); !ok {
 		return vec2d.Rect{}
 	} else {
 		if len(v) == 4 {
@@ -61,11 +65,11 @@ func (r *ArcGISExportRequestParams) SetBBox(bbox vec2d.Rect) {
 	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
 	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
 	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
-	r.Set("bbox", []string{minx, miny, maxx, maxy})
+	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
 }
 
 func (r *ArcGISExportRequestParams) GetSize() [2]int {
-	if v, ok := r.Get("size"); !ok {
+	if v, ok := r.params.Get("size"); !ok {
 		return [2]int{-1, -1}
 	} else {
 		if len(v) == 2 {
@@ -96,43 +100,55 @@ func (r *ArcGISExportRequestParams) GetSize() [2]int {
 	return [2]int{-1, -1}
 }
 
-func (r *ArcGISExportRequestParams) SetSize(si [2]int) {
+func (r *ArcGISExportRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
-	r.Set("size", []string{width, height})
+	r.params.Set("size", []string{width, height})
 }
 
 func (r *ArcGISExportRequestParams) GetBBOxSrs() string {
-	return r.GetOne("bboxSR", "EPSG:4326")
+	return r.params.GetOne("bboxSR", "EPSG:4326")
 }
 
 func (r *ArcGISExportRequestParams) SetBBOxSrs(srs string) {
-	r.Set("bboxSR", []string{srs})
+	r.params.Set("bboxSR", []string{srs})
 }
 
 func (r *ArcGISExportRequestParams) GetImageSrs() string {
-	return r.GetOne("imageSR", "EPSG:4326")
+	return r.params.GetOne("imageSR", "EPSG:4326")
 }
 
 func (r *ArcGISExportRequestParams) SetImageSrs(srs string) {
-	r.Set("imageSR", []string{srs})
+	r.params.Set("imageSR", []string{srs})
+}
+
+func (r *ArcGISExportRequestParams) SetTransparent(b bool) {
+	if b {
+		r.params.Set("transparent", []string{"true"})
+	} else {
+		r.params.Set("transparent", []string{"false"})
+	}
 }
 
 type ArcGISIdentifyRequestParams struct {
-	RequestParams
+	params RequestParams
+}
+
+func NewArcGISIdentifyRequestParams(params RequestParams) ArcGISIdentifyRequestParams {
+	return ArcGISIdentifyRequestParams{params: params}
 }
 
 func (r *ArcGISIdentifyRequestParams) GetFormat() images.ImageFormat {
-	strs := SplitMimeType(r.GetOne("format", ""))
+	strs := SplitMimeType(r.params.GetOne("format", ""))
 	return images.ImageFormat(strs[1])
 }
 
 func (r *ArcGISIdentifyRequestParams) SetFormat(fmrt images.ImageFormat) {
-	r.Set("tilematrix", []string{fmrt.MimeType()})
+	r.params.Set("tilematrix", []string{fmrt.MimeType()})
 }
 
 func (r *ArcGISIdentifyRequestParams) GetBBox() vec2d.Rect {
-	if v, ok := r.Get("mapExtent"); !ok {
+	if v, ok := r.params.Get("mapExtent"); !ok {
 		return vec2d.Rect{}
 	} else {
 		if len(v) == 4 {
@@ -168,11 +184,11 @@ func (r *ArcGISIdentifyRequestParams) SetBBox(bbox vec2d.Rect) {
 	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
 	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
 	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
-	r.Set("mapExtent", []string{minx, miny, maxx, maxy})
+	r.params.Set("mapExtent", []string{minx, miny, maxx, maxy})
 }
 
 func (r *ArcGISIdentifyRequestParams) GetSize() [2]int {
-	if v, ok := r.Get("imageDisplay"); !ok {
+	if v, ok := r.params.Get("imageDisplay"); !ok {
 		return [2]int{-1, -1}
 	} else {
 		if len(v) == 2 {
@@ -206,11 +222,11 @@ func (r *ArcGISIdentifyRequestParams) GetSize() [2]int {
 func (r *ArcGISIdentifyRequestParams) SetSize(si [2]int) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
-	r.Set("imageDisplay", []string{width, height})
+	r.params.Set("imageDisplay", []string{width, height})
 }
 
 func (r *ArcGISIdentifyRequestParams) GetPos() [2]float64 {
-	if v, ok := r.Get("geometry"); !ok {
+	if v, ok := r.params.Get("geometry"); !ok {
 		return [2]float64{}
 	} else {
 		if len(v) == 2 {
@@ -244,20 +260,28 @@ func (r *ArcGISIdentifyRequestParams) GetPos() [2]float64 {
 func (r *ArcGISIdentifyRequestParams) SetPos(pos [2]float64) {
 	posx := strconv.FormatFloat(pos[0], 'E', -1, 64)
 	posy := strconv.FormatFloat(pos[1], 'E', -1, 64)
-	r.Set("geometry", []string{posx, posy})
+	r.params.Set("geometry", []string{posx, posy})
 }
 
 func (r *ArcGISIdentifyRequestParams) GetSrs() string {
-	srs := r.GetOne("sr", "4326")
+	srs := r.params.GetOne("sr", "4326")
 	return fmt.Sprintf("%s", srs)
 }
 
 func (r *ArcGISIdentifyRequestParams) SetSrs(srs string) {
 	if strings.Contains(srs, ":") {
 		strs := strings.Split(srs, ":")
-		r.Set("sr", []string{strs[1]})
+		r.params.Set("sr", []string{strs[1]})
 	} else {
-		r.Set("sr", []string{srs})
+		r.params.Set("sr", []string{srs})
+	}
+}
+
+func (r *ArcGISIdentifyRequestParams) SetTransparent(b bool) {
+	if b {
+		r.params.Set("transparent", []string{"true"})
+	} else {
+		r.params.Set("transparent", []string{"false"})
 	}
 }
 

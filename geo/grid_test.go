@@ -182,7 +182,6 @@ func TestTileGridBasic(t *testing.T) {
 }
 
 func TestEpsg4326BBox(t *testing.T) {
-
 	conf := DefaultTileGridOptions()
 	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:4326")
 

@@ -12,6 +12,7 @@ import (
 	"github.com/flywave/go-proj"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	vec3d "github.com/flywave/go3d/float64/vec3"
 )
 
 var (
@@ -324,4 +325,22 @@ func (s *SupportedSRS) Eq(o *SupportedSRS) bool {
 		}
 	}
 	return true
+}
+
+type GeoReference struct {
+	bbox vec2d.Rect
+	srs  string
+}
+
+func (g *GeoReference) TiePoints() [6]float64 {
+	return [6]float64{
+		0.0, 0.0, 0.0,
+		g.bbox.Min[0], g.bbox.Max[1], 0.0,
+	}
+}
+
+func (g *GeoReference) PixelScale(img_size [2]int) vec3d.T {
+	width := g.bbox.Max[0] - g.bbox.Min[0]
+	height := g.bbox.Max[1] - g.bbox.Min[1]
+	return vec3d.T{width / float64(img_size[0]), height / float64(img_size[1]), 0.0}
 }

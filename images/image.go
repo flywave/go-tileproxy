@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
-	vec3d "github.com/flywave/go3d/float64/vec3"
 
 	"github.com/flywave/go-tileproxy/geo"
 
@@ -60,24 +59,6 @@ func peekImageFormat(buf string) string {
 	return ""
 }
 
-type GeoReference struct {
-	bbox vec2d.Rect
-	srs  string
-}
-
-func (g *GeoReference) TiePoints() [6]float64 {
-	return [6]float64{
-		0.0, 0.0, 0.0,
-		g.bbox.Min[0], g.bbox.Max[1], 0.0,
-	}
-}
-
-func (g *GeoReference) PixelScale(img_size [2]int) vec3d.T {
-	width := g.bbox.Max[0] - g.bbox.Min[0]
-	height := g.bbox.Max[1] - g.bbox.Min[1]
-	return vec3d.T{width / float64(img_size[0]), height / float64(img_size[1]), 0.0}
-}
-
 type Source interface {
 	GetSource() interface{}
 	SetSource(src interface{})
@@ -98,7 +79,7 @@ type ImageSource struct {
 	Options   ImageOptions
 	size      []uint32
 	cacheable bool
-	georef    *GeoReference
+	georef    *geo.GeoReference
 }
 
 func CreateImageSource(si [2]uint32, opts *ImageOptions) *ImageSource {
@@ -179,7 +160,7 @@ func (s *ImageSource) makeImageBuf() error {
 	return errors.New("image name is empty!")
 }
 
-func imageToBuf(image image.Image, image_opts ImageOptions, georef *GeoReference) []byte {
+func imageToBuf(image image.Image, image_opts ImageOptions, georef *geo.GeoReference) []byte {
 	fname := image_opts.Format.Extension()
 	buf := &bytes.Buffer{}
 	encodeImage(fname, buf, image)

@@ -179,6 +179,7 @@ func (s *WMSSource) isCompatible(other *WMSSource, query *layer.MapQuery) bool {
 
 	sr, sg, sb, sa := s.TransparentColor.RGBA()
 	tr, tg, tb, ta := other.TransparentColor.RGBA()
+
 	if sr != tr || sg != tg || sb != tb || sa != ta {
 		return false
 	}
@@ -272,8 +273,10 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) images.Source {
 	}
 
 	format := request.SplitMimeType(query.Format)[0]
-	legend = &resource.Legend{Source: images.ConcatLegends(legends, images.RGBA, images.ImageFormat(format), nil, nil, false),
-		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
+	legend = &resource.Legend{
+		Source:       images.ConcatLegends(legends, images.RGBA, images.ImageFormat(format), nil, nil, false),
+		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale,
+	}
 
 	if !error_occured {
 		s.Cache.Store(legend)

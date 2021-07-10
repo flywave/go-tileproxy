@@ -31,7 +31,10 @@ func (h *HTTPSourceErrorHandler) Handle(status_code string, query *layer.MapQuer
 		return nil
 	}
 
-	image_opts := &images.ImageOptions{BgColor: info.Color, Transparent: geo.NewBool(true)}
+	image_opts := &images.ImageOptions{
+		BgColor:     info.Color,
+		Transparent: geo.NewBool(true),
+	}
 	img_source := images.NewBlankImageSource(query.Size, image_opts, info.Cacheable)
 	return img_source
 }

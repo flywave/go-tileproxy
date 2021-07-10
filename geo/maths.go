@@ -6,17 +6,25 @@ import (
 
 	"errors"
 
-	"github.com/flywave/go-tileproxy/tile"
+	"github.com/flywave/go-geom/general"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 const (
 	WebMercator = 3857
-	WGS84       = tile.WGS84
-	Deg2Rad     = math.Pi / 180
-	Rad2Deg     = 180 / math.Pi
-	PiDiv2      = math.Pi / 2.0
-	PiDiv4      = math.Pi / 4.0
+	WGS84       = 4326
+)
+
+var (
+	WebMercatorBounds = &general.Extent{-20026376.39, -20048966.10, 20026376.39, 20048966.10}
+	WGS84Bounds       = &general.Extent{-180.0, -85.0511, 180.0, 85.0511}
+)
+
+const (
+	Deg2Rad = math.Pi / 180
+	Rad2Deg = 180 / math.Pi
+	PiDiv2  = math.Pi / 2.0
+	PiDiv4  = math.Pi / 4.0
 )
 
 type Pt struct {

@@ -55,10 +55,6 @@ func quadKey(tile_coord [3]int) string {
 	return quadKey
 }
 
-func gmapsPath(tile_coord [3]int) string {
-
-}
-
 func tmsPath(tile_coord [3]int) string {
 	return fmt.Sprintf("%d/%d/%d", tile_coord[2], tile_coord[0], tile_coord[1])
 }

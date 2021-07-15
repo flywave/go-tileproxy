@@ -1,5 +1,10 @@
 package seed
 
+import (
+	"math"
+	"strings"
+)
+
 type SeedProgress struct {
 	progress                 float32
 	levelProgressPercentages []float32
@@ -10,15 +15,42 @@ type SeedProgress struct {
 }
 
 func (p *SeedProgress) StepForward(subtiles int) {
-
+	p.progress += float32(p.levelProgresses[len(p.levelProgresses)-1][0]) / float32(subtiles)
 }
 
 func (p *SeedProgress) ToString() string {
-	return ""
+	return strings.Join(p.progressStrParts, "")
 }
 
-func (p *SeedProgress) StepDown(i, subtiles int) {
+func statusSymbol(i, total int) string {
+	symbols := string(" .oO0")
+	i += 1
+	if 0 < i && i > total {
+		return "X"
+	} else {
+		return string(symbols[int(math.Ceil(float64(i)/float64(total/4)))])
+	}
+}
 
+func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
+	if p.levelProgresses == nil {
+		p.levelProgresses = [][2]int{}
+	}
+	p.levelProgresses = p.levelProgresses[:p.levelProgressesLevel]
+	p.levelProgresses = append(p.levelProgresses, [2]int{i, subtiles})
+	p.levelProgressesLevel += 1
+	p.progressStrParts = append(p.progressStrParts, statusSymbol(i, subtiles))
+	p.levelProgressPercentages = append(p.levelProgressPercentages, p.levelProgressPercentages[len(p.levelProgressPercentages)-1]/float32(subtiles))
+
+	task()
+
+	p.levelProgressPercentages = p.levelProgressPercentages[1:]
+	p.progressStrParts = p.progressStrParts[1:]
+
+	p.levelProgressesLevel -= 1
+	if p.levelProgressesLevel == 0 {
+		p.levelProgresses = [][2]int{}
+	}
 }
 
 func (p *SeedProgress) AlreadyProcessed() bool {

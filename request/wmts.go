@@ -8,10 +8,10 @@ import (
 	"unsafe"
 
 	mapset "github.com/deckarep/golang-set"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/utils"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type WMTSTileRequestParams struct {

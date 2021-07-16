@@ -53,6 +53,10 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
 	}
 }
 
+func (p *SeedProgress) Running() bool {
+	return false
+}
+
 func (p *SeedProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }

@@ -83,11 +83,9 @@ func iziplongest(fillvalue int, iterables ...[][2]int) [][]int {
 			} else {
 				newresult[j] = fillvalue
 			}
-
 		}
 
 		results = append(results, newresult)
-
 	}
 
 	return results

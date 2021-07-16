@@ -180,12 +180,14 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 func (t *TileWalker) reportProgress(level int, bbox vec2d.Rect) {
 	if t.progressLogger != nil {
-		t.progressLogger.LogProgress(t.seedProgress, level, bbox,
-			t.count*t.tilesPerMetatile)
+		t.progressLogger.LogProgress(t.seedProgress, level, bbox, t.count*t.tilesPerMetatile)
 	}
 }
 
 type TileIterator struct {
+	Subtiles        [][3]int
+	AllSubtiles     bool
+	currentIterator int
 }
 
 func (it *TileIterator) HasNext() bool {
@@ -205,17 +207,5 @@ func (it *TileIterator) Next() (subtile []int, sub_bbox *vec2d.Rect, intersectio
 }
 
 func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool) *TileIterator {
-	for _, subtile := range subtiles:
-            if subtile is None:
-                yield None, None, None
-            else:
-                sub_bbox = self.grid.meta_tile(subtile).bbox
-                if all_subtiles:
-                    intersection = CONTAINS
-                else:
-                    intersection = self.task.intersects(sub_bbox)
-                if intersection:
-                    yield subtile, sub_bbox, intersection
-                else:
-                    yield None, None, None
+	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles}
 }

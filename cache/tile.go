@@ -22,6 +22,10 @@ type Tile struct {
 	Timestamp time.Time
 }
 
+func NewTile(coord [3]int) *Tile {
+	return &Tile{Coord: coord[:]}
+}
+
 func (t *Tile) GetCacheInfo() CacheInfo {
 	return CacheInfo{Cacheable: t.Cacheable, Timestamp: t.Timestamp,
 		Size: t.Size}

@@ -10,14 +10,14 @@ import (
 type Task interface {
 	Run() error
 	GetID() string
-	GetManager() cache.TileManager
+	GetManager() cache.Manager
 	GetLevels() []int
 	GetCoverage() geo.Coverage
 	Intersects(vec2d.Rect) IntersectionType
 }
 
 type BaseTask struct {
-	Manager  cache.TileManager
+	Manager  cache.Manager
 	Coverage geo.Coverage
 	Grid     *geo.MetaGrid
 	Levels   []int

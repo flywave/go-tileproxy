@@ -13,7 +13,7 @@ type TileCreator struct {
 	Grid          geo.TileGrid
 	MetaGrid      geo.MetaGrid
 	BulkMetaTiles bool
-	Manager       TileManager
+	Manager       Manager
 	Dimensions    map[string]interface{}
 	ImageMerger   images.Merger
 }

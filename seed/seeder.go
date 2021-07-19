@@ -13,7 +13,7 @@ import (
 
 type TileWalker struct {
 	Ctx                    *Context
-	manager                cache.TileManager
+	manager                cache.Manager
 	task                   Task
 	workOnMetatiles        bool
 	skipGeomsForLastLevels int

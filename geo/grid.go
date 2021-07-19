@@ -1063,6 +1063,10 @@ type MetaTile struct {
 	grid_size     [2]uint32
 }
 
+func (t *MetaTile) GetBBox() vec2d.Rect {
+	return t.bbox
+}
+
 func NewMetaTile(bbox vec2d.Rect, size [2]uint32, tiles []TilePattern, grid_size [2]uint32) *MetaTile {
 	return &MetaTile{bbox: bbox, size: size, tile_patterns: tiles, grid_size: grid_size}
 }

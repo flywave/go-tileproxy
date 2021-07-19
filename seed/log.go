@@ -3,6 +3,8 @@ package seed
 import vec2d "github.com/flywave/go3d/float64/vec2"
 
 type ProgressLogger struct {
+	currentTaskID string
+	progressStore map[string][][2]int
 }
 
 func (p *ProgressLogger) LogMessage() {

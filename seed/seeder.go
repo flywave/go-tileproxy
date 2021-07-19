@@ -1,18 +1,19 @@
 package seed
 
 import (
+	"errors"
 	"math"
 
+	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/utils"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type TileWalker struct {
-	Ctx                    Context
-	manager                layer.TileManager
+	Ctx                    *Context
+	manager                cache.TileManager
 	task                   Task
 	workOnMetatiles        bool
 	skipGeomsForLastLevels int
@@ -25,11 +26,11 @@ type TileWalker struct {
 	progressLogger         *ProgressLogger
 }
 
-func NewTileWalker(task Task, ctx Context,
-	work_on_metatiles bool, skip_geoms_for_last_levels int,
+func NewTileWalker(task Task, ctx *Context,
+	work_on_metatiles bool, skip_geoms_for_last_levels int, progress_logger *ProgressLogger,
 	seed_progress *SeedProgress) *TileWalker {
 	ret := &TileWalker{Ctx: ctx, task: task, manager: task.GetManager(), workOnMetatiles: work_on_metatiles,
-		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress}
+		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress, progressLogger: progress_logger}
 
 	num_seed_levels := len(task.GetLevels())
 	if num_seed_levels >= 4 {
@@ -94,7 +95,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 	if len(levels) < t.skipGeomsForLastLevels {
 		all_subtiles = true
 	}
-	subtiles_it := t.filterSubtiles(subtiles, all_subtiles)
+	subtiles_it := t.filterSubtiles(subtiles, all_subtiles, t.grid, t.task)
 
 	if levelInLevels(current_level, levels) && current_level <= t.reportTillLevel {
 		t.reportProgress(current_level, cur_bbox)
@@ -185,13 +186,15 @@ func (t *TileWalker) reportProgress(level int, bbox vec2d.Rect) {
 }
 
 type TileIterator struct {
-	Subtiles        [][3]int
-	AllSubtiles     bool
-	currentIterator int
+	Subtiles    [][3]int
+	AllSubtiles bool
+	current     int
+	grid        *geo.MetaGrid
+	task        Task
 }
 
 func (it *TileIterator) HasNext() bool {
-	return false
+	return it.current < len(it.Subtiles)
 }
 
 type IntersectionType int
@@ -202,10 +205,78 @@ const (
 	INTERSECTS IntersectionType = 2
 )
 
-func (it *TileIterator) Next() (subtile []int, sub_bbox *vec2d.Rect, intersection IntersectionType) {
-	return
+func (it *TileIterator) Next() (rsubtile []int, rsub_bbox *vec2d.Rect, intersection IntersectionType) {
+	subtile := it.Subtiles[it.current]
+	defer func() {
+		it.current++
+	}()
+
+	if subtile[0] == -1 || subtile[1] == -1 || subtile[2] == -1 {
+		return nil, nil, NONE
+	} else {
+		metatile := it.grid.GetMetaTile(subtile)
+		sub_bbox := metatile.GetBBox()
+		if it.AllSubtiles {
+			intersection = CONTAINS
+		} else {
+			intersection = it.task.Intersects(sub_bbox)
+		}
+		if intersection != NONE {
+			rsubtile = subtile[:]
+			rsub_bbox = &sub_bbox
+			return
+		} else {
+			return nil, nil, NONE
+		}
+	}
 }
 
-func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool) *TileIterator {
-	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles}
+func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool, grid *geo.MetaGrid, task Task) *TileIterator {
+	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: grid, task: task}
+}
+
+func seedTask(task Task, skipGeomsForLastLevels int, progress_logger *ProgressLogger, seedProgress *SeedProgress) error {
+	if task.GetCoverage() == nil {
+		return errors.New("task coverage is null!")
+	}
+
+	task.GetManager().SetMinimizeMetaRequests(false)
+
+	var work_on_metatiles bool
+	if task.GetManager().GetRescaleTiles() != 0 {
+		work_on_metatiles = false
+	}
+	ctx := &Context{}
+	tile_walker := NewTileWalker(task, ctx, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress)
+	tile_walker.Walk()
+
+	return nil
+}
+
+func Seed(tasks []Task, skipGeomsForLastLevels int, progress_logger *ProgressLogger, cache_locker CacheLocker) {
+	if cache_locker == nil {
+		cache_locker = &DummyCacheLocker{}
+	}
+
+	active_tasks := tasks[:]
+	for len(active_tasks) > 0 {
+		task := active_tasks[len(active_tasks)-1]
+
+		if err := cache_locker.Lock("cache_name", func() error {
+			var start_progress [][2]int
+			if progress_logger != nil && progress_logger.progressStore != nil {
+				progress_logger.currentTaskID = task.GetID()
+				start_progress = progress_logger.progressStore[task.GetID()]
+			} else {
+				start_progress = nil
+			}
+			seed_progress := &SeedProgress{oldLevelProgresses: start_progress}
+			return seedTask(task, skipGeomsForLastLevels, progress_logger, seed_progress)
+		}); err != nil {
+			temp := []Task{task}
+			active_tasks = append(temp, active_tasks[:len(active_tasks)-1]...)
+		} else {
+			active_tasks = active_tasks[:len(active_tasks)-2]
+		}
+	}
 }

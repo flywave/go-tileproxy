@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
@@ -26,7 +27,7 @@ type Manager interface {
 	ExpireTimestamp(tile *Tile) *time.Time
 	ApplyTileFilter(tile *Tile) *Tile
 	Creator(dimensions map[string]string) *TileCreator
-	Lock(tile *Tile, run func() error) error
+	Lock(ctx context.Context, tile *Tile, run func() error) error
 }
 
 type TileManager struct {
@@ -238,7 +239,7 @@ func (tm *TileManager) scaledTile(tile *Tile, stop_zoom int, rescaled_tiles *Til
 		stop_zoom,
 		rescaled_tiles)
 
-	if tile_collection.Empty() {
+	if tile_collection.AllBlank() {
 		return tile
 	}
 
@@ -307,9 +308,9 @@ func (tm *TileManager) Creator(dimensions map[string]string) *TileCreator {
 	return NewTileCreator(tm, dimensions, nil, false)
 }
 
-func (tm *TileManager) Lock(tile *Tile, run func() error) error {
+func (tm *TileManager) Lock(ctx context.Context, tile *Tile, run func() error) error {
 	if tm.metaGrid != nil {
 		tile = NewTile(tm.metaGrid.MainTile(tile.Coord))
 	}
-	return tm.locker.Lock(tile, run)
+	return tm.locker.Lock(ctx, tile, run)
 }

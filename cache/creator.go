@@ -1,6 +1,9 @@
 package cache
 
 import (
+	"context"
+	"time"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
@@ -70,7 +73,11 @@ func (c *TileCreator) createSingleTile(tile *Tile) *Tile {
 	tile_bbox := c.Grid.TileBBox(tile.Coord, false)
 	query := &layer.MapQuery{BBox: tile_bbox, Size: [2]uint32{c.Grid.TileSize[0], c.Grid.TileSize[1]}, Srs: c.Grid.Srs,
 		Format: images.ImageFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
-	c.Manager.Lock(tile, func() error {
+
+	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	c.Manager.Lock(lockCtx, tile, func() error {
 		if !c.IsCached(tile.Coord) {
 			source, err := c.querySources(query)
 			if source == nil || err != nil {
@@ -152,7 +159,11 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 		Dimensions: c.Dimensions}
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
 	var splitted_tiles *TileCollection
-	c.Manager.Lock(main_tile, func() error {
+
+	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	c.Manager.Lock(lockCtx, main_tile, func() error {
 		flag := true
 
 		for _, t := range meta_tile.GetTiles() {
@@ -206,7 +217,10 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
 	var tiles []*Tile
 
-	c.Manager.Lock(main_tile, func() error {
+	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	c.Manager.Lock(lockCtx, main_tile, func() error {
 		flag := true
 
 		for _, t := range meta_tile.GetTiles() {

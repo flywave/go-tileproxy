@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"image"
 	"time"
 
 	"github.com/flywave/go-tileproxy/images"
@@ -35,6 +36,22 @@ func (t *Tile) SetCacheInfo(cache CacheInfo) {
 	t.Cacheable = cache.Cacheable
 	t.Timestamp = cache.Timestamp
 	t.Size = cache.Size
+}
+
+func (t *Tile) GetSourceBuffer(format *images.ImageFormat, in_image_opts *images.ImageOptions) []byte {
+	if t.Source != nil {
+		return t.Source.GetBuffer(format, in_image_opts)
+	} else {
+		return nil
+	}
+}
+
+func (t *Tile) GetSourceImage() image.Image {
+	if t.Source != nil {
+		return t.Source.GetImage()
+	} else {
+		return nil
+	}
 }
 
 func (t *Tile) GetSource() images.Source {

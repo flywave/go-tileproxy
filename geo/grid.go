@@ -875,7 +875,7 @@ func (g *MetaGrid) GetMetaTile(tile_coord [3]int) *MetaTile {
 	return NewMetaTile(bbox, size, tile_patterns, grid_size)
 }
 
-func (g *MetaGrid) minimalMetaTile(tiles [][3]int) *MetaTile {
+func (g *MetaGrid) MinimalMetaTile(tiles [][3]int) *MetaTile {
 	tiles, grid_size, bounds := g.fullTileList(tiles)
 	bbox, buffers := g.metaBBox(nil, bounds, true)
 
@@ -1065,6 +1065,31 @@ type MetaTile struct {
 
 func (t *MetaTile) GetBBox() vec2d.Rect {
 	return t.bbox
+}
+
+func (t *MetaTile) GetSize() [2]uint32 {
+	return t.size
+}
+
+func (t *MetaTile) GetTilePattern() []TilePattern {
+	return t.tile_patterns
+}
+
+func (t *MetaTile) GetTiles() [][3]int {
+	ret := [][3]int{}
+	for _, t := range t.tile_patterns {
+		ret = append(ret, t.Tiles)
+	}
+	return ret
+}
+
+func (t *MetaTile) GetMainTileCoord() [3]int {
+	for _, t := range t.GetTiles() {
+		if t[0] > 0 && t[1] > 0 && t[2] > 0 {
+			return t
+		}
+	}
+	return [3]int{-1, -1, -1}
 }
 
 func NewMetaTile(bbox vec2d.Rect, size [2]uint32, tiles []TilePattern, grid_size [2]uint32) *MetaTile {

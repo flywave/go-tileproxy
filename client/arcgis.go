@@ -32,7 +32,7 @@ func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *images.ImageForma
 	params.SetFormat(*format)
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
-	params.SetBBOxSrs(query.Srs.GetDef())
+	params.SetBBoxSrs(query.Srs.GetDef())
 	params.SetImageSrs(query.Srs.GetDef())
 	params.SetTransparent(query.Transparent)
 	return req.CompleteUrl()

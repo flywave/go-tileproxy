@@ -68,6 +68,7 @@ type Source interface {
 	GetImage() image.Image
 	GetCacheable() bool
 	SetCacheable(c bool)
+	SetImageOptions(options *ImageOptions)
 	GetImageOptions() *ImageOptions
 }
 
@@ -96,6 +97,10 @@ func CreateImageSourceFromBufer(buf []byte) *ImageSource {
 	ret := &ImageSource{}
 	ret.SetSource(bytes.NewBuffer(buf))
 	return ret
+}
+
+func (s *ImageSource) SetImageOptions(options *ImageOptions) {
+	s.Options = *options
 }
 
 func (s *ImageSource) GetImageOptions() *ImageOptions {

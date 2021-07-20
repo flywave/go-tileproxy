@@ -12,18 +12,21 @@ type Manager interface {
 	GetGrid() *geo.TileGrid
 	GetCache() Cache
 	GetMetaGrid() *geo.MetaGrid
+	GetImageOptions() *images.ImageOptions
 	Cleanup() bool
+	GetRequestFormat() string
 	SetMinimizeMetaRequests(f bool)
+	GetMinimizeMetaRequests() bool
 	GetRescaleTiles() int
-	LoadTileCoord(tile_coord [3]int, dimensions map[string]interface{}, with_metadata bool) (error, *Tile)
-	LoadTileCoords(tile_coords [][3]int, dimensions map[string]interface{}, with_metadata bool) (error, *TileCollection)
+	LoadTileCoord(tile_coord [3]int, dimensions map[string]string, with_metadata bool) (error, *Tile)
+	LoadTileCoords(tile_coords [][3]int, dimensions map[string]string, with_metadata bool) (error, *TileCollection)
 	RemoveTileCoords(tile_coord [][3]int) error
-	IsCached(tile_coord [3]int, dimensions map[string]interface{}) bool
-	IsStale(tile_coord [3]int, dimensions map[string]interface{}) bool
+	IsCached(tile_coord [3]int, dimensions map[string]string) bool
+	IsStale(tile_coord [3]int, dimensions map[string]string) bool
 	ExpireTimestamp(tile *Tile) *time.Time
 	ApplyTileFilter(tile *Tile) *Tile
-	Creator(dimensions map[string]interface{}) *TileCreator
-	Lock(tile *Tile) error
+	Creator(dimensions map[string]string) *TileCreator
+	Lock(tile *Tile, run func() error) error
 }
 
 type TileManager struct {
@@ -93,20 +96,32 @@ func (tm *TileManager) Cleanup() bool {
 	return false
 }
 
+func (tm *TileManager) GetImageOptions() *images.ImageOptions {
+	return tm.imageOpts
+}
+
+func (tm *TileManager) GetRequestFormat() string {
+	return tm.format
+}
+
 func (tm *TileManager) SetMinimizeMetaRequests(f bool) {
 	tm.minimizeMetaRequests = f
+}
+
+func (tm *TileManager) GetMinimizeMetaRequests() bool {
+	return tm.minimizeMetaRequests
 }
 
 func (tm *TileManager) GetRescaleTiles() int {
 	return tm.rescaleTiles
 }
 
-func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions map[string]interface{}, with_metadata bool) (error, *Tile) {
+func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions map[string]string, with_metadata bool) (error, *Tile) {
 	err, tiles := tm.LoadTileCoords([][3]int{tile_coord}, dimensions, with_metadata)
 	return err, tiles.GetItem(0)
 }
 
-func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[string]interface{}, with_metadata bool) (error, *TileCollection) {
+func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[string]string, with_metadata bool) (error, *TileCollection) {
 	tiles := NewTileCollection(tile_coords)
 	rescale_till_zoom := 0
 
@@ -121,7 +136,6 @@ func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[strin
 		}
 		if rescale_till_zoom > int(tm.grid.Levels) {
 			rescale_till_zoom = int(tm.grid.Levels)
-
 		}
 	}
 
@@ -138,7 +152,7 @@ func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[strin
 	return nil, tiles
 }
 
-func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions map[string]interface{}, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
+func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions map[string]string, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
 	uncached_tiles := []*Tile{}
 
 	if rescaled_tiles != nil {
@@ -249,7 +263,7 @@ func (tm *TileManager) RemoveTileCoords(tile_coords [][3]int) error {
 	return tm.cache.RemoveTiles(tiles)
 }
 
-func (tm *TileManager) IsCached(tile_coord [3]int, dimensions map[string]interface{}) bool {
+func (tm *TileManager) IsCached(tile_coord [3]int, dimensions map[string]string) bool {
 	tile := NewTile(tile_coord)
 	cached := tm.cache.IsCached(tile)
 	max_mtime := tm.ExpireTimestamp(tile)
@@ -263,7 +277,7 @@ func (tm *TileManager) IsCached(tile_coord [3]int, dimensions map[string]interfa
 	return cached
 }
 
-func (tm *TileManager) IsStale(tile_coord [3]int, dimensions map[string]interface{}) bool {
+func (tm *TileManager) IsStale(tile_coord [3]int, dimensions map[string]string) bool {
 	tile := NewTile(tile_coord)
 	if tm.cache.IsCached(tile) {
 		if !tm.IsCached(tile_coord, nil) {
@@ -289,13 +303,13 @@ func (tm *TileManager) ApplyTileFilter(tile *Tile) *Tile {
 	return tile
 }
 
-func (tm *TileManager) Creator(dimensions map[string]interface{}) *TileCreator {
-	return NewTileCreator(tm, dimensions)
+func (tm *TileManager) Creator(dimensions map[string]string) *TileCreator {
+	return NewTileCreator(tm, dimensions, nil, false)
 }
 
-func (tm *TileManager) Lock(tile *Tile) error {
+func (tm *TileManager) Lock(tile *Tile, run func() error) error {
 	if tm.metaGrid != nil {
 		tile = NewTile(tm.metaGrid.MainTile(tile.Coord))
 	}
-	return tm.locker.Lock(tile)
+	return tm.locker.Lock(tile, run)
 }

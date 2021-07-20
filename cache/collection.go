@@ -21,6 +21,11 @@ func (c *TileCollection) SetItem(tile *Tile) {
 	c.tilesDict[tile.Coord] = tile
 }
 
+func (c *TileCollection) UpdateItem(i int, tile *Tile) {
+	c.tiles[i] = tile
+	c.tilesDict[tile.Coord] = tile
+}
+
 func (c *TileCollection) GetItem(idx_or_coord interface{}) *Tile {
 	switch v := idx_or_coord.(type) {
 	case [3]int:

@@ -1,5 +1,5 @@
 package cache
 
 type TileLocker interface {
-	Lock(tile *Tile) error
+	Lock(tile *Tile, run func() error) error
 }

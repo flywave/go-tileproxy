@@ -110,7 +110,7 @@ func (r *ArcGISExportRequestParams) GetBBOxSrs() string {
 	return r.params.GetOne("bboxSR", "EPSG:4326")
 }
 
-func (r *ArcGISExportRequestParams) SetBBOxSrs(srs string) {
+func (r *ArcGISExportRequestParams) SetBBoxSrs(srs string) {
 	r.params.Set("bboxSR", []string{srs})
 }
 

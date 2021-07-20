@@ -9,7 +9,7 @@ import (
 type CacheInfo struct {
 	Cacheable bool
 	Timestamp time.Time
-	Size      [2]uint32
+	Size      int64
 }
 
 type Tile struct {
@@ -18,7 +18,7 @@ type Tile struct {
 	Location  string
 	Stored    bool
 	Cacheable bool
-	Size      [2]uint32
+	Size      int64
 	Timestamp time.Time
 }
 

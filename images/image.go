@@ -99,6 +99,12 @@ func CreateImageSourceFromBufer(buf []byte) *ImageSource {
 	return ret
 }
 
+func CreateImageSourceFromPath(file string) *ImageSource {
+	ret := &ImageSource{}
+	ret.SetSource(file)
+	return ret
+}
+
 func (s *ImageSource) SetImageOptions(options *ImageOptions) {
 	s.Options = *options
 }

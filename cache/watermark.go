@@ -1,5 +1,5 @@
 package cache
 
 type Watermark struct {
-	ImageFilter
+	Filter
 }

@@ -25,7 +25,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 )
 
 replace boringssl.googlesource.com/boringssl => github.com/google/boringssl v0.0.0-20210514210023-ddecaabdc8c9

@@ -64,6 +64,10 @@ type InfoQuery struct {
 	FeatureCount int
 }
 
+func (i *InfoQuery) GetCoord() []float64 {
+	return geo.MakeLinTransf(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(i.Size[0]), float64(i.Size[1])}}, i.BBox)(i.Pos[:])
+}
+
 type LegendQuery struct {
 	Query
 	Format string

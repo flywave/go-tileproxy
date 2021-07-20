@@ -13,7 +13,7 @@ type CacheInfo struct {
 }
 
 type Tile struct {
-	Coord     []int
+	Coord     [3]int
 	Source    images.Source
 	Location  string
 	Stored    bool
@@ -23,7 +23,7 @@ type Tile struct {
 }
 
 func NewTile(coord [3]int) *Tile {
-	return &Tile{Coord: coord[:]}
+	return &Tile{Coord: coord}
 }
 
 func (t *Tile) GetCacheInfo() CacheInfo {
@@ -42,9 +42,6 @@ func (t *Tile) GetSource() images.Source {
 }
 
 func (t *Tile) IsMissing() bool {
-	if t.Coord == nil {
-		return false
-	}
 	return (t.Source == nil)
 }
 

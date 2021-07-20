@@ -16,6 +16,11 @@ func NewTileCollection(tileCoords [][3]int) *TileCollection {
 	return ret
 }
 
+func (c *TileCollection) SetItem(tile *Tile) {
+	c.tiles = append(c.tiles, tile)
+	c.tilesDict[tile.Coord] = tile
+}
+
 func (c *TileCollection) GetItem(idx_or_coord interface{}) *Tile {
 	switch v := idx_or_coord.(type) {
 	case [3]int:
@@ -39,6 +44,10 @@ func (c *TileCollection) Contains(idx_or_coord interface{}) bool {
 		return v < len(c.tiles)
 	}
 	return false
+}
+
+func (c *TileCollection) Empty() bool {
+	return len(c.tiles) == 0
 }
 
 func (c *TileCollection) GetSlice() []*Tile {

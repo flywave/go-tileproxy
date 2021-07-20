@@ -1,6 +1,8 @@
-package filters
+package cache
 
-type Filter interface{}
+type Filter interface {
+	Apply(*Tile) *Tile
+}
 
 type ImageFilter interface {
 	Filter

@@ -18,6 +18,10 @@ type TileCreator struct {
 	ImageMerger   images.Merger
 }
 
+func NewTileCreator(m Manager, dimensions map[string]interface{}) *TileCreator {
+	return &TileCreator{Manager: m, Dimensions: dimensions}
+}
+
 func (c *TileCreator) IsCached(tile *Tile) bool {
 	return false
 }

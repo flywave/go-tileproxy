@@ -3,9 +3,9 @@ package geo
 import (
 	"testing"
 
-	"github.com/flywave/go-geos"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-geos"
 )
 
 func TestGeomCoverage(t *testing.T) {

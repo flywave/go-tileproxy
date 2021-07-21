@@ -5,13 +5,13 @@ import (
 	"image/color"
 	"math"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 
 	"github.com/flywave/go-geos"
 
 	"github.com/fogleman/gg"
-
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func drawPolygon(dc *gg.Context, pg *geos.Geometry, transf func([]float64) []float64) {

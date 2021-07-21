@@ -5,9 +5,9 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/flywave/go-tileproxy/geo"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-tileproxy/geo"
 
 	"github.com/flywave/imaging"
 )

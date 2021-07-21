@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/flywave/go-proj"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
+
+	"github.com/flywave/go-proj"
 )
 
 var (

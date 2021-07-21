@@ -1,6 +1,10 @@
 package seed
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 
@@ -17,6 +21,7 @@ type Task interface {
 }
 
 type BaseTask struct {
+	Conf     map[string]string
 	Manager  cache.Manager
 	Coverage geo.Coverage
 	Grid     *geo.MetaGrid
@@ -46,9 +51,24 @@ func (t *BaseTask) Intersects(bbox vec2d.Rect) IntersectionType {
 }
 
 type TileSeedTask struct {
-	Task
+	BaseTask
+	RefreshTimestamp time.Time
+}
+
+func (t *TileSeedTask) GetID() string {
+	l := "level"
+	for _, level := range t.Levels {
+		l += "-" + strconv.Itoa(level)
+	}
+	return fmt.Sprintf("%s %s %s %s", t.Conf["name"], t.Conf["cache_name"], t.Conf["grid_name"], l)
 }
 
 type TileCleanupTask struct {
-	Task
+	BaseTask
+	RemoveTimestamp time.Time
+	CompleteExtent  bool
+}
+
+func (t *TileCleanupTask) GetID() string {
+	return fmt.Sprintf("cleanup %s %s %s", t.Conf["name"], t.Conf["cache_name"], t.Conf["grid_name"])
 }

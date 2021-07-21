@@ -6,8 +6,9 @@ import (
 
 	"errors"
 
-	"github.com/flywave/go-geom/general"
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-geom/general"
 )
 
 const (

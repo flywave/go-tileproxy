@@ -23,11 +23,11 @@ type TileWalker struct {
 	grid                   *geo.MetaGrid
 	count                  int
 	seededTiles            map[int]*utils.Deque
-	progressLogger         *ProgressLogger
+	progressLogger         ProgressLogger
 }
 
 func NewTileWalker(task Task, ctx *Context,
-	work_on_metatiles bool, skip_geoms_for_last_levels int, progress_logger *ProgressLogger,
+	work_on_metatiles bool, skip_geoms_for_last_levels int, progress_logger ProgressLogger,
 	seed_progress *SeedProgress) *TileWalker {
 	ret := &TileWalker{Ctx: ctx, task: task, manager: task.GetManager(), workOnMetatiles: work_on_metatiles,
 		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress, progressLogger: progress_logger}
@@ -89,7 +89,7 @@ func limitSubBBox(bbox, sub_bbox vec2d.Rect) *vec2d.Rect {
 	return &vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
 }
 
-func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, all_subtiles bool) {
+func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, all_subtiles bool) error {
 	_, tiles, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, current_level)
 	total_subtiles := tiles[0] * tiles[1]
 	if len(levels) < t.skipGeomsForLastLevels {
@@ -106,8 +106,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 			t.reportProgress(current_level, cur_bbox)
 		}
 		t.manager.Cleanup()
-		//raise StopProcess()
-		return
+		return nil
 	}
 
 	process := false
@@ -164,7 +163,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 		if handle_tiles != nil {
 			t.count += 1
-			//t.worker_pool.process(handle_tiles, t.seed_progress)
+			t.process(handle_tiles, t.seedProgress)
 		}
 
 		if levels == nil {
@@ -176,6 +175,14 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 	if len(levels) >= 4 {
 		t.manager.Cleanup()
+	}
+	return nil
+}
+
+func (t *TileWalker) process(tiles [][3]int, progress *SeedProgress) {
+	//TODO
+	if t.progressLogger != nil {
+		t.progressLogger.LogStep(progress)
 	}
 }
 
@@ -235,7 +242,7 @@ func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool, grid *
 	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: grid, task: task}
 }
 
-func seedTask(task Task, skipGeomsForLastLevels int, progress_logger *ProgressLogger, seedProgress *SeedProgress) error {
+func seedTask(task Task, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null!")
 	}
@@ -253,7 +260,7 @@ func seedTask(task Task, skipGeomsForLastLevels int, progress_logger *ProgressLo
 	return nil
 }
 
-func Seed(tasks []Task, skipGeomsForLastLevels int, progress_logger *ProgressLogger, cache_locker CacheLocker) {
+func Seed(tasks []Task, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -261,12 +268,11 @@ func Seed(tasks []Task, skipGeomsForLastLevels int, progress_logger *ProgressLog
 	active_tasks := tasks[:]
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
-
 		if err := cache_locker.Lock("cache_name", func() error {
 			var start_progress [][2]int
-			if progress_logger != nil && progress_logger.progressStore != nil {
-				progress_logger.currentTaskID = task.GetID()
-				start_progress = progress_logger.progressStore[task.GetID()]
+			if progress_logger != nil && progress_store != nil {
+				progress_logger.SetCurrentTaskID(task.GetID())
+				start_progress = progress_store.LoadProgress(task.GetID())
 			} else {
 				start_progress = nil
 			}

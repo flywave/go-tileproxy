@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/flywave/go-proj"
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-proj"
 )
 
 func TestSrs4326(t *testing.T) {

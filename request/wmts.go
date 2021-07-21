@@ -190,6 +190,10 @@ type WMTS100TileRequest struct {
 	WMTSRequest
 }
 
+func (r *WMTSRequest) GetRequestHandler() string {
+	return r.RequestHandlerName
+}
+
 func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"

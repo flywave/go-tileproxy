@@ -24,6 +24,10 @@ type TileRequest struct {
 	Http               *http.Request
 }
 
+func (r *TileRequest) GetRequestHandler() string {
+	return r.RequestHandlerName
+}
+
 func (r *TileRequest) init() {
 	r.RequestHandlerName = "map"
 	r.TileReqRegex = regexp.MustCompile(`^(?P<begin>/[^/]+)/

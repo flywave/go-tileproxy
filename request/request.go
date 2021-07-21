@@ -92,6 +92,7 @@ type Request interface {
 	QueryString() string
 	CompleteUrl() string
 	GetParams() RequestParams
+	GetRequestHandler() string
 }
 
 type BaseRequest struct {

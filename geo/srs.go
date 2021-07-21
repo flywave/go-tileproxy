@@ -332,7 +332,7 @@ type GeoReference struct {
 	srs  string
 }
 
-func (g *GeoReference) TiePoints() [6]float64 {
+func (g *GeoReference) TilePoints() [6]float64 {
 	return [6]float64{
 		0.0, 0.0, 0.0,
 		g.bbox.Min[0], g.bbox.Max[1], 0.0,

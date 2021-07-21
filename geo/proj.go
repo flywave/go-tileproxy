@@ -97,11 +97,11 @@ func (p *GCJ02Proj) transformToWGS84(points []vec2d.T) ([]vec2d.T, *SRSProj4) {
 }
 
 func (p *GCJ02Proj) GetDef() string {
-	return "GCJ:02"
+	return "GCJ02"
 }
 
 func (p *GCJ02Proj) ToString() string {
-	return "GCJ:02"
+	return "GCJ02"
 }
 
 type BD09Proj struct {
@@ -179,7 +179,7 @@ func (p *BD09Proj) transformToWGS84(points []vec2d.T) ([]vec2d.T, *SRSProj4) {
 }
 
 func (p *BD09Proj) GetDef() string {
-	return "BD:09"
+	return "BD09"
 }
 
 func (p *BD09Proj) IsLatLong() bool {
@@ -187,5 +187,5 @@ func (p *BD09Proj) IsLatLong() bool {
 }
 
 func (p *BD09Proj) ToString() string {
-	return "BD:09"
+	return "BD09"
 }

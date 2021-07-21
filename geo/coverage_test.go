@@ -101,7 +101,6 @@ func TestBBOXCoverage(t *testing.T) {
 	if !BBoxEquals(coverage.BBox, vec2d.Rect{Min: vec2d.T{-10, 10}, Max: vec2d.T{80, 80}}, 0.0001, 0.0001) {
 		t.FailNow()
 	}
-
 }
 
 func TestUnionCoverage(t *testing.T) {
@@ -124,7 +123,6 @@ func TestUnionCoverage(t *testing.T) {
 	if !BBoxEquals(coverage.GetBBox(), vec2d.Rect{Min: vec2d.T{-8.98315284, 0.0}, Max: vec2d.T{20.0, 10.0}}, 0.0001, 0.0001) {
 		t.FailNow()
 	}
-
 }
 
 func TestDiffCoverage(t *testing.T) {
@@ -143,7 +141,6 @@ func TestDiffCoverage(t *testing.T) {
 	if !BBoxEquals(coverage.GetBBox(), vec2d.Rect{Min: vec2d.T{-10, 0.0}, Max: vec2d.T{20.0, 10.0}}, 0.0001, 0.0001) {
 		t.FailNow()
 	}
-
 }
 
 func TestIntersectionCoverage(t *testing.T) {
@@ -158,7 +155,6 @@ func TestIntersectionCoverage(t *testing.T) {
 	if !BBoxEquals(coverage.GetBBox(), vec2d.Rect{Min: vec2d.T{5.0, 5.0}, Max: vec2d.T{10.0, 10.0}}, 0.0001, 0.0001) {
 		t.FailNow()
 	}
-
 }
 
 func TestMultiCoverage(t *testing.T) {

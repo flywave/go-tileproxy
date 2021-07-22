@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/flywave/go-tileproxy/utils"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
 
@@ -20,6 +21,8 @@ var (
 		"EPSG:900913", "EPSG:3857",
 		"EPSG:102100", "EPSG:102113",
 	}
+	AXIS_ORDER_NE = []string{"EPSG:4326", "EPSG:4258", "EPSG:31466", "EPSG:31467", "EPSG:31468"}
+	AXIS_ORDER_EN = []string{"CRS:84", "EPSG:900913", "EPSG:25831", "EPSG:25832", "EPSG:25833"}
 )
 
 type SRS string
@@ -239,6 +242,19 @@ func (p *SRSProj4) AlignBBox(t vec2d.Rect) vec2d.Rect {
 
 func (p *SRSProj4) IsLatLong() bool {
 	return p.proj.IsLatLong()
+}
+
+func (p *SRSProj4) IsAxisOrderNE() bool {
+	if utils.ContainsString(AXIS_ORDER_NE, p.SrsCode) {
+		return true
+	}
+	if utils.ContainsString(AXIS_ORDER_EN, p.SrsCode) {
+		return false
+	}
+	if p.IsLatLong() {
+		return true
+	}
+	return false
 }
 
 func (p *SRSProj4) Eq(o Proj) bool {

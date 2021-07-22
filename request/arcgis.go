@@ -122,6 +122,14 @@ func (r *ArcGISExportRequestParams) SetImageSrs(srs string) {
 	r.params.Set("imageSR", []string{srs})
 }
 
+func (r *ArcGISExportRequestParams) GetTransparent() bool {
+	str := r.params.GetOne("format", "false")
+	if strings.ToLower(str) == "true" {
+		return true
+	}
+	return false
+}
+
 func (r *ArcGISExportRequestParams) SetTransparent(b bool) {
 	if b {
 		r.params.Set("transparent", []string{"true"})
@@ -275,6 +283,14 @@ func (r *ArcGISIdentifyRequestParams) SetSrs(srs string) {
 	} else {
 		r.params.Set("sr", []string{srs})
 	}
+}
+
+func (r *ArcGISIdentifyRequestParams) GetTransparent() bool {
+	str := r.params.GetOne("format", "false")
+	if strings.ToLower(str) == "true" {
+		return true
+	}
+	return false
 }
 
 func (r *ArcGISIdentifyRequestParams) SetTransparent(b bool) {

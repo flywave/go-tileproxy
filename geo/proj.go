@@ -16,6 +16,7 @@ type Proj interface {
 	GetDef() string
 	IsLatLong() bool
 	ToString() string
+	IsAxisOrderNE() bool
 }
 
 type GCJ02Proj struct {
@@ -28,6 +29,10 @@ func NewGCJ02Proj(exact bool) *GCJ02Proj {
 }
 
 func (p *GCJ02Proj) IsLatLong() bool {
+	return true
+}
+
+func (p *GCJ02Proj) IsAxisOrderNE() bool {
 	return true
 }
 
@@ -183,6 +188,10 @@ func (p *BD09Proj) GetDef() string {
 }
 
 func (p *BD09Proj) IsLatLong() bool {
+	return true
+}
+
+func (p *BD09Proj) IsAxisOrderNE() bool {
 	return true
 }
 

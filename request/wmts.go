@@ -297,7 +297,7 @@ func (r *WMTS100CapabilitiesRequest) init(param interface{}, url string, validat
 	r.FixedParams = map[string]string{}
 }
 
-func parseRequestType(req *http.Request) string {
+func parseWMTSRequestType(req *http.Request) string {
 	if _, ok := req.Header["request"]; ok {
 		request_type := strings.ToLower(req.Header["request"][0])
 		if strings.HasPrefix(request_type, "get") {
@@ -311,7 +311,7 @@ func parseRequestType(req *http.Request) string {
 }
 
 func MakeWMTSRequest(req *http.Request, validate bool) Request {
-	req_type := parseRequestType(req)
+	req_type := parseWMTSRequestType(req)
 	switch req_type {
 	case "featureinfo":
 		r := &WMTS100FeatureInfoRequest{}

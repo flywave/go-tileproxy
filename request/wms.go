@@ -355,7 +355,9 @@ type WMSFeatureInfoRequestParams struct {
 }
 
 func NewWMSFeatureInfoRequestParams(params RequestParams) WMSFeatureInfoRequestParams {
-	return WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: params}}
+	ret := WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: params}}
+	ret.switchBBox()
+	return ret
 }
 
 func (r *WMSFeatureInfoRequestParams) GetPos() [2]int {

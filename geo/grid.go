@@ -581,7 +581,7 @@ func (t *TileGrid) OriginTile(level int, origin OriginType) (cx, cy, clevel int)
 	return t.FlipTileCoord(cx, cy, clevel)
 }
 
-func (t *TileGrid) GetAffectedTiles(bbox vec2d.Rect, size [2]uint32, req_srs *SRSProj4) (vec2d.Rect, [2]int, *TileIter, error) {
+func (t *TileGrid) GetAffectedTiles(bbox vec2d.Rect, size [2]uint32, req_srs Proj) (vec2d.Rect, [2]int, *TileIter, error) {
 	src_bbox, level, err := t.GetAffectedBBoxAndLevel(bbox, size, req_srs)
 	if err != nil {
 		return src_bbox, [2]int{}, nil, err
@@ -589,7 +589,7 @@ func (t *TileGrid) GetAffectedTiles(bbox vec2d.Rect, size [2]uint32, req_srs *SR
 	return t.GetAffectedLevelTiles(src_bbox, level)
 }
 
-func (t *TileGrid) GetAffectedBBoxAndLevel(bbox vec2d.Rect, size [2]uint32, req_srs *SRSProj4) (vec2d.Rect, int, error) {
+func (t *TileGrid) GetAffectedBBoxAndLevel(bbox vec2d.Rect, size [2]uint32, req_srs Proj) (vec2d.Rect, int, error) {
 	var src_bbox vec2d.Rect
 	if req_srs != nil && !req_srs.Eq(t.Srs) {
 		src_bbox = req_srs.TransformRectTo(t.Srs, bbox, 16)
@@ -771,7 +771,7 @@ func (t *TileGrid) isSubsetOf(other *TileGrid) bool {
 }
 
 func TileGridForEpsg(SrsCode string, bbox *vec2d.Rect, tile_size []uint32, res []float64) *TileGrid {
-	epsg := getEpsgNum(SrsCode)
+	epsg := GetEpsgNum(SrsCode)
 	for c := range geodetic_epsg_codes {
 		if c == int(epsg) {
 			srs := NewSRSProj4(fmt.Sprintf("EPSG:%d", epsg))

@@ -10,11 +10,13 @@ import (
 )
 
 type Manager interface {
+	GetSources() []layer.Layer
 	GetGrid() *geo.TileGrid
 	GetCache() Cache
 	GetMetaGrid() *geo.MetaGrid
 	GetImageOptions() *images.ImageOptions
 	Cleanup() bool
+	GetFormat() string
 	GetRequestFormat() string
 	SetMinimizeMetaRequests(f bool)
 	GetMinimizeMetaRequests() bool
@@ -39,7 +41,7 @@ type TileManager struct {
 	format               string
 	imageOpts            *images.ImageOptions
 	requestFormat        string
-	sources              []layer.MapLayer
+	sources              []layer.Layer
 	minimizeMetaRequests bool
 	expireTimestamp      *time.Time
 	preStoreFilter       []Filter
@@ -48,7 +50,7 @@ type TileManager struct {
 	locker               TileLocker
 }
 
-func NewTileManager(sources []layer.MapLayer, grid *geo.TileGrid, cache Cache, identifier string, format string, opts *images.ImageOptions, minimize_meta_requests bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
+func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, identifier string, format string, opts *images.ImageOptions, minimize_meta_requests bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
 	ret := &TileManager{}
 	ret.grid = grid
 	ret.cache = cache
@@ -65,7 +67,7 @@ func NewTileManager(sources []layer.MapLayer, grid *geo.TileGrid, cache Cache, i
 	if metaBuffer != -1 || (metaSize != [2]uint32{1, 1}) {
 		allsm := true
 		for i := range sources {
-			if !sources[i].SupportMetaTiles {
+			if !sources[i].IsSupportMetaTiles() {
 				allsm = false
 			}
 		}
@@ -74,6 +76,10 @@ func NewTileManager(sources []layer.MapLayer, grid *geo.TileGrid, cache Cache, i
 		}
 	}
 	return ret
+}
+
+func (tm *TileManager) GetSources() []layer.Layer {
+	return tm.sources
 }
 
 func (tm *TileManager) GetGrid() *geo.TileGrid {
@@ -101,8 +107,12 @@ func (tm *TileManager) GetImageOptions() *images.ImageOptions {
 	return tm.imageOpts
 }
 
-func (tm *TileManager) GetRequestFormat() string {
+func (tm *TileManager) GetFormat() string {
 	return tm.format
+}
+
+func (tm *TileManager) GetRequestFormat() string {
+	return tm.requestFormat
 }
 
 func (tm *TileManager) SetMinimizeMetaRequests(f bool) {

@@ -53,7 +53,7 @@ type SRSProj4 struct {
 	proj    *proj.Proj
 }
 
-func getEpsgNum(SrsCode string) int {
+func GetEpsgNum(SrsCode string) int {
 	if strings.ContainsRune(SrsCode, ':') {
 		epscode, err := strconv.Atoi(strings.Split(SrsCode, ":")[1])
 		if err == nil {
@@ -72,7 +72,7 @@ func NewSRSProj4(SrsCode string) *SRSProj4 {
 			return nil
 		}
 	} else {
-		epsg_num := getEpsgNum(SrsCode)
+		epsg_num := GetEpsgNum(SrsCode)
 		if epsg_num < 0 {
 			return nil
 		}

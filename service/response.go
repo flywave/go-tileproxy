@@ -12,10 +12,9 @@ import (
 )
 
 const (
-	locallyGeneratedEtagPrefix = "\"6E8F849B434D4B98A569B9D7718876E9-"
-	Charset                    = "utf-8"
-	DefaultContentType         = "text/plain"
-	BlockSize                  = 1024 * 32
+	Charset            = "utf-8"
+	DefaultContentType = "text/plain"
+	BlockSize          = 1024 * 32
 )
 
 var (
@@ -62,6 +61,10 @@ var (
 		505: "HTTP Version not supported",
 	}
 )
+
+func StatusCode(code int) string {
+	return strconv.Itoa(code) + " " + _status_codes[code]
+}
 
 type Response struct {
 	response      []byte
@@ -128,7 +131,7 @@ func (r *Response) GetETag() string {
 }
 
 func etagFor(data []byte) string {
-	return fmt.Sprintf("%s%X\"", locallyGeneratedEtagPrefix, sha512.Sum512(data))
+	return fmt.Sprintf("%X", sha512.Sum512(data))
 }
 
 func (r *Response) noCacheHeaders() {
@@ -149,8 +152,26 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 	}
 }
 
-func (r *Response) makeConditional() {
+func (r *Response) makeConditional(req *http.Request) {
+	not_modified := false
+	if v := req.Header.Get("if-none-match"); v == r.etag {
+		not_modified = true
+	} else if r.timestamp != nil {
+		if date := req.Header.Get("if-modified-since"); date != "" {
+			timestamp, _ := utils.ParseDateTime(date)
+			if r.timestamp.Before(timestamp) {
+				not_modified = true
+			}
+		}
+	}
 
+	if not_modified {
+		r.status = 304
+		r.response = nil
+		if _, ok := r.headers["Content-type"]; ok {
+			delete(r.headers, "Content-type")
+		}
+	}
 }
 
 func (r *Response) GetContentLength() int {

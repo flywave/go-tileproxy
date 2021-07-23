@@ -21,7 +21,7 @@ type Task interface {
 }
 
 type BaseTask struct {
-	Conf     map[string]string
+	Metadata map[string]string
 	Manager  cache.Manager
 	Coverage geo.Coverage
 	Grid     *geo.MetaGrid
@@ -60,7 +60,7 @@ func (t *TileSeedTask) GetID() string {
 	for _, level := range t.Levels {
 		l += "-" + strconv.Itoa(level)
 	}
-	return fmt.Sprintf("%s %s %s %s", t.Conf["name"], t.Conf["cache_name"], t.Conf["grid_name"], l)
+	return fmt.Sprintf("%s %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"], l)
 }
 
 type TileCleanupTask struct {
@@ -70,5 +70,5 @@ type TileCleanupTask struct {
 }
 
 func (t *TileCleanupTask) GetID() string {
-	return fmt.Sprintf("cleanup %s %s %s", t.Conf["name"], t.Conf["cache_name"], t.Conf["grid_name"])
+	return fmt.Sprintf("cleanup %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
 }

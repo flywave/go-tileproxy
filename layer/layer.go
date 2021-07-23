@@ -13,6 +13,9 @@ type Layer interface {
 	GetMap(query *MapQuery) images.Source
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
+	GetExtent() *geo.MapExtent
+	IsOpaque(query *MapQuery) bool
+	CombinedLayer(other Layer, query *MapQuery) Layer
 }
 
 type MapLayer struct {
@@ -53,6 +56,10 @@ func (l *MapLayer) CheckResRange(query *MapQuery) error {
 
 func (l *MapLayer) CombinedLayer(other Layer, query *MapQuery) Layer {
 	return nil
+}
+
+func (l *MapLayer) GetExtent() *geo.MapExtent {
+	return l.Extent
 }
 
 type LimitedLayer struct {

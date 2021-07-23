@@ -1,12 +1,40 @@
 package service
 
 import (
+	"time"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/request"
 	_ "github.com/flywave/ogc-specifications/pkg/wmts100"
 )
 
 type WMTSService struct {
+	BaseService
+	Metadata   map[string]string
+	MaxTileAge time.Duration
+	Layers     map[string]WMTSTileLayer
+	MatrixSets map[string]TileMatrixSet
+}
+
+func (s *WMSService) getMatrixSets(layers []WMTSTileLayer) (map[string]WMTSTileLayer, map[string]TileMatrixSet) {
+	/**sets := make(map[string]TileMatrixSet)
+	        layers_grids = odict()
+	        for _,layer := range layers {
+	            grid = layer.grid
+	            if !grid.supports_access_with_origin("nw") {
+	                continue
+				}
+	            if grid.name not in sets {
+	                    sets[grid.name] = TileMatrixSet(grid)
+				}
+	            layers_grids.setdefault(layer.name, odict())[grid.name] = layer
+			}
+	        wmts_layers = odict()
+	        for layer_name, layers in layers_grids.items() {
+	            wmts_layers[layer_name] = WMTSTileLayer(layers)
+			}
+	        return wmts_layers, sets.values()**/
+	return nil, nil
 }
 
 func (s *WMTSService) GetCapabilities() {
@@ -37,6 +65,13 @@ type WMTSRestService struct {
 }
 
 type WMTSTileLayer struct {
+}
+
+type WMTSCapabilities struct {
+}
+
+type WMTSRestfulCapabilities struct {
+	WMTSCapabilities
 }
 
 const (

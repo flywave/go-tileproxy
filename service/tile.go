@@ -26,7 +26,7 @@ var (
 type TileService struct {
 	BaseService
 	Layers             map[string]TileLayer
-	Conf               map[string]string
+	Metadata           map[string]string
 	MaxTileAge         time.Duration
 	UseDimensionLayers bool
 	Origin             string
@@ -56,7 +56,7 @@ func (s *TileService) GetMap(tile_request request.TileRequest) *Response {
 		resp.noCacheHeaders()
 	}
 
-	resp.makeConditional()
+	resp.makeConditional(tile_request.Http)
 	return resp
 }
 
@@ -103,7 +103,7 @@ func (s *TileService) GetLayer(tile_request request.TileRequest) (*TileLayer, ge
 		internal_layer = s.internalLayer(tile_request)
 	}
 	if internal_layer == nil {
-		//raise RequestError('unknown layer: ' + tile_request.layer, request=tile_request)
+		return nil, nil
 	}
 
 	limit_to := s.authorizeTileLayer(internal_layer, tile_request)
@@ -123,7 +123,7 @@ func (s *TileService) authorizedTileLayers() []*TileLayer {
 }
 
 func (s *TileService) Capabilities(tms_request request.TileRequest) *Response {
-	service := s.serviceConf(tms_request)
+	service := s.serviceMetadata(tms_request)
 	var result []byte
 	if tms_request.Layer != "" {
 		layer, _ := s.GetLayer(tms_request)
@@ -135,8 +135,8 @@ func (s *TileService) Capabilities(tms_request request.TileRequest) *Response {
 	return NewResponse(result, 200, "", "text/xml")
 }
 
-func (s *TileService) serviceConf(tms_request request.TileRequest) map[string]string {
-	md := s.Conf
+func (s *TileService) serviceMetadata(tms_request request.TileRequest) map[string]string {
+	md := s.Metadata
 	md["url"] = tms_request.Http.URL.Host
 	return md
 }
@@ -154,7 +154,7 @@ func (s *TileService) renderRootResource(service map[string]string) []byte {
 }
 
 func (s *TileService) RootResource(tms_request request.TileRequest) *Response {
-	service := s.serviceConf(tms_request)
+	service := s.serviceMetadata(tms_request)
 	result := s.renderRootResource(service)
 	return NewResponse(result, 200, "", "text/xml")
 }
@@ -352,7 +352,7 @@ func (r *tileResponse) peekFormat() string {
 type TileLayer struct {
 	name                  string
 	title                 string
-	conf                  map[string]string
+	metadata              map[string]string
 	tileManager           cache.Manager
 	infoSources           []sources.InfoSource
 	dimensions            map[string]string
@@ -364,8 +364,8 @@ type TileLayer struct {
 }
 
 func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []sources.InfoSource, dimensions map[string]string) *TileLayer {
-	ret := &TileLayer{name: name, title: title, conf: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid()), mixed_format: true, empty_response_as_png: true}
-	if v, ok := ret.conf["format"]; ok {
+	ret := &TileLayer{name: name, title: title, metadata: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid()), mixed_format: true, empty_response_as_png: true}
+	if v, ok := ret.metadata["format"]; ok {
 		if strings.ToLower(v) == "true" {
 			ret.mixed_format = true
 		} else {
@@ -387,7 +387,7 @@ func (t *TileLayer) getFormatMimeType() string {
 	if t.mixed_format {
 		return "image/png"
 	}
-	if f, ok := t.conf["format"]; ok {
+	if f, ok := t.metadata["format"]; ok {
 		return f
 	}
 	return "image/png"
@@ -435,7 +435,6 @@ func (tl *TileLayer) TileBBox(request request.TileRequest, use_profiles bool, li
 
 func (tl *TileLayer) checkedDimensions(request request.TileRequest) map[string]string {
 	dimensions := make(map[string]string)
-
 	for dimension, values := range tl.dimensions {
 		dimensions[dimension] = values
 	}

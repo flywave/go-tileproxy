@@ -131,15 +131,16 @@ func etagFor(data []byte) string {
 	return fmt.Sprintf("%s%X\"", locallyGeneratedEtagPrefix, sha512.Sum512(data))
 }
 
-func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []byte, max_age int, no_cache bool) {
-	if etag_data != nil {
-		r.etag = etagFor(etag_data)
-	}
+func (r *Response) noCacheHeaders() {
+	r.headers["Cache-Control"] = []string{"no-cache, no-store"}
+	r.headers["Pragma"] = []string{"no-cache"}
+	r.headers["Expires"] = []string{"-1"}
+}
 
-	if no_cache {
-		r.headers["Cache-Control"] = []string{"no-cache, no-store"}
-		r.headers["Pragma"] = []string{"no-cache"}
-		r.headers["Expires"] = []string{"-1"}
+func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_age int) {
+	if etag_data != nil {
+		hash_src := strings.Join(etag_data, "")
+		r.etag = etagFor([]byte(hash_src))
 	}
 
 	r.last_modified = *timestamp

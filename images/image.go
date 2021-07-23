@@ -46,7 +46,7 @@ func isTiff(h string) bool {
 	return stringIn(h[:2], []string{"MM", "II"})
 }
 
-func peekImageFormat(buf string) string {
+func PeekImageFormat(buf string) string {
 	if isJpeg(buf) {
 		return "jpeg"
 	} else if isPng(buf) {
@@ -192,7 +192,7 @@ func (s *ImageSource) GetBuffer(format *ImageFormat, in_image_opts *ImageOptions
 	if s.buf == nil {
 		s.buf = imageToBuf(s.GetImage(), image_opts, s.georef)
 		if len(s.Options.Format) == 0 {
-			s.Options.Format = ImageFormat(peekImageFormat(string(s.buf)))
+			s.Options.Format = ImageFormat(PeekImageFormat(string(s.buf)))
 		}
 		if image_opts.Format != s.Options.Format {
 			s.SetSource(s.GetImage())

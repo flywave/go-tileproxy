@@ -58,7 +58,22 @@ type OriginType uint32
 const (
 	ORIGIN_UL OriginType = 0
 	ORIGIN_LL OriginType = 1
+	ORIGIN_NW OriginType = 2
+	ORIGIN_SW OriginType = 3
 )
+
+func OriginToString(ot OriginType) string {
+	if ot == ORIGIN_UL {
+		return "ul"
+	} else if ot == ORIGIN_LL {
+		return "ll"
+	} else if ot == ORIGIN_NW {
+		return "nw"
+	} else if ot == ORIGIN_SW {
+		return "sw"
+	}
+	return ""
+}
 
 func alignedResolutions(min_res *float64, max_res *float64, res_factor interface{}, num_levels *int,
 	bbox *vec2d.Rect, tile_size []uint32, align_with *TileGrid) []float64 {
@@ -559,7 +574,7 @@ func (t *TileGrid) SupportsAccessWithOrigin(origin OriginType) bool {
 	for level := range t.GridSizes {
 		tiles := [][3]int{{0, 0, level},
 			{int(t.GridSizes[level][0]) - 1, int(t.GridSizes[level][1]) - 1, level}}
-		level_bbox := t.tilesBBox(tiles)
+		level_bbox := t.TilesBBox(tiles)
 
 		if math.Abs(t.BBox.Min[1]-level_bbox.Min[1]) > delta || math.Abs(t.BBox.Max[1]-level_bbox.Max[1]) > delta {
 			return false
@@ -678,12 +693,12 @@ func (t *TileGrid) tileIter(x0, y0, x1, y1, level int) (vec2d.Rect, [2]int, *Til
 	ll := [3]int{xs[0], ys[len(ys)-1], level}
 	ur := [3]int{xs[len(xs)-1], ys[0], level}
 
-	abbox := t.tilesBBox([][3]int{ll, ur})
+	abbox := t.TilesBBox([][3]int{ll, ur})
 	return abbox, [2]int{len(xs), len(ys)},
 		createTileTileIter(xs, ys, level, t.GridSizes[level]), nil
 }
 
-func (t *TileGrid) tilesBBox(tiles [][3]int) vec2d.Rect {
+func (t *TileGrid) TilesBBox(tiles [][3]int) vec2d.Rect {
 	ll_bbox := t.TileBBox(tiles[0], false)
 	ur_bbox := t.TileBBox(tiles[len(tiles)-1], false)
 	return MergeBBox(ll_bbox, ur_bbox)
@@ -745,7 +760,7 @@ func (t *TileGrid) isSubsetOf(other *TileGrid) bool {
 			t.GridSizes[self_level][0] * t.TileSize[0],
 			t.GridSizes[self_level][1] * t.TileSize[1],
 		}
-		level_bbox := t.tilesBBox([][3]int{
+		level_bbox := t.TilesBBox([][3]int{
 			{0, 0, self_level},
 			{int(t.GridSizes[self_level][0]) - 1, int(t.GridSizes[self_level][1]) - 1, self_level},
 		})
@@ -809,7 +824,7 @@ func (g *MetaGrid) metaBBox(tile_coord *[3]int, tiles [][3]int, limit_to_bbox bo
 	var bbox vec2d.Rect
 	if tiles != nil {
 		level = tiles[0][2]
-		bbox = g.tilesBBox(tiles)
+		bbox = g.TilesBBox(tiles)
 	} else {
 		level = tile_coord[2]
 		bbox = g.unbufferedMetaBBox(*tile_coord)
@@ -822,7 +837,7 @@ func (g *MetaGrid) unbufferedMetaBBox(tile_coord [3]int) vec2d.Rect {
 
 	meta_size := g.metaSize(z)
 
-	return g.tilesBBox([][3]int{tile_coord, {x + int(meta_size[0]) - 1, y + int(meta_size[1]) - 1, z}})
+	return g.TilesBBox([][3]int{tile_coord, {x + int(meta_size[0]) - 1, y + int(meta_size[1]) - 1, z}})
 }
 
 func (g *MetaGrid) bufferedBBox(bbox vec2d.Rect, level int, limit_to_grid_bbox bool) (vec2d.Rect, []int) {
@@ -1052,7 +1067,7 @@ func (g *MetaGrid) tileList(x0, y0, x1, y1, level int) (vec2d.Rect, [2]int, [][3
 	ur := [3]int{xs[len(xs)-1], ys[0], level}
 
 	ur = [3]int{ur[0] + int(meta_size[0]) - 1, ur[1] + int(meta_size[1]) - 1, ur[2]}
-	abbox := g.tilesBBox([][3]int{ll, ur})
+	abbox := g.TilesBBox([][3]int{ll, ur})
 	return abbox, [2]int{len(xs), len(ys)}, createTileList(xs, ys, level, g.GridSizes[level])
 }
 

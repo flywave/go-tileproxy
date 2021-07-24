@@ -4,7 +4,13 @@ import "strings"
 
 var (
 	mimeMaps = map[string]string{
-		"png": "image/png",
+		"png":  "image/png",
+		"tif":  "image/tiff",
+		"tiff": "image/tiff",
+		"jpe":  "image/jpeg",
+		"jpeg": "image/jpeg",
+		"wbmp": "image/vnd.wap.wbmp",
+		"mvt":  "application/vnd.mapbox-vector-tile",
 	}
 )
 

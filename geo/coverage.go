@@ -15,6 +15,7 @@ type Coverage interface {
 	GetGeom() *geos.Geometry
 	Intersects(bbox vec2d.Rect, srs Proj) bool
 	Contains(bbox vec2d.Rect, srs Proj) bool
+	ContainsPoint(pt []float64, srs Proj) bool
 	Intersection(bbox vec2d.Rect, srs Proj) Coverage
 	TransformTo(srs Proj) Coverage
 	Equals(cc Coverage) bool
@@ -77,6 +78,15 @@ func (c *MultiCoverage) Intersects(bbox vec2d.Rect, srs Proj) bool {
 func (c *MultiCoverage) Contains(bbox vec2d.Rect, srs Proj) bool {
 	for i := range c.Coverages {
 		if c.Coverages[i].Contains(bbox, srs) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *MultiCoverage) ContainsPoint(pt []float64, srs Proj) bool {
+	for i := range c.Coverages {
+		if c.Coverages[i].ContainsPoint(pt, srs) {
 			return true
 		}
 	}
@@ -213,6 +223,11 @@ func (c *GeomCoverage) Intersection(bbox vec2d.Rect, srs Proj) Coverage {
 
 func (c *GeomCoverage) Contains(bbox vec2d.Rect, srs Proj) bool {
 	geom := c.geomInCoverageSrs(bbox, srs)
+	return c.Geom.Contains(geom)
+}
+
+func (c *GeomCoverage) ContainsPoint(pt []float64, srs Proj) bool {
+	geom := c.geomInCoverageSrs(vec2d.T{pt[0], pt[1]}, srs)
 	return c.Geom.Contains(geom)
 }
 

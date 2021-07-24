@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/sources"
+	"github.com/flywave/go-tileproxy/utils"
 
 	mapset "github.com/deckarep/golang-set"
 )
@@ -19,11 +20,11 @@ type TileCreator struct {
 	MetaGrid      *geo.MetaGrid
 	BulkMetaTiles bool
 	Manager       Manager
-	Dimensions    map[string]string
+	Dimensions    utils.Dimensions
 	ImageMerger   images.Merger
 }
 
-func NewTileCreator(m Manager, dimensions map[string]string, merger images.Merger, bulk_meta_tiles bool) *TileCreator {
+func NewTileCreator(m Manager, dimensions utils.Dimensions, merger images.Merger, bulk_meta_tiles bool) *TileCreator {
 	return &TileCreator{Manager: m, Dimensions: dimensions, ImageMerger: merger, BulkMetaTiles: bulk_meta_tiles}
 }
 

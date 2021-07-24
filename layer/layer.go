@@ -11,11 +11,13 @@ import (
 
 type Layer interface {
 	GetMap(query *MapQuery) images.Source
+	GetInfo(query *InfoQuery) *resource.FeatureInfo
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
 	GetExtent() *geo.MapExtent
 	IsOpaque(query *MapQuery) bool
 	CombinedLayer(other Layer, query *MapQuery) Layer
+	GetCoverage() geo.Coverage
 }
 
 type MapLayer struct {
@@ -32,6 +34,10 @@ func NewMapLayer(opts *images.ImageOptions) *MapLayer {
 
 func (l *MapLayer) IsSupportMetaTiles() bool {
 	return l.SupportMetaTiles
+}
+
+func (l *MapLayer) GetCoverage() geo.Coverage {
+	return l.Coverage
 }
 
 func (l *MapLayer) GetOpacity() float64 {
@@ -67,12 +73,48 @@ type LimitedLayer struct {
 	coverage geo.Coverage
 }
 
+func (l *LimitedLayer) IsOpaque(query *MapQuery) bool {
+	return l.layer.IsOpaque(query)
+}
+
 func (l *LimitedLayer) CombinedLayer(other Layer, query *MapQuery) Layer {
+	var combined Layer
+	if l.coverage == other.GetCoverage() {
+		combined = l.layer.CombinedLayer(other, query)
+	}
+	if combined != nil {
+		return &LimitedLayer{layer: combined, coverage: l.coverage}
+	}
 	return nil
 }
 
+func (l *LimitedLayer) IsSupportMetaTiles() bool {
+	return l.layer.IsSupportMetaTiles()
+}
+
+func (l *LimitedLayer) GetResolutionRange() *geo.ResolutionRange {
+	return l.layer.GetResolutionRange()
+}
+
+func (l *LimitedLayer) GetCoverage() geo.Coverage {
+	return l.layer.GetCoverage()
+}
+
+func (l *LimitedLayer) GetMap(query *MapQuery) images.Source {
+	return l.layer.GetMap(query)
+}
+
 func (l *LimitedLayer) GetInfo(query *InfoQuery) *resource.FeatureInfo {
-	return nil
+	if l.GetCoverage() != nil {
+		if !l.GetCoverage().ContainsPoint(query.GetCoord(), query.Srs) {
+			return nil
+		}
+	}
+	return l.layer.GetInfo(query)
+}
+
+func (l *LimitedLayer) GetExtent() *geo.MapExtent {
+	return l.layer.GetExtent()
 }
 
 type ResolutionConditional struct {

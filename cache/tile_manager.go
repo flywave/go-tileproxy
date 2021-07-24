@@ -7,6 +7,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/utils"
 )
 
 type TileManager struct {
@@ -104,12 +105,12 @@ func (tm *TileManager) GetRescaleTiles() int {
 	return tm.rescaleTiles
 }
 
-func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions map[string]string, with_metadata bool) (error, *Tile) {
+func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (error, *Tile) {
 	err, tiles := tm.LoadTileCoords([][3]int{tile_coord}, dimensions, with_metadata)
 	return err, tiles.GetItem(0)
 }
 
-func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[string]string, with_metadata bool) (error, *TileCollection) {
+func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (error, *TileCollection) {
 	tiles := NewTileCollection(tile_coords)
 	rescale_till_zoom := 0
 
@@ -140,7 +141,7 @@ func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions map[strin
 	return nil, tiles
 }
 
-func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions map[string]string, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
+func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Dimensions, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
 	uncached_tiles := []*Tile{}
 
 	if rescaled_tiles != nil {
@@ -251,7 +252,7 @@ func (tm *TileManager) RemoveTileCoords(tile_coords [][3]int) error {
 	return tm.cache.RemoveTiles(tiles)
 }
 
-func (tm *TileManager) IsCached(tile_coord [3]int, dimensions map[string]string) bool {
+func (tm *TileManager) IsCached(tile_coord [3]int, dimensions utils.Dimensions) bool {
 	tile := NewTile(tile_coord)
 	cached := tm.cache.IsCached(tile)
 	max_mtime := tm.ExpireTimestamp(tile)
@@ -265,7 +266,7 @@ func (tm *TileManager) IsCached(tile_coord [3]int, dimensions map[string]string)
 	return cached
 }
 
-func (tm *TileManager) IsStale(tile_coord [3]int, dimensions map[string]string) bool {
+func (tm *TileManager) IsStale(tile_coord [3]int, dimensions utils.Dimensions) bool {
 	tile := NewTile(tile_coord)
 	if tm.cache.IsCached(tile) {
 		if !tm.IsCached(tile_coord, nil) {
@@ -291,7 +292,7 @@ func (tm *TileManager) ApplyTileFilter(tile *Tile) *Tile {
 	return tile
 }
 
-func (tm *TileManager) Creator(dimensions map[string]string) *TileCreator {
+func (tm *TileManager) Creator(dimensions utils.Dimensions) *TileCreator {
 	return NewTileCreator(tm, dimensions, nil, false)
 }
 

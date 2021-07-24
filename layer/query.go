@@ -20,7 +20,7 @@ type MapQuery struct {
 	Format      images.ImageFormat
 	Transparent bool
 	TiledOnly   bool
-	Dimensions  map[string]string
+	Dimensions  utils.Dimensions
 }
 
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {
@@ -31,7 +31,7 @@ func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]stri
 	result := make(map[string]string)
 	for k, v := range q.Dimensions {
 		if utils.ContainsString(keys, k) {
-			result[k] = v
+			result[k] = v.GetFirstValue()
 		}
 	}
 	return result

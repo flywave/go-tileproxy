@@ -355,7 +355,7 @@ type TileLayer struct {
 	metadata              map[string]string
 	tileManager           cache.Manager
 	infoSources           []sources.InfoSource
-	dimensions            map[string]string
+	dimensions            utils.Dimensions
 	grid                  *TileServiceGrid
 	extent                *geo.MapExtent
 	empty_tile            []byte
@@ -363,7 +363,7 @@ type TileLayer struct {
 	empty_response_as_png bool
 }
 
-func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []sources.InfoSource, dimensions map[string]string) *TileLayer {
+func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []sources.InfoSource, dimensions utils.Dimensions) *TileLayer {
 	ret := &TileLayer{name: name, title: title, metadata: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid()), mixed_format: true, empty_response_as_png: true}
 	if v, ok := ret.metadata["format"]; ok {
 		if strings.ToLower(v) == "true" {
@@ -433,8 +433,8 @@ func (tl *TileLayer) TileBBox(request request.TileRequest, use_profiles bool, li
 	return tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
 }
 
-func (tl *TileLayer) checkedDimensions(request request.TileRequest) map[string]string {
-	dimensions := make(map[string]string)
+func (tl *TileLayer) checkedDimensions(request request.TileRequest) utils.Dimensions {
+	dimensions := make(utils.Dimensions)
 	for dimension, values := range tl.dimensions {
 		dimensions[dimension] = values
 	}

@@ -26,7 +26,6 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, image_opts *images.ImageOp
 	if tm.GetRescaleTiles() == -1 {
 		ret.ResRange = layer.MergeLayerResRanges(tm.GetSources())
 	}
-
 	return ret
 }
 
@@ -34,7 +33,6 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 	if string(query.Format) != r.tileManager.GetFormat() {
 		return errors.New(fmt.Sprintf("invalid tile format, use %s", r.tileManager.GetFormat()))
 	}
-
 	if query.Size[0] != r.grid.TileSize[0] || query.Size[1] != r.grid.TileSize[1] {
 		return errors.New(fmt.Sprintf("invalid tile size (use %dx%d)", r.grid.TileSize[0], r.grid.TileSize[1]))
 	}
@@ -42,7 +40,6 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (images.Source, error) {
-
 	src_bbox, tile_grid, affected_tile_coords, err :=
 		r.grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
 	if err != nil {

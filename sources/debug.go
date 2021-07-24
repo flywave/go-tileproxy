@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type DebugSource struct {
@@ -22,7 +23,7 @@ func NewDebugSource() *DebugSource {
 	return &DebugSource{Extent: geo.MapExtentFromDefault(), SupportMetaTiles: true}
 }
 
-func (s *DebugSource) GetMap(query *layer.MapQuery) images.Source {
+func (s *DebugSource) GetMap(query *layer.MapQuery) tile.Source {
 	bbox := query.BBox
 	w := bbox.Max[0] - bbox.Min[0]
 	h := bbox.Max[1] - bbox.Min[1]
@@ -52,6 +53,6 @@ func NewDummySource(cov geo.Coverage) *DummySource {
 	return ds
 }
 
-func (s *DummySource) GetMap(query *layer.MapQuery) images.Source {
+func (s *DummySource) GetMap(query *layer.MapQuery) tile.Source {
 	return images.NewBlankImageSource(query.Size, &images.ImageOptions{Transparent: geo.NewBool(true)}, false)
 }

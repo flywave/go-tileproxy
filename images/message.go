@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
@@ -30,7 +31,7 @@ func SetFontPath(p string) {
 }
 
 func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, bgcolor color.Color,
-	transparent bool) Source {
+	transparent bool) tile.Source {
 	eimg := NewExceptionImage(message, image_opts)
 	src, err := eimg.Draw(nil, size[:], true)
 	if err != nil {
@@ -39,7 +40,7 @@ func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, b
 	return src
 }
 
-func GenAttributionImage(message string, size [2]uint32, image_opts *ImageOptions, inverse bool) Source {
+func GenAttributionImage(message string, size [2]uint32, image_opts *ImageOptions, inverse bool) tile.Source {
 	if image_opts == nil {
 		image_opts = &ImageOptions{Transparent: geo.NewBool(true)}
 	}
@@ -111,7 +112,7 @@ func (m *MessageImage) newImage(size []uint32) image.Image {
 	return image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
 }
 
-func (m *MessageImage) Draw(img Source, size []uint32, in_place bool) (Source, error) {
+func (m *MessageImage) Draw(img tile.Source, size []uint32, in_place bool) (tile.Source, error) {
 	if !((img != nil && size == nil) || (size != nil && img == nil)) {
 		return nil, errors.New("need either img or size argument")
 	}
@@ -123,7 +124,7 @@ func (m *MessageImage) Draw(img Source, size []uint32, in_place bool) (Source, e
 		size = ss[:]
 		base_img = m.newImage(size)
 	} else {
-		base_img = img.GetImage()
+		base_img = img.GetTile().(image.Image)
 		size = []uint32{uint32(base_img.Bounds().Dx()), uint32(base_img.Bounds().Dy())}
 	}
 
@@ -131,7 +132,7 @@ func (m *MessageImage) Draw(img Source, size []uint32, in_place bool) (Source, e
 		if img != nil {
 			return img, nil
 		}
-		return &ImageSource{image: base_img, size: size, Options: *m.image_opts}, nil
+		return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
 	}
 
 	draw := gg.NewContextForImage(base_img)
@@ -140,17 +141,17 @@ func (m *MessageImage) Draw(img Source, size []uint32, in_place bool) (Source, e
 	base_img = draw.Image()
 
 	if !in_place && img != nil {
-		if image_opts == nil && img.GetImageOptions() != nil {
-			image_opts = img.GetImageOptions()
+		if image_opts == nil && img.GetTileOptions() != nil {
+			image_opts = img.GetTileOptions().(*ImageOptions)
 		}
-		img := img.GetImage()
+		img := img.GetTile().(image.Image)
 
 		imgd := gg.NewContextForImage(img)
 		imgd.DrawImage(base_img, 0, 0)
 		base_img = imgd.Image()
 	}
 
-	return &ImageSource{image: base_img, size: size, Options: *m.image_opts}, nil
+	return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
 }
 
 func (m *MessageImage) drawMsg(draw *gg.Context, size []uint32) {

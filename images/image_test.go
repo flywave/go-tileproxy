@@ -8,13 +8,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/imaging"
 )
 
 var (
-	PNG_FORMAT  = &ImageOptions{Format: ImageFormat("image/png")}
-	JPEG_FORMAT = &ImageOptions{Format: ImageFormat("image/jpeg")}
-	TIFF_FORMAT = &ImageOptions{Format: ImageFormat("image/tiff")}
+	PNG_FORMAT  = &ImageOptions{Format: tile.TileFormat("image/png")}
+	JPEG_FORMAT = &ImageOptions{Format: tile.TileFormat("image/jpeg")}
+	TIFF_FORMAT = &ImageOptions{Format: tile.TileFormat("image/tiff")}
 )
 
 func createTmpImageFile(size [2]uint32) string {
@@ -33,7 +34,7 @@ func TestImageSource(t *testing.T) {
 	tmp_filename := createTmpImageFile([2]uint32{100, 100})
 	defer os.Remove(tmp_filename)
 
-	ir := &ImageSource{Options: *PNG_FORMAT}
+	ir := &ImageSource{Options: PNG_FORMAT}
 	ir.SetSource(tmp_filename)
 
 	if !isPng(string(ir.GetBuffer(nil, nil))) {
@@ -46,7 +47,7 @@ func TestImageSource(t *testing.T) {
 		t.FailNow()
 	}
 
-	ir = &ImageSource{Options: *PNG_FORMAT}
+	ir = &ImageSource{Options: PNG_FORMAT}
 	tmpfile, _ := os.Open(tmp_filename)
 	ir.SetSource(tmpfile)
 

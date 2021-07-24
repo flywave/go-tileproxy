@@ -1,6 +1,9 @@
 package raster
 
-import "github.com/flywave/go-tileproxy/geo"
+import (
+	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
+)
 
 type RasterType uint32
 
@@ -16,6 +19,7 @@ const (
 )
 
 type Raster struct {
+	tile.Source
 	data      interface{}
 	tp        RasterType
 	buf       []byte

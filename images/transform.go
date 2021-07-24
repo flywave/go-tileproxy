@@ -8,6 +8,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/imaging"
 )
@@ -20,12 +21,13 @@ type ImageTransformer struct {
 	MaxPxErr float64
 }
 
-func (t *ImageTransformer) Transform(srcImg Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) Source {
-	if t.noTransformationNeeded([2]uint32{uint32(srcImg.GetImage().Bounds().Dx()), uint32(srcImg.GetImage().Bounds().Dy())}, srcBBox, dstSize, dstBBox) {
+func (t *ImageTransformer) Transform(srcImg tile.Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) tile.Source {
+	img := srcImg.GetTile().(image.Image)
+	if t.noTransformationNeeded([2]uint32{uint32(img.Bounds().Dx()), uint32(img.Bounds().Dy())}, srcBBox, dstSize, dstBBox) {
 		return srcImg
 	}
 
-	var result Source
+	var result tile.Source
 	if t.SrcSRS.Eq(t.DstSRS) {
 		result = t.transformSimple(srcImg, srcBBox, dstSize, dstBBox,
 			imageOpts)
@@ -44,7 +46,7 @@ func (t *ImageTransformer) noTransformationNeeded(srcSize [2]uint32, srcBBox vec
 		geo.BBoxEquals(srcBBox, dstBBox, xres/10, yres/10))
 }
 
-func (t *ImageTransformer) transformSimple(srcImg Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) Source {
+func (t *ImageTransformer) transformSimple(srcImg tile.Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) tile.Source {
 	srcQuad := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{float64(srcImg.GetSize()[0]), float64(srcImg.GetSize()[1])}}
 	to_src_px := geo.MakeLinTransf(srcBBox, srcQuad)
 
@@ -63,16 +65,16 @@ func (t *ImageTransformer) transformSimple(srcImg Source, srcBBox vec2d.Rect, ds
 		math.Abs(src_res[1]-dst_res[1]) < tenth_px_res[1] {
 		minx := int(math.Round(minxy[0]))
 		miny := int(math.Round(minxy[1]))
-		result = imaging.Crop(srcImg.GetImage(), image.Rect(minx, miny,
+		result = imaging.Crop(srcImg.GetTile().(image.Image), image.Rect(minx, miny,
 			minx+int(dstSize[0]), miny+int(dstSize[1])))
 	} else {
-		result = imaging.Resize(srcImg.GetImage(), int(maxxy[0]-minxy[0]), int(maxxy[1]-minxy[1]), image_filter[imageOpts.Resampling])
+		result = imaging.Resize(srcImg.GetTile().(image.Image), int(maxxy[0]-minxy[0]), int(maxxy[1]-minxy[1]), image_filter[imageOpts.Resampling])
 	}
 
-	return &ImageSource{image: result, size: dstSize[:], Options: *imageOpts}
+	return &ImageSource{image: result, size: dstSize[:], Options: imageOpts}
 }
 
-func (t *ImageTransformer) transform(srcImg Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) Source {
+func (t *ImageTransformer) transform(srcImg tile.Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) tile.Source {
 
 	meshes := transformMeshes(
 		srcImg.GetSize(),
@@ -85,11 +87,11 @@ func (t *ImageTransformer) transform(srcImg Source, srcBBox vec2d.Rect, dstSize 
 		false,
 	)
 
-	img := srcImg.GetImage()
+	img := srcImg.GetTile().(image.Image)
 	result := imaging.Transform(img, int(dstSize[0]), int(dstSize[1]), imaging.MESH, meshes,
 		image_filter[imageOpts.Resampling], true, color.Black)
 
-	return &ImageSource{image: result, size: dstSize[:], Options: *imageOpts}
+	return &ImageSource{image: result, size: dstSize[:], Options: imageOpts}
 
 }
 

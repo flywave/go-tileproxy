@@ -10,7 +10,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type ArcGISExportRequestParams struct {
@@ -21,12 +21,12 @@ func NewArcGISExportRequestParams(params RequestParams) ArcGISExportRequestParam
 	return ArcGISExportRequestParams{params: params}
 }
 
-func (r *ArcGISExportRequestParams) GetFormat() images.ImageFormat {
+func (r *ArcGISExportRequestParams) GetFormat() tile.TileFormat {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return images.ImageFormat(strs[1])
+	return tile.TileFormat(strs[1])
 }
 
-func (r *ArcGISExportRequestParams) SetFormat(fmrt images.ImageFormat) {
+func (r *ArcGISExportRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("format", []string{fmrt.MimeType()})
 }
 
@@ -124,12 +124,12 @@ func NewArcGISIdentifyRequestParams(params RequestParams) ArcGISIdentifyRequestP
 	return ArcGISIdentifyRequestParams{params: params}
 }
 
-func (r *ArcGISIdentifyRequestParams) GetFormat() images.ImageFormat {
+func (r *ArcGISIdentifyRequestParams) GetFormat() tile.TileFormat {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return images.ImageFormat(strs[1])
+	return tile.TileFormat(strs[1])
 }
 
-func (r *ArcGISIdentifyRequestParams) SetFormat(fmrt images.ImageFormat) {
+func (r *ArcGISIdentifyRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("tilematrix", []string{fmrt.MimeType()})
 }
 

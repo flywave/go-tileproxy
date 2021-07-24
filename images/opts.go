@@ -3,7 +3,8 @@ package images
 import (
 	"image"
 	"image/color"
-	"strings"
+
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type ImageMode uint32
@@ -15,35 +16,19 @@ const (
 	GRAY ImageMode = 3
 )
 
-type ImageFormat string
-
-func (i *ImageFormat) MimeType() string {
-	if strings.HasPrefix(string(*i), "image/") {
-		return string(*i)
-	}
-	return "image/" + string(*i)
-}
-
-func (i *ImageFormat) Extension() string {
-	ext := string(*i)
-	if strings.Contains(ext, "/") {
-		ext = strings.Split(ext, "/")[1]
-	}
-	if strings.Contains(ext, ";") {
-		ext = strings.Split(ext, ";")[0]
-	}
-	return strings.Trim(ext, " ")
-}
-
 type ImageOptions struct {
 	Transparent     *bool
 	Opacity         *float64
-	Format          ImageFormat
+	Format          tile.TileFormat
 	Resampling      string
 	Mode            ImageMode
 	BgColor         color.Color
 	Colors          int
 	EncodingOptions map[string]interface{}
+}
+
+func (o *ImageOptions) GetFormat() tile.TileFormat {
+	return o.Format
 }
 
 func CreateImage(size [2]uint32, image_opts *ImageOptions) image.Image {

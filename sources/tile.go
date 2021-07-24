@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type TileSource struct {
@@ -21,7 +22,7 @@ type TileSource struct {
 	ErrorHandler func(error)
 }
 
-func (s *TileSource) GetMap(query *layer.MapQuery) (images.Source, error) {
+func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	if s.Grid.TileSize[0] != query.Size[0] || s.Grid.TileSize[1] != query.Size[1] {
 		return nil, errors.New("tile size of cache and tile source do not match")
 	}

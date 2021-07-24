@@ -7,6 +7,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
@@ -21,7 +22,7 @@ func NewTileMerger(tile_grid [2]int, tile_size [2]uint32) *TileMerger {
 	return &TileMerger{Grid: tile_grid, Size: tile_size}
 }
 
-func (t *TileMerger) Merge(ordered_tiles []Source, image_opts *ImageOptions) Source {
+func (t *TileMerger) Merge(ordered_tiles []tile.Source, image_opts *ImageOptions) tile.Source {
 	if t.Grid[0] == 1 && t.Grid[1] == 1 {
 		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
 			tile := ordered_tiles[0]
@@ -45,12 +46,12 @@ func (t *TileMerger) Merge(ordered_tiles []Source, image_opts *ImageOptions) Sou
 			cacheable = false
 		}
 
-		tile := source.GetImage()
+		tile := source.GetTile().(image.Image)
 		pos := t.tileOffset(i)
 		tile = imaging.Resize(tile, int(t.Size[0]), int(t.Size[1]), imaging.Lanczos)
 		dcresult.DrawImage(tile, pos[0], pos[1])
 	}
-	return &ImageSource{image: result, size: src_size[:], Options: *image_opts, cacheable: cacheable}
+	return &ImageSource{image: result, size: src_size[:], Options: image_opts, cacheable: cacheable}
 }
 
 func (t *TileMerger) srcSize() [2]uint32 {
@@ -68,8 +69,8 @@ type TileSplitter struct {
 	Options   *ImageOptions
 }
 
-func NewTileSplitter(meta_tile Source, image_opts *ImageOptions) *TileSplitter {
-	return &TileSplitter{MetaImage: meta_tile.GetImage(), Options: image_opts}
+func NewTileSplitter(meta_tile tile.Source, image_opts *ImageOptions) *TileSplitter {
+	return &TileSplitter{MetaImage: meta_tile.GetTile().(image.Image), Options: image_opts}
 }
 
 func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSource {
@@ -93,27 +94,27 @@ func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSou
 	} else {
 		crop = imaging.Crop(t.MetaImage, image.Rect(minx, miny, maxx, maxy))
 	}
-	return &ImageSource{image: crop, size: tile_size[:], Options: *t.Options}
+	return &ImageSource{image: crop, size: tile_size[:], Options: t.Options}
 }
 
 type TiledImage struct {
-	Tiles    []Source
+	Tiles    []tile.Source
 	TileGrid [2]int
 	TileSize [2]uint32
 	SrcBBox  vec2d.Rect
 	SrcSRS   geo.Proj
 }
 
-func NewTiledImage(tiles []Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj) *TiledImage {
+func NewTiledImage(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj) *TiledImage {
 	return &TiledImage{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: src_srs}
 }
 
-func (t *TiledImage) GetImage(image_opts *ImageOptions) Source {
+func (t *TiledImage) GetImage(image_opts *ImageOptions) tile.Source {
 	tm := NewTileMerger(t.TileGrid, t.TileSize)
 	return tm.Merge(t.Tiles, image_opts)
 }
 
-func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) Source {
+func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) tile.Source {
 	transformer := NewImageTransformer(t.SrcSRS, req_srs, nil)
 	src_img := t.GetImage(image_opts)
 	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox, image_opts)

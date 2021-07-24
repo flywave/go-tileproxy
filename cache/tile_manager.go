@@ -7,6 +7,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -184,18 +185,18 @@ var (
 	RESCALE_TILE_MISSING = images.NewBlankImageSource([2]uint32{256, 256}, &images.ImageOptions{}, false)
 )
 
-func (tm *TileManager) scaledTile(tile *Tile, stop_zoom int, rescaled_tiles *TileCollection) *Tile {
-	if rescaled_tiles.Contains(tile.Coord) {
-		return rescaled_tiles.GetItem(tile.Coord)
+func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCollection) *Tile {
+	if rescaled_tiles.Contains(t.Coord) {
+		return rescaled_tiles.GetItem(t.Coord)
 	}
 
-	tile.Source = RESCALE_TILE_MISSING
-	rescaled_tiles.SetItem(tile)
+	t.Source = RESCALE_TILE_MISSING
+	rescaled_tiles.SetItem(t)
 
-	tile_bbox := tm.grid.TileBBox(tile.Coord, false)
-	current_zoom := tile.Coord[2]
+	tile_bbox := tm.grid.TileBBox(t.Coord, false)
+	current_zoom := t.Coord[2]
 	if stop_zoom == current_zoom {
-		return tile
+		return t
 	}
 	var src_level int
 	if stop_zoom > current_zoom {
@@ -228,10 +229,10 @@ func (tm *TileManager) scaledTile(tile *Tile, stop_zoom int, rescaled_tiles *Til
 		rescaled_tiles)
 
 	if tile_collection.AllBlank() {
-		return tile
+		return t
 	}
 
-	tile_sources := []images.Source{}
+	tile_sources := []tile.Source{}
 	for _, t := range tile_collection.tiles {
 		if t.Source != nil && t.Source != RESCALE_TILE_MISSING {
 			tile_sources = append(tile_sources, t.Source)
@@ -239,12 +240,12 @@ func (tm *TileManager) scaledTile(tile *Tile, stop_zoom int, rescaled_tiles *Til
 	}
 
 	tiled_image := images.NewTiledImage(tile_sources, src_tile_grid, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, src_bbox, tm.grid.Srs)
-	tile.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.imageOpts)
+	t.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.imageOpts)
 
 	if tm.cacheRescaledTiles {
-		tm.cache.StoreTile(tile)
+		tm.cache.StoreTile(t)
 	}
-	return tile
+	return t
 }
 
 func (tm *TileManager) RemoveTileCoords(tile_coords [][3]int) error {

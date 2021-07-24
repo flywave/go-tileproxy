@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -15,7 +15,7 @@ type Manager interface {
 	GetGrid() *geo.TileGrid
 	GetCache() Cache
 	GetMetaGrid() *geo.MetaGrid
-	GetImageOptions() *images.ImageOptions
+	GetTileOptions() tile.TileOptions
 	Cleanup() bool
 	GetFormat() string
 	GetRequestFormat() string

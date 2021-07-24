@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type LegendCache struct {
@@ -17,7 +18,7 @@ func NewLegendCache(cache_dir string, file_ext string) *LegendCache {
 
 type Legend struct {
 	BaseResource
-	Source images.Source
+	Source tile.Source
 	Scale  int
 }
 

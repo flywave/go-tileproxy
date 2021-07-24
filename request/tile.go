@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type TileRequest struct {
@@ -20,7 +20,7 @@ type TileRequest struct {
 	Dimensions         map[string][]string
 	Tile               []int
 	Layer              string
-	Format             *images.ImageFormat
+	Format             *tile.TileFormat
 	Http               *http.Request
 }
 
@@ -67,7 +67,7 @@ func (r *TileRequest) initRequest() error {
 		r.Tile = []int{int(x), int(y), int(z)}
 	}
 	if r.Format != nil {
-		*r.Format = images.ImageFormat(result["format"])
+		*r.Format = tile.TileFormat(result["format"])
 	}
 	return nil
 }

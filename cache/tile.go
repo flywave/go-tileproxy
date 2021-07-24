@@ -4,7 +4,7 @@ import (
 	"image"
 	"time"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type CacheInfo struct {
@@ -15,7 +15,7 @@ type CacheInfo struct {
 
 type Tile struct {
 	Coord     [3]int
-	Source    images.Source
+	Source    tile.Source
 	Location  string
 	Stored    bool
 	Cacheable bool
@@ -38,7 +38,7 @@ func (t *Tile) SetCacheInfo(cache CacheInfo) {
 	t.Size = cache.Size
 }
 
-func (t *Tile) GetSourceBuffer(format *images.ImageFormat, in_image_opts *images.ImageOptions) []byte {
+func (t *Tile) GetSourceBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {
 	if t.Source != nil {
 		return t.Source.GetBuffer(format, in_image_opts)
 	} else {
@@ -48,13 +48,13 @@ func (t *Tile) GetSourceBuffer(format *images.ImageFormat, in_image_opts *images
 
 func (t *Tile) GetSourceImage() image.Image {
 	if t.Source != nil {
-		return t.Source.GetImage()
+		return t.Source.GetTile().(image.Image)
 	} else {
 		return nil
 	}
 }
 
-func (t *Tile) GetSource() images.Source {
+func (t *Tile) GetSource() tile.Source {
 	return t.Source
 }
 

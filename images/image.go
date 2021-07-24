@@ -15,6 +15,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
@@ -59,37 +60,24 @@ func PeekImageFormat(buf string) string {
 	return ""
 }
 
-type Source interface {
-	GetSource() interface{}
-	SetSource(src interface{})
-	GetFileName() string
-	GetSize() [2]uint32
-	GetBuffer(format *ImageFormat, in_image_opts *ImageOptions) []byte
-	GetImage() image.Image
-	GetCacheable() bool
-	SetCacheable(c bool)
-	SetImageOptions(options *ImageOptions)
-	GetImageOptions() *ImageOptions
-}
-
 type ImageSource struct {
-	Source
+	tile.Source
 	image     image.Image
 	buf       []byte
 	fname     string
-	Options   ImageOptions
+	Options   tile.TileOptions
 	size      []uint32
 	cacheable bool
 	georef    *geo.GeoReference
 }
 
 func CreateImageSource(si [2]uint32, opts *ImageOptions) *ImageSource {
-	ret := &ImageSource{image: CreateImage(si, opts), Options: *opts}
+	ret := &ImageSource{image: CreateImage(si, opts), Options: opts}
 	return ret
 }
 
 func CreateImageSourceFromImage(img image.Image, opts *ImageOptions) *ImageSource {
-	ret := &ImageSource{image: img, Options: *opts}
+	ret := &ImageSource{image: img, Options: opts}
 	return ret
 }
 
@@ -105,12 +93,12 @@ func CreateImageSourceFromPath(file string) *ImageSource {
 	return ret
 }
 
-func (s *ImageSource) SetImageOptions(options *ImageOptions) {
-	s.Options = *options
+func (s *ImageSource) SetTileOptions(options tile.TileOptions) {
+	s.Options = options
 }
 
-func (s *ImageSource) GetImageOptions() *ImageOptions {
-	return &s.Options
+func (s *ImageSource) GetTileOptions() tile.TileOptions {
+	return s.Options
 }
 
 func (s *ImageSource) GetCacheable() bool {
@@ -171,41 +159,49 @@ func (s *ImageSource) makeImageBuf() error {
 	return errors.New("image name is empty!")
 }
 
-func imageToBuf(image image.Image, image_opts ImageOptions, georef *geo.GeoReference) []byte {
+func imageToBuf(image image.Image, image_opts *ImageOptions, georef *geo.GeoReference) []byte {
 	fname := image_opts.Format.Extension()
 	buf := &bytes.Buffer{}
 	encodeImage(fname, buf, image)
 	return buf.Bytes()
 }
 
-func (s *ImageSource) GetBuffer(format *ImageFormat, in_image_opts *ImageOptions) []byte {
-	var image_opts ImageOptions
+func (s *ImageSource) getImageOptions() *ImageOptions {
+	return s.Options.(*ImageOptions)
+}
+
+func (s *ImageSource) GetBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {
+	var image_opts *ImageOptions
 	if in_image_opts != nil {
-		image_opts = *in_image_opts
+		image_opts = in_image_opts.(*ImageOptions)
 	} else {
-		image_opts = s.Options
+		image_opts = s.Options.(*ImageOptions)
 	}
 	if format != nil {
-		image_opts = s.Options
+		image_opts = s.Options.(*ImageOptions)
 		image_opts.Format = *format
 	}
 	if s.buf == nil {
 		s.buf = imageToBuf(s.GetImage(), image_opts, s.georef)
-		if len(s.Options.Format) == 0 {
-			s.Options.Format = ImageFormat(PeekImageFormat(string(s.buf)))
+		if len(s.getImageOptions().Format) == 0 {
+			s.getImageOptions().Format = tile.TileFormat(PeekImageFormat(string(s.buf)))
 		}
-		if image_opts.Format != s.Options.Format {
+		if image_opts.Format != s.getImageOptions().Format {
 			s.SetSource(s.GetImage())
 			s.buf = nil
 			s.Options = image_opts
 			fname := s.fname
 			s.fname = ""
-			s.GetBuffer(nil, &image_opts)
+			s.GetBuffer(nil, image_opts)
 			s.fname = fname
 		}
 	}
 
 	return s.buf
+}
+
+func (s *ImageSource) GetTile() interface{} {
+	return s.GetImage()
 }
 
 func (s *ImageSource) GetImage() image.Image {
@@ -254,9 +250,9 @@ func decodeImage(inputName string, reader io.Reader) image.Image {
 }
 
 func SubImageSource(source *ImageSource, size [2]uint32, offset []uint32, image_opts *ImageOptions, cacheable bool) *ImageSource {
-	new_image_opts := *image_opts
+	new_image_opts := image_opts
 	new_image_opts.Transparent = geo.NewBool(true)
-	img := CreateImage(size, &new_image_opts)
+	img := CreateImage(size, new_image_opts)
 
 	subimg := source.GetImage()
 
@@ -272,7 +268,7 @@ type BlankImageSource struct {
 }
 
 func NewBlankImageSource(size [2]uint32, image_opts *ImageOptions, cacheable bool) *BlankImageSource {
-	return &BlankImageSource{ImageSource: ImageSource{size: size[:], Options: *image_opts, image: nil, cacheable: cacheable}}
+	return &BlankImageSource{ImageSource: ImageSource{size: size[:], Options: image_opts, image: nil, cacheable: cacheable}}
 }
 
 func (s *BlankImageSource) GetFileName() string {
@@ -281,21 +277,21 @@ func (s *BlankImageSource) GetFileName() string {
 
 func (s *BlankImageSource) GetImage() image.Image {
 	if s.image == nil {
-		s.image = CreateImage([2]uint32{s.size[0], s.size[1]}, &s.Options)
+		s.image = CreateImage([2]uint32{s.size[0], s.size[1]}, s.getImageOptions())
 	}
 	return s.image
 }
 
-func (s *BlankImageSource) GetBuffer(format *ImageFormat, in_image_opts *ImageOptions) []byte {
+func (s *BlankImageSource) GetBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {
 	if s.buf == nil {
-		var image_opts ImageOptions
+		var image_opts *ImageOptions
 		if in_image_opts != nil {
-			image_opts = *in_image_opts
+			image_opts = in_image_opts.(*ImageOptions)
 		} else {
-			image_opts = s.Options
+			image_opts = s.Options.(*ImageOptions)
 		}
 		if format != nil {
-			image_opts = s.Options
+			image_opts = s.Options.(*ImageOptions)
 			image_opts.Format = *format
 		}
 		image_opts.Colors = 0

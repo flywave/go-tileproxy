@@ -13,7 +13,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -147,12 +147,12 @@ func (r *WMSMapRequestParams) SetSrs(srs string) {
 	r.params.Set("bboxSR", []string{srs})
 }
 
-func (r *WMSMapRequestParams) GetFormat() images.ImageFormat {
+func (r *WMSMapRequestParams) GetFormat() tile.TileFormat {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return images.ImageFormat(strs[1])
+	return tile.TileFormat(strs[1])
 }
 
-func (r *WMSMapRequestParams) SetFormat(fmrt images.ImageFormat) {
+func (r *WMSMapRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("format", []string{fmrt.MimeType()})
 }
 

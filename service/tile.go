@@ -14,6 +14,7 @@ import (
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/sources"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 	_ "github.com/flywave/ogc-specifications/pkg/tms100"
 )
@@ -38,7 +39,7 @@ func (s *TileService) GetMap(tile_request request.TileRequest) *Response {
 	}
 	layer, limit_to := s.GetLayer(tile_request)
 
-	decorate_img := func(image images.Source) images.Source {
+	decorate_img := func(image tile.Source) tile.Source {
 		query_extent := &geo.MapExtent{Srs: layer.grid.srs, BBox: layer.TileBBox(tile_request, tile_request.UseProfiles, false)}
 		return s.DecorateImg(image, "tms", []string{layer.name}, query_extent)
 	}
@@ -321,7 +322,7 @@ type tileResponse struct {
 	cacheable bool
 }
 
-func newTileResponse(tile *cache.Tile, format *images.ImageFormat, timestamp *time.Time, image_opts *images.ImageOptions) *tileResponse {
+func newTileResponse(tile *cache.Tile, format *tile.TileFormat, timestamp *time.Time, image_opts tile.TileOptions) *tileResponse {
 	return &tileResponse{buf: tile.GetSourceBuffer(format, image_opts), tile: tile, timestamp: &tile.Timestamp, size: int(tile.Size), cacheable: tile.Cacheable}
 }
 
@@ -422,7 +423,7 @@ func (t *TileLayer) empty_response() renderResponse {
 	}
 	if t.empty_tile == nil {
 		si := t.grid.grid.TileSize
-		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: images.ImageFormat(format), Transparent: geo.NewBool(true)}, false)
+		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, false)
 		t.empty_tile = img.GetBuffer(nil, nil)
 	}
 	return newImageResponse(t.empty_tile, format, time.Now())
@@ -441,7 +442,7 @@ func (tl *TileLayer) checkedDimensions(request request.TileRequest) utils.Dimens
 	return dimensions
 }
 
-func (tl *TileLayer) Render(tile_request request.TileRequest, use_profiles bool, coverage geo.Coverage, decorate_img func(image images.Source) images.Source) renderResponse {
+func (tl *TileLayer) Render(tile_request request.TileRequest, use_profiles bool, coverage geo.Coverage, decorate_img func(image tile.Source) tile.Source) renderResponse {
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return nil
 	}
@@ -461,36 +462,36 @@ func (tl *TileLayer) Render(tile_request request.TileRequest, use_profiles bool,
 
 	dimensions := tl.checkedDimensions(tile_request)
 
-	_, tile := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
-	if tile.Source == nil {
+	_, t := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
+	if t.Source == nil {
 		return tl.empty_response()
 	}
 
 	if decorate_img != nil {
-		tile.Source = decorate_img(tile.Source)
+		t.Source = decorate_img(t.Source)
 	}
-	var format *images.ImageFormat
+	var format *tile.TileFormat
 	var image_opts *images.ImageOptions
 	if coverage_intersects {
 		if tl.empty_response_as_png {
-			tf := images.ImageFormat("png")
+			tf := tile.TileFormat("png")
 			format = &tf
-			image_opts = &images.ImageOptions{Transparent: geo.NewBool(true), Format: images.ImageFormat("png")}
+			image_opts = &images.ImageOptions{Transparent: geo.NewBool(true), Format: tile.TileFormat("png")}
 		} else {
-			tf := images.ImageFormat(tl.GetFormat())
+			tf := tile.TileFormat(tl.GetFormat())
 			format = &tf
-			image_opts = tile.Source.GetImageOptions()
+			image_opts = t.Source.GetTileOptions().(*images.ImageOptions)
 		}
 
-		tile.Source = images.MaskImageSourceFromCoverage(
-			tile.Source, tile_bbox, tl.grid.srs, coverage, image_opts)
+		t.Source = images.MaskImageSourceFromCoverage(
+			t.Source, tile_bbox, tl.grid.srs, coverage, image_opts)
 
-		return newTileResponse(tile, format, nil, image_opts)
+		return newTileResponse(t, format, nil, image_opts)
 	}
 	if tl.mixed_format {
 		format = nil
 	} else {
 		format = tile_request.Format
 	}
-	return newTileResponse(tile, format, nil, tl.tileManager.GetImageOptions())
+	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }

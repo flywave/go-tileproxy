@@ -6,6 +6,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type errorInfo struct {
@@ -21,7 +22,7 @@ func (h *HTTPSourceErrorHandler) AddHandler(http_code string, color color.Color,
 	h.ResponseErrorCodes[http_code] = errorInfo{Color: color, Cacheable: cacheable}
 }
 
-func (h *HTTPSourceErrorHandler) Handle(status_code string, query *layer.MapQuery) images.Source {
+func (h *HTTPSourceErrorHandler) Handle(status_code string, query *layer.MapQuery) tile.Source {
 	var info errorInfo
 	if _, ok := h.ResponseErrorCodes[status_code]; ok {
 		info = h.ResponseErrorCodes[status_code]

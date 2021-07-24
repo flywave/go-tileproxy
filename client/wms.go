@@ -14,6 +14,7 @@ import (
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type WMSClient struct {
@@ -23,7 +24,7 @@ type WMSClient struct {
 	FWDReqParams    map[string]string
 }
 
-func (c *WMSClient) Retrieve(query *layer.MapQuery, format *images.ImageFormat) []byte {
+func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
 	var request_method string
 	if c.HttpMethod == "POST" {
 		request_method = "POST"
@@ -49,7 +50,7 @@ func (c *WMSClient) Retrieve(query *layer.MapQuery, format *images.ImageFormat) 
 	return resp.Body
 }
 
-func (c *WMSClient) queryData(query *layer.MapQuery, format *images.ImageFormat) (url string, data []byte) {
+func (c *WMSClient) queryData(query *layer.MapQuery, format *tile.TileFormat) (url string, data []byte) {
 	req := c.queryReq(query, format)
 	ind := strings.Index(req.Url, "?")
 	if ind != -1 {
@@ -60,11 +61,11 @@ func (c *WMSClient) queryData(query *layer.MapQuery, format *images.ImageFormat)
 	return url, []byte(req.QueryString())
 }
 
-func (c *WMSClient) queryURL(query *layer.MapQuery, format *images.ImageFormat) string {
+func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
 	return c.queryReq(query, format).CompleteUrl()
 }
 
-func (c *WMSClient) queryReq(query *layer.MapQuery, format *images.ImageFormat) *request.ArcGISRequest {
+func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.ArcGISRequest {
 	req := c.RequestTemplate
 	params := request.NewWMTSTileRequestParams(req.GetParams())
 	params.SetBBox(query.BBox)
@@ -165,7 +166,7 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	}
 
 	if query.Format != "" {
-		params.SetFormat(images.ImageFormat(query.Format))
+		params.SetFormat(tile.TileFormat(query.Format))
 	} else {
 		params.SetFormat("image/png")
 	}
@@ -182,7 +183,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 	resp := c.retrieve(query)
 	format := request.SplitMimeType(query.Format)[1]
 
-	src := &images.ImageSource{Options: images.ImageOptions{Format: images.ImageFormat(format)}}
+	src := &images.ImageSource{Options: &images.ImageOptions{Format: tile.TileFormat(format)}}
 	src.SetSource(bytes.NewBuffer(resp))
 
 	return &resource.Legend{Source: src, Scale: query.Scale}
@@ -198,7 +199,7 @@ func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 	params := request.NewWMTSLegendRequestParams(req.GetParams())
 
 	if query.Format != "" {
-		params.SetFormat(images.ImageFormat(query.Format))
+		params.SetFormat(tile.TileFormat(query.Format))
 	} else {
 		params.SetFormat("image/png")
 	}

@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type ArcGISClient struct {
@@ -22,11 +22,11 @@ func NewArcGISClient() *ArcGISClient {
 	return ret
 }
 
-func (c *ArcGISClient) Retrieve(*layer.MapQuery, *images.ImageFormat) []byte {
+func (c *ArcGISClient) Retrieve(*layer.MapQuery, *tile.TileFormat) []byte {
 	return nil
 }
 
-func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *images.ImageFormat) string {
+func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
 	req := c.RequestTemplate
 	params := request.NewArcGISExportRequestParams(req.GetParams())
 	params.SetFormat(*format)

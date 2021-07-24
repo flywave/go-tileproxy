@@ -10,7 +10,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -134,12 +134,12 @@ func (r *WMTSTileRequestParams) SetCoord(c [3]int) {
 	r.params.Set("tilematrix", []string{strconv.Itoa(c[2])})
 }
 
-func (r *WMTSTileRequestParams) GetFormat() images.ImageFormat {
+func (r *WMTSTileRequestParams) GetFormat() tile.TileFormat {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return images.ImageFormat(strs[1])
+	return tile.TileFormat(strs[1])
 }
 
-func (r *WMTSTileRequestParams) SetFormat(fmrt images.ImageFormat) {
+func (r *WMTSTileRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("format", []string{fmrt.MimeType()})
 }
 
@@ -207,7 +207,7 @@ func (r *WMTS100TileRequest) MakeRequest() map[string]interface{} {
 	req := make(map[string]interface{})
 	req["layer"] = params.params.GetOne("layer", "")
 	req["tilematrixset"] = params.params.GetOne("tilematrixset", "")
-	req["format"] = images.ImageFormat(params.params.GetOne("format", ""))
+	req["format"] = tile.TileFormat(params.params.GetOne("format", ""))
 	req["tile"] = params.GetCoord()
 	req["origin"] = "nw"
 	req["dimensions"] = params.GetDimensions()
@@ -279,7 +279,6 @@ func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 
 	ret["infoformat"] = params.params.GetOne("infoformat", "")
 	ret["pos"] = params.GetPos()
-
 	return ret
 }
 
@@ -337,12 +336,12 @@ func NewWMTSLegendRequestParams(params RequestParams) WMTSLegendRequestParams {
 	return WMTSLegendRequestParams{params: params}
 }
 
-func (r *WMTSLegendRequestParams) GetFormat() images.ImageFormat {
+func (r *WMTSLegendRequestParams) GetFormat() tile.TileFormat {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return images.ImageFormat(strs[1])
+	return tile.TileFormat(strs[1])
 }
 
-func (r *WMTSLegendRequestParams) SetFormat(fmrt images.ImageFormat) {
+func (r *WMTSLegendRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("format", []string{fmrt.MimeType()})
 }
 

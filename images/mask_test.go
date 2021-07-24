@@ -1,6 +1,7 @@
 package images
 
 import (
+	"image"
 	"os"
 	"testing"
 
@@ -59,7 +60,7 @@ func TestWKTMask(t *testing.T) {
 		t.FailNow()
 	}
 
-	imaging.Save(result.GetImage(), "./test.png")
+	imaging.Save(result.GetTile().(image.Image), "./test.png")
 }
 
 func TestGeosMask(t *testing.T) {

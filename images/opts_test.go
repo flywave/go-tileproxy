@@ -1,13 +1,17 @@
 package images
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/flywave/go-tileproxy/tile"
+)
 
 func TestImageFormat(t *testing.T) {
-	png1 := ImageFormat("image/png")
+	png1 := tile.TileFormat("image/png")
 	if png1.Extension() != "png" {
 		t.FailNow()
 	}
-	png2 := ImageFormat("png")
+	png2 := tile.TileFormat("png")
 	if png2.Extension() != "png" {
 		t.FailNow()
 	}

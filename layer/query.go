@@ -6,7 +6,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -17,7 +17,7 @@ type MapQuery struct {
 	BBox        vec2d.Rect
 	Size        [2]uint32
 	Srs         geo.Proj
-	Format      images.ImageFormat
+	Format      tile.TileFormat
 	Transparent bool
 	TiledOnly   bool
 	Dimensions  utils.Dimensions

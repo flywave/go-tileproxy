@@ -154,10 +154,10 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 
 func (r *Response) makeConditional(req *http.Request) {
 	not_modified := false
-	if v := req.Header.Get("if-none-match"); v == r.etag {
+	if v := req.Header.Get("If-none-match"); v == r.etag {
 		not_modified = true
 	} else if r.timestamp != nil {
-		if date := req.Header.Get("if-modified-since"); date != "" {
+		if date := req.Header.Get("If-modified-since"); date != "" {
 			timestamp, _ := utils.ParseDateTime(date)
 			if r.timestamp.Before(timestamp) {
 				not_modified = true

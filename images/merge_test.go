@@ -35,7 +35,7 @@ func TestMergeSingleCoverage(t *testing.T) {
 
 	result := merger.Merge(&img_opts, nil, vec2d.Rect{Min: vec2d.T{5, 0}, Max: vec2d.T{15, 10}}, geo.NewSRSProj4("EPSG:3857"), nil)
 
-	ri := result.GetImage()
+	ri := result.GetTile().(image.Image)
 	c := ri.At(6, 0)
 	_, _, _, A := c.RGBA()
 	if A != 0 {

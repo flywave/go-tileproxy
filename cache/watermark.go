@@ -33,7 +33,7 @@ func tileWatermarkPlacement(coord [3]int, double_spacing bool) string {
 
 func (w *Watermark) Apply(tile *Tile) *Tile {
 	placement := tileWatermarkPlacement(tile.Coord, w.spacing == "wide")
-	wimg := images.NewWatermarkImage(w.text, tile.Source.GetImageOptions(),
+	wimg := images.NewWatermarkImage(w.text, tile.Source.GetTileOptions().(*images.ImageOptions),
 		placement, &w.opacity, &w.font_color, &w.font_size)
 	tile.Source, _ = wimg.Draw(tile.Source, nil, false)
 	return tile

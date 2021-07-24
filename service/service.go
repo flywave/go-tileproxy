@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type Service interface {
@@ -34,6 +34,6 @@ func (s *BaseService) RequestParser(r *http.Request) request.Request {
 	return nil
 }
 
-func (s *BaseService) DecorateImg(image images.Source, service string, layers []string, query_extent *geo.MapExtent) images.Source {
+func (s *BaseService) DecorateImg(image tile.Source, service string, layers []string, query_extent *geo.MapExtent) tile.Source {
 	return image
 }

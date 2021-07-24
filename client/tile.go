@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type TileClient struct {
@@ -21,7 +21,7 @@ func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate) *TileClient {
 	return &TileClient{Grid: grid, Template: tpl}
 }
 
-func (c *TileClient) GetTile(tile_coord [3]int, format *images.ImageFormat) []byte {
+func (c *TileClient) GetTile(tile_coord [3]int, format *tile.TileFormat) []byte {
 	url := c.Template.substitute(tile_coord, format, c.Grid)
 	return c.Get(url).Body
 }
@@ -114,7 +114,7 @@ func NewURLTemplate(template string, format string) *TileURLTemplate {
 	return rt
 }
 
-func (t *TileURLTemplate) substitute(tile_coord [3]int, format *images.ImageFormat, grid *geo.TileGrid) string {
+func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat, grid *geo.TileGrid) string {
 	x, y, z := tile_coord[0], tile_coord[1], tile_coord[2]
 	data := map[string]string{"x": strconv.FormatInt(int64(x), 10), "y": strconv.FormatInt(int64(y), 10), "z": strconv.FormatInt(int64(z), 10)}
 	if format != nil {

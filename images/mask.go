@@ -8,6 +8,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/go-geos"
 
@@ -124,15 +125,15 @@ func maskImage(img image.Image, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo
 	return img, mask
 }
 
-func MaskImageSourceFromCoverage(img_source Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, image_opts *ImageOptions) Source {
+func MaskImageSourceFromCoverage(img_source tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, image_opts *ImageOptions) tile.Source {
 	var opts *ImageOptions
 	if image_opts == nil {
-		opts = img_source.GetImageOptions()
+		opts = img_source.GetTileOptions().(*ImageOptions)
 	} else {
 		opts = image_opts
 	}
 	var mask *image.Alpha
-	img := img_source.GetImage()
+	img := img_source.GetTile().(image.Image)
 	img, mask = maskImage(img, bbox, bbox_srs, coverage)
 
 	result := CreateImage([2]uint32{uint32(img.Bounds().Dx()), uint32(img.Bounds().Dy())}, image_opts)
@@ -142,5 +143,5 @@ func MaskImageSourceFromCoverage(img_source Source, bbox vec2d.Rect, bbox_srs ge
 	dc.SetMask(mask)
 	dc.DrawImage(img, 0, 0)
 
-	return &ImageSource{image: dc.Image(), Options: *opts, cacheable: false}
+	return &ImageSource{image: dc.Image(), Options: opts, cacheable: false}
 }

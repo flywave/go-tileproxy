@@ -65,7 +65,7 @@ func (l *Style) Hash() []byte {
 
 type Sprite struct {
 	BaseResource
-	Source images.Source
+	Source *images.ImageSource
 	Scale  int
 }
 

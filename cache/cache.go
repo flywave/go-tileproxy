@@ -21,16 +21,14 @@ type Cache interface {
 
 type LocalCache struct {
 	Cache
-	cacheDir              string
-	fileExt               string
-	linkSingleColorImages bool
-	tileLocation          func(*Tile, string, string, bool) string
-	levelLocation         func(int, string) string
+	cacheDir      string
+	fileExt       string
+	tileLocation  func(*Tile, string, string, bool) string
+	levelLocation func(int, string) string
 }
 
-func NewLocalCache(cache_dir string, file_ext string, directory_layout string,
-	link_single_color_images bool) *LocalCache {
-	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext, linkSingleColorImages: link_single_color_images}
+func NewLocalCache(cache_dir string, file_ext string, directory_layout string) *LocalCache {
+	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
 	return c
 }
@@ -74,9 +72,7 @@ func (c *LocalCache) StoreTile(tile *Tile) error {
 	if tile.Stored {
 		return nil
 	}
-
 	tile_loc := c.tile_location(tile, true)
-
 	return c.store(tile, tile_loc)
 }
 

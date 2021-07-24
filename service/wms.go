@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 	_ "github.com/flywave/ogc-specifications/pkg/wms130"
 )
 
@@ -66,7 +66,7 @@ type wmsLayer interface {
 	layer.Layer
 	mapLayersForQuery(query *layer.MapQuery) []wmsLayer
 	infoLayersForQuery(query *layer.InfoQuery) []wmsLayer
-	legend(query *layer.LegendQuery) []images.Source
+	legend(query *layer.LegendQuery) []tile.Source
 	GetLegendSize() int
 	GetName() string
 	GetLegendUrl() string
@@ -149,8 +149,8 @@ func (l *WMSLayer) infoLayersForQuery(query *layer.InfoQuery) []wmsLayer {
 	return l.infoLayers
 }
 
-func (l *WMSLayer) legend(query *layer.LegendQuery) []images.Source {
-	legend := []images.Source{}
+func (l *WMSLayer) legend(query *layer.LegendQuery) []tile.Source {
+	legend := []tile.Source{}
 	for _, lyr := range l.legendLayers {
 		legend = append(legend, lyr.legend(query)...)
 	}
@@ -293,7 +293,7 @@ func (l *WMSGroupLayer) GetChildLayers() map[string]wmsLayer {
 	return layers
 }
 
-func (l *WMSGroupLayer) legend(query *layer.LegendQuery) []images.Source {
+func (l *WMSGroupLayer) legend(query *layer.LegendQuery) []tile.Source {
 	panic("not implemented")
 }
 

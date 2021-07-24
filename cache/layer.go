@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type CacheMapLayer struct {
@@ -39,7 +40,7 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 	return nil
 }
 
-func (r *CacheMapLayer) getSource(query *layer.MapQuery) (images.Source, error) {
+func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	src_bbox, tile_grid, affected_tile_coords, err :=
 		r.grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
 	if err != nil {
@@ -79,20 +80,20 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (images.Source, error) 
 	if query.TiledOnly {
 		t := tile_collection.GetItem(0)
 		tile := t.Source
-		tile.SetImageOptions(r.tileManager.GetImageOptions())
+		tile.SetTileOptions(r.tileManager.GetTileOptions())
 		tile.SetCacheable(t.Cacheable)
 		return tile, nil
 	}
 
-	tile_sources := []images.Source{}
+	tile_sources := []tile.Source{}
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
 	tiled_image := images.NewTiledImage(tile_sources, tile_grid, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, src_bbox, r.grid.Srs)
-	return tiled_image.Transform(query.BBox, query.Srs, query.Size, r.tileManager.GetImageOptions()), nil
+	return tiled_image.Transform(query.BBox, query.Srs, query.Size, r.tileManager.GetTileOptions().(*images.ImageOptions)), nil
 }
 
-func (r *CacheMapLayer) GetMap(query *layer.MapQuery) images.Source {
+func (r *CacheMapLayer) GetMap(query *layer.MapQuery) tile.Source {
 	if err := r.CheckResRange(query); err != nil {
 		return nil
 	}
@@ -102,7 +103,7 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) images.Source {
 	}
 
 	query_extent := &geo.MapExtent{BBox: query.BBox, Srs: query.Srs}
-	var result images.Source
+	var result tile.Source
 	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(query_extent) {
 		if !r.Extent.Intersects(query_extent) {
 			return &images.BlankImageSource{}

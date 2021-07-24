@@ -1,9 +1,11 @@
 package images
 
 import (
+	"image"
 	"testing"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 func TestTileMerge(t *testing.T) {
@@ -11,13 +13,13 @@ func TestTileMerge(t *testing.T) {
 	for i := 0; i < 9; i++ {
 		cleanup_tiles = append(cleanup_tiles, createTmpImageFile([2]uint32{100, 100}))
 	}
-	var tiles []Source
+	var tiles []tile.Source
 	for i := 0; i < 9; i++ {
-		tiles = append(tiles, &ImageSource{fname: cleanup_tiles[i], Options: *PNG_FORMAT})
+		tiles = append(tiles, &ImageSource{fname: cleanup_tiles[i], Options: PNG_FORMAT})
 	}
 	m := NewTileMerger([2]int{3, 3}, [2]uint32{100, 100})
 	result := m.Merge(tiles, PNG_FORMAT)
-	img := result.GetImage()
+	img := result.GetTile().(image.Image)
 
 	if img.Bounds().Dx() != 300 || img.Bounds().Dy() != 300 {
 		t.FailNow()
@@ -25,13 +27,13 @@ func TestTileMerge(t *testing.T) {
 }
 
 func TestOneTileMerge(t *testing.T) {
-	tiles := []Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: *PNG_FORMAT}}
+	tiles := []tile.Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: PNG_FORMAT}}
 	for i := 0; i < 9; i++ {
 		tiles = append(tiles)
 	}
 	m := NewTileMerger([2]int{1, 1}, [2]uint32{100, 100})
 	result := m.Merge(tiles, PNG_FORMAT)
-	img := result.GetImage()
+	img := result.GetTile().(image.Image)
 
 	if img.Bounds().Dx() != 100 || img.Bounds().Dy() != 100 {
 		t.FailNow()
@@ -43,13 +45,13 @@ func TestMissingTileMerge(t *testing.T) {
 	for i := 0; i < 9; i++ {
 		cleanup_tiles = append(cleanup_tiles, createTmpImageFile([2]uint32{100, 100}))
 	}
-	tiles := []Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: *PNG_FORMAT}}
+	tiles := []tile.Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: PNG_FORMAT}}
 	for i := 0; i < 8; i++ {
 		tiles = append(tiles, nil)
 	}
 	m := NewTileMerger([2]int{3, 3}, [2]uint32{100, 100})
 	result := m.Merge(tiles, PNG_FORMAT)
-	img := result.GetImage()
+	img := result.GetTile().(image.Image)
 
 	if img.Bounds().Dx() != 300 || img.Bounds().Dy() != 300 {
 		t.FailNow()

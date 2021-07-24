@@ -8,27 +8,28 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/fogleman/gg"
 )
 
 type Merger interface {
-	Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source
+	Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source
 }
 
 type LayerMerger struct {
 	Merger
-	Layers    []Source
+	Layers    []tile.Source
 	Coverages []geo.Coverage
 	Cacheable bool
 }
 
-func (l *LayerMerger) Add(src Source, cov geo.Coverage) {
+func (l *LayerMerger) Add(src tile.Source, cov geo.Coverage) {
 	l.Layers = append(l.Layers, src)
 	l.Coverages = append(l.Coverages, cov)
 }
 
-func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source {
+func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
 	if l.Layers == nil {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
@@ -39,7 +40,7 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 		if len(l.Coverages) > 0 {
 			layer_coverage = l.Coverages[0]
 		}
-		layer_opts := layer_img.GetImageOptions()
+		layer_opts := layer_img.GetTileOptions().(*ImageOptions)
 		if ((layer_opts != nil && layer_opts.Transparent != nil && !*layer_opts.Transparent) || (layer_opts.Transparent != nil && *image_opts.Transparent)) && (size != nil || (size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1])) && (layer_coverage != nil || !layer_coverage.IsClip()) && coverage != nil {
 			return layer_img
 		}
@@ -66,8 +67,8 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 		}
 
 		var mask *image.Alpha
-		img := layer_img.GetImage()
-		layer_image_opts := layer_img.GetImageOptions()
+		img := layer_img.GetTile().(image.Image)
+		layer_image_opts := layer_img.GetTileOptions().(*ImageOptions)
 		if layer_image_opts == nil || layer_image_opts.Opacity == nil {
 			opacity = nil
 		} else {
@@ -106,7 +107,7 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 		result = dbg.Image()
 	}
 
-	return &ImageSource{image: result, size: size, Options: *image_opts, cacheable: cacheable}
+	return &ImageSource{image: result, size: size, Options: image_opts, cacheable: cacheable}
 }
 
 func opacityAdjust(m image.Image, percentage float64) *image.NRGBA {
@@ -136,7 +137,7 @@ type BandOption struct {
 
 type BandMerger struct {
 	Merger
-	Layers       []Source
+	Layers       []tile.Source
 	Ops          []BandOption
 	Cacheable    bool
 	Mode         ImageMode
@@ -237,7 +238,7 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 	return out
 }
 
-func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Source {
+func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
 	if len(l.Layers) < l.MaxSrcImages {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
@@ -251,7 +252,7 @@ func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.R
 	var src_image_rect image.Rectangle
 	var bands [][]uint32
 	for i, layer := range l.Layers {
-		img := layer.GetImage()
+		img := layer.GetTile().(image.Image)
 
 		if _, ok := l.MaxBand[i]; !ok {
 			src_img_bands = append(src_img_bands, nil)
@@ -308,10 +309,10 @@ func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.R
 
 	result := mergeImage(tmp_mode, src_image_rect, result_bands)
 
-	return &ImageSource{image: result, size: size, Options: *image_opts, cacheable: l.Cacheable}
+	return &ImageSource{image: result, size: size, Options: image_opts, cacheable: l.Cacheable}
 }
 
-func MergeImages(layers []Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs geo.Proj, merger Merger) Source {
+func MergeImages(layers []tile.Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs geo.Proj, merger Merger) tile.Source {
 	if merger == nil {
 		merger = &LayerMerger{}
 	}
@@ -325,7 +326,7 @@ func MergeImages(layers []Source, image_opts *ImageOptions, size [2]uint32, bbox
 	return nil
 }
 
-func ConcatLegends(legends []Source, mode ImageMode, format ImageFormat, size []uint32, bgcolor color.Color, transparent bool) Source {
+func ConcatLegends(legends []tile.Source, mode ImageMode, format tile.TileFormat, size []uint32, bgcolor color.Color, transparent bool) tile.Source {
 	if legends == nil {
 		return NewBlankImageSource([2]uint32{1, 1}, &ImageOptions{BgColor: bgcolor, Transparent: geo.NewBool(transparent)}, false)
 	}
@@ -340,7 +341,7 @@ func ConcatLegends(legends []Source, mode ImageMode, format ImageFormat, size []
 		legend_height := 0
 		for _, legend := range legends {
 			legend_position_y = append(legend_position_y, legend_height)
-			tmp_img := legend.GetImage()
+			tmp_img := legend.GetTile().(image.Image)
 			legend_width = geo.MaxInt(legend_width, tmp_img.Bounds().Dx())
 			legend_height += tmp_img.Bounds().Dy()
 		}
@@ -372,8 +373,8 @@ func ConcatLegends(legends []Source, mode ImageMode, format ImageFormat, size []
 	dc := gg.NewContextForImage(img)
 
 	for i := range legends {
-		legend_img := legends[i].GetImage()
+		legend_img := legends[i].GetTile().(image.Image)
 		dc.DrawImage(legend_img, 0, legend_position_y[i])
 	}
-	return &ImageSource{image: dc.Image(), Options: ImageOptions{Format: format}}
+	return &ImageSource{image: dc.Image(), Options: &ImageOptions{Format: format}}
 }

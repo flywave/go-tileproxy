@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type MapboxVectorClient struct {
@@ -18,7 +18,7 @@ type MapboxRasterClient struct {
 	Client
 }
 
-func (c *MapboxRasterClient) GetRaster(*layer.MapQuery, images.ImageFormat) []byte {
+func (c *MapboxRasterClient) GetRaster(*layer.MapQuery, tile.TileFormat) []byte {
 	return nil
 }
 
@@ -26,7 +26,7 @@ type MapboxRasterDemClient struct {
 	Client
 }
 
-func (c *MapboxRasterDemClient) GetRasterDem(*layer.MapQuery, images.ImageFormat) []byte {
+func (c *MapboxRasterDemClient) GetRasterDem(*layer.MapQuery, tile.TileFormat) []byte {
 	return nil
 }
 

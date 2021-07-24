@@ -7,10 +7,11 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/resource"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type Layer interface {
-	GetMap(query *MapQuery) images.Source
+	GetMap(query *MapQuery) tile.Source
 	GetInfo(query *InfoQuery) *resource.FeatureInfo
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
@@ -100,7 +101,7 @@ func (l *LimitedLayer) GetCoverage() geo.Coverage {
 	return l.layer.GetCoverage()
 }
 
-func (l *LimitedLayer) GetMap(query *MapQuery) images.Source {
+func (l *LimitedLayer) GetMap(query *MapQuery) tile.Source {
 	return l.layer.GetMap(query)
 }
 
@@ -150,7 +151,7 @@ func NewResolutionConditional(a, b Layer, resolution float64, srs geo.Proj, ext 
 	return ret
 }
 
-func (r *ResolutionConditional) GetMap(query *MapQuery) images.Source {
+func (r *ResolutionConditional) GetMap(query *MapQuery) tile.Source {
 	if err := r.CheckResRange(query); err != nil {
 		return nil
 	}
@@ -199,7 +200,7 @@ func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, opacity *float
 	return ret
 }
 
-func (r *SRSConditional) GetMap(query *MapQuery) images.Source {
+func (r *SRSConditional) GetMap(query *MapQuery) tile.Source {
 	if err := r.CheckResRange(query); err != nil {
 		return nil
 	}
@@ -221,7 +222,7 @@ func NewDirectMapLayer(src Layer, ext *geo.MapExtent) *DirectMapLayer {
 	return &DirectMapLayer{MapLayer: MapLayer{SupportMetaTiles: true, Extent: ext}, source: src}
 }
 
-func (r *DirectMapLayer) GetMap(query *MapQuery) images.Source {
+func (r *DirectMapLayer) GetMap(query *MapQuery) tile.Source {
 	if err := r.CheckResRange(query); err != nil {
 		return nil
 	}

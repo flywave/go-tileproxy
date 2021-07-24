@@ -2,6 +2,7 @@ package images
 
 import (
 	"fmt"
+	"image"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -35,11 +36,11 @@ func TestImageTransform(t *testing.T) {
 		dst_bbox,
 		&img_opts)
 
-	imaging.Save(result.GetImage(), "./transform.png")
+	imaging.Save(result.GetTile().(image.Image), "./transform.png")
 	errs := []float64{0.2, 0.5, 1, 2, 4, 6, 8, 12, 16}
 	for _, err := range errs {
 		transformer := &ImageTransformer{SrcSRS: src_srs, DstSRS: dst_srs, MaxPxErr: err}
 		result = transformer.Transform(src_img, src_bbox, dst_size, dst_bbox, &img_opts)
-		imaging.Save(result.GetImage(), fmt.Sprintf("./transform_%d.png", int(err*10)))
+		imaging.Save(result.GetTile().(image.Image), fmt.Sprintf("./transform_%d.png", int(err*10)))
 	}
 }

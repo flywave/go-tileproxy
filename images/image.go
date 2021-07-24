@@ -93,6 +93,10 @@ func CreateImageSourceFromPath(file string) *ImageSource {
 	return ret
 }
 
+func (s *ImageSource) GetType() tile.TileType {
+	return tile.TILE_IMAGERY
+}
+
 func (s *ImageSource) SetTileOptions(options tile.TileOptions) {
 	s.Options = options
 }

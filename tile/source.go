@@ -1,6 +1,15 @@
 package tile
 
+type TileType uint8
+
+const (
+	TILE_IMAGERY   = 0
+	TILE_DEMRASTER = 1
+	TILE_VECTOR    = 2
+)
+
 type Source interface {
+	GetType() TileType
 	GetSource() interface{}
 	SetSource(src interface{})
 	GetFileName() string

@@ -2,7 +2,6 @@ package raster
 
 import (
 	"io"
-	"math"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -30,6 +29,8 @@ type RasterSource struct {
 	buf        []byte
 	fname      string
 	size       []uint32
+	minimum    float64
+	maximum    float64
 	bounds     vec2d.Rect
 	cacheable  bool
 	georef     *geo.GeoReference
@@ -96,9 +97,13 @@ func (s *RasterSource) decode(r io.Reader) (interface{}, error) {
 }
 
 func (s *RasterSource) MinimumValue() float64 {
-	return math.Inf(-1)
+	return s.minimum
 }
 
 func (s *RasterSource) MaximumValue() float64 {
-	return math.Inf(1)
+	return s.maximum
+}
+
+func (s *RasterSource) RangeValue() float64 {
+	return s.maximum - s.minimum
 }

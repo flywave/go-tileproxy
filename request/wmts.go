@@ -10,6 +10,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
@@ -184,10 +185,17 @@ type WMTSRequest struct {
 	ExpectedParam      []string
 	NonStrict          bool
 	NonStrictParams    mapset.Set
+	UseProfiles        bool
 }
 
 type WMTS100TileRequest struct {
 	WMTSRequest
+	Layer         string
+	TileMatrixSet string
+	Format        tile.TileFormat
+	Tile          [3]int
+	Origin        geo.OriginType
+	Dimensions    map[string][]string
 }
 
 func (r *WMTSRequest) GetRequestHandler() string {
@@ -200,6 +208,13 @@ func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, 
 	r.FixedParams = map[string]string{"request": "GetTile", "version": "1.0.0", "service": "WMTS"}
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
 		"tilematrix", "tilerow", "tilecol", "format"}
+	params := &WMTSTileRequestParams{params: r.Params}
+	r.Layer = params.params.GetOne("layer", "")
+	r.TileMatrixSet = params.params.GetOne("tilematrixset", "")
+	r.Format = tile.TileFormat(params.params.GetOne("format", ""))
+	r.Tile = params.GetCoord()
+	r.Origin = geo.ORIGIN_NW
+	r.Dimensions = params.GetDimensions()
 }
 
 func (r *WMTS100TileRequest) MakeRequest() map[string]interface{} {
@@ -209,7 +224,7 @@ func (r *WMTS100TileRequest) MakeRequest() map[string]interface{} {
 	req["tilematrixset"] = params.params.GetOne("tilematrixset", "")
 	req["format"] = tile.TileFormat(params.params.GetOne("format", ""))
 	req["tile"] = params.GetCoord()
-	req["origin"] = "nw"
+	req["origin"] = geo.ORIGIN_NW
 	req["dimensions"] = params.GetDimensions()
 	return req
 }
@@ -262,6 +277,8 @@ func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
 
 type WMTS100FeatureInfoRequest struct {
 	WMTS100TileRequest
+	Infoformat []string
+	Pos        [2]int
 }
 
 func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -271,13 +288,16 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
 		"tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
 	r.NonStrictParams = mapset.NewSet("format", "styles")
+	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
+	r.Infoformat, _ = params.params.Get("infoformat")
+	r.Pos = params.GetPos()
 }
 
 func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 	ret := r.WMTS100TileRequest.MakeRequest()
 	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
 
-	ret["infoformat"] = params.params.GetOne("infoformat", "")
+	ret["infoformat"], _ = params.params.Get("infoformat")
 	ret["pos"] = params.GetPos()
 	return ret
 }

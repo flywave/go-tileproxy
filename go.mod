@@ -10,7 +10,7 @@ require (
 	github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c
 	github.com/flywave/go-geotiff v0.0.0-20210728070603-df2557449cb1
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20210728024731-80ed1bc42931
+	github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38
 	github.com/flywave/go-mbgeom v0.0.0-20210727032259-ea704981cf96
 	github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
@@ -21,6 +21,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985

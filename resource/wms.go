@@ -45,3 +45,7 @@ type FeatureInfo struct{}
 func CreateFeatureinfoDoc(data []byte, InfoFormat string) *FeatureInfo {
 	return nil
 }
+
+func CombineDocs(docs []*FeatureInfo) {
+
+}

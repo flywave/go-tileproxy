@@ -2,8 +2,9 @@ package raster
 
 import (
 	"io"
+	"math"
 
-	vec2d "github.com/flywave/go3d/float64/vec2"
+	vec3d "github.com/flywave/go3d/float64/vec3"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -24,19 +25,19 @@ const (
 
 type RasterSource struct {
 	tile.Source
-	data       interface{}
-	tp         RasterType
-	buf        []byte
-	fname      string
-	size       []uint32
-	minimum    float64
-	maximum    float64
-	bounds     vec2d.Rect
-	cacheable  bool
-	georef     *geo.GeoReference
-	nodata     float64
-	Options    tile.TileOptions
-	decodeFunc func(r io.Reader) (interface{}, error)
+	data             interface{}
+	tp               RasterType
+	buf              []byte
+	fname            string
+	size             []uint32
+	pixelSize        []float64
+	cacheable        bool
+	georef           *geo.GeoReference
+	nodata           float64
+	Options          tile.TileOptions
+	decodeFunc       func(r io.Reader) (interface{}, error)
+	getElevationFunc func(d interface{}, x, y int) float64
+	interpolator     Interpolator
 }
 
 func (s *RasterSource) GetType() tile.TileType {
@@ -96,14 +97,136 @@ func (s *RasterSource) decode(r io.Reader) (interface{}, error) {
 	return s.decodeFunc(r)
 }
 
-func (s *RasterSource) MinimumValue() float64 {
-	return s.minimum
+func (s *RasterSource) caclulatePixelSize() {
+	if s.pixelSize == nil {
+		s.pixelSize = []float64{0, 0}
+		s.pixelSize[0] = (s.georef.GetBBox().Max[0] - s.georef.GetBBox().Min[0]) / float64(s.size[0])
+		s.pixelSize[1] = (s.georef.GetBBox().Max[1] - s.georef.GetBBox().Min[1]) / float64(s.size[1])
+	}
 }
 
-func (s *RasterSource) MaximumValue() float64 {
-	return s.maximum
+func GetAverageExceptForNoDataValue(noData, valueIfAllBad float64, values ...float64) float64 {
+	withValues := []float64{}
+
+	epsilon := math.Nextafter(1, 2) - 1
+
+	for _, v := range values {
+		if math.Abs(v-noData) > epsilon {
+			withValues = append(withValues, v)
+		}
+	}
+	if len(withValues) > 0 {
+		sum := 0.0
+		for _, v := range withValues {
+			sum += v
+		}
+
+		return sum / float64(len(withValues))
+	} else {
+		return valueIfAllBad
+	}
 }
 
-func (s *RasterSource) RangeValue() float64 {
-	return s.maximum - s.minimum
+const (
+	NO_DATA_OUT = 0
+)
+
+func (s *RasterSource) GetElevation(lat, lon float64) float64 {
+	heightValue := 0.0
+
+	if s.pixelSize == nil {
+		s.caclulatePixelSize()
+	}
+
+	epsilon := math.Nextafter(1, 2) - 1
+
+	noData := s.nodata
+
+	var yPixel, xPixel, xInterpolationAmount, yInterpolationAmount float64
+
+	dataEndLat := s.georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
+
+	if float64(s.pixelSize[1]) > 0 {
+		yPixel = (dataEndLat - lat) / float64(s.pixelSize[1])
+	} else {
+		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
+	}
+	xPixel = (lon - s.georef.GetOrigin()[0]) / float64(s.pixelSize[0])
+
+	_, xInterpolationAmount = math.Modf(float64(xPixel))
+	_, yInterpolationAmount = math.Modf(float64(yPixel))
+
+	xOnDataPoint := math.Abs(xInterpolationAmount) < epsilon
+	yOnDataPoint := math.Abs(yInterpolationAmount) < epsilon
+
+	if xOnDataPoint && yOnDataPoint {
+		x := int(math.Round(xPixel))
+		y := int(math.Round(yPixel))
+		heightValue = s.getElevation(x, y)
+	} else {
+		xCeiling := int(math.Ceil(xPixel))
+		xFloor := int(math.Floor(xPixel))
+		yCeiling := int(math.Ceil(yPixel))
+		yFloor := int(math.Floor(yPixel))
+
+		northWest := s.getElevation(xFloor, yFloor)
+		northEast := s.getElevation(xCeiling, yFloor)
+		southWest := s.getElevation(xFloor, yCeiling)
+		southEast := s.getElevation(xCeiling, yCeiling)
+
+		avgHeight := GetAverageExceptForNoDataValue(noData, NO_DATA_OUT, southWest, southEast, northWest, northEast)
+
+		if northWest == noData {
+			northWest = avgHeight
+		}
+		if northEast == noData {
+			northEast = avgHeight
+		}
+		if southWest == noData {
+			southWest = avgHeight
+		}
+		if southEast == noData {
+			southEast = avgHeight
+		}
+
+		heightValue = s.interpolator.Interpolate(southWest, southEast, northWest, northEast, xInterpolationAmount, yInterpolationAmount)
+	}
+
+	return heightValue
+}
+
+func (s *RasterSource) getElevation(x, y int) float64 {
+	return s.getElevationFunc(s.data, x, y)
+}
+
+func (s *RasterSource) GetHeightMap() *HeightMap {
+	opts := s.Options.(*RasterOptions)
+	heightMap := NewHeightMap(int(s.size[0]), int(s.size[1]))
+	heightMap.Count = heightMap.Width * heightMap.Height
+	heightMap.srs = s.georef.GetSrs()
+	coords := make(Coordinates, heightMap.Count)
+
+	if s.pixelSize == nil {
+		s.caclulatePixelSize()
+	}
+
+	for y := 0; y < int(s.size[1]); y++ {
+		latitude := s.georef.GetOrigin()[1] + (float64(s.pixelSize[1]) * float64(y))
+		for x := 0; x < int(s.size[0]); x++ {
+			longitude := s.georef.GetOrigin()[0] + (float64(s.pixelSize[0]) * float64(x))
+
+			heightValue := s.getElevation(x, y)
+
+			if heightValue < float64(32768) {
+				heightMap.Minimum = math.Min(opts.MinimumAltitude, heightValue)
+				heightMap.Maximum = math.Max(opts.MaximumAltitude, heightValue)
+			} else {
+				heightValue = 0
+			}
+			coords = append(coords, vec3d.T{latitude, longitude, heightValue})
+		}
+	}
+
+	heightMap.Coordinates = coords
+	return heightMap
 }

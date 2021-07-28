@@ -3,6 +3,8 @@ package raster
 import (
 	"sort"
 
+	"github.com/flywave/go-tileproxy/geo"
+
 	mat4d "github.com/flywave/go3d/float64/mat4"
 	vec3d "github.com/flywave/go3d/float64/vec3"
 )
@@ -33,6 +35,7 @@ type HeightMap struct {
 	Minimum     float64
 	Maximum     float64
 	box         *vec3d.Box
+	srs         geo.Proj
 }
 
 func NewHeightMap(width, height int) *HeightMap {

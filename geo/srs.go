@@ -344,8 +344,21 @@ func (s *SupportedSRS) Eq(o *SupportedSRS) bool {
 }
 
 type GeoReference struct {
-	bbox vec2d.Rect
-	srs  string
+	bbox   vec2d.Rect
+	origin vec2d.T
+	srs    Proj
+}
+
+func (g *GeoReference) GetOrigin() vec2d.T {
+	return g.origin
+}
+
+func (g *GeoReference) GetBBox() vec2d.Rect {
+	return g.bbox
+}
+
+func (g *GeoReference) GetSrs() Proj {
+	return g.srs
 }
 
 func (g *GeoReference) TilePoints() [6]float64 {

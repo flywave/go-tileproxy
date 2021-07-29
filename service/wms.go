@@ -154,13 +154,15 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 
 	info_types := []string{"text", "html", "xml"}
 	if s.InfoFormats != nil {
-		info_types = s.InfoFormats
-	} else if self.fi_transformers {
-		info_types = self.fi_transformers.keys()
+		for _, v := range s.InfoFormats {
+			info_types = append(info_types, v)
+		}
+	} else if s.fi_transformers {
+		info_types = s.fi_transformers.keys()
 	}
 	info_formats := []string{}
 	for i := range info_types {
-		info_formats = append(info_formats, mimetype_from_infotype(info_types[i]))
+		info_formats = append(info_formats, request.MimetypeFromInfotype(info_types[i]))
 	}
 
 	cap := newCapabilities(service, root_layer, tile_layers,
@@ -187,12 +189,12 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	}
 
 	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewSRSProj4(freq.GetSrs()), Pos: info_request.Pos,
-		InfoFormat: freq.GetFormat(), FeatureCount: feature_count}
+		InfoFormat: string(freq.GetFormat()), FeatureCount: feature_count}
 
 	actual_layers := make(map[string]wmsLayer)
 
-	for layer_name := range freq.GetLayers() {
-		layer = self.layers[layer_name]
+	for _, layer_name := range freq.GetLayers() {
+		layer := s.Layers[layer_name]
 		if !layer.Queryable() {
 			//raise RequestError('layer %s is not queryable' % layer_name, request=request)
 		}
@@ -229,27 +231,27 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 
 	var resp []byte
 	var info_type string
-
-	if self.fi_transformers {
+	var actual_info_type string
+	if s.fi_transformers {
 		if !mimetype {
-			if utils.ContainsString(self.fi_transformers, "xml") {
+			if utils.ContainsString(s.fi_transformers, "xml") {
 				info_type = "xml"
-			} else if utils.ContainsString(self.fi_transformers, "html") {
+			} else if utils.ContainsString(s.fi_transformers, "html") {
 				info_type = "html"
 			} else {
 				info_type = "text"
 			}
-			mimetype = mimetype_from_infotype(request.version, info_type)
+			mimetype = request.MimetypeFromInfotype(request.version, info_type)
 		} else {
-			info_type = infotype_from_mimetype(request.version, mimetype)
+			info_type = request.InfotypeFromMimetype(request.version, mimetype)
 		}
-		resp, actual_info_type = combine_docs(infos, self.fi_transformers[info_type])
+		resp, actual_info_type = resource.CombineDocs(infos, self.fi_transformers[info_type])
 		if actual_info_type != nil && info_type != actual_info_type {
-			mimetype = mimetype_from_infotype(request.version, actual_info_type)
+			mimetype = request.MimetypeFromInfotype(request.version, actual_info_type)
 		}
 	} else {
-		resp, info_type = combine_docs(infos)
-		mimetype = mimetype_from_infotype(request.version, info_type)
+		resp, info_type = resource.CombineDocs(infos)
+		mimetype = request.MimetypeFromInfotype(request.version, info_type)
 	}
 
 	return NewResponse(resp, 200, "", mimetype)
@@ -315,7 +317,7 @@ type wmsLayer interface {
 	layer.Layer
 	rendersQuery(query *layer.MapQuery) bool
 	mapLayersForQuery(query *layer.MapQuery) map[string]wmsLayer
-	infoLayersForQuery(query *layer.InfoQuery) []wmsLayer
+	infoLayersForQuery(query *layer.InfoQuery) map[string]wmsLayer
 	legend(query *layer.LegendQuery) []tile.Source
 	GetLegendSize() int
 	GetName() string
@@ -526,13 +528,16 @@ func (l *WMSGroupLayer) mapLayersForQuery(query *layer.MapQuery) map[string]wmsL
 	}
 }
 
-func (l *WMSGroupLayer) infoLayersForQuery(query *layer.InfoQuery) []wmsLayer {
+func (l *WMSGroupLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]wmsLayer {
 	if l.this != nil {
 		return l.this.infoLayersForQuery(query)
 	} else {
-		layers := []wmsLayer{}
+		layers := make(map[string]wmsLayer)
 		for _, layer := range l.layers {
-			layers = append(layers, layer.infoLayersForQuery(query)...)
+			ll := layer.infoLayersForQuery(query)
+			for name, l := range ll {
+				layers[name] = l
+			}
 		}
 		return layers
 	}

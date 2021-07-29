@@ -480,7 +480,7 @@ var (
 	}
 )
 
-func infotype_from_mimetype(mime_type string) string {
+func InfotypeFromMimetype(mime_type string) string {
 	for t, m := range info_formats {
 		if m == mime_type {
 			return t
@@ -489,7 +489,7 @@ func infotype_from_mimetype(mime_type string) string {
 	return "text"
 }
 
-func mimetype_from_infotype(info_type string) string {
+func MimetypeFromInfotype(info_type string) string {
 	for t, m := range info_formats {
 		if t == info_type {
 			return m

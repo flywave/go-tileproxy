@@ -258,16 +258,16 @@ func NewWMTSFeatureInfoRequestParams(params RequestParams) WMTSFeatureInfoReques
 	return WMTSFeatureInfoRequestParams{WMTSTileRequestParams: WMTSTileRequestParams{params: params}}
 }
 
-func (r *WMTSFeatureInfoRequestParams) GetPos() [2]int {
-	i, err := strconv.Atoi(r.params.GetOne("i", "-1"))
+func (r *WMTSFeatureInfoRequestParams) GetPos() [2]float64 {
+	i, err := strconv.ParseFloat(r.params.GetOne("i", "-1"), 64)
 	if err != nil {
-		return [2]int{-1, -1}
+		return [2]float64{-1, -1}
 	}
-	j, err := strconv.Atoi(r.params.GetOne("j", "-1"))
+	j, err := strconv.ParseFloat(r.params.GetOne("j", "-1"), 64)
 	if err != nil {
-		return [2]int{-1, -1}
+		return [2]float64{-1, -1}
 	}
-	return [2]int{i, j}
+	return [2]float64{i, j}
 }
 
 func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
@@ -277,8 +277,8 @@ func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
 
 type WMTS100FeatureInfoRequest struct {
 	WMTS100TileRequest
-	Infoformat []string
-	Pos        [2]int
+	Infoformat string
+	Pos        [2]float64
 }
 
 func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -289,7 +289,7 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 		"tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
 	r.NonStrictParams = mapset.NewSet("format", "styles")
 	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
-	r.Infoformat, _ = params.params.Get("infoformat")
+	r.Infoformat = params.params.GetOne("infoformat", "")
 	r.Pos = params.GetPos()
 }
 

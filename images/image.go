@@ -67,7 +67,7 @@ type ImageSource struct {
 	fname     string
 	Options   tile.TileOptions
 	size      []uint32
-	cacheable bool
+	cacheable *tile.CacheInfo
 	georef    *geo.GeoReference
 }
 
@@ -105,11 +105,11 @@ func (s *ImageSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
-func (s *ImageSource) GetCacheable() bool {
+func (s *ImageSource) GetCacheable() *tile.CacheInfo {
 	return s.cacheable
 }
 
-func (s *ImageSource) SetCacheable(c bool) {
+func (s *ImageSource) SetCacheable(c *tile.CacheInfo) {
 	s.cacheable = c
 }
 
@@ -168,6 +168,10 @@ func imageToBuf(image image.Image, image_opts *ImageOptions, georef *geo.GeoRefe
 	buf := &bytes.Buffer{}
 	encodeImage(fname, buf, image)
 	return buf.Bytes()
+}
+
+func (s *ImageSource) SetGeoReference(georef *geo.GeoReference) {
+	s.georef = georef
 }
 
 func (s *ImageSource) getImageOptions() *ImageOptions {
@@ -253,7 +257,7 @@ func decodeImage(inputName string, reader io.Reader) image.Image {
 	return nil
 }
 
-func SubImageSource(source *ImageSource, size [2]uint32, offset []uint32, image_opts *ImageOptions, cacheable bool) *ImageSource {
+func SubImageSource(source *ImageSource, size [2]uint32, offset []uint32, image_opts *ImageOptions, cacheable *tile.CacheInfo) *ImageSource {
 	new_image_opts := image_opts
 	new_image_opts.Transparent = geo.NewBool(true)
 	img := CreateImage(size, new_image_opts)
@@ -271,7 +275,7 @@ type BlankImageSource struct {
 	ImageSource
 }
 
-func NewBlankImageSource(size [2]uint32, image_opts *ImageOptions, cacheable bool) *BlankImageSource {
+func NewBlankImageSource(size [2]uint32, image_opts *ImageOptions, cacheable *tile.CacheInfo) *BlankImageSource {
 	return &BlankImageSource{ImageSource: ImageSource{size: size[:], Options: image_opts, image: nil, cacheable: cacheable}}
 }
 

@@ -23,6 +23,11 @@ type MapQuery struct {
 	Dimensions  utils.Dimensions
 }
 
+func (q *MapQuery) EQ(o *MapQuery) bool {
+	//TODO
+	return false
+}
+
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {
 	keys := []string{}
 	for k := range params {
@@ -61,7 +66,7 @@ type InfoQuery struct {
 	Pos          [2]float64
 	InfoFormat   string
 	Format       string
-	FeatureCount int
+	FeatureCount *int
 }
 
 func (i *InfoQuery) GetCoord() []float64 {

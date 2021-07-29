@@ -101,36 +101,36 @@ func (r *WMSMapRequestParams) SetLayers(l []string) {
 	r.params.Set("layer", []string{strings.Join(l, ",")})
 }
 
-func (r *WMSMapRequestParams) GetSize() [2]int {
+func (r *WMSMapRequestParams) GetSize() [2]uint32 {
 	if v, ok := r.params.Get("size"); !ok {
-		return [2]int{-1, -1}
+		return [2]uint32{0, 0}
 	} else {
 		if len(v) == 2 {
-			si := [2]int{}
+			si := [2]uint32{}
 			for i := range v {
 				v, err := strconv.ParseInt(v[i], 10, 64)
 				if err != nil {
 					return si
 				}
-				si[i] = int(v)
+				si[i] = uint32(v)
 			}
 			return si
 		} else if len(v) == 1 {
 			bstr := strings.Split(v[0], ",")
 			if len(bstr) == 2 {
-				si := [2]int{}
+				si := [2]uint32{}
 				for i := range bstr {
 					v, err := strconv.ParseInt(v[i], 10, 64)
 					if err != nil {
 						return si
 					}
-					si[i] = int(v)
+					si[i] = uint32(v)
 				}
 				return si
 			}
 		}
 	}
-	return [2]int{-1, -1}
+	return [2]uint32{0, 0}
 }
 
 func (r *WMSMapRequestParams) SetSize(si [2]uint32) {

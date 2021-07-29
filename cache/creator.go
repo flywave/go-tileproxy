@@ -88,9 +88,9 @@ func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 			}
 			source.SetTileOptions(c.Manager.GetTileOptions())
 			t.Source = source
-			t.Cacheable = source.GetCacheable()
+			t.SetCacheInfo(source.GetCacheable())
 			t = c.Manager.ApplyTileFilter(t)
-			if source.GetCacheable() {
+			if source.GetCacheable() != nil {
 				return c.Cache.StoreTile(t)
 			}
 		} else {
@@ -151,7 +151,7 @@ func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2
 		}
 		data := splitter.GetTile(crop_coord, tile_size)
 		new_tile := NewTile(tile_coord)
-		new_tile.Cacheable = meta_tile.GetCacheable()
+		new_tile.SetCacheInfo(meta_tile.GetCacheable())
 		new_tile.Source = data
 		split_tiles.SetItem(new_tile)
 	}
@@ -187,7 +187,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 			for i, t := range splitted_tiles.tiles {
 				splitted_tiles.UpdateItem(i, c.Manager.ApplyTileFilter(t))
 			}
-			if meta_tile_image.GetCacheable() {
+			if meta_tile_image.GetCacheable() != nil {
 				c.Cache.StoreTiles(splitted_tiles)
 			}
 		}
@@ -211,7 +211,7 @@ func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) *Tile {
 	}
 
 	tile := NewTile(coord)
-	tile.Cacheable = tile_image.GetCacheable()
+	tile.SetCacheInfo(tile_image.GetCacheable())
 	tile.Source = tile_image
 	tile = c.Manager.ApplyTileFilter(tile)
 	return tile

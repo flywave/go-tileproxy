@@ -28,9 +28,13 @@ type TileService struct {
 	BaseService
 	Layers             map[string]RenderLayer
 	Metadata           map[string]string
-	MaxTileAge         time.Duration
+	MaxTileAge         *time.Duration
 	UseDimensionLayers bool
 	Origin             string
+}
+
+func NewTileService(layers map[string]RenderLayer, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
+	return &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
 }
 
 func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
@@ -425,7 +429,7 @@ func (t *TileLayer) empty_response() RenderResponse {
 	}
 	if t.empty_tile == nil {
 		si := t.grid.grid.TileSize
-		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, false)
+		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
 		t.empty_tile = img.GetBuffer(nil, nil)
 	}
 	return newImageResponse(t.empty_tile, format, time.Now())

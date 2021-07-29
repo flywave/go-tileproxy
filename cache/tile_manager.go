@@ -182,7 +182,7 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 }
 
 var (
-	RESCALE_TILE_MISSING = images.NewBlankImageSource([2]uint32{256, 256}, &images.ImageOptions{}, false)
+	RESCALE_TILE_MISSING = images.NewBlankImageSource([2]uint32{256, 256}, &images.ImageOptions{}, nil)
 )
 
 func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCollection) *Tile {

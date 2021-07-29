@@ -22,7 +22,7 @@ type ImagerySource interface {
 
 type InfoSource interface {
 	Source
-	GetInfo(query *layer.MapQuery) *resource.FeatureInfo
+	GetInfo(query *layer.InfoQuery) *resource.FeatureInfo
 }
 
 type LegendSource interface {

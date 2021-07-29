@@ -31,7 +31,7 @@ type RasterSource struct {
 	fname            string
 	size             []uint32
 	pixelSize        []float64
-	cacheable        bool
+	cacheable        *tile.CacheInfo
 	georef           *geo.GeoReference
 	nodata           float64
 	Options          tile.TileOptions
@@ -44,11 +44,11 @@ func (s *RasterSource) GetType() tile.TileType {
 	return tile.TILE_DEMRASTER
 }
 
-func (s *RasterSource) GetCacheable() bool {
+func (s *RasterSource) GetCacheable() *tile.CacheInfo {
 	return s.cacheable
 }
 
-func (s *RasterSource) SetCacheable(c bool) {
+func (s *RasterSource) SetCacheable(c *tile.CacheInfo) {
 	s.cacheable = c
 }
 

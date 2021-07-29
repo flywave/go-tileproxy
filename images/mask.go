@@ -143,5 +143,5 @@ func MaskImageSourceFromCoverage(img_source tile.Source, bbox vec2d.Rect, bbox_s
 	dc.SetMask(mask)
 	dc.DrawImage(img, 0, 0)
 
-	return &ImageSource{image: dc.Image(), Options: opts, cacheable: false}
+	return &ImageSource{image: dc.Image(), Options: opts, cacheable: nil}
 }

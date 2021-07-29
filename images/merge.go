@@ -21,7 +21,7 @@ type LayerMerger struct {
 	Merger
 	Layers    []tile.Source
 	Coverages []geo.Coverage
-	Cacheable bool
+	Cacheable *tile.CacheInfo
 }
 
 func (l *LayerMerger) Add(src tile.Source, cov geo.Coverage) {
@@ -62,8 +62,8 @@ func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.
 			layer_coverage = l.Coverages[i]
 		}
 
-		if !layer_img.GetCacheable() {
-			cacheable = false
+		if layer_img.GetCacheable() == nil {
+			cacheable = layer_img.GetCacheable()
 		}
 
 		var mask *image.Alpha
@@ -139,14 +139,14 @@ type BandMerger struct {
 	Merger
 	Layers       []tile.Source
 	Ops          []BandOption
-	Cacheable    bool
+	Cacheable    *tile.CacheInfo
 	Mode         ImageMode
 	MaxBand      map[int]int
 	MaxSrcImages int
 }
 
 func NewBandMerger(mode ImageMode) *BandMerger {
-	return &BandMerger{Ops: make([]BandOption, 0), Cacheable: true, Mode: mode, MaxBand: make(map[int]int), MaxSrcImages: 0}
+	return &BandMerger{Ops: make([]BandOption, 0), Cacheable: nil, Mode: mode, MaxBand: make(map[int]int), MaxSrcImages: 0}
 }
 
 func (l *BandMerger) AddOps(dst_band, src_img, src_band int, factor float64) {
@@ -328,7 +328,7 @@ func MergeImages(layers []tile.Source, image_opts *ImageOptions, size [2]uint32,
 
 func ConcatLegends(legends []tile.Source, mode ImageMode, format tile.TileFormat, size []uint32, bgcolor color.Color, transparent bool) tile.Source {
 	if legends == nil {
-		return NewBlankImageSource([2]uint32{1, 1}, &ImageOptions{BgColor: bgcolor, Transparent: geo.NewBool(transparent)}, false)
+		return NewBlankImageSource([2]uint32{1, 1}, &ImageOptions{BgColor: bgcolor, Transparent: geo.NewBool(transparent)}, nil)
 	}
 
 	if len(legends) == 1 {

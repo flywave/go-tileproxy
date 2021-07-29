@@ -66,7 +66,7 @@ func TestImageSource(t *testing.T) {
 func TestSubImageSource(t *testing.T) {
 	sub_img := CreateImageSource([2]uint32{150, 150}, PNG_FORMAT)
 	img := SubImageSource(
-		sub_img, [2]uint32{100, 100}, []uint32{0, 0}, PNG_FORMAT, false).GetImage()
+		sub_img, [2]uint32{100, 100}, []uint32{0, 0}, PNG_FORMAT, nil).GetImage()
 
 	rect := img.Bounds()
 
@@ -76,7 +76,7 @@ func TestSubImageSource(t *testing.T) {
 }
 
 func TestBlankImageSource(t *testing.T) {
-	bi := NewBlankImageSource([2]uint32{100, 100}, PNG_FORMAT, false)
+	bi := NewBlankImageSource([2]uint32{100, 100}, PNG_FORMAT, nil)
 
 	if !isPng(string(bi.GetBuffer(nil, nil))) {
 		t.FailNow()

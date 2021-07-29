@@ -1,11 +1,15 @@
 package service
 
 import (
+	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
 	_ "github.com/flywave/ogc-specifications/pkg/wmts100"
 )
@@ -14,15 +18,19 @@ type WMTSService struct {
 	BaseService
 	Metadata    map[string]string
 	MaxTileAge  time.Duration
-	Layers      map[string]*WMTSTileLayer
+	Layers      map[string]WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
-	InfoFormats []string
+	InfoFormats map[string]string
 }
 
-func (s *WMTSService) getMatrixSets(layers []RenderLayer) (map[string]*WMTSTileLayer, map[string]*TileMatrixSet) {
+func NewWMTSService(layers []*TileLayer, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSRestService {
+	return nil
+}
+
+func (s *WMTSService) getMatrixSets(tlayers []*TileLayer) (map[string]*WMTSTileLayer, map[string]*TileMatrixSet) {
 	sets := make(map[string]*TileMatrixSet)
-	layers_grids := make(map[string][]RenderLayer)
-	for _, layer := range layers {
+	layers_grids := make(map[string][]*TileLayer)
+	for _, layer := range tlayers {
 		grid := layer.GetGrid()
 		if !grid.SupportsAccessWithOrigin(geo.ORIGIN_NW) {
 			continue
@@ -61,9 +69,9 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 
 func (s *WMTSService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.WMTS100TileRequest)
-	s.checkRequest(&tile_request.WMTSRequest)
+	s.checkRequest(&tile_request.WMTSRequest, nil)
 
-	tile_layer := s.Layers[tile_request.Layer].Get(tile_request.TileMatrixSet)
+	tile_layer := s.Layers[tile_request.Layer][tile_request.TileMatrixSet]
 	if tile_request.Format == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
 		tile_request.Format = tf
@@ -71,7 +79,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	s.checkRequestDimensions(tile_layer, &tile_request.WMTSRequest)
 
-	limited_to := s.authorizeTileLayer(tile_layer, tile_request)
+	limited_to := s.authorizeTileLayer(tile_layer, tile_request, false)
 
 	decorate_tile := func(image tile.Source) tile.Source {
 		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
@@ -87,71 +95,104 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 	return resp
 }
 
-func (s *WMTSService) GetFeatureInfo(req request.Request) *Response  {
+func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	infos := []*resource.FeatureInfo{}
 	info_request := req.(*request.WMTS100FeatureInfoRequest)
-	s.checkRequest(&info_request.WMTSRequest, s.InfoFormats)
+	s.checkRequest(&info_request.WMTSRequest, &info_request.Infoformat)
 
-	tile_layer := s.Layers[info_request.Layer].Get(info_request.TileMatrixSet)
+	tile_layer := s.Layers[info_request.Layer][info_request.TileMatrixSet]
 	if info_request.Format == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
 		info_request.Format = tf
 	}
 
-	feature_count = None
+	var feature_count *int
 
-	if hasattr(request, 'params') {
-		feature_count = request.params.get('feature_count', None)
-	}
-
-	bbox = tile_layer.grid.tile_bbox(request.tile)
-	query = InfoQuery(bbox, tile_layer.grid.tile_size, tile_layer.grid.srs, request.pos,
-					  request.infoformat, feature_count=feature_count)
-	self.check_request_dimensions(tile_layer, request)
-	coverage = self.authorize_tile_layer(tile_layer, request, featureinfo=True)
-
-	if not tile_layer.info_sources {
-		raise RequestError('layer %s not queryable' % str(request.layer),
-			code='OperationNotSupported', request=request)
-	}
-
-	if coverage and not coverage.contains(query.coord, query.srs) {
-		infos = []
-	} else {
-		for source in tile_layer.info_sources {
-			info = source.get_info(query)
-			if info is None {
-				continue
-			}
-			infos.append(info)
+	if req.GetParams() != nil {
+		if v, ok := req.GetParams()["feature_count"]; ok {
+			fc, _ := strconv.Atoi(v[0])
+			feature_count = &fc
 		}
 	}
 
-	mimetype = request.infoformat
+	bbox := tile_layer.GetGrid().TileBBox(info_request.Tile, false)
+	query := &layer.InfoQuery{BBox: bbox, Size: [2]uint32{tile_layer.GetGrid().TileSize[0], tile_layer.GetGrid().TileSize[1]}, Srs: tile_layer.GetGrid().Srs, Pos: info_request.Pos,
+		InfoFormat: info_request.Infoformat, FeatureCount: feature_count}
+	s.checkRequestDimensions(tile_layer, req)
 
-	if not infos{
-		return NewResponse('', 200, "", mimetype)
+	coverage := s.authorizeTileLayer(tile_layer, req, true)
+
+	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
+		infos = nil
+	} else {
+		for _, source := range tile_layer.infoSources {
+			info := source.GetInfo(query)
+			if info == nil {
+				continue
+			}
+			infos = append(infos, info)
+		}
 	}
 
-	resp, _ = resource.CombineDocs(infos)
+	mimetype := info_request.Infoformat
+
+	if infos == nil || len(infos) == 0 {
+		return NewResponse([]byte{}, 200, "", mimetype)
+	}
+
+	resp, _ := resource.CombineDocs(infos)
 
 	return NewResponse(resp, 200, "", mimetype)
 }
 
-func (s *WMTSService) authorizeTileLayer(tile_layer RenderLayer, tile_request request.Request) geo.Coverage {
+func (s *WMTSService) authorizeTileLayer(tile_layer *TileLayer, tile_request request.Request, featureinfo bool) geo.Coverage {
 	return nil
 }
 
-func (s *WMTSService) authorizedTileLayers() []*WMTSTileLayer {
+func (s *WMTSService) authorizedTileLayers() []WMTSTileLayer {
+	ret := []WMTSTileLayer{}
+	for _, v := range s.Layers {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
+func (s *WMTSService) checkRequestDimensions(tile_layer *TileLayer, request request.Request) {
+	//
+}
+
+func (s *WMTSService) checkRequest(req request.Request, infoformat *string) error {
+	switch wreq := req.(type) {
+	case *request.WMTS100TileRequest:
+		{
+			if _, ok := s.Layers[wreq.Layer]; !ok {
+				return errors.New("unknown layer: " + wreq.Layer)
+			}
+			if _, ok := s.Layers[wreq.Layer][wreq.TileMatrixSet]; !ok {
+				return errors.New("unknown tilematrixset: " + wreq.TileMatrixSet)
+			}
+		}
+	case *request.WMTS100CapabilitiesRequest:
+		{
+			//
+		}
+	case *request.WMTS100FeatureInfoRequest:
+		{
+			if infoformat != nil {
+				if strings.Contains(wreq.Infoformat, "/") {
+					if _, ok := s.InfoFormats[wreq.Infoformat]; !ok {
+						return errors.New("unknown infoformat: " + wreq.Infoformat)
+					}
+				} else {
+					if _, ok := s.InfoFormats[wreq.Infoformat]; !ok {
+						return errors.New("unknown infoformat: " + wreq.Infoformat)
+					}
+					wreq.Infoformat = s.InfoFormats[wreq.Infoformat]
+				}
+			}
+		}
+	}
 	return nil
-}
-
-func (s *WMTSService) checkRequestDimensions(tile_layer RenderLayer, request request.Request) {
-
-}
-
-func (s *WMTSService) checkRequest(request request.Request) {
-
 }
 
 const (
@@ -167,32 +208,45 @@ type WMTSRestService struct {
 	infoTemplate   string
 }
 
-type WMTSTileLayer struct {
-	layers    map[string]RenderLayer
-	baseLayer RenderLayer
-}
-
-func NewWMTSTileLayer(layer []RenderLayer) *WMTSTileLayer {
+func NewWMTSRestService(layers []*TileLayer, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
 	return nil
 }
 
-func (t *WMTSTileLayer) Get(p string) RenderLayer {
-	return t.layers[p]
+func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileLayer, request request.Request) {
+	//
+}
+
+type WMTSTileLayer map[string]*TileLayer
+
+func NewWMTSTileLayer(layer []*TileLayer) *WMTSTileLayer {
+	return nil
 }
 
 type WMTSCapabilities struct {
+	Service     map[string]string
+	Layers      []WMTSTileLayer
+	MatrixSets  map[string]*TileMatrixSet
+	InfoFormats map[string]string
 }
 
 func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
 	return nil
 }
 
-func newWMTSCapabilities(md map[string]string, layers []*WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats []string) *WMTSCapabilities {
+func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
 	return nil
 }
 
 type WMTSRestfulCapabilities struct {
 	WMTSCapabilities
+}
+
+func newWMTSRestfulCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
+	return nil
+}
+
+func (c *WMTSRestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
+	return nil
 }
 
 const (

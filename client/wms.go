@@ -156,8 +156,8 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	params.SetPos(query.Pos)
 	params.SetSrs(query.Srs.GetDef())
 
-	if query.FeatureCount > 0 {
-		fc := strconv.FormatInt(int64(query.FeatureCount), 10)
+	if query.FeatureCount != nil {
+		fc := strconv.FormatInt(int64(*query.FeatureCount), 10)
 		req.GetParams().Set("feature_count", []string{fc})
 	}
 	req.GetParams().Set("query_layers", []string{req.GetParams().GetOne("layers", "")})

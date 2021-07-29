@@ -35,15 +35,15 @@ func (t *TileMerger) Merge(ordered_tiles []tile.Source, image_opts *ImageOptions
 	result := CreateImage(src_size, image_opts)
 	dcresult := gg.NewContextForImage(result)
 
-	cacheable := true
+	var cacheable *tile.CacheInfo
 
 	for i, source := range ordered_tiles {
 		if source == nil {
 			continue
 		}
 
-		if !source.GetCacheable() {
-			cacheable = false
+		if source.GetCacheable() == nil {
+			cacheable = source.GetCacheable()
 		}
 
 		tile := source.GetTile().(image.Image)

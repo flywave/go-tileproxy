@@ -349,6 +349,10 @@ type GeoReference struct {
 	srs    Proj
 }
 
+func NewGeoReference(bbox vec2d.Rect, srs Proj) *GeoReference {
+	return &GeoReference{bbox: bbox, srs: srs}
+}
+
 func (g *GeoReference) GetOrigin() vec2d.T {
 	return g.origin
 }

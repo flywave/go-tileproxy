@@ -81,7 +81,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		t := tile_collection.GetItem(0)
 		tile := t.Source
 		tile.SetTileOptions(r.tileManager.GetTileOptions())
-		tile.SetCacheable(t.Cacheable)
+		tile.SetCacheable(t.GetCacheInfo())
 		return tile, nil
 	}
 

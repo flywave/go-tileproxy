@@ -23,8 +23,6 @@ github.com/flywave/go-geotiff v0.0.0-20210728070603-df2557449cb1 h1:6gBw3qbMtxB4
 github.com/flywave/go-geotiff v0.0.0-20210728070603-df2557449cb1/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuqnZcTgZirpm7RlAcXGA1C4MkXPF5Y=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9/go.mod h1:ViGRrCXmuOf68/rpxR2fHy9nKOxdCKgCFd5+/iyWRTs=
-github.com/flywave/go-mapbox v0.0.0-20210728024731-80ed1bc42931 h1:i6c98XGieYsvJtAHWs4Jkcx3Q6/QNDN22oC3FPIyTTE=
-github.com/flywave/go-mapbox v0.0.0-20210728024731-80ed1bc42931/go.mod h1:37d1E5kXL+Cejv2Pis171bymCqP6c0dQHr00tL0O8I4=
 github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38 h1:QAo5wru6wQPFTVwPsSuwoiFjXZZEq8k0agxiYNJnq48=
 github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38/go.mod h1:R9xkIbHuXudBSxQHB6ohxK2ZL/OPAatXCUNwgNUKbo0=
 github.com/flywave/go-mbgeom v0.0.0-20210727032259-ea704981cf96 h1:DzC8FsJPnmxfitD8sWMBF1anamBzfcITxuROtlf/puw=
@@ -33,7 +31,6 @@ github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e h1:BHGfBgDZ5CZlNtaM
 github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e/go.mod h1:cfHFEG24/0hT2xCSLJb8rT/2WE8ieeIrbOJq1sql/fg=
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a h1:srwTNcHMN/ZNZQ4B2uIK1644nK14TJ3LirbnVEhHbxs=
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a/go.mod h1:arlOMgTGugKsD+yFiKdAipbAKOZU/KIpTJwk5jnjNow=
-github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e h1:/61TKX8lpJxlBIWHnXJnevSZkSiI8y1ZZLf4jk92V08=
 github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e/go.mod h1:17J4n9odoOX61u0PwtkbIqPkNx5GcAF6xPtQ/4AY6lc=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290 h1:d/Quyfh7G/2QqZzsNsZTbgA5c5hUwngwVoGTmj/43BU=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
@@ -79,7 +76,6 @@ github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsK
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBOAvL+k=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=

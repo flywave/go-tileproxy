@@ -11,14 +11,14 @@ import (
 
 type errorInfo struct {
 	Color     color.Color
-	Cacheable bool
+	Cacheable *tile.CacheInfo
 }
 
 type HTTPSourceErrorHandler struct {
 	ResponseErrorCodes map[string]errorInfo
 }
 
-func (h *HTTPSourceErrorHandler) AddHandler(http_code string, color color.Color, cacheable bool) {
+func (h *HTTPSourceErrorHandler) AddHandler(http_code string, color color.Color, cacheable *tile.CacheInfo) {
 	h.ResponseErrorCodes[http_code] = errorInfo{Color: color, Cacheable: cacheable}
 }
 

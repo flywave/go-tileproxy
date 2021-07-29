@@ -77,11 +77,11 @@ func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
 
 func (s *WMSSource) GetMap(query *layer.MapQuery) tile.Source {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, false)
+		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil)
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, false)
+		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil)
 	}
 	resp := s.getMap(query)
 	opts := resp.GetTileOptions().(*images.ImageOptions)
@@ -124,13 +124,13 @@ func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
 func (s *WMSSource) getSubQuery(query *layer.MapQuery, format tile.TileFormat) tile.Source {
 	size, offset, bbox := images.BBoxPositionInImage(query.BBox, query.Size, s.Extent.BBoxFor(query.Srs))
 	if size[0] == 0 || size[1] == 0 {
-		return images.NewBlankImageSource(size, s.ImageOpts, false)
+		return images.NewBlankImageSource(size, s.ImageOpts, nil)
 	}
 	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: format, Dimensions: query.Dimensions}
 	resp := s.Client.Retrieve(src_query, &format)
 	src := images.CreateImageSource(query.Size, s.ImageOpts)
 	src.SetSource(bytes.NewBuffer(resp))
-	return images.SubImageSource(src, query.Size, offset[:], s.ImageOpts, false)
+	return images.SubImageSource(src, query.Size, offset[:], s.ImageOpts, nil)
 }
 
 func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat) tile.Source {

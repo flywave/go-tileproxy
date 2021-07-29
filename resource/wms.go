@@ -46,6 +46,6 @@ func CreateFeatureinfoDoc(data []byte, InfoFormat string) *FeatureInfo {
 	return nil
 }
 
-func CombineDocs(docs []*FeatureInfo) {
-
+func CombineDocs(docs []*FeatureInfo) ([]byte, error) {
+	return nil, nil
 }

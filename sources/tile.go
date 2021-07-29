@@ -32,11 +32,11 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, false), nil
+		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, false), nil
+		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)

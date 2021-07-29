@@ -54,5 +54,5 @@ func NewDummySource(cov geo.Coverage) *DummySource {
 }
 
 func (s *DummySource) GetMap(query *layer.MapQuery) tile.Source {
-	return images.NewBlankImageSource(query.Size, &images.ImageOptions{Transparent: geo.NewBool(true)}, false)
+	return images.NewBlankImageSource(query.Size, &images.ImageOptions{Transparent: geo.NewBool(true)}, nil)
 }

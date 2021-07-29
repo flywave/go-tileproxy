@@ -1,5 +1,7 @@
 package tile
 
+import "time"
+
 type TileType uint8
 
 const (
@@ -7,6 +9,12 @@ const (
 	TILE_DEMRASTER = 1
 	TILE_VECTOR    = 2
 )
+
+type CacheInfo struct {
+	Cacheable bool
+	Timestamp time.Time
+	Size      int64
+}
 
 type Source interface {
 	GetType() TileType
@@ -16,8 +24,8 @@ type Source interface {
 	GetSize() [2]uint32
 	GetBuffer(format *TileFormat, in_tile_opts TileOptions) []byte
 	GetTile() interface{}
-	GetCacheable() bool
-	SetCacheable(c bool)
+	GetCacheable() *CacheInfo
+	SetCacheable(c *CacheInfo)
 	SetTileOptions(options TileOptions)
 	GetTileOptions() TileOptions
 }

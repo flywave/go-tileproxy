@@ -15,7 +15,7 @@ type VectorSource struct {
 	Options    tile.TileOptions
 	size       []uint32
 	bounds     []float64
-	cacheable  bool
+	cacheable  *tile.CacheInfo
 	georef     *geo.GeoReference
 	decodeFunc func(r io.Reader) (interface{}, error)
 }
@@ -24,11 +24,11 @@ func (s *VectorSource) GetType() tile.TileType {
 	return tile.TILE_VECTOR
 }
 
-func (s *VectorSource) GetCacheable() bool {
+func (s *VectorSource) GetCacheable() *tile.CacheInfo {
 	return s.cacheable
 }
 
-func (s *VectorSource) SetCacheable(c bool) {
+func (s *VectorSource) SetCacheable(c *tile.CacheInfo) {
 	s.cacheable = c
 }
 

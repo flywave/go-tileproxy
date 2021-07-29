@@ -7,12 +7,6 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type CacheInfo struct {
-	Cacheable bool
-	Timestamp time.Time
-	Size      int64
-}
-
 type Tile struct {
 	Coord     [3]int
 	Source    tile.Source
@@ -27,12 +21,12 @@ func NewTile(coord [3]int) *Tile {
 	return &Tile{Coord: coord}
 }
 
-func (t *Tile) GetCacheInfo() CacheInfo {
-	return CacheInfo{Cacheable: t.Cacheable, Timestamp: t.Timestamp,
+func (t *Tile) GetCacheInfo() *tile.CacheInfo {
+	return &tile.CacheInfo{Cacheable: t.Cacheable, Timestamp: t.Timestamp,
 		Size: t.Size}
 }
 
-func (t *Tile) SetCacheInfo(cache CacheInfo) {
+func (t *Tile) SetCacheInfo(cache *tile.CacheInfo) {
 	t.Cacheable = cache.Cacheable
 	t.Timestamp = cache.Timestamp
 	t.Size = cache.Size

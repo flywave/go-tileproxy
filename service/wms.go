@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"image/color"
 	"strconv"
 	"strings"
 	"time"
@@ -11,25 +13,25 @@ import (
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-	"github.com/flywave/go-tileproxy/utils"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	_ "github.com/flywave/ogc-specifications/pkg/wms130"
 )
 
 type WMSService struct {
 	BaseService
-	RootLayer       *WMSGroupLayer
-	Layers          map[string]wmsLayer
-	Strict          bool
-	ImageFormats    map[string]*images.ImageOptions
-	TileLayers      []*TileLayer
-	Metadata        map[string]string
-	InfoFormats     map[string]string
-	Srs             geo.Proj
-	SrsExtents      map[string]*geo.MapExtent
-	MaxOutputPixels int
-	MaxTileAge      time.Duration
-	InspireMetadata map[string]string
+	RootLayer           *WMSGroupLayer
+	Layers              map[string]wmsLayer
+	Strict              bool
+	ImageFormats        map[string]*images.ImageOptions
+	TileLayers          []*TileLayer
+	Metadata            map[string]string
+	InfoFormats         map[string]string
+	Srs                 []geo.Proj
+	SrsExtents          map[string]*geo.MapExtent
+	MaxOutputPixels     int
+	MaxTileAge          time.Duration
+	InspireMetadata     map[string]string
+	FeatureTransformers map[string]*resource.XSLTransformer
 }
 
 func (s *WMSService) GetMap(req request.Request) *Response {
@@ -93,8 +95,6 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		render_layers = append(render_layers, v)
 	}
 
-	s.updateQueryWithFWDParams(query, mapreq, render_layers)
-
 	renderer := &LayerRenderer{layers: render_layers, query: query, params: mapreq}
 
 	merger := &images.LayerMerger{}
@@ -157,26 +157,27 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 		for _, v := range s.InfoFormats {
 			info_types = append(info_types, v)
 		}
-	} else if s.fi_transformers {
-		info_types = s.fi_transformers.keys()
+	} else if s.FeatureTransformers != nil {
+		info_types = []string{}
+		for k := range s.FeatureTransformers {
+			info_types = append(info_types, k)
+		}
 	}
 	info_formats := []string{}
 	for i := range info_types {
 		info_formats = append(info_formats, request.MimetypeFromInfotype(info_types[i]))
 	}
 
-	cap := newCapabilities(service, root_layer, tile_layers,
-		s.ImageFormats, info_formats, s.Srs, s.SrsExtents,
-		s.InspireMetadata, s.MaxOutputPixels)
+	cap := newCapabilities(service, root_layer, tile_layers, s.ImageFormats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
 	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "", "application/xml")
 }
 
 func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
-	infos := []*resource.FeatureInfo{}
+	infos := []resource.FeatureInfoDoc{}
 	s.checkFeatureinfoRequest(req)
-	p := req.GetParams()
+
 	freq := request.NewWMSFeatureInfoRequestParams(req.GetParams())
 
 	var feature_count *int
@@ -188,7 +189,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 		}
 	}
 
-	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewSRSProj4(freq.GetSrs()), Pos: info_request.Pos,
+	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewSRSProj4(freq.GetSrs()), Pos: freq.GetPos(),
 		InfoFormat: string(freq.GetFormat()), FeatureCount: feature_count}
 
 	actual_layers := make(map[string]wmsLayer)
@@ -214,16 +215,22 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
 		infos = nil
 	} else {
-		for _, source := range tile_layer.infoSources {
-			info := source.GetInfo(query)
-			if info == nil {
-				continue
+		info_layers := []*TileLayer{}
+		for _, layers := range authorized_layers {
+			info_layers = append(info_layers, layers)
+		}
+		for _, layer := range info_layers {
+			for _, source := range layer.infoSources {
+				info := source.GetInfo(query)
+				if info == nil {
+					continue
+				}
+				infos = append(infos, info)
 			}
-			infos = append(infos, info)
 		}
 	}
 
-	mimetype := info_request.Infoformat
+	mimetype := freq.GetFormatString()
 
 	if infos == nil || len(infos) == 0 {
 		return NewResponse([]byte{}, 200, "", mimetype)
@@ -232,54 +239,109 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	var resp []byte
 	var info_type string
 	var actual_info_type string
-	if s.fi_transformers {
-		if !mimetype {
-			if utils.ContainsString(s.fi_transformers, "xml") {
+	if s.FeatureTransformers != nil {
+		if mimetype != "" {
+			if _, ok := s.FeatureTransformers["xml"]; ok {
 				info_type = "xml"
-			} else if utils.ContainsString(s.fi_transformers, "html") {
+			} else if _, ok := s.FeatureTransformers["html"]; ok {
 				info_type = "html"
 			} else {
 				info_type = "text"
 			}
-			mimetype = request.MimetypeFromInfotype(request.version, info_type)
+			mimetype = request.MimetypeFromInfotype(info_type)
 		} else {
-			info_type = request.InfotypeFromMimetype(request.version, mimetype)
+			info_type = request.InfotypeFromMimetype(mimetype)
 		}
-		resp, actual_info_type = resource.CombineDocs(infos, self.fi_transformers[info_type])
-		if actual_info_type != nil && info_type != actual_info_type {
-			mimetype = request.MimetypeFromInfotype(request.version, actual_info_type)
+		resp, actual_info_type = resource.CombineDocs(infos, s.FeatureTransformers[info_type])
+		if actual_info_type != "" && info_type != actual_info_type {
+			mimetype = request.MimetypeFromInfotype(actual_info_type)
 		}
 	} else {
-		resp, info_type = resource.CombineDocs(infos)
-		mimetype = request.MimetypeFromInfotype(request.version, info_type)
+		resp, info_type = resource.CombineDocs(infos, nil)
+		mimetype = request.MimetypeFromInfotype(info_type)
 	}
 
 	return NewResponse(resp, 200, "", mimetype)
 }
 
-func (s *WMSService) checkMapRequest(req request.Request) {
+func (s *WMSService) checkMapRequest(req request.Request) error {
+	mapreq := req.(*request.WMSMapRequest)
+	mapparams := request.NewWMSMapRequestParams(req.GetParams())
+	si := mapparams.GetSize()
+	if s.MaxOutputPixels != -1 && (si[0]*si[1]) > uint32(s.MaxOutputPixels) {
+		return errors.New("image size too large")
+	}
 
+	s.validateLayers(req)
+
+	formats := []string{}
+	for k := range s.ImageFormats {
+		formats = append(formats, k)
+	}
+
+	mapreq.ValidateFormat(formats)
+
+	srss := []string{}
+	for _, s := range s.Srs {
+		srss = append(srss, s.GetDef())
+	}
+
+	mapreq.ValidateSrs(srss)
+	return nil
 }
 
 func (s *WMSService) checkFeatureinfoRequest(req request.Request) {
+	mapreq := req.(*request.WMSMapRequest)
+	s.validateLayers(req)
 
+	srss := []string{}
+	for _, s := range s.Srs {
+		srss = append(srss, s.GetDef())
+	}
+
+	mapreq.ValidateSrs(srss)
 }
 
-func (s *WMSService) updateQueryWithFWDParams(query *layer.MapQuery, params request.WMSMapRequestParams, layers []wmsLayer) {
-
+func (s *WMSService) validateLayers(req request.Request) error {
+	mapparams := request.NewWMSMapRequestParams(req.GetParams())
+	query_layers := mapparams.GetLayers()
+	for _, layer := range query_layers {
+		if _, ok := s.Layers[layer]; !ok {
+			return errors.New("unknown layer: " + layer)
+		}
+	}
+	return nil
 }
 
-func (s *WMSService) validateLayers(req request.Request) {
-
+func (s *WMSService) checkLegendRequest(req request.Request) error {
+	mapparams := request.NewWMSLegendGraphicRequestParams(req.GetParams())
+	layer := mapparams.GetLayer()
+	if _, ok := s.Layers[layer]; !ok {
+		return errors.New("unknown layer: " + layer)
+	}
+	return nil
 }
 
-func (s *WMSService) checkLegendRequest(req request.Request) {
+func (s *WMSService) Legendgraphic(req request.Request) *Response {
+	mapparams := request.NewWMSLegendGraphicRequestParams(req.GetParams())
+	layer := mapparams.GetLayer()
+	mapparams.GetFormatMimeType()
 
+	s.checkLegendRequest(req)
+	if !s.Layers[layer].HasLegend() {
+		//raise RequestError('layer %s has no legend graphic' % layer, request=request)
+	}
+	legends := s.Layers[layer].legend(req.(*request.WMSLegendGraphicRequest))
+
+	result := images.ConcatLegends(legends, images.RGBA, tile.TileFormat("png"), nil, color.White, true)
+	mimetype := mapparams.GetFormatMimeType()
+	if mimetype == "" {
+		mimetype = "image/png"
+	}
+	img_opts := s.ImageFormats[mimetype]
+	return NewResponse(result.GetBuffer(nil, img_opts), 200, "", mimetype)
 }
 
-func (s *WMSService) Legendgraphic(req request.Request) {
-
-}
 func (s *WMSService) serviceMetadata(tms_request request.Request) map[string]string {
 	req := tms_request.(*request.BaseRequest)
 	md := s.Metadata
@@ -296,11 +358,19 @@ func (s *WMSService) filterActualLayers(actual_layers map[string]wmsLayer, layer
 
 }
 
-func (s *WMSService) authorizedCapabilityLayers() {
-
+func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
+	return nil
 }
 
 type WMSCapabilities struct {
+}
+
+func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
+	return nil
+}
+
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileLayer, imageFormats map[string]*images.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
+	return nil
 }
 
 type LayerRenderer struct {
@@ -310,7 +380,6 @@ type LayerRenderer struct {
 }
 
 func (l *LayerRenderer) render(layer *images.LayerMerger) {
-
 }
 
 type wmsLayer interface {
@@ -318,7 +387,7 @@ type wmsLayer interface {
 	rendersQuery(query *layer.MapQuery) bool
 	mapLayersForQuery(query *layer.MapQuery) map[string]wmsLayer
 	infoLayersForQuery(query *layer.InfoQuery) map[string]wmsLayer
-	legend(query *layer.LegendQuery) []tile.Source
+	legend(query *request.WMSLegendGraphicRequest) []tile.Source
 	GetLegendSize() int
 	GetName() string
 	GetLegendUrl() string
@@ -401,7 +470,7 @@ func (l *WMSLayer) infoLayersForQuery(query *layer.InfoQuery) []wmsLayer {
 	return l.infoLayers
 }
 
-func (l *WMSLayer) legend(query *layer.LegendQuery) []tile.Source {
+func (l *WMSLayer) legend(query *request.WMSLegendGraphicRequest) []tile.Source {
 	legend := []tile.Source{}
 	for _, lyr := range l.legendLayers {
 		legend = append(legend, lyr.legend(query)...)
@@ -563,7 +632,7 @@ func (l *WMSGroupLayer) GetChildLayers() map[string]wmsLayer {
 	return layers
 }
 
-func (l *WMSGroupLayer) legend(query *layer.LegendQuery) []tile.Source {
+func (l *WMSGroupLayer) legend(query *request.WMSLegendGraphicRequest) []tile.Source {
 	panic("not implemented")
 }
 

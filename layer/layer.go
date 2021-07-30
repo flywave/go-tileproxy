@@ -12,7 +12,7 @@ import (
 
 type Layer interface {
 	GetMap(query *MapQuery) tile.Source
-	GetInfo(query *InfoQuery) *resource.FeatureInfo
+	GetInfo(query *InfoQuery) resource.FeatureInfoDoc
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
 	GetExtent() *geo.MapExtent
@@ -105,7 +105,7 @@ func (l *LimitedLayer) GetMap(query *MapQuery) tile.Source {
 	return l.layer.GetMap(query)
 }
 
-func (l *LimitedLayer) GetInfo(query *InfoQuery) *resource.FeatureInfo {
+func (l *LimitedLayer) GetInfo(query *InfoQuery) resource.FeatureInfoDoc {
 	if l.GetCoverage() != nil {
 		if !l.GetCoverage().ContainsPoint(query.GetCoord(), query.Srs) {
 			return nil

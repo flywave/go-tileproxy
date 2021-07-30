@@ -152,6 +152,11 @@ func (r *WMSMapRequestParams) GetFormat() tile.TileFormat {
 	return tile.TileFormat(strs[1])
 }
 
+func (r *WMSMapRequestParams) GetFormatString() string {
+	strs := SplitMimeType(r.params.GetOne("format", ""))
+	return strs[1]
+}
+
 func (r *WMSMapRequestParams) SetFormat(fmrt tile.TileFormat) {
 	r.params.Set("format", []string{fmrt.MimeType()})
 }
@@ -322,6 +327,11 @@ type WMSLegendGraphicRequestParams struct {
 	WMSMapRequestParams
 }
 
+func NewWMSLegendGraphicRequestParams(params RequestParams) WMSLegendGraphicRequestParams {
+	ret := WMSLegendGraphicRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: params}}
+	return ret
+}
+
 func (r *WMSLegendGraphicRequestParams) GetLayer() string {
 	val, ok := r.params.Get("layer")
 	if ok {
@@ -360,16 +370,16 @@ func NewWMSFeatureInfoRequestParams(params RequestParams) WMSFeatureInfoRequestP
 	return ret
 }
 
-func (r *WMSFeatureInfoRequestParams) GetPos() [2]int {
-	i, err := strconv.Atoi(r.params.GetOne("i", "-1"))
+func (r *WMSFeatureInfoRequestParams) GetPos() [2]float64 {
+	i, err := strconv.ParseFloat(r.params.GetOne("i", "-1"), 64)
 	if err != nil {
-		return [2]int{-1, -1}
+		return [2]float64{-1, -1}
 	}
-	j, err := strconv.Atoi(r.params.GetOne("j", "-1"))
+	j, err := strconv.ParseFloat(r.params.GetOne("j", "-1"), 64)
 	if err != nil {
-		return [2]int{-1, -1}
+		return [2]float64{-1, -1}
 	}
-	return [2]int{i, j}
+	return [2]float64{i, j}
 }
 
 func (r *WMSFeatureInfoRequestParams) SetPos(pos [2]float64) {

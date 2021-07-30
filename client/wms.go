@@ -96,7 +96,7 @@ type WMSInfoClient struct {
 	SupportedSrs    *geo.SupportedSRS
 }
 
-func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
+func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
 	b, _ := geo.ContainsSrs(query.Srs.GetDef(), c.SupportedSrs.Srs)
 	if c.SupportedSrs != nil && !b {
 		query = c.GetTransformedQuery(query)

@@ -39,13 +39,3 @@ func (l *Legend) Hash() []byte {
 	m.Write([]byte(fmt.Sprintf("%d", l.Scale)))
 	return m.Sum(nil)
 }
-
-type FeatureInfo struct{}
-
-func CreateFeatureinfoDoc(data []byte, InfoFormat string) *FeatureInfo {
-	return nil
-}
-
-func CombineDocs(docs []*FeatureInfo) ([]byte, error) {
-	return nil, nil
-}

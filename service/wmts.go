@@ -96,7 +96,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 }
 
 func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
-	infos := []*resource.FeatureInfo{}
+	infos := []resource.FeatureInfoDoc{}
 	info_request := req.(*request.WMTS100FeatureInfoRequest)
 	s.checkRequest(&info_request.WMTSRequest, &info_request.Infoformat)
 
@@ -140,7 +140,7 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 		return NewResponse([]byte{}, 200, "", mimetype)
 	}
 
-	resp, _ := resource.CombineDocs(infos)
+	resp, _ := resource.CombineDocs(infos, nil)
 
 	return NewResponse(resp, 200, "", mimetype)
 }

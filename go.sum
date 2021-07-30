@@ -2,6 +2,8 @@ github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy86
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/sprig v2.22.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
 github.com/barnex/fmath v0.0.0-20150108074215-ec9671f295c2/go.mod h1:G7XW+2O6Hk/x6OP8AuwZjI8ZTyXvKDTTKaRK92gapfk=
+github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
+github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82 h1:9bAydALqAjBfPHd/eAiJBHnMZUYov8m2PkXVr+YGQeI=
 github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82/go.mod h1:tyA14J0sA3Hph4dt+AfCjPrYR13+vVodshQSM7km9qw=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
@@ -32,6 +34,10 @@ github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e/go.mod h1:cfHFEG24/
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a h1:srwTNcHMN/ZNZQ4B2uIK1644nK14TJ3LirbnVEhHbxs=
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a/go.mod h1:arlOMgTGugKsD+yFiKdAipbAKOZU/KIpTJwk5jnjNow=
 github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e/go.mod h1:17J4n9odoOX61u0PwtkbIqPkNx5GcAF6xPtQ/4AY6lc=
+github.com/flywave/go-xslt v0.0.0-20210730031211-b92706938760 h1:uv09SkCzShws3gBDh+KoXPq0ius1k3lRJjG6QFihYzc=
+github.com/flywave/go-xslt v0.0.0-20210730031211-b92706938760/go.mod h1:tADSmg0//jibF4kAQCkw36d4w5sUKQB5N4nnBpUxy3I=
+github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=
+github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67/go.mod h1:tADSmg0//jibF4kAQCkw36d4w5sUKQB5N4nnBpUxy3I=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290 h1:d/Quyfh7G/2QqZzsNsZTbgA5c5hUwngwVoGTmj/43BU=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
 github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs=
@@ -86,6 +92,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/twpayne/go-kml v1.5.2/go.mod h1:kz8jAiIz6FIdU2Zjce9qGlVtgFYES9vt7BTPBHf5jl4=
 github.com/twpayne/go-polyline v1.0.0/go.mod h1:ICh24bcLYBX8CknfvNPKqoTbe+eg+MX1NPyJmSBo7pU=
 github.com/twpayne/go-waypoint v0.0.0-20200706203930-b263a7f6e4e8/go.mod h1:qj5pHncxKhu9gxtZEYWypA/z097sxhFlbTyOyt9gcnU=
+github.com/wamuir/go-xslt v0.1.1 h1:X+UQPvXUCJVLr+V8LSXkwj9gyj9T8aIdzhvD5OlwXak=
+github.com/wamuir/go-xslt v0.1.1/go.mod h1:nOHZrr7wJA/9iI/dd41Sx4gJZ0ggSZqzc/S5f5fsCDU=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=

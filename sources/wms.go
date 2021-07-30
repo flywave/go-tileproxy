@@ -224,14 +224,14 @@ type WMSInfoSource struct {
 	InfoSource
 	Client      *client.WMSInfoClient
 	Coverage    geo.Coverage
-	Transformer func(feature *resource.FeatureInfo) *resource.FeatureInfo
+	Transformer func(feature resource.FeatureInfoDoc) resource.FeatureInfoDoc
 }
 
 func (s *WMSInfoSource) GetClient() client.Client {
 	return s.Client
 }
 
-func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
+func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
 	if s.Coverage != nil && !s.Coverage.Contains(query.BBox, query.Srs) {
 		return nil
 	}

@@ -25,7 +25,7 @@ func NewArcGISInfoSource(c client.Client) *ArcGISInfoSource {
 	return &ArcGISInfoSource{WMSInfoSource: WMSInfoSource{Client: c.(*client.WMSInfoClient)}}
 }
 
-func (c *ArcGISInfoSource) GetInfo(query *layer.InfoQuery) *resource.FeatureInfo {
+func (c *ArcGISInfoSource) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
 	agis := c.GetClient().(*client.ArcGISInfoClient)
 	doc := agis.GetInfo(query)
 	return doc

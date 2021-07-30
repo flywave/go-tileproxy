@@ -3,6 +3,7 @@ module github.com/flywave/go-tileproxy
 go 1.16
 
 require (
+	github.com/beevik/etree v1.1.0
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
@@ -13,6 +14,7 @@ require (
 	github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38
 	github.com/flywave/go-mbgeom v0.0.0-20210727032259-ea704981cf96
 	github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a
+	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-specifications v0.2.6

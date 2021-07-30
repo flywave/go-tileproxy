@@ -140,6 +140,24 @@ type StyleQuery struct {
 	Query
 }
 
+func (q *StyleQuery) EQ(o *StyleQuery) bool {
+	return true
+}
+
+func (req *StyleQuery) buildURL(URL string, username string, styleID string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/v1/%s/%s", URL, username, styleID)
+
+	u, err := url.Parse(urls)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("access_token", accessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
+}
+
 type TileQuery struct {
 	Query
 	Latitude  float64
@@ -152,8 +170,33 @@ type TileQuery struct {
 	Markers   []*Marker
 }
 
+func (q *TileQuery) EQ(o *TileQuery) bool {
+	if q.Latitude != o.Latitude {
+		return false
+	}
+	if q.Longitude != o.Longitude {
+		return false
+	}
+	if q.Zoom != o.Zoom {
+		return false
+	}
+	if q.Width != o.Width {
+		return false
+	}
+	if q.Height != o.Height {
+		return false
+	}
+	if q.Format != o.Format {
+		return false
+	}
+	if q.Retina != o.Retina {
+		return false
+	}
+	return true
+}
+
 func (req *TileQuery) buildURL(URL string, mapId string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/v4/%s", URL, url.QueryEscape(mapId))
+	urls := fmt.Sprintf("%s/styles/v4/%s", URL, url.QueryEscape(mapId))
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {
@@ -183,9 +226,66 @@ func (req *TileQuery) buildURL(URL string, mapId string, accessToken string) (st
 }
 
 type SpriteQuery struct {
-	Query
+	StyleQuery
+	Retina bool
+	Format string
+}
+
+func (q *SpriteQuery) EQ(o *SpriteQuery) bool {
+	if !q.StyleQuery.EQ(&o.StyleQuery) {
+		return false
+	}
+	return true
+}
+
+func (req *SpriteQuery) buildURL(URL string, username string, styleID string, spriteID string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/v1/%s/%s/%s/sprite", URL, username, styleID, spriteID)
+	if req.Retina {
+		urls += "@2x"
+	}
+	urls += fmt.Sprintf(".%s", req.Format)
+
+	u, err := url.Parse(urls)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("access_token", accessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }
 
 type GlyphsQuery struct {
 	Query
+	Font  string
+	Start string
+	End   string
+}
+
+func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
+	if q.Font != o.Font {
+		return false
+	}
+	if q.Start != o.Start {
+		return false
+	}
+	if q.End != o.End {
+		return false
+	}
+	return true
+}
+
+func (req *GlyphsQuery) buildURL(URL string, username string, mapId string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/fonts/v1/%s/%s/%s-%s.pbf", URL, username, req.Font, req.Start, req.End)
+
+	u, err := url.Parse(urls)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("access_token", accessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }

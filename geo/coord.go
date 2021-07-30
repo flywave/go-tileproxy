@@ -6,6 +6,17 @@ type TileCoord struct {
 	X, Y, Z int
 }
 
+func NewTileCoord(coords ...int) *TileCoord {
+	if len(coords) < 3 {
+		return nil
+	}
+	return &TileCoord{X: coords[0], Y: coords[1], Z: coords[2]}
+}
+
+func (t *TileCoord) Coords() [3]int {
+	return [3]int{t.X, t.Y, t.Z}
+}
+
 func (t *TileCoord) TopLeftChild() *TileCoord {
 	return &TileCoord{Z: t.Z + 1, X: t.X << 1, Y: t.Y << 1}
 }

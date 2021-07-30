@@ -29,13 +29,10 @@ github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38 h1:QAo5wru6wQPFT
 github.com/flywave/go-mapbox v0.0.0-20210728073134-4607456f6b38/go.mod h1:R9xkIbHuXudBSxQHB6ohxK2ZL/OPAatXCUNwgNUKbo0=
 github.com/flywave/go-mbgeom v0.0.0-20210727032259-ea704981cf96 h1:DzC8FsJPnmxfitD8sWMBF1anamBzfcITxuROtlf/puw=
 github.com/flywave/go-mbgeom v0.0.0-20210727032259-ea704981cf96/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
-github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e h1:BHGfBgDZ5CZlNtaMAgZjes6pP0ZpoDmPR1ePyUaI9Qk=
 github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e/go.mod h1:cfHFEG24/0hT2xCSLJb8rT/2WE8ieeIrbOJq1sql/fg=
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a h1:srwTNcHMN/ZNZQ4B2uIK1644nK14TJ3LirbnVEhHbxs=
 github.com/flywave/go-proj v0.0.0-20210708024853-92de7f26712a/go.mod h1:arlOMgTGugKsD+yFiKdAipbAKOZU/KIpTJwk5jnjNow=
 github.com/flywave/go-raster v0.0.0-20210526065301-f50e348f662e/go.mod h1:17J4n9odoOX61u0PwtkbIqPkNx5GcAF6xPtQ/4AY6lc=
-github.com/flywave/go-xslt v0.0.0-20210730031211-b92706938760 h1:uv09SkCzShws3gBDh+KoXPq0ius1k3lRJjG6QFihYzc=
-github.com/flywave/go-xslt v0.0.0-20210730031211-b92706938760/go.mod h1:tADSmg0//jibF4kAQCkw36d4w5sUKQB5N4nnBpUxy3I=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67/go.mod h1:tADSmg0//jibF4kAQCkw36d4w5sUKQB5N4nnBpUxy3I=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290 h1:d/Quyfh7G/2QqZzsNsZTbgA5c5hUwngwVoGTmj/43BU=
@@ -76,7 +73,6 @@ github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFW
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.9.0/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
-github.com/paulmach/go.geojson v1.4.0 h1:5x5moCkCtDo5x8af62P9IOAYGQcYHtxz2QJ3x1DoCgY=
 github.com/paulmach/go.geojson v1.4.0/go.mod h1:YaKx1hKpWF+T2oj2lFJPsW/t1Q5e1jQI61eoQSTwpIs=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -92,8 +88,6 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/twpayne/go-kml v1.5.2/go.mod h1:kz8jAiIz6FIdU2Zjce9qGlVtgFYES9vt7BTPBHf5jl4=
 github.com/twpayne/go-polyline v1.0.0/go.mod h1:ICh24bcLYBX8CknfvNPKqoTbe+eg+MX1NPyJmSBo7pU=
 github.com/twpayne/go-waypoint v0.0.0-20200706203930-b263a7f6e4e8/go.mod h1:qj5pHncxKhu9gxtZEYWypA/z097sxhFlbTyOyt9gcnU=
-github.com/wamuir/go-xslt v0.1.1 h1:X+UQPvXUCJVLr+V8LSXkwj9gyj9T8aIdzhvD5OlwXak=
-github.com/wamuir/go-xslt v0.1.1/go.mod h1:nOHZrr7wJA/9iI/dd41Sx4gJZ0ggSZqzc/S5f5fsCDU=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=

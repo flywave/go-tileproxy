@@ -74,10 +74,12 @@ func (m *MapExtent) Intersection(other *MapExtent) *MapExtent {
 	source := m.BBox
 	sub := other.BBoxFor(m.Srs)
 
-	return &MapExtent{BBox: vec2d.Rect{Min: vec2d.T{
-		math.Max(source.Min[0], sub.Min[0]),
-		math.Max(source.Min[1], sub.Min[1])},
-		Max: vec2d.T{math.Min(source.Max[0], sub.Max[0]),
+	return &MapExtent{BBox: vec2d.Rect{
+		Min: vec2d.T{
+			math.Max(source.Min[0], sub.Min[0]),
+			math.Max(source.Min[1], sub.Min[1])},
+		Max: vec2d.T{
+			math.Min(source.Max[0], sub.Max[0]),
 			math.Min(source.Max[1], sub.Max[1])}},
 		Srs: m.Srs}
 }

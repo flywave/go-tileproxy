@@ -160,8 +160,7 @@ func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2
 
 func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	tile_size := c.Grid.TileSize
-	query := &layer.MapQuery{BBox: meta_tile.GetBBox(), Size: meta_tile.GetSize(), Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()),
-		Dimensions: c.Dimensions}
+	query := &layer.MapQuery{BBox: meta_tile.GetBBox(), Size: meta_tile.GetSize(), Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
 	var splitted_tiles *TileCollection
 

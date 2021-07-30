@@ -267,6 +267,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 	} else {
 		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
 	}
+
 	var error_occured bool
 	legends := make([]tile.Source, 0)
 	if s.Cache.Load(legend) == nil {

@@ -7,7 +7,7 @@ import (
 )
 
 type MapboxVectorClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxVectorClient) GetVector(*layer.MapQuery) []byte {
@@ -15,7 +15,7 @@ func (c *MapboxVectorClient) GetVector(*layer.MapQuery) []byte {
 }
 
 type MapboxRasterClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxRasterClient) GetRaster(*layer.MapQuery, tile.TileFormat) []byte {
@@ -23,7 +23,7 @@ func (c *MapboxRasterClient) GetRaster(*layer.MapQuery, tile.TileFormat) []byte 
 }
 
 type MapboxRasterDemClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxRasterDemClient) GetRasterDem(*layer.MapQuery, tile.TileFormat) []byte {
@@ -31,7 +31,7 @@ func (c *MapboxRasterDemClient) GetRasterDem(*layer.MapQuery, tile.TileFormat) [
 }
 
 type MapboxSpriteClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxSpriteClient) GetSprite(query *layer.MapQuery) *resource.Sprite {
@@ -39,7 +39,7 @@ func (c *MapboxSpriteClient) GetSprite(query *layer.MapQuery) *resource.Sprite {
 }
 
 type MapboxStyleClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxStyleClient) GetStyle(query *layer.MapQuery) *resource.Style {
@@ -47,7 +47,7 @@ func (c *MapboxStyleClient) GetStyle(query *layer.MapQuery) *resource.Style {
 }
 
 type MapboxGlyphsClient struct {
-	Client
+	BaseClient
 }
 
 func (c *MapboxGlyphsClient) GetGlyphs(query *layer.MapQuery) *resource.Glyphs {

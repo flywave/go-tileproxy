@@ -8,22 +8,21 @@ import (
 	"github.com/flywave/go-lerc"
 )
 
-type LercDataType uint32
-
-const (
-	LCHAR   LercDataType = lerc.DT_CHAR
-	LUCHAR  LercDataType = lerc.DT_UCHAR
-	LSHORT  LercDataType = lerc.DT_SHORT
-	LUSHORT LercDataType = lerc.DT_USHORT
-	LINT    LercDataType = lerc.DT_INT
-	LUINT   LercDataType = lerc.DT_UINT
-	LFLOAT  LercDataType = lerc.DT_FLOAT
-	LDOUBLE LercDataType = lerc.DT_DOUBLE
+var (
+	LERC_DT_MAP = map[int]RasterType{
+		lerc.DT_CHAR:   RT_CHAR,
+		lerc.DT_UCHAR:  RT_UCHAR,
+		lerc.DT_SHORT:  RT_SHORT,
+		lerc.DT_USHORT: RT_USHORT,
+		lerc.DT_INT:    RT_INT,
+		lerc.DT_UINT:   RT_UINT,
+		lerc.DT_FLOAT:  RT_FLOAT,
+		lerc.DT_DOUBLE: RT_DOUBLE,
+	}
 )
 
 type LercRasterSource struct {
 	RasterSource
-	DataType LercDataType
 }
 
 func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {

@@ -138,7 +138,6 @@ func MergeLayerResRanges(layers []Layer) *geo.ResolutionRange {
 			ret = geo.MergeResolutionRange(ret, r)
 		}
 	}
-
 	return ret
 }
 

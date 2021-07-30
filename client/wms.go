@@ -18,7 +18,7 @@ import (
 )
 
 type WMSClient struct {
-	Client
+	BaseClient
 	RequestTemplate *request.ArcGISRequest
 	HttpMethod      string
 	FWDReqParams    map[string]string
@@ -46,7 +46,7 @@ func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []b
 		data = nil
 	}
 	var resp *crawler.Response
-	resp = c.Client.Open(url, data)
+	resp = c.Open(url, data)
 	return resp.Body
 }
 
@@ -87,11 +87,11 @@ func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMS
 
 	params.SetLayer(params.GetLayer() + other_params.GetLayer())
 
-	return &WMSClient{RequestTemplate: &new_req, Client: c.Client, HttpMethod: c.HttpMethod, FWDReqParams: c.FWDReqParams}
+	return &WMSClient{RequestTemplate: &new_req, BaseClient: c.BaseClient, HttpMethod: c.HttpMethod, FWDReqParams: c.FWDReqParams}
 }
 
 type WMSInfoClient struct {
-	Client
+	BaseClient
 	RequestTemplate *request.ArcGISRequest
 	SupportedSrs    *geo.SupportedSRS
 }
@@ -145,7 +145,7 @@ func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQ
 
 func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	return c.Client.Get(url).Body
+	return c.Get(url).Body
 }
 
 func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
@@ -175,7 +175,7 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 }
 
 type WMSLegendClient struct {
-	Client
+	BaseClient
 	RequestTemplate *request.ArcGISRequest
 }
 
@@ -191,7 +191,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 	url := c.queryURL(query)
-	return c.Client.Get(url).Body
+	return c.Get(url).Body
 }
 
 func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {

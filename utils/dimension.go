@@ -7,6 +7,7 @@ type Dimension interface {
 	SetValue([]string)
 	SetOneValue(string)
 	SetDefault(string)
+	EQ(o Dimension) bool
 }
 
 type dimension struct {
@@ -43,6 +44,18 @@ func (d *dimension) SetOneValue(v string) {
 
 func (d *dimension) SetDefault(defa string) {
 	d.default_ = defa
+}
+
+func (d *dimension) EQ(o Dimension) bool {
+	if len(d.values) != len(o.GetValue()) {
+		return false
+	}
+	for i := range d.values {
+		if d.values[i] != o.GetValue()[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type Dimensions map[string]Dimension
@@ -117,4 +130,17 @@ func (d Dimensions) GetRawMap() map[string][]string {
 		ret[k] = []string{d.GetDefault()}
 	}
 	return ret
+}
+
+func (d Dimensions) EQ(o Dimensions) bool {
+	for k, vs := range d {
+		if v, ok := o[k]; ok {
+			if !v.EQ(vs) {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+	return true
 }

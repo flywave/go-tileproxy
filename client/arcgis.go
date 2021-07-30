@@ -12,7 +12,7 @@ import (
 )
 
 type ArcGISClient struct {
-	Client
+	BaseClient
 	RequestTemplate *request.ArcGISRequest
 }
 

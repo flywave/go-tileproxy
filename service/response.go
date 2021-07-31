@@ -75,12 +75,12 @@ type Response struct {
 	headers       http.Header
 }
 
-func NewResponse(response []byte, status int, content_type string, mimetype string) *Response {
+func NewResponse(response []byte, status int, mimetype string) *Response {
 	if status == -1 {
 		status = 200
 	}
 	r := &Response{response: response, status: status, timestamp: nil, headers: make(http.Header)}
-
+	var content_type string
 	if mimetype != "" {
 		if strings.HasPrefix(mimetype, "text/") {
 			content_type = mimetype + "; charset=" + Charset

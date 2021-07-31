@@ -138,14 +138,18 @@ func (q *LegendQuery) EQ(o *LegendQuery) bool {
 
 type StyleQuery struct {
 	Query
+	StyleID string
 }
 
 func (q *StyleQuery) EQ(o *StyleQuery) bool {
+	if q.StyleID != o.StyleID {
+		return false
+	}
 	return true
 }
 
-func (req *StyleQuery) buildURL(URL string, username string, styleID string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/v1/%s/%s", URL, username, styleID)
+func (req *StyleQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/v1/%s/%s", URL, username, req.StyleID)
 
 	u, err := url.Parse(urls)
 	if err != nil {
@@ -160,6 +164,7 @@ func (req *StyleQuery) buildURL(URL string, username string, styleID string, acc
 
 type TileQuery struct {
 	Query
+	MapId     string
 	Latitude  float64
 	Longitude float64
 	Zoom      int
@@ -195,8 +200,8 @@ func (q *TileQuery) EQ(o *TileQuery) bool {
 	return true
 }
 
-func (req *TileQuery) buildURL(URL string, mapId string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/v4/%s", URL, url.QueryEscape(mapId))
+func (req *TileQuery) BuildURL(URL string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/v4/%s", URL, url.QueryEscape(req.MapId))
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {
@@ -227,24 +232,29 @@ func (req *TileQuery) buildURL(URL string, mapId string, accessToken string) (st
 
 type SpriteQuery struct {
 	StyleQuery
-	Retina bool
-	Format string
+	SpriteID string
+	Retina   bool
+	Format   *string
 }
 
 func (q *SpriteQuery) EQ(o *SpriteQuery) bool {
 	if !q.StyleQuery.EQ(&o.StyleQuery) {
 		return false
 	}
+	if q.SpriteID != o.SpriteID {
+		return false
+	}
 	return true
 }
 
-func (req *SpriteQuery) buildURL(URL string, username string, styleID string, spriteID string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/v1/%s/%s/%s/sprite", URL, username, styleID, spriteID)
+func (req *SpriteQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/v1/%s/%s/%s/sprite", URL, username, req.StyleID, req.SpriteID)
 	if req.Retina {
 		urls += "@2x"
 	}
-	urls += fmt.Sprintf(".%s", req.Format)
-
+	if req.Format != nil {
+		urls += fmt.Sprintf(".%s", *req.Format)
+	}
 	u, err := url.Parse(urls)
 	if err != nil {
 		return "", err
@@ -276,7 +286,7 @@ func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
 	return true
 }
 
-func (req *GlyphsQuery) buildURL(URL string, username string, mapId string, accessToken string) (string, error) {
+func (req *GlyphsQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
 	urls := fmt.Sprintf("%s/fonts/v1/%s/%s/%s-%s.pbf", URL, username, req.Font, req.Start, req.End)
 
 	u, err := url.Parse(urls)

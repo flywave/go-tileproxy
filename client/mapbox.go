@@ -3,53 +3,75 @@ package client
 import (
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
-	"github.com/flywave/go-tileproxy/tile"
 )
 
-type MapboxVectorClient struct {
+type MapboxClient struct {
 	BaseClient
+	BaseURL     string
+	UserName    string
+	AccessToken string
 }
 
-func (c *MapboxVectorClient) GetVector(*layer.MapQuery) []byte {
-	return nil
+type MapboxTileClient struct {
+	MapboxClient
 }
 
-type MapboxRasterClient struct {
-	BaseClient
-}
-
-func (c *MapboxRasterClient) GetRaster(*layer.MapQuery, tile.TileFormat) []byte {
-	return nil
-}
-
-type MapboxRasterDemClient struct {
-	BaseClient
-}
-
-func (c *MapboxRasterDemClient) GetRasterDem(*layer.MapQuery, tile.TileFormat) []byte {
+func (c *MapboxTileClient) GetVector(q *layer.TileQuery) []byte {
+	url, err := q.BuildURL(c.BaseURL, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	resp := c.Get(url)
+	if resp.StatusCode == 200 {
+		return resp.Body
+	}
 	return nil
 }
 
 type MapboxSpriteClient struct {
-	BaseClient
+	MapboxClient
 }
 
-func (c *MapboxSpriteClient) GetSprite(query *layer.MapQuery) *resource.Sprite {
+func (c *MapboxSpriteClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
+	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	resp := c.Get(url)
+	if resp.StatusCode == 200 {
+		return resource.CreateSprite(resp.Body)
+	}
 	return nil
 }
 
 type MapboxStyleClient struct {
-	BaseClient
+	MapboxClient
 }
 
-func (c *MapboxStyleClient) GetStyle(query *layer.MapQuery) *resource.Style {
+func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
+	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	resp := c.Get(url)
+	if resp.StatusCode == 200 {
+		return resource.CreateStyle(resp.Body)
+	}
 	return nil
 }
 
 type MapboxGlyphsClient struct {
-	BaseClient
+	MapboxClient
 }
 
-func (c *MapboxGlyphsClient) GetGlyphs(query *layer.MapQuery) *resource.Glyphs {
+func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
+	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	resp := c.Get(url)
+	if resp.StatusCode == 200 {
+		return resource.CreateGlyphs(resp.Body)
+	}
 	return nil
 }

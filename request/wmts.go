@@ -206,8 +206,7 @@ func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, 
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
 	r.FixedParams = map[string]string{"request": "GetTile", "version": "1.0.0", "service": "WMTS"}
-	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
-		"tilematrix", "tilerow", "tilecol", "format"}
+	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset", "tilematrix", "tilerow", "tilecol", "format"}
 	params := &WMTSTileRequestParams{params: r.Params}
 	r.Layer = params.params.GetOne("layer", "")
 	r.TileMatrixSet = params.params.GetOne("tilematrixset", "")
@@ -285,8 +284,7 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "featureinfo"
 	r.FixedParams = map[string]string{"request": "GetFeatureInfo", "version": "1.0.0", "service": "WMTS"}
-	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset",
-		"tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
+	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset", "tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
 	r.NonStrictParams = mapset.NewSet("format", "styles")
 	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
 	r.Infoformat = params.params.GetOne("infoformat", "")

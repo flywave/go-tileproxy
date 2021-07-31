@@ -61,7 +61,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 				img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
 				img := images.NewBlankImageSource(mapreq.GetSize(), img_opts, nil)
 
-				return NewResponse(img.GetBuffer(nil, nil), 200, "", img_opts.Format.MimeType())
+				return NewResponse(img.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 			}
 			sub_size, offset, sub_bbox = images.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
 			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewSRSProj4(mapreq.GetSrs()), Format: mapreq.GetFormat()}
@@ -117,7 +117,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs())))
 	result_buf := result.GetBuffer(nil, img_opts)
 	f := img_opts.GetFormat()
-	resp := NewResponse(result_buf, 200, "", f.MimeType())
+	resp := NewResponse(result_buf, 200, f.MimeType())
 
 	if query.TiledOnly && result.GetCacheable() != nil {
 		cache_info := result.GetCacheable()
@@ -169,9 +169,9 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 	}
 
 	cap := newCapabilities(service, root_layer, tile_layers, s.ImageFormats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
-	result := cap.render(map_request)
+	result := cap.fetch(map_request)
 
-	return NewResponse(result, 200, "", "application/xml")
+	return NewResponse(result, 200, "application/xml")
 }
 
 func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
@@ -233,7 +233,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	mimetype := freq.GetFormatString()
 
 	if infos == nil || len(infos) == 0 {
-		return NewResponse([]byte{}, 200, "", mimetype)
+		return NewResponse([]byte{}, 200, mimetype)
 	}
 
 	var resp []byte
@@ -261,7 +261,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 		mimetype = request.MimetypeFromInfotype(info_type)
 	}
 
-	return NewResponse(resp, 200, "", mimetype)
+	return NewResponse(resp, 200, mimetype)
 }
 
 func (s *WMSService) checkMapRequest(req request.Request) error {
@@ -339,7 +339,7 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 		mimetype = "image/png"
 	}
 	img_opts := s.ImageFormats[mimetype]
-	return NewResponse(result.GetBuffer(nil, img_opts), 200, "", mimetype)
+	return NewResponse(result.GetBuffer(nil, img_opts), 200, mimetype)
 }
 
 func (s *WMSService) serviceMetadata(tms_request request.Request) map[string]string {
@@ -365,7 +365,7 @@ func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
 type WMSCapabilities struct {
 }
 
-func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
+func (c *WMSCapabilities) fetch(req *request.WMSRequest) []byte {
 	return nil
 }
 

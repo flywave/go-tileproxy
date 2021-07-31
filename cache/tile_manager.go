@@ -164,6 +164,7 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 	if len(uncached_tiles) > 0 {
 		creator := tm.Creator(dimensions)
 		created_tiles := creator.CreateTiles(uncached_tiles)
+
 		if created_tiles == nil && tm.rescaleTiles != -1 {
 			created_tiles = make([]*Tile, len(uncached_tiles))
 			for i, t := range uncached_tiles {

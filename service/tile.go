@@ -54,7 +54,7 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	if tile_format == "" {
 		tile_format = string(*tile_request.Format)
 	}
-	resp := NewResponse(tile.getBuffer(), -1, "image/"+string(tile_format), "")
+	resp := NewResponse(tile.getBuffer(), -1, "image/"+string(tile_format))
 	if tile.getCacheable() {
 		resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())},
 			int(s.MaxTileAge.Seconds()))
@@ -138,7 +138,7 @@ func (s *TileService) Capabilities(tms_request *request.TileRequest) *Response {
 		layer := s.authorizedTileLayers()
 		result = s.renderCapabilities(layer, service)
 	}
-	return NewResponse(result, 200, "", "text/xml")
+	return NewResponse(result, 200, "text/xml")
 }
 
 func (s *TileService) serviceMetadata(tms_request *request.TileRequest) map[string]string {
@@ -162,7 +162,7 @@ func (s *TileService) renderRootResource(service map[string]string) []byte {
 func (s *TileService) RootResource(tms_request *request.TileRequest) *Response {
 	service := s.serviceMetadata(tms_request)
 	result := s.renderRootResource(service)
-	return NewResponse(result, 200, "", "text/xml")
+	return NewResponse(result, 200, "text/xml")
 }
 
 type TileServiceGrid struct {

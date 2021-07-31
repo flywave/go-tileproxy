@@ -23,11 +23,11 @@ type TileCreator struct {
 	BulkMetaTiles bool
 	Manager       Manager
 	Dimensions    utils.Dimensions
-	ImageMerger   images.Merger
+	TileMerger    tile.Merger
 }
 
-func NewTileCreator(m Manager, dimensions utils.Dimensions, merger images.Merger, bulk_meta_tiles bool) *TileCreator {
-	return &TileCreator{Manager: m, Dimensions: dimensions, ImageMerger: merger, BulkMetaTiles: bulk_meta_tiles}
+func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
+	return &TileCreator{Manager: m, Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
 }
 
 func (c *TileCreator) IsCached(tile [3]int) bool {
@@ -103,7 +103,7 @@ func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 
 func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 	if len(c.Sources) == 1 &&
-		c.ImageMerger == nil && !(c.Sources[0].Coverage != nil &&
+		c.TileMerger == nil && !(c.Sources[0].Coverage != nil &&
 		c.Sources[0].Coverage.IsClip() &&
 		c.Sources[0].Coverage.Intersects(query.BBox, query.Srs)) {
 		return c.Sources[0].GetMap(query)
@@ -120,7 +120,7 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 	}
 	imageOptions := c.Manager.GetTileOptions().(*images.ImageOptions)
 	if imageOptions != nil {
-		return images.MergeImages(layers, c.Manager.GetTileOptions().(*images.ImageOptions), query.Size, query.BBox, query.Srs, c.ImageMerger), nil
+		return images.MergeImages(layers, c.Manager.GetTileOptions().(*images.ImageOptions), query.Size, query.BBox, query.Srs, c.TileMerger), nil
 	}
 	return nil, errors.New("error")
 }

@@ -17,8 +17,6 @@ func (i *BilinearInterpolator) Interpolate(southWestHeight, southEastHeight, nor
 	nw := northWestHeight
 	ne := northEastHeight
 
-	//ha := Lerp(nw, sw, y)
-	//hb := Lerp(ne, se, y)
 	hi_linear := Lerp(Lerp(nw, sw, y), Lerp(ne, se, y), x)
 
 	return hi_linear

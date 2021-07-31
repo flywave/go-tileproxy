@@ -63,6 +63,12 @@ func (l *Style) Hash() []byte {
 	return m.Sum(nil)
 }
 
+func CreateStyle(content []byte) *Style {
+	s := &Style{}
+	s.SetData(content)
+	return s
+}
+
 type Sprite struct {
 	BaseResource
 	Source *images.ImageSource
@@ -87,6 +93,12 @@ func (l *Sprite) Hash() []byte {
 	return m.Sum(nil)
 }
 
+func CreateSprite(content []byte) *Sprite {
+	s := &Sprite{}
+	s.SetData(content)
+	return s
+}
+
 type Glyphs struct {
 	BaseResource
 	Buffer []byte
@@ -104,4 +116,8 @@ func (l *Glyphs) Hash() []byte {
 	m := md5.New()
 	m.Write([]byte(l.ID))
 	return m.Sum(nil)
+}
+
+func CreateGlyphs(content []byte) *Glyphs {
+	return &Glyphs{Buffer: content}
 }

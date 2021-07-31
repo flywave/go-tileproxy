@@ -64,7 +64,7 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 
 	result := cap.render(tile_request)
 
-	return NewResponse(result, 200, "", "application/xml")
+	return NewResponse(result, 200, "application/xml")
 }
 
 func (s *WMTSService) GetTile(req request.Request) *Response {
@@ -88,7 +88,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	tile := tile_layer.Render(tile_request, false, limited_to, decorate_tile)
 
-	resp := NewResponse(tile.getBuffer(), -1, "", "image/"+tile.getFormat())
+	resp := NewResponse(tile.getBuffer(), -1, "image/"+tile.getFormat())
 	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())},
 		int(s.MaxTileAge.Seconds()))
 	resp.makeConditional(tile_request.Http)
@@ -137,12 +137,12 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	mimetype := info_request.Infoformat
 
 	if infos == nil || len(infos) == 0 {
-		return NewResponse([]byte{}, 200, "", mimetype)
+		return NewResponse([]byte{}, 200, mimetype)
 	}
 
 	resp, _ := resource.CombineDocs(infos, nil)
 
-	return NewResponse(resp, 200, "", mimetype)
+	return NewResponse(resp, 200, mimetype)
 }
 
 func (s *WMTSService) authorizeTileLayer(tile_layer *TileLayer, tile_request request.Request, featureinfo bool) geo.Coverage {

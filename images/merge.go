@@ -13,23 +13,20 @@ import (
 	"github.com/fogleman/gg"
 )
 
-type Merger interface {
-	Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source
-}
-
 type LayerMerger struct {
-	Merger
+	tile.Merger
 	Layers    []tile.Source
 	Coverages []geo.Coverage
 	Cacheable *tile.CacheInfo
 }
 
-func (l *LayerMerger) Add(src tile.Source, cov geo.Coverage) {
+func (l *LayerMerger) AddSource(src tile.Source, cov geo.Coverage) {
 	l.Layers = append(l.Layers, src)
 	l.Coverages = append(l.Coverages, cov)
 }
 
-func (l *LayerMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
+func (l *LayerMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
+	image_opts := opts.(*ImageOptions)
 	if l.Layers == nil {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
@@ -136,7 +133,7 @@ type BandOption struct {
 }
 
 type BandMerger struct {
-	Merger
+	tile.Merger
 	Layers       []tile.Source
 	Ops          []BandOption
 	Cacheable    *tile.CacheInfo
@@ -147,6 +144,9 @@ type BandMerger struct {
 
 func NewBandMerger(mode ImageMode) *BandMerger {
 	return &BandMerger{Ops: make([]BandOption, 0), Cacheable: nil, Mode: mode, MaxBand: make(map[int]int), MaxSrcImages: 0}
+}
+
+func (l *BandMerger) AddSource(src tile.Source, cov geo.Coverage) {
 }
 
 func (l *BandMerger) AddOps(dst_band, src_img, src_band int, factor float64) {
@@ -238,7 +238,9 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 	return out
 }
 
-func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
+func (l *BandMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
+	image_opts := opts.(*ImageOptions)
+
 	if len(l.Layers) < l.MaxSrcImages {
 		return NewBlankImageSource([2]uint32{size[0], size[1]}, image_opts, l.Cacheable)
 	}
@@ -312,7 +314,7 @@ func (l *BandMerger) Merge(image_opts *ImageOptions, size []uint32, bbox vec2d.R
 	return &ImageSource{image: result, size: size, Options: image_opts, cacheable: l.Cacheable}
 }
 
-func MergeImages(layers []tile.Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs geo.Proj, merger Merger) tile.Source {
+func MergeImages(layers []tile.Source, image_opts *ImageOptions, size [2]uint32, bbox vec2d.Rect, bbox_srs geo.Proj, merger tile.Merger) tile.Source {
 	if merger == nil {
 		merger = &LayerMerger{}
 	}

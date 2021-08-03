@@ -12,8 +12,8 @@ import (
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
-	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 	_ "github.com/flywave/ogc-specifications/pkg/tms100"
@@ -353,7 +353,7 @@ type TileLayer struct {
 	title                 string
 	metadata              map[string]string
 	tileManager           cache.Manager
-	infoSources           []sources.InfoSource
+	infoSources           []layer.Layer
 	dimensions            utils.Dimensions
 	grid                  *TileServiceGrid
 	extent                *geo.MapExtent
@@ -362,7 +362,7 @@ type TileLayer struct {
 	empty_response_as_png bool
 }
 
-func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []sources.InfoSource, dimensions utils.Dimensions) *TileLayer {
+func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []layer.Layer, dimensions utils.Dimensions) *TileLayer {
 	ret := &TileLayer{name: name, title: title, metadata: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid()), mixed_format: true, empty_response_as_png: true}
 	if v, ok := ret.metadata["format"]; ok {
 		if strings.ToLower(v) == "true" {

@@ -41,7 +41,7 @@ type RasterSource struct {
 }
 
 func (s *RasterSource) GetType() tile.TileType {
-	return tile.TILE_DEMRASTER
+	return tile.TILE_DEM
 }
 
 func (s *RasterSource) GetCacheable() *tile.CacheInfo {

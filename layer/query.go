@@ -53,7 +53,7 @@ func (q *MapQuery) EQ(o *MapQuery) bool {
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {
 	keys := []string{}
 	for k := range params {
-		keys = append(keys, strings.ToUpper(k))
+		keys = append(keys, strings.ToLower(k))
 	}
 	result := make(map[string]string)
 	for k, v := range q.Dimensions {
@@ -164,22 +164,22 @@ func (req *StyleQuery) BuildURL(URL string, username string, accessToken string)
 
 type TileQuery struct {
 	Query
-	MapId     string
-	Latitude  float64
-	Longitude float64
-	Zoom      int
-	Width     int
-	Height    int
-	Format    string
-	Retina    bool
-	Markers   []*Marker
+	MapId   string
+	Y       int
+	X       int
+	Zoom    int
+	Width   int
+	Height  int
+	Format  string
+	Retina  bool
+	Markers []*Marker
 }
 
 func (q *TileQuery) EQ(o *TileQuery) bool {
-	if q.Latitude != o.Latitude {
+	if q.Y != o.Y {
 		return false
 	}
-	if q.Longitude != o.Longitude {
+	if q.X != o.X {
 		return false
 	}
 	if q.Zoom != o.Zoom {
@@ -201,7 +201,7 @@ func (q *TileQuery) EQ(o *TileQuery) bool {
 }
 
 func (req *TileQuery) BuildURL(URL string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/v4/%s", URL, url.QueryEscape(req.MapId))
+	urls := fmt.Sprintf("%s/v4/%s", URL, url.QueryEscape(req.MapId))
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {
@@ -212,8 +212,7 @@ func (req *TileQuery) BuildURL(URL string, accessToken string) (string, error) {
 		}
 		urls += s
 	}
-	urls += fmt.Sprintf("/%f,%f,%d", req.Longitude, req.Latitude, req.Zoom)
-	urls += fmt.Sprintf("/%dx%d", req.Width, req.Height)
+	urls += fmt.Sprintf("/%d/%d/%d", req.Zoom, req.X, req.Y)
 	if req.Retina {
 		urls += "@2x"
 	}
@@ -269,8 +268,8 @@ func (req *SpriteQuery) BuildURL(URL string, username string, accessToken string
 type GlyphsQuery struct {
 	Query
 	Font  string
-	Start string
-	End   string
+	Start int
+	End   int
 }
 
 func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
@@ -287,7 +286,7 @@ func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
 }
 
 func (req *GlyphsQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/fonts/v1/%s/%s/%s-%s.pbf", URL, username, req.Font, req.Start, req.End)
+	urls := fmt.Sprintf("%s/fonts/v1/%s/%s/%d-%d.pbf", URL, username, req.Font, req.Start, req.End)
 
 	u, err := url.Parse(urls)
 	if err != nil {

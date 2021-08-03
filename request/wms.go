@@ -75,10 +75,10 @@ func (r *WMSMapRequestParams) GetBBox() vec2d.Rect {
 }
 
 func (r *WMSMapRequestParams) SetBBox(bbox vec2d.Rect) {
-	minx := strconv.FormatFloat(bbox.Min[0], 'E', -1, 64)
-	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
-	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
-	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
+	minx := strconv.FormatFloat(bbox.Min[0], 'f', -1, 64)
+	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
+	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
+	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
 	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
 }
 
@@ -189,7 +189,6 @@ func (r *WMSMapRequestParams) GetBGColor() color.Color {
 type WMSRequest struct {
 	BaseRequest
 	RequestHandlerName string
-	FixedParams        map[string]string
 	ExpectedParam      []string
 	NonStrict          bool
 	NonStrictParams    mapset.Set
@@ -235,14 +234,17 @@ type WMSMapRequest struct {
 	WMSRequest
 }
 
-func NewWMSMapRequest(nonStrict bool) *WMSMapRequest {
+func NewWMSMapRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSMapRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSMapRequest{WMSRequest{RequestHandlerName: "map", NonStrict: nonStrict, v: v}}
+	req.FixedParams = make(map[string]string)
 	req.FixedParams["request"] = "GetMap"
 	req.FixedParams["version"] = "1.3.0"
 	req.FixedParams["service"] = "WMS"
+	req.FixedParams["styles"] = ""
 	req.ExpectedParam = []string{"version", "request", "layers", "styles", "srs", "bbox",
 		"width", "height", "format"}
+	req.init(param, url, validate, ht)
 	return req
 }
 
@@ -383,8 +385,8 @@ func (r *WMSFeatureInfoRequestParams) GetPos() [2]float64 {
 }
 
 func (r *WMSFeatureInfoRequestParams) SetPos(pos [2]float64) {
-	r.params.Set("i", []string{strconv.FormatFloat(pos[0], 'E', -1, 64)})
-	r.params.Set("j", []string{strconv.FormatFloat(pos[1], 'E', -1, 64)})
+	r.params.Set("i", []string{strconv.FormatFloat(pos[0], 'f', -1, 64)})
+	r.params.Set("j", []string{strconv.FormatFloat(pos[1], 'f', -1, 64)})
 }
 
 func (r *WMSFeatureInfoRequestParams) GetPosCoords() []float64 {
@@ -398,13 +400,15 @@ type WMSLegendGraphicRequest struct {
 	WMSRequest
 }
 
-func NewWMSLegendGraphicRequest(nonStrict bool) *WMSLegendGraphicRequest {
+func NewWMSLegendGraphicRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSLegendGraphicRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSLegendGraphicRequest{WMSRequest{RequestHandlerName: "legendgraphic", NonStrict: nonStrict, v: v}}
+	req.FixedParams = make(map[string]string)
 	req.FixedParams["request"] = "GetLegendGraphic"
 	req.FixedParams["sld_version"] = "1.3.0"
 	req.FixedParams["service"] = "WMS"
 	req.ExpectedParam = []string{"version", "request", "layer", "format", "sld_version"}
+	req.init(param, url, validate, ht)
 	return req
 }
 
@@ -412,9 +416,10 @@ type WMSFeatureInfoRequest struct {
 	WMSMapRequest
 }
 
-func NewWMSFeatureInfoRequest(nonStrict bool) *WMSFeatureInfoRequest {
-	req := &WMSFeatureInfoRequest{WMSMapRequest: *NewWMSMapRequest(nonStrict)}
+func NewWMSFeatureInfoRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSFeatureInfoRequest {
+	req := &WMSFeatureInfoRequest{WMSMapRequest: *NewWMSMapRequest(param, url, validate, ht, nonStrict)}
 	req.RequestHandlerName = "featureinfo"
+	req.FixedParams = make(map[string]string)
 	req.FixedParams["request"] = "GetFeatureInfo"
 	req.ExpectedParam = []string{"format", "styles", "query_layers", "i", "j"}
 	req.NonStrictParams = mapset.NewSet("format", "styles")
@@ -430,12 +435,14 @@ type WMSCapabilitiesRequest struct {
 	MimeType string
 }
 
-func NewWMSCapabilitiesRequest() *WMSCapabilitiesRequest {
+func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht *http.Request) *WMSCapabilitiesRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSCapabilitiesRequest{WMSRequest: WMSRequest{RequestHandlerName: "capabilities", NonStrict: false, v: v}, MimeType: "text/xml"}
+	req.FixedParams = make(map[string]string)
 	req.FixedParams["request"] = "GetCapabilities"
 	req.FixedParams["version"] = "1.3.0"
 	req.FixedParams["service"] = "WMS"
+	req.init(param, url, validate, ht)
 	return req
 }
 

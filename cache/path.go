@@ -49,7 +49,8 @@ func tile_location_tc(tile *Tile, cache_dir string, file_ext string, create_dir 
 		tile.Location = path.Join(parts...)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }
@@ -66,7 +67,8 @@ func tile_location_mp(tile *Tile, cache_dir string, file_ext string, create_dir 
 		tile.Location = path.Join(parts...)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }
@@ -79,7 +81,8 @@ func tile_location_tms(tile *Tile, cache_dir string, file_ext string, create_dir
 			strconv.Itoa(x), strconv.Itoa(y)+"."+file_ext)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }
@@ -91,7 +94,8 @@ func tile_location_reverse_tms(tile *Tile, cache_dir string, file_ext string, cr
 			cache_dir, strconv.Itoa(y), strconv.Itoa(x), strconv.Itoa(z)+"."+file_ext)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }
@@ -100,7 +104,7 @@ func tile_location_quadkey(tile *Tile, cache_dir string, file_ext string, create
 	if tile.Location == "" {
 		x, y, z := tile.Coord[0], tile.Coord[1], tile.Coord[2]
 		quadKey := ""
-		for i := range []int{z, 0, -1} {
+		for i := z; i > 0; i-- {
 			digit := 0
 			mask := 1 << (i - 1)
 			if (x & mask) != 0 {
@@ -115,7 +119,8 @@ func tile_location_quadkey(tile *Tile, cache_dir string, file_ext string, create
 			cache_dir, quadKey+"."+file_ext)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }
@@ -127,7 +132,8 @@ func tile_location_arcgiscache(tile *Tile, cache_dir string, file_ext string, cr
 		tile.Location = path.Join(parts...)
 	}
 	if create_dir {
-		ensure_directory(tile.Location)
+		dir := path.Dir(tile.Location)
+		ensure_directory(dir)
 	}
 	return tile.Location
 }

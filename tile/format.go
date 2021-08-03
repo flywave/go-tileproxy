@@ -32,5 +32,14 @@ func (i *TileFormat) Extension() string {
 	if strings.Contains(ext, ";") {
 		ext = strings.Split(ext, ";")[0]
 	}
-	return strings.Trim(ext, " ")
+	ext = strings.Trim(ext, " ")
+
+	if ext == "vnd.wap.wbmp" {
+		ext = "wbmp"
+	}
+	if ext == "vnd.mapbox-vector-tile" {
+		ext = "mvt"
+	}
+
+	return ext
 }

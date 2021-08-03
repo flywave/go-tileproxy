@@ -50,10 +50,10 @@ func (r *ArcGISExportRequestParams) GetBBox() vec2d.Rect {
 }
 
 func (r *ArcGISExportRequestParams) SetBBox(bbox vec2d.Rect) {
-	minx := strconv.FormatFloat(bbox.Min[0], 'E', -1, 64)
-	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
-	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
-	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
+	minx := strconv.FormatFloat(bbox.Min[0], 'f', -1, 64)
+	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
+	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
+	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
 	r.params.Set("bbox", []string{strings.Join([]string{minx, miny, maxx, maxy}, ",")})
 }
 
@@ -166,10 +166,10 @@ func (r *ArcGISIdentifyRequestParams) GetBBox() vec2d.Rect {
 }
 
 func (r *ArcGISIdentifyRequestParams) SetBBox(bbox vec2d.Rect) {
-	minx := strconv.FormatFloat(bbox.Min[0], 'E', -1, 64)
-	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
-	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
-	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
+	minx := strconv.FormatFloat(bbox.Min[0], 'f', -1, 64)
+	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
+	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
+	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
 	r.params.Set("mapExtent", []string{minx, miny, maxx, maxy})
 }
 
@@ -244,8 +244,8 @@ func (r *ArcGISIdentifyRequestParams) GetPos() [2]float64 {
 }
 
 func (r *ArcGISIdentifyRequestParams) SetPos(pos [2]float64) {
-	posx := strconv.FormatFloat(pos[0], 'E', -1, 64)
-	posy := strconv.FormatFloat(pos[1], 'E', -1, 64)
+	posx := strconv.FormatFloat(pos[0], 'f', -1, 64)
+	posy := strconv.FormatFloat(pos[1], 'f', -1, 64)
 	r.params.Set("geometry", []string{posx, posy})
 }
 
@@ -281,8 +281,13 @@ func (r *ArcGISIdentifyRequestParams) SetTransparent(b bool) {
 
 type ArcGISRequest struct {
 	BaseRequest
-	FixedParams map[string]string
-	Uri         *url.URL
+	Uri *url.URL
+}
+
+func NewArcGISRequest(param interface{}, url string, validate bool, ht *http.Request) *ArcGISRequest {
+	req := &ArcGISRequest{}
+	req.init(param, url, validate, ht)
+	return req
 }
 
 func (r *ArcGISRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -301,8 +306,13 @@ func (r *ArcGISRequest) QueryString() string {
 
 type ArcGISIdentifyRequest struct {
 	BaseRequest
-	FixedParams map[string]string
-	Uri         *url.URL
+	Uri *url.URL
+}
+
+func NewArcGISIdentifyRequest(param interface{}, url string, validate bool, ht *http.Request) *ArcGISIdentifyRequest {
+	req := &ArcGISIdentifyRequest{}
+	req.init(param, url, validate, ht)
+	return req
 }
 
 func (r *ArcGISIdentifyRequest) init(param interface{}, url string, validate bool, http *http.Request) {

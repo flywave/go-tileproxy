@@ -12,7 +12,6 @@ import (
 )
 
 type DebugSource struct {
-	ImagerySource
 	SupportMetaTiles bool
 	ResRange         *geo.ResolutionRange
 	Coverage         geo.Coverage
@@ -34,7 +33,6 @@ func (s *DebugSource) GetMap(query *layer.MapQuery) tile.Source {
 }
 
 type DummySource struct {
-	ImagerySource
 	SupportMetaTiles bool
 	ResRange         *geo.ResolutionRange
 	Coverage         geo.Coverage

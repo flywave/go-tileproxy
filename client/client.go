@@ -62,25 +62,13 @@ func createCollector(config *Config) *crawler.Collector {
 }
 
 type Client interface {
-	GetCollector() *crawler.Collector
-	Sync()
-	Open(url string, data []byte) *crawler.Response
-	Get(url string) *crawler.Response
 }
 
 type BaseClient struct {
 	Client
-	Collector *crawler.Collector
+	http HttpClient
 }
 
-func (c *BaseClient) GetCollector() *crawler.Collector {
-	return c.Collector
-}
-
-func (c *BaseClient) Sync() {
-	c.Collector.Wait()
-}
-
-func (c *BaseClient) Get(url string) *crawler.Response {
-	return nil
+func (c *BaseClient) GetHttpClient() HttpClient {
+	return c.http
 }

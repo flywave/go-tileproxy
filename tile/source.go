@@ -5,9 +5,9 @@ import "time"
 type TileType uint8
 
 const (
-	TILE_IMAGERY   = 0
-	TILE_DEMRASTER = 1
-	TILE_VECTOR    = 2
+	TILE_IMAGERY = 0
+	TILE_DEM     = 1
+	TILE_VECTOR  = 2
 )
 
 type CacheInfo struct {

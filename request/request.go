@@ -14,7 +14,7 @@ func (p RequestParams) genDict(params []ParamPair) map[string][]string {
 	dict := make(map[string][]string)
 	for _, pa := range params {
 		if len(pa) > 1 {
-			upkey := strings.ToUpper(pa[0])
+			upkey := strings.ToLower(pa[0])
 			dict[upkey] = pa[1:]
 		}
 	}
@@ -40,13 +40,13 @@ func (p RequestParams) Update(params []ParamPair) {
 }
 
 func (p RequestParams) Get(key string) (val []string, ok bool) {
-	upkey := strings.ToUpper(key)
+	upkey := strings.ToLower(key)
 	val, ok = p[upkey]
 	return
 }
 
 func (p RequestParams) GetOne(key string, defaults string) string {
-	upkey := strings.ToUpper(key)
+	upkey := strings.ToLower(key)
 	val, ok := p[upkey]
 	if ok {
 		return val[0]
@@ -55,7 +55,7 @@ func (p RequestParams) GetOne(key string, defaults string) string {
 }
 
 func (p RequestParams) Set(key string, val []string) {
-	upkey := strings.ToUpper(key)
+	upkey := strings.ToLower(key)
 	p[upkey] = val
 }
 
@@ -97,11 +97,12 @@ type Request interface {
 
 type BaseRequest struct {
 	Request
-	Params    RequestParams
-	Delimiter string
-	Url       string
-	Http      *http.Request
-	validate  bool
+	Params      RequestParams
+	Delimiter   string
+	Url         string
+	Http        *http.Request
+	validate    bool
+	FixedParams map[string]string
 }
 
 func (r *BaseRequest) init(param interface{}, url string, validate bool, ht *http.Request) error {
@@ -132,12 +133,31 @@ func (r *BaseRequest) ToString() string {
 	return r.CompleteUrl()
 }
 
+func (r *BaseRequest) GetParams() RequestParams {
+	return r.Params
+}
+
 func (r *BaseRequest) GetRawParams() map[string][]string {
 	return map[string][]string(r.Params)
 }
 
 func (r *BaseRequest) QueryString() string {
-	return r.QueryString()
+	kv_pairs := []string{}
+	for key, value := range r.FixedParams {
+		r.Params[key] = []string{value}
+	}
+
+	for k, v := range r.Params {
+		var val string
+		if len(v) > 1 {
+			val = strings.Join(v, ",")
+		} else {
+			val = v[0]
+		}
+		kv_pairs = append(kv_pairs, k+"="+url.QueryEscape(val))
+	}
+
+	return strings.Join(kv_pairs, "&")
 }
 
 func (r *BaseRequest) CompleteUrl() string {

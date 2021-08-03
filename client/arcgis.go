@@ -1,6 +1,7 @@
 package client
 
 import (
+	"math"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type ArcGISClient struct {
@@ -16,13 +18,17 @@ type ArcGISClient struct {
 	RequestTemplate *request.ArcGISRequest
 }
 
-func NewArcGISClient() *ArcGISClient {
-	ret := &ArcGISClient{}
-
+func NewArcGISClient(req *request.ArcGISRequest, client HttpClient) *ArcGISClient {
+	ret := &ArcGISClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
 	return ret
 }
 
-func (c *ArcGISClient) Retrieve(*layer.MapQuery, *tile.TileFormat) []byte {
+func (c *ArcGISClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
+	url := c.queryURL(query, format)
+	status, resp := c.http.Open(url, nil)
+	if status == 200 {
+		return resp
+	}
 	return nil
 }
 
@@ -39,15 +45,51 @@ func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) 
 }
 
 type ArcGISInfoClient struct {
-	WMSInfoClient
+	BaseClient
+	RequestTemplate  *request.ArcGISIdentifyRequest
+	SupportedSrs     *geo.SupportedSRS
 	ReturnGeometries bool
 	Tolerance        int
 }
 
-func NewArcGISInfoClient() *ArcGISInfoClient {
-	ret := &ArcGISInfoClient{}
-
+func NewArcGISInfoClient(req *request.ArcGISIdentifyRequest, supported_srs *geo.SupportedSRS, client HttpClient, return_geometries bool, tolerance int) *ArcGISInfoClient {
+	ret := &ArcGISInfoClient{BaseClient: BaseClient{http: client}, RequestTemplate: req, SupportedSrs: supported_srs, ReturnGeometries: return_geometries, Tolerance: tolerance}
 	return ret
+}
+
+func (c *ArcGISInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQuery {
+	req_srs := query.Srs
+	req_bbox := query.BBox
+	req_coord := geo.MakeLinTransf(vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(query.Size[0]), float64(query.Size[1])}}, req_bbox)(query.Pos[:])
+
+	info_srs, _ := c.SupportedSrs.BestSrs(req_srs)
+	info_bbox := req_srs.TransformRectTo(info_srs, req_bbox, 16)
+
+	info_aratio := (info_bbox.Max[1] - info_bbox.Min[1]) / (info_bbox.Max[0] - info_bbox.Min[0])
+	info_size := [2]uint32{query.Size[0], uint32(info_aratio * float64(query.Size[0]))}
+
+	info_coord := req_srs.TransformTo(info_srs, []vec2d.T{{req_coord[0], req_coord[1]}})
+	info_pos := geo.MakeLinTransf(info_bbox, vec2d.Rect{Min: vec2d.T{float64(0), float64(0)}, Max: vec2d.T{float64(info_size[0]), float64(info_size[1])}})(info_coord[0][:])
+	info_pos2 := [2]float64{math.Round(info_pos[0]), math.Round(info_pos[1])}
+
+	info_query := &layer.InfoQuery{
+		BBox:         info_bbox,
+		Size:         info_size,
+		Srs:          info_srs,
+		Pos:          info_pos2,
+		InfoFormat:   query.InfoFormat,
+		FeatureCount: query.FeatureCount,
+	}
+	return info_query
+}
+
+func (c *ArcGISInfoClient) retrieve(query *layer.InfoQuery) []byte {
+	url := c.queryURL(query)
+	status, resp := c.http.Open(url, nil)
+	if status == 200 {
+		return resp
+	}
+	return nil
 }
 
 func (c *ArcGISInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {

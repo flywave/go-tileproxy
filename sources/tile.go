@@ -6,23 +6,24 @@ import (
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type TileSource struct {
-	ImagerySource
-	Grid         *geo.TileGrid
-	Client       *client.TileClient
-	ImageOpts    *images.ImageOptions
-	Coverage     geo.Coverage
-	Extent       *geo.MapExtent
-	ResRange     *geo.ResolutionRange
-	ErrorHandler func(error)
+type SourceCreater func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source
+
+type TileSourceLayer struct {
+	Grid          *geo.TileGrid
+	Client        *client.TileClient
+	ImageOpts     tile.TileOptions
+	Coverage      geo.Coverage
+	Extent        *geo.MapExtent
+	ResRange      *geo.ResolutionRange
+	ErrorHandler  func(error)
+	SourceCreater SourceCreater
 }
 
-func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
+func (s *TileSourceLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	if s.Grid.TileSize[0] != query.Size[0] || s.Grid.TileSize[1] != query.Size[1] {
 		return nil, errors.New("tile size of cache and tile source do not match")
 	}
@@ -32,11 +33,11 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil), nil
+		return s.SourceCreater(query.Size, s.ImageOpts, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil), nil
+		return s.SourceCreater(query.Size, s.ImageOpts, nil), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -52,7 +53,6 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z}, &query.Format)
-	src := images.CreateImageSource(query.Size, s.ImageOpts)
-	src.SetSource(bytes.NewBuffer(resp))
+	src := s.SourceCreater(query.Size, s.ImageOpts, bytes.NewBuffer(resp))
 	return src, nil
 }

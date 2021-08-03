@@ -56,49 +56,36 @@ func (r *WMTSTileRequestParams) GetBBox() vec2d.Rect {
 }
 
 func (r *WMTSTileRequestParams) SetBBox(bbox vec2d.Rect) {
-	minx := strconv.FormatFloat(bbox.Min[0], 'E', -1, 64)
-	miny := strconv.FormatFloat(bbox.Min[1], 'E', -1, 64)
-	maxx := strconv.FormatFloat(bbox.Max[0], 'E', -1, 64)
-	maxy := strconv.FormatFloat(bbox.Max[1], 'E', -1, 64)
+	minx := strconv.FormatFloat(bbox.Min[0], 'f', -1, 64)
+	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
+	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
+	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
 	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
 }
 
 func (r *WMTSTileRequestParams) GetSize() [2]int {
-	if v, ok := r.params.Get("size"); !ok {
+	w, okw := r.params.Get("width")
+	h, okh := r.params.Get("height")
+	if !okw || !okh {
 		return [2]int{-1, -1}
 	} else {
-		if len(v) == 2 {
-			si := [2]int{}
-			for i := range v {
-				v, err := strconv.ParseInt(v[i], 10, 64)
-				if err != nil {
-					return si
-				}
-				si[i] = int(v)
-			}
-			return si
-		} else if len(v) == 1 {
-			bstr := strings.Split(v[0], ",")
-			if len(bstr) == 2 {
-				si := [2]int{}
-				for i := range bstr {
-					v, err := strconv.ParseInt(v[i], 10, 64)
-					if err != nil {
-						return si
-					}
-					si[i] = int(v)
-				}
-				return si
-			}
+		ws, err := strconv.ParseInt(w[0], 10, 64)
+		if err != nil {
+			return [2]int{-1, -1}
 		}
+		hs, err := strconv.ParseInt(h[0], 10, 64)
+		if err != nil {
+			return [2]int{-1, -1}
+		}
+		return [2]int{int(ws), int(hs)}
 	}
-	return [2]int{-1, -1}
 }
 
 func (r *WMTSTileRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
-	r.params.Set("size", []string{width, height})
+	r.params.Set("width", []string{width})
+	r.params.Set("height", []string{height})
 }
 
 func (r *WMTSTileRequestParams) GetLayer() string {
@@ -171,17 +158,16 @@ func (r *WMTSTileRequestParams) Update(params map[string]string) {
 }
 
 func (r *WMTSTileRequestParams) GetSrs() string {
-	return r.params.GetOne("bboxSR", "EPSG:4326")
+	return r.params.GetOne("srs", "EPSG:4326")
 }
 
 func (r *WMTSTileRequestParams) SetSrs(srs string) {
-	r.params.Set("bboxSR", []string{srs})
+	r.params.Set("srs", []string{srs})
 }
 
 type WMTSRequest struct {
 	BaseRequest
 	RequestHandlerName string
-	FixedParams        map[string]string
 	ExpectedParam      []string
 	NonStrict          bool
 	NonStrictParams    mapset.Set
@@ -200,6 +186,12 @@ type WMTS100TileRequest struct {
 
 func (r *WMTSRequest) GetRequestHandler() string {
 	return r.RequestHandlerName
+}
+
+func NewWMTS100TileRequest(param interface{}, url string, validate bool, ht *http.Request) *WMTS100TileRequest {
+	req := &WMTS100TileRequest{}
+	req.init(param, url, validate, ht)
+	return req
 }
 
 func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -270,14 +262,20 @@ func (r *WMTSFeatureInfoRequestParams) GetPos() [2]float64 {
 }
 
 func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
-	r.params.Set("i", []string{strconv.FormatFloat(pos[0], 'E', -1, 64)})
-	r.params.Set("j", []string{strconv.FormatFloat(pos[1], 'E', -1, 64)})
+	r.params.Set("i", []string{strconv.FormatFloat(pos[0], 'f', -1, 64)})
+	r.params.Set("j", []string{strconv.FormatFloat(pos[1], 'f', -1, 64)})
 }
 
 type WMTS100FeatureInfoRequest struct {
 	WMTS100TileRequest
 	Infoformat string
 	Pos        [2]float64
+}
+
+func NewWMTS100FeatureInfoRequest(param interface{}, url string, validate bool, ht *http.Request) *WMTS100FeatureInfoRequest {
+	req := &WMTS100FeatureInfoRequest{}
+	req.init(param, url, validate, ht)
+	return req
 }
 
 func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -304,6 +302,12 @@ type WMTS100CapabilitiesRequest struct {
 	WMTSRequest
 	CapabilitiesTemplate string
 	MimeType             string
+}
+
+func NewWMTS100CapabilitiesRequest(param interface{}, url string, validate bool, ht *http.Request) *WMTS100CapabilitiesRequest {
+	req := &WMTS100CapabilitiesRequest{}
+	req.init(param, url, validate, ht)
+	return req
 }
 
 func (r *WMTS100CapabilitiesRequest) init(param interface{}, url string, validate bool, http *http.Request) {

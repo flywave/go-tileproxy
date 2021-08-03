@@ -4,9 +4,11 @@ import (
 	"errors"
 	"os"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
+
+type SourceCreater func(location string) tile.Source
 
 type Cache interface {
 	LoadTile(tile *Tile, withMetadata bool) error
@@ -25,10 +27,11 @@ type LocalCache struct {
 	fileExt       string
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
+	creater       SourceCreater
 }
 
-func NewLocalCache(cache_dir string, file_ext string, directory_layout string) *LocalCache {
-	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext}
+func NewLocalCache(cache_dir string, file_ext string, directory_layout string, creater SourceCreater) *LocalCache {
+	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext, creater: creater}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
 	return c
 }
@@ -52,7 +55,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 		if withMetadata {
 			c.LoadTileMetadata(tile)
 		}
-		tile.Source = images.CreateImageSourceFromPath(location)
+		tile.Source = c.creater(location)
 		return nil
 	}
 	return errors.New("not found")

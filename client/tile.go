@@ -17,13 +17,17 @@ type TileClient struct {
 	Template *TileURLTemplate
 }
 
-func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate) *TileClient {
-	return &TileClient{Grid: grid, Template: tpl}
+func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate, client HttpClient) *TileClient {
+	return &TileClient{Grid: grid, Template: tpl, BaseClient: BaseClient{http: client}}
 }
 
 func (c *TileClient) GetTile(tile_coord [3]int, format *tile.TileFormat) []byte {
 	url := c.Template.substitute(tile_coord, format, c.Grid)
-	return c.Get(url).Body
+	status, resp := c.http.Open(url, nil)
+	if status == 200 {
+		return resp
+	}
+	return nil
 }
 
 func tilecachePath(tile_coord [3]int) string {
@@ -41,7 +45,7 @@ func tilecachePath(tile_coord [3]int) string {
 func quadKey(tile_coord [3]int) string {
 	x, y, z := tile_coord[0], tile_coord[1], tile_coord[2]
 	quadKey := ""
-	for _, i := range [3]int{z, 0, -1} {
+	for i := z; i > 0; i-- {
 		digit := 0
 		mask := 1 << (i - 1)
 		if (x & mask) != 0 {

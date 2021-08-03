@@ -22,6 +22,7 @@ type Layer interface {
 }
 
 type MapLayer struct {
+	Layer
 	SupportMetaTiles bool
 	ResRange         *geo.ResolutionRange
 	Coverage         geo.Coverage

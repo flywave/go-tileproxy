@@ -17,7 +17,7 @@ import (
 
 type TileCreator struct {
 	Cache         Cache
-	Sources       []sources.TileSource
+	Sources       []sources.TileSourceLayer
 	Grid          *geo.TileGrid
 	MetaGrid      *geo.MetaGrid
 	BulkMetaTiles bool
@@ -204,14 +204,14 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) *Tile {
 	query := &layer.MapQuery{BBox: c.Grid.TileBBox(coord, false), Size: [2]uint32{tile_size[0], tile_size[1]}, Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()),
 		Dimensions: c.Dimensions}
-	tile_image, err := c.querySources(query)
-	if tile_image == nil || err != nil {
+	tile_data, err := c.querySources(query)
+	if tile_data == nil || err != nil {
 		return nil
 	}
 
 	tile := NewTile(coord)
-	tile.SetCacheInfo(tile_image.GetCacheable())
-	tile.Source = tile_image
+	tile.SetCacheInfo(tile_data.GetCacheable())
+	tile.Source = tile_data
 	tile = c.Manager.ApplyTileFilter(tile)
 	return tile
 }

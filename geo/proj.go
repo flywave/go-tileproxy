@@ -13,6 +13,7 @@ type Proj interface {
 	TransformRectTo(o Proj, rect vec2d.Rect, withPoints int) vec2d.Rect
 	Eq(o Proj) bool
 	AlignBBox(t vec2d.Rect) vec2d.Rect
+	GetSrsCode() string
 	GetDef() string
 	IsLatLong() bool
 	ToString() string
@@ -101,6 +102,10 @@ func (p *GCJ02Proj) transformToWGS84(points []vec2d.T) ([]vec2d.T, *SRSProj4) {
 	return ret, NewSRSProj4("EPSG:4326")
 }
 
+func (p *GCJ02Proj) GetSrsCode() string {
+	return "GCJ02"
+}
+
 func (p *GCJ02Proj) GetDef() string {
 	return "GCJ02"
 }
@@ -181,6 +186,10 @@ func (p *BD09Proj) transformToWGS84(points []vec2d.T) ([]vec2d.T, *SRSProj4) {
 		}
 	}
 	return ret, NewSRSProj4("EPSG:4326")
+}
+
+func (p *BD09Proj) GetSrsCode() string {
+	return "GCJ02"
 }
 
 func (p *BD09Proj) GetDef() string {

@@ -22,8 +22,7 @@ func NewTile(coord [3]int) *Tile {
 }
 
 func (t *Tile) GetCacheInfo() *tile.CacheInfo {
-	return &tile.CacheInfo{Cacheable: t.Cacheable, Timestamp: t.Timestamp,
-		Size: t.Size}
+	return &tile.CacheInfo{Cacheable: t.Cacheable, Timestamp: t.Timestamp, Size: t.Size}
 }
 
 func (t *Tile) SetCacheInfo(cache *tile.CacheInfo) {

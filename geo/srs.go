@@ -265,6 +265,10 @@ func (p *SRSProj4) Eq(o Proj) bool {
 	return false
 }
 
+func (p *SRSProj4) GetSrsCode() string {
+	return p.SrsCode
+}
+
 func (p *SRSProj4) GetDef() string {
 	return p.proj.GetDef()
 }

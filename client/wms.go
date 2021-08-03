@@ -8,7 +8,6 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/crawler"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
@@ -19,35 +18,42 @@ import (
 
 type WMSClient struct {
 	BaseClient
-	RequestTemplate *request.ArcGISRequest
+	RequestTemplate *request.WMSMapRequest
 	HttpMethod      string
 	FWDReqParams    map[string]string
 }
 
+func NewWMSClient(req *request.WMSMapRequest, client HttpClient) *WMSClient {
+	return &WMSClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
+}
+
 func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
-	var request_method string
+	var requestMethod string
 	if c.HttpMethod == "POST" {
-		request_method = "POST"
+		requestMethod = "POST"
 	} else if c.HttpMethod == "GET" {
-		request_method = "GET"
+		requestMethod = "GET"
 	} else {
 		if _, ok := c.RequestTemplate.GetParams().Get("sld_body"); ok {
-			request_method = "POST"
+			requestMethod = "POST"
 		} else {
-			request_method = "GET"
+			requestMethod = "GET"
 		}
 	}
+
 	var url string
 	var data []byte
-	if request_method == "POST" {
+	if requestMethod == "POST" {
 		url, data = c.queryData(query, format)
 	} else {
 		url = c.queryURL(query, format)
 		data = nil
 	}
-	var resp *crawler.Response
-	resp = c.Open(url, data)
-	return resp.Body
+	status, resp := c.http.Open(url, data)
+	if status == 200 {
+		return resp
+	}
+	return nil
 }
 
 func (c *WMSClient) queryData(query *layer.MapQuery, format *tile.TileFormat) (url string, data []byte) {
@@ -65,15 +71,15 @@ func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) str
 	return c.queryReq(query, format).CompleteUrl()
 }
 
-func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.ArcGISRequest {
-	req := c.RequestTemplate
+func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.WMSMapRequest {
+	req := *c.RequestTemplate
 	params := request.NewWMTSTileRequestParams(req.GetParams())
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
-	params.SetSrs(query.Srs.GetDef())
+	params.SetSrs(query.Srs.GetSrsCode())
 	params.SetFormat(*format)
 	params.Update(query.DimensionsForParams(c.FWDReqParams))
-	return req
+	return &req
 }
 
 func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMSClient {
@@ -92,8 +98,12 @@ func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMS
 
 type WMSInfoClient struct {
 	BaseClient
-	RequestTemplate *request.ArcGISRequest
+	RequestTemplate *request.WMSFeatureInfoRequest
 	SupportedSrs    *geo.SupportedSRS
+}
+
+func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, client HttpClient) *WMSInfoClient {
+	return &WMSInfoClient{RequestTemplate: req, SupportedSrs: supported_srs, BaseClient: BaseClient{http: client}}
 }
 
 func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
@@ -145,7 +155,11 @@ func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQ
 
 func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	return c.Get(url).Body
+	status, resp := c.http.Open(url, nil)
+	if status == 200 {
+		return resp
+	}
+	return nil
 }
 
 func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
@@ -176,7 +190,11 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 
 type WMSLegendClient struct {
 	BaseClient
-	RequestTemplate *request.ArcGISRequest
+	RequestTemplate *request.WMSLegendGraphicRequest
+}
+
+func NewWMSLegendClient(req *request.WMSLegendGraphicRequest, client HttpClient) *WMSLegendClient {
+	return &WMSLegendClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
 }
 
 func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
@@ -191,7 +209,11 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 	url := c.queryURL(query)
-	return c.Get(url).Body
+	states, resp := c.http.Open(url, nil)
+	if states == 200 {
+		return resp
+	}
+	return nil
 }
 
 func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
@@ -203,7 +225,7 @@ func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 	} else {
 		params.SetFormat("image/png")
 	}
-	if query.Scale == -1 {
+	if query.Scale > 0 {
 		params.SetScale(query.Scale)
 	}
 	return req.CompleteUrl()

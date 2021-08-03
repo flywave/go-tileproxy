@@ -16,7 +16,6 @@ import (
 )
 
 type WMSSource struct {
-	ImagerySource
 	Client                    *client.WMSClient
 	ImageOpts                 *images.ImageOptions
 	SupportsMetaTiles         bool
@@ -221,7 +220,6 @@ func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSS
 }
 
 type WMSInfoSource struct {
-	InfoSource
 	Client      *client.WMSInfoClient
 	Coverage    geo.Coverage
 	Transformer func(feature resource.FeatureInfoDoc) resource.FeatureInfoDoc
@@ -243,7 +241,6 @@ func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc 
 }
 
 type WMSLegendSource struct {
-	LegendSource
 	Clients    []client.WMSLegendClient
 	Identifier string
 	Cache      *resource.LegendCache

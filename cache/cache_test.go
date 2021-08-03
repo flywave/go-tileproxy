@@ -116,7 +116,6 @@ var (
 )
 
 func TestPath(t *testing.T) {
-
 	for _, p := range paths {
 		cache := NewLocalCache("/tmp/foo", "png", p.key, nil)
 

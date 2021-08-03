@@ -118,8 +118,8 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			layers = append(layers, img)
 		}
 	}
-	imageOptions := c.Manager.GetTileOptions().(*images.ImageOptions)
-	if imageOptions != nil {
+	imageOptions, ok := c.Manager.GetTileOptions().(*images.ImageOptions)
+	if ok && imageOptions != nil {
 		return images.MergeImages(layers, c.Manager.GetTileOptions().(*images.ImageOptions), query.Size, query.BBox, query.Srs, c.TileMerger), nil
 	}
 	return nil, errors.New("error")

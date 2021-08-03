@@ -100,6 +100,10 @@ func (r *WMTSTileRequestParams) SetLayer(l string) {
 	r.params.Set("layer", []string{l})
 }
 
+func (r *WMTSTileRequestParams) SetLayers(ls []string) {
+	r.params.Set("layer", ls)
+}
+
 func (r *WMTSTileRequestParams) GetCoord() [3]int {
 	x, err := strconv.Atoi(r.params.GetOne("tilecol", "-1"))
 	if err != nil {

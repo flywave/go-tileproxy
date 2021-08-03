@@ -91,7 +91,7 @@ func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMS
 	params := request.NewWMTSTileRequestParams(new_req.GetParams())
 	other_params := request.NewWMTSTileRequestParams(other.RequestTemplate.Params)
 
-	params.SetLayer(params.GetLayer() + other_params.GetLayer())
+	params.SetLayers([]string{params.GetLayer(), other_params.GetLayer()})
 
 	return &WMSClient{RequestTemplate: &new_req, BaseClient: c.BaseClient, HttpMethod: c.HttpMethod, FWDReqParams: c.FWDReqParams}
 }

@@ -60,7 +60,6 @@ func TestImageSource(t *testing.T) {
 	if rect.Dx() != 100 || rect.Dy() != 100 {
 		t.FailNow()
 	}
-
 }
 
 func TestSubImageSource(t *testing.T) {

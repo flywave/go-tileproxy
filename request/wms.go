@@ -102,41 +102,28 @@ func (r *WMSMapRequestParams) SetLayers(l []string) {
 }
 
 func (r *WMSMapRequestParams) GetSize() [2]uint32 {
-	if v, ok := r.params.Get("size"); !ok {
+	w, okw := r.params.Get("width")
+	h, okh := r.params.Get("height")
+	if !okw || !okh {
 		return [2]uint32{0, 0}
 	} else {
-		if len(v) == 2 {
-			si := [2]uint32{}
-			for i := range v {
-				v, err := strconv.ParseInt(v[i], 10, 64)
-				if err != nil {
-					return si
-				}
-				si[i] = uint32(v)
-			}
-			return si
-		} else if len(v) == 1 {
-			bstr := strings.Split(v[0], ",")
-			if len(bstr) == 2 {
-				si := [2]uint32{}
-				for i := range bstr {
-					v, err := strconv.ParseInt(v[i], 10, 64)
-					if err != nil {
-						return si
-					}
-					si[i] = uint32(v)
-				}
-				return si
-			}
+		ws, err := strconv.ParseInt(w[0], 10, 64)
+		if err != nil {
+			return [2]uint32{0, 0}
 		}
+		hs, err := strconv.ParseInt(h[0], 10, 64)
+		if err != nil {
+			return [2]uint32{0, 0}
+		}
+		return [2]uint32{uint32(ws), uint32(hs)}
 	}
-	return [2]uint32{0, 0}
 }
 
 func (r *WMSMapRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
-	r.params.Set("size", []string{width, height})
+	r.params.Set("width", []string{width})
+	r.params.Set("height", []string{height})
 }
 
 func (r *WMSMapRequestParams) GetSrs() string {

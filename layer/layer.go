@@ -85,7 +85,7 @@ func (l *LimitedLayer) IsOpaque(query *MapQuery) bool {
 
 func (l *LimitedLayer) CombinedLayer(other Layer, query *MapQuery) Layer {
 	var combined Layer
-	if l.coverage == other.GetCoverage() {
+	if l.coverage.Equals(other.GetCoverage()) {
 		combined = l.layer.CombinedLayer(other, query)
 	}
 	if combined != nil {

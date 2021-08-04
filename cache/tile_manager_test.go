@@ -170,7 +170,7 @@ type mockSource struct {
 }
 
 func (s *mockSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
-	rgba := image.NewRGBA(image.Rect(0, 0, 256, 256))
+	rgba := image.NewRGBA(image.Rect(0, 0, int(query.Size[0]), int(query.Size[1])))
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
 	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}

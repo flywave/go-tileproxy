@@ -8,6 +8,8 @@ import (
 	"os"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
@@ -15,7 +17,6 @@ import (
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestCacheMapLayer(t *testing.T) {

@@ -238,7 +238,7 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 				tiles = append(tiles, tile)
 			}
 
-			cacheTiles := &TileCollection{}
+			cacheTiles := NewTileCollection(nil)
 			for _, t := range tiles {
 				if t.Cacheable {
 					cacheTiles.SetItem(t)

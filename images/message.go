@@ -217,13 +217,56 @@ func NewWatermarkImage(message string, image_opts *ImageOptions, placement strin
 		c.A = uint16(opacity)
 		break
 	}
+	ret.font_face = ret.GetFont()
 
 	ret.placement = placement
 	return ret
 }
 
+func (m *WatermarkImage) Draw(img tile.Source, size []uint32, in_place bool) (tile.Source, error) {
+	if !((img != nil && size == nil) || (size != nil && img == nil)) {
+		return nil, errors.New("need either img or size argument")
+	}
+	var base_img image.Image
+	if img == nil {
+		base_img = m.newImage(size)
+	} else if !in_place {
+		ss := img.GetSize()
+		size = ss[:]
+		base_img = m.newImage(size)
+	} else {
+		base_img = img.GetTile().(image.Image)
+		size = []uint32{uint32(base_img.Bounds().Dx()), uint32(base_img.Bounds().Dy())}
+	}
+
+	if m.message == "" {
+		if img != nil {
+			return img, nil
+		}
+		return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
+	}
+
+	draw := gg.NewContextForImage(base_img)
+	m.drawMsg(draw, size)
+	image_opts := m.image_opts
+	base_img = draw.Image()
+
+	if !in_place && img != nil {
+		if image_opts == nil && img.GetTileOptions() != nil {
+			image_opts = img.GetTileOptions().(*ImageOptions)
+		}
+		img := img.GetTile().(image.Image)
+
+		imgd := gg.NewContextForImage(img)
+		imgd.DrawImage(base_img, 0, 0)
+		base_img = imgd.Image()
+	}
+
+	return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
+}
+
 func (e *WatermarkImage) drawMsg(draw *gg.Context, size []uint32) {
-	td := NewTextDraw(e.message, e.font_face, e.font_color, nil, "", 3, 5)
+	td := NewTextDraw(e.message, e.GetFont(), e.font_color, nil, "", 3, 5)
 	if strings.ContainsAny(e.placement, "lb") {
 		td.placement = "cL"
 		td.draw(draw, size)
@@ -232,7 +275,7 @@ func (e *WatermarkImage) drawMsg(draw *gg.Context, size []uint32) {
 		td.placement = "cR"
 		td.draw(draw, size)
 	}
-	if strings.Contains(e.placement, "c") {
+	if e.placement == "c" {
 		td.placement = "cc"
 		td.draw(draw, size)
 	}

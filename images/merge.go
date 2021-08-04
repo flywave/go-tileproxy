@@ -323,6 +323,7 @@ func MergeImages(layers []tile.Source, image_opts *ImageOptions, size [2]uint32,
 		m.Layers = layers
 		return m.Merge(image_opts, size[:], bbox, bbox_srs, nil)
 	} else if ml, ok := merger.(*LayerMerger); ok {
+		ml.Layers = layers
 		return ml.Merge(image_opts, size[:], bbox, bbox_srs, nil)
 	}
 	return nil

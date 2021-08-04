@@ -1100,7 +1100,7 @@ func (t *MetaTile) GetTiles() [][3]int {
 
 func (t *MetaTile) GetMainTileCoord() [3]int {
 	for _, t := range t.GetTiles() {
-		if t[0] > 0 && t[1] > 0 && t[2] > 0 {
+		if t[0] >= 0 && t[1] >= 0 && t[2] >= 0 {
 			return t
 		}
 	}

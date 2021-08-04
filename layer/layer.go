@@ -34,6 +34,10 @@ func NewMapLayer(opts *images.ImageOptions) *MapLayer {
 	return &MapLayer{Options: opts}
 }
 
+func (l *MapLayer) GetResolutionRange() *geo.ResolutionRange {
+	return l.ResRange
+}
+
 func (l *MapLayer) IsSupportMetaTiles() bool {
 	return l.SupportMetaTiles
 }

@@ -9,11 +9,16 @@ type TileCollection struct {
 
 func NewTileCollection(tileCoords [][3]int) *TileCollection {
 	ret := &TileCollection{}
-	ret.tiles = make([]*Tile, len(tileCoords))
-	ret.tilesDict = make(map[[3]int]*Tile)
-	for i := range tileCoords {
-		ret.tiles[i] = NewTile(tileCoords[i])
-		ret.tilesDict[tileCoords[i]] = ret.tiles[i]
+	if tileCoords == nil {
+		ret.tiles = make([]*Tile, 0)
+		ret.tilesDict = make(map[[3]int]*Tile)
+	} else {
+		ret.tiles = make([]*Tile, len(tileCoords))
+		ret.tilesDict = make(map[[3]int]*Tile)
+		for i := range tileCoords {
+			ret.tiles[i] = NewTile(tileCoords[i])
+			ret.tilesDict[tileCoords[i]] = ret.tiles[i]
+		}
 	}
 	return ret
 }

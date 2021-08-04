@@ -26,7 +26,7 @@ type TileCreator struct {
 }
 
 func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
-	return &TileCreator{Manager: m, Sources: m.GetSources(), Grid: m.GetGrid(), Cache: m.GetCache(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
+	return &TileCreator{Manager: m, Sources: m.GetSources(), Grid: m.GetGrid(), Cache: m.GetCache(), MetaGrid: m.GetMetaGrid(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
 }
 
 func (c *TileCreator) IsCached(tile [3]int) bool {
@@ -142,7 +142,7 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
 
 func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, image_opts *images.ImageOptions) *TileCollection {
 	splitter := images.NewTileSplitter(meta_tile, image_opts)
-	split_tiles := &TileCollection{}
+	split_tiles := NewTileCollection(nil)
 	for _, tile := range tiles {
 		tile_coord, crop_coord := tile.Tiles, tile.Sizes
 		if tile_coord[0] < 0 || tile_coord[1] < 0 || tile_coord[2] < 0 {
@@ -175,7 +175,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 			}
 		}
 
-		if flag {
+		if !flag {
 			meta_tile_image, err := c.querySources(query)
 			if meta_tile_image == nil || err != nil {
 				return nil
@@ -192,7 +192,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 		return nil
 	})
 
-	tiles := &TileCollection{}
+	tiles := NewTileCollection(nil)
 	for _, coord := range meta_tile.GetTiles() {
 		tiles.SetItem(NewTile(coord))
 	}
@@ -232,7 +232,7 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 			}
 		}
 
-		if flag {
+		if !flag {
 			for _, coord := range meta_tile.GetTiles() {
 				tile := c.queryTile(coord, tile_size)
 				tiles = append(tiles, tile)
@@ -255,7 +255,7 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 		return tiles
 	}
 
-	ctiles := &TileCollection{}
+	ctiles := NewTileCollection(nil)
 	for _, coord := range meta_tile.GetTiles() {
 		ctiles.SetItem(NewTile(coord))
 	}

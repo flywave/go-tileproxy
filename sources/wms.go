@@ -29,7 +29,7 @@ type WMSSource struct {
 func NewWMSSource(client client.MapClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
 	transparent_color color.Color, transparent_color_tolerance *float64,
 	supported_srs *geo.SupportedSRS, supported_formats []string, fwd_req_params map[string]string) *WMSSource {
-	src := &WMSSource{Client: client, MapLayer: layer.MapLayer{Options: image_opts, Coverage: coverage, ResRange: res_range, SupportMetaTiles: false}, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, ExtReqParams: fwd_req_params}
+	src := &WMSSource{Client: client, MapLayer: layer.MapLayer{Options: image_opts, Coverage: coverage, ResRange: res_range, SupportMetaTiles: true}, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, ExtReqParams: fwd_req_params}
 	if transparent_color != nil {
 		src.Options.Transparent = geo.NewBool(true)
 	}

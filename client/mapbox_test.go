@@ -10,7 +10,7 @@ import (
 )
 
 func TestMapboxTileClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: true}
 
@@ -28,7 +28,7 @@ func TestMapboxSpriteClient(t *testing.T) {
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
 
-	mock := &MockClient{code: 200, body: imagedata.Bytes()}
+	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 
 	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, SpriteID: "testSprite", Retina: true}
 
@@ -42,7 +42,7 @@ func TestMapboxSpriteClient(t *testing.T) {
 }
 
 func TestMapboxStyleClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	query := &layer.StyleQuery{StyleID: "testStylteId"}
 
@@ -56,7 +56,7 @@ func TestMapboxStyleClient(t *testing.T) {
 }
 
 func TestMapboxGlyphsClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	query := &layer.GlyphsQuery{Font: "Arial Unicode MS", Start: 0, End: 255}
 

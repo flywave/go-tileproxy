@@ -141,6 +141,10 @@ type StyleQuery struct {
 	StyleID string
 }
 
+func (req *StyleQuery) GetID() string {
+	return req.StyleID
+}
+
 func (q *StyleQuery) EQ(o *StyleQuery) bool {
 	if q.StyleID != o.StyleID {
 		return false
@@ -245,6 +249,10 @@ func (q *SpriteQuery) EQ(o *SpriteQuery) bool {
 	return true
 }
 
+func (req *SpriteQuery) GetID() string {
+	return fmt.Sprintf("%s-%s", req.StyleID, req.SpriteID)
+}
+
 func (req *SpriteQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
 	urls := fmt.Sprintf("%s/styles/v1/%s/%s/%s/sprite", URL, username, req.StyleID, req.SpriteID)
 	if req.Retina {
@@ -269,6 +277,10 @@ type GlyphsQuery struct {
 	Font  string
 	Start int
 	End   int
+}
+
+func (req *GlyphsQuery) GetID() string {
+	return fmt.Sprintf("%s-%d-%d", req.Font, req.Start, req.End)
 }
 
 func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {

@@ -5,14 +5,15 @@ import (
 	"io/ioutil"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
-type MockClient struct {
+type mockClient struct {
 	client.HttpClient
 	data []byte
 	url  string
@@ -20,14 +21,14 @@ type MockClient struct {
 	code int
 }
 
-func (c *MockClient) Open(url string, data []byte) (statusCode int, body []byte) {
+func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte) {
 	c.data = data
 	c.url = url
 	return c.code, c.body
 }
 
 func TestTileSource(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"

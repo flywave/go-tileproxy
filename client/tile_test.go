@@ -51,7 +51,7 @@ func TestTileURLTemplate(t *testing.T) {
 }
 
 func TestTileClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	ut := NewURLTemplate("/key={{ .quadkey }}&format={{ .format }}", "png")
 	opts := geo.DefaultTileGridOptions()

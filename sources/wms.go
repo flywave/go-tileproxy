@@ -242,6 +242,10 @@ type WMSLegendSource struct {
 	Static     bool
 }
 
+func NewWMSLegendSource(id string, clients []client.WMSLegendClient, cache *resource.LegendCache) *WMSLegendSource {
+	return &WMSLegendSource{Identifier: id, Clients: clients, Cache: cache}
+}
+
 func (s *WMSLegendSource) GetSize() []uint32 {
 	if s.Size == nil {
 		legend := s.GetLegend(&layer.LegendQuery{Format: "image/png", Scale: -1})

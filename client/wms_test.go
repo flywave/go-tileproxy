@@ -15,7 +15,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
-type MockClient struct {
+type mockClient struct {
 	HttpClient
 	data []byte
 	url  string
@@ -23,14 +23,14 @@ type MockClient struct {
 	code int
 }
 
-func (c *MockClient) Open(url string, data []byte) (statusCode int, body []byte) {
+func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte) {
 	c.data = data
 	c.url = url
 	return c.code, c.body
 }
 
 func TestWMSClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	param := http.Header{
 		"layers":      []string{"foo"},
@@ -50,7 +50,7 @@ func TestWMSClient(t *testing.T) {
 
 func TestWMSInfoClient(t *testing.T) {
 	mockF := "text"
-	mock := &MockClient{code: 200, body: []byte(mockF)}
+	mock := &mockClient{code: 200, body: []byte(mockF)}
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
@@ -74,7 +74,7 @@ func TestWMSLegendClient(t *testing.T) {
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
 
-	mock := &MockClient{code: 200, body: imagedata.Bytes()}
+	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 	param := http.Header{
 		"layers": []string{"foo"},
 	}

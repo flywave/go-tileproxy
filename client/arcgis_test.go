@@ -13,7 +13,7 @@ import (
 )
 
 func TestArcGISClient(t *testing.T) {
-	mock := &MockClient{code: 200, body: []byte{0}}
+	mock := &mockClient{code: 200, body: []byte{0}}
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -32,7 +32,7 @@ func TestArcGISClient(t *testing.T) {
 
 func TestArcGISInfoClient(t *testing.T) {
 	mockF := "text"
-	mock := &MockClient{code: 200, body: []byte(mockF)}
+	mock := &mockClient{code: 200, body: []byte(mockF)}
 
 	param := http.Header{
 		"layers": []string{"foo"},

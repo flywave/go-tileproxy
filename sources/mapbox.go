@@ -15,11 +15,14 @@ type MapboxTileSource struct {
 	layer.MapLayer
 	Grid          *geo.TileGrid
 	Coverage      geo.Coverage
-	Extent        *geo.MapExtent
 	ResRange      *geo.ResolutionRange
 	Client        *client.MapboxTileClient
-	ImageOpts     tile.TileOptions
+	Options       tile.TileOptions
 	SourceCreater SourceCreater
+}
+
+func NewMapboxTileSource(grid *geo.TileGrid, c *client.MapboxTileClient, opts tile.TileOptions, creater SourceCreater) *MapboxTileSource {
+	return &MapboxTileSource{Grid: grid, Client: c, Options: opts, SourceCreater: creater}
 }
 
 func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
@@ -32,11 +35,11 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return s.SourceCreater(query.Size, s.ImageOpts, nil), nil
+		return s.SourceCreater(query.Size, s.Options, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return s.SourceCreater(query.Size, s.ImageOpts, nil), nil
+		return s.SourceCreater(query.Size, s.Options, nil), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -53,7 +56,7 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 
 	tilequery := s.buildTileQuery(x, y, z, query)
 	resp := s.Client.GetTile(tilequery)
-	src := s.SourceCreater(query.Size, s.ImageOpts, bytes.NewBuffer(resp))
+	src := s.SourceCreater(query.Size, s.Options, bytes.NewBuffer(resp))
 	return src, nil
 }
 
@@ -70,24 +73,63 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 
 type MapboxSpriteSource struct {
 	Client *client.MapboxSpriteClient
+	Cache  *resource.SpriteCache
+}
+
+func NewMapboxSpriteSource(c *client.MapboxSpriteClient, cache *resource.SpriteCache) *MapboxSpriteSource {
+	return &MapboxSpriteSource{Client: c, Cache: cache}
 }
 
 func (s *MapboxSpriteSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite {
-	return nil
+	id := query.GetID()
+
+	ret := &resource.Sprite{BaseResource: resource.BaseResource{ID: id}}
+
+	if s.Cache != nil && s.Cache.Load(ret) == nil {
+		ret = s.Client.GetSprite(query)
+	}
+
+	return ret
 }
 
 type MapboxStyleSource struct {
 	Client *client.MapboxStyleClient
+	Cache  *resource.StyleCache
+}
+
+func NewMapboxStyleSource(c *client.MapboxStyleClient, cache *resource.StyleCache) *MapboxStyleSource {
+	return &MapboxStyleSource{Client: c, Cache: cache}
 }
 
 func (s *MapboxStyleSource) GetStyle(query *layer.StyleQuery) *resource.Style {
-	return nil
+	id := query.GetID()
+
+	ret := &resource.Style{BaseResource: resource.BaseResource{ID: id}}
+
+	if s.Cache != nil && s.Cache.Load(ret) == nil {
+		ret = s.Client.GetStyle(query)
+	}
+
+	return ret
 }
 
 type MapboxGlyphsSource struct {
 	Client *client.MapboxGlyphsClient
+	Cache  *resource.GlyphsCache
+}
+
+func NewMapboxGlyphsSource(c *client.MapboxGlyphsClient, cache *resource.GlyphsCache) *MapboxGlyphsSource {
+	return &MapboxGlyphsSource{Client: c, Cache: cache}
 }
 
 func (s *MapboxGlyphsSource) GetGlyphs(query *layer.GlyphsQuery) *resource.Glyphs {
-	return nil
+	id := query.GetID()
+
+	ret := &resource.Glyphs{BaseResource: resource.BaseResource{ID: id}}
+
+	if s.Cache != nil && s.Cache.Load(ret) == nil {
+		ret = s.Client.GetGlyphs(query)
+	}
+
+	return ret
 }

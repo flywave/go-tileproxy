@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestWMSSource(t *testing.T) {
@@ -21,7 +22,7 @@ func TestWMSSource(t *testing.T) {
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
 
-	mock := &MockClient{code: 200, body: imagedata.Bytes()}
+	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"

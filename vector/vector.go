@@ -25,6 +25,9 @@ func (s *VectorSource) GetType() tile.TileType {
 }
 
 func (s *VectorSource) GetCacheable() *tile.CacheInfo {
+	if s.cacheable == nil {
+		s.cacheable = &tile.CacheInfo{Cacheable: false}
+	}
 	return s.cacheable
 }
 

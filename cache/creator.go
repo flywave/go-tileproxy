@@ -26,7 +26,7 @@ type TileCreator struct {
 }
 
 func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
-	return &TileCreator{Manager: m, Sources: m.GetSources(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
+	return &TileCreator{Manager: m, Sources: m.GetSources(), Grid: m.GetGrid(), Cache: m.GetCache(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
 }
 
 func (c *TileCreator) IsCached(tile [3]int) bool {

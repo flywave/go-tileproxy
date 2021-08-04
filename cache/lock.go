@@ -37,3 +37,10 @@ func (l *FileTileLocker) Lock(ctx context.Context, tile *Tile, run func() error)
 		}
 	}
 }
+
+type DummyTileLocker struct {
+}
+
+func (l *DummyTileLocker) Lock(ctx context.Context, tile *Tile, run func() error) error {
+	return run()
+}

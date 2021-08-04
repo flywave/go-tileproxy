@@ -71,8 +71,9 @@ func CreateStyle(content []byte) *Style {
 
 type Sprite struct {
 	BaseResource
-	Source *images.ImageSource
-	Scale  int
+	Source  *images.ImageSource
+	Scale   int
+	Options *images.ImageOptions
 }
 
 func (l *Sprite) GetData() []byte {
@@ -83,7 +84,7 @@ func (l *Sprite) GetData() []byte {
 }
 
 func (l *Sprite) SetData(data []byte) {
-	l.Source = images.CreateImageSourceFromBufer(data)
+	l.Source = images.CreateImageSourceFromBufer(data, l.Options)
 }
 
 func (l *Sprite) Hash() []byte {

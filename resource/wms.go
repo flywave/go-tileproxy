@@ -18,8 +18,9 @@ func NewLegendCache(cache_dir string, file_ext string) *LegendCache {
 
 type Legend struct {
 	BaseResource
-	Source tile.Source
-	Scale  int
+	Source  tile.Source
+	Scale   int
+	Options *images.ImageOptions
 }
 
 func (l *Legend) GetData() []byte {
@@ -30,7 +31,7 @@ func (l *Legend) GetData() []byte {
 }
 
 func (l *Legend) SetData(data []byte) {
-	l.Source = images.CreateImageSourceFromBufer(data)
+	l.Source = images.CreateImageSourceFromBufer(data, l.Options)
 }
 
 func (l *Legend) Hash() []byte {

@@ -18,7 +18,7 @@ type TileManager struct {
 	identifier           string
 	metaGrid             *geo.MetaGrid
 	format               string
-	imageOpts            *images.ImageOptions
+	tileOpts             tile.TileOptions
 	requestFormat        string
 	sources              []layer.Layer
 	minimizeMetaRequests bool
@@ -29,19 +29,20 @@ type TileManager struct {
 	locker               TileLocker
 }
 
-func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, identifier string, format string, opts *images.ImageOptions, minimize_meta_requests bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
+func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, locker TileLocker, identifier string, format string, opts tile.TileOptions, minimize_meta_requests bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
 	ret := &TileManager{}
 	ret.grid = grid
 	ret.cache = cache
 	ret.identifier = identifier
 	ret.format = format
-	ret.imageOpts = opts
+	ret.tileOpts = opts
 	ret.requestFormat = format
 	ret.sources = sources
 	ret.minimizeMetaRequests = minimize_meta_requests
 	ret.preStoreFilter = pre_store_filter
 	ret.rescaleTiles = rescale_tiles
 	ret.cacheRescaledTiles = cache_rescaled_tiles
+	ret.locker = locker
 
 	if metaBuffer != -1 || (metaSize != [2]uint32{1, 1}) {
 		allsm := true
@@ -82,8 +83,12 @@ func (tm *TileManager) Cleanup() bool {
 	return false
 }
 
+func (tm *TileManager) GetTileOptions() tile.TileOptions {
+	return tm.tileOpts
+}
+
 func (tm *TileManager) GetImageOptions() *images.ImageOptions {
-	return tm.imageOpts
+	return tm.tileOpts.(*images.ImageOptions)
 }
 
 func (tm *TileManager) GetFormat() string {
@@ -241,7 +246,7 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 	}
 
 	tiled_image := images.NewTiledImage(tile_sources, src_tile_grid, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, src_bbox, tm.grid.Srs)
-	t.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.imageOpts)
+	t.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.GetImageOptions())
 
 	if tm.cacheRescaledTiles {
 		tm.cache.StoreTile(t)

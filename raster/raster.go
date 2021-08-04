@@ -45,6 +45,9 @@ func (s *RasterSource) GetType() tile.TileType {
 }
 
 func (s *RasterSource) GetCacheable() *tile.CacheInfo {
+	if s.cacheable == nil {
+		s.cacheable = &tile.CacheInfo{Cacheable: false}
+	}
 	return s.cacheable
 }
 

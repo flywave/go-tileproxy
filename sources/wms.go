@@ -45,7 +45,7 @@ func (s *WMSSource) GetClient() client.MapClient {
 	return s.Client
 }
 
-func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
+func (s *WMSSource) IsOpaque(query *layer.MapQuery) bool {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return false
 	}
@@ -198,8 +198,9 @@ func (s *WMSSource) isCompatible(other *WMSSource, query *layer.MapQuery) bool {
 	return true
 }
 
-func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSSource {
-	if !s.isCompatible(other, query) {
+func (s *WMSSource) CombinedLayer(other layer.Layer, query *layer.MapQuery) layer.Layer {
+	o := other.(*WMSSource)
+	if !s.isCompatible(o, query) {
 		return nil
 	}
 	c := s.Client.CombinedClient(s.Client, query)

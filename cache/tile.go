@@ -26,9 +26,11 @@ func (t *Tile) GetCacheInfo() *tile.CacheInfo {
 }
 
 func (t *Tile) SetCacheInfo(cache *tile.CacheInfo) {
-	t.Cacheable = cache.Cacheable
-	t.Timestamp = cache.Timestamp
-	t.Size = cache.Size
+	if cache != nil {
+		t.Cacheable = cache.Cacheable
+		t.Timestamp = cache.Timestamp
+		t.Size = cache.Size
+	}
 }
 
 func (t *Tile) GetSourceBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {

@@ -81,8 +81,8 @@ func CreateImageSourceFromImage(img image.Image, opts *ImageOptions) *ImageSourc
 	return ret
 }
 
-func CreateImageSourceFromBufer(buf []byte) *ImageSource {
-	ret := &ImageSource{}
+func CreateImageSourceFromBufer(buf []byte, opts *ImageOptions) *ImageSource {
+	ret := &ImageSource{Options: opts}
 	ret.SetSource(bytes.NewBuffer(buf))
 	return ret
 }
@@ -106,6 +106,9 @@ func (s *ImageSource) GetTileOptions() tile.TileOptions {
 }
 
 func (s *ImageSource) GetCacheable() *tile.CacheInfo {
+	if s.cacheable == nil {
+		s.cacheable = &tile.CacheInfo{Cacheable: false}
+	}
 	return s.cacheable
 }
 

@@ -10,6 +10,8 @@ import (
 	"github.com/flywave/go-tileproxy/crawler"
 	"github.com/flywave/go-tileproxy/crawler/debug"
 	"github.com/flywave/go-tileproxy/crawler/extensions"
+	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type Config struct {
@@ -61,11 +63,12 @@ func createCollector(config *Config) *crawler.Collector {
 	return sc
 }
 
-type Client interface {
+type MapClient interface {
+	Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte
+	CombinedClient(other MapClient, query *layer.MapQuery) MapClient
 }
 
 type BaseClient struct {
-	Client
 	http HttpClient
 }
 

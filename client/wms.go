@@ -82,14 +82,15 @@ func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *re
 	return &req
 }
 
-func (c *WMSClient) CombinedClient(other *WMSClient, query *layer.MapQuery) *WMSClient {
-	if c.RequestTemplate.Url != other.RequestTemplate.Url {
+func (c *WMSClient) CombinedClient(other MapClient, query *layer.MapQuery) MapClient {
+	oc := other.(*WMSClient)
+	if c.RequestTemplate.Url != oc.RequestTemplate.Url {
 		return nil
 	}
 
 	new_req := *c.RequestTemplate
 	params := request.NewWMTSTileRequestParams(new_req.GetParams())
-	other_params := request.NewWMTSTileRequestParams(other.RequestTemplate.Params)
+	other_params := request.NewWMTSTileRequestParams(oc.RequestTemplate.Params)
 
 	params.SetLayers([]string{params.GetLayer(), other_params.GetLayer()})
 

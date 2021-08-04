@@ -7,7 +7,7 @@ import (
 )
 
 type Context struct {
-	Client client.Client
+	Client client.MapClient
 	Queue  *queue.Queue
 }
 

@@ -33,6 +33,10 @@ func (c *ArcGISClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) 
 	return nil
 }
 
+func (c *ArcGISClient) CombinedClient(other MapClient, query *layer.MapQuery) MapClient {
+	return nil
+}
+
 func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
 	req := c.RequestTemplate
 	params := request.NewArcGISExportRequestParams(req.GetParams())

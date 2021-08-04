@@ -44,5 +44,5 @@ func (t *TileCoord) Children() []TileCoord {
 }
 
 func (t *TileCoord) String() string {
-	return fmt.Sprintf("%d_%d_%d", t.Z, t.X, t.Y)
+	return fmt.Sprintf("%d/%d/%d", t.Z, t.X, t.Y)
 }

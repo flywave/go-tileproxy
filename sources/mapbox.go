@@ -64,7 +64,7 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 			retina = true
 		}
 	}
-	tile := &layer.TileQuery{X: x, Y: y, Zoom: z, Width: int(query.Size[0]), Height: int(query.Size[1]), Format: query.Format.MimeType(), Retina: retina}
+	tile := &layer.TileQuery{X: x, Y: y, Zoom: z, Width: int(query.Size[0]), Height: int(query.Size[1]), Format: query.Format.Extension(), Retina: retina}
 	return tile
 }
 

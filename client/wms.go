@@ -205,7 +205,9 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 	src := &images.ImageSource{Options: &images.ImageOptions{Format: tile.TileFormat(format)}}
 	src.SetSource(bytes.NewBuffer(resp))
 
-	return &resource.Legend{Source: src, Scale: query.Scale}
+	id := c.RequestTemplate.Url
+
+	return &resource.Legend{BaseResource: resource.BaseResource{ID: id}, Source: src, Scale: query.Scale}
 }
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {

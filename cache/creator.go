@@ -8,7 +8,6 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/images"
 	"github.com/flywave/go-tileproxy/layer"
-	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 
@@ -17,7 +16,7 @@ import (
 
 type TileCreator struct {
 	Cache         Cache
-	Sources       []sources.TileSourceLayer
+	Sources       []layer.Layer
 	Grid          *geo.TileGrid
 	MetaGrid      *geo.MetaGrid
 	BulkMetaTiles bool
@@ -27,7 +26,7 @@ type TileCreator struct {
 }
 
 func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
-	return &TileCreator{Manager: m, Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
+	return &TileCreator{Manager: m, Sources: m.GetSources(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
 }
 
 func (c *TileCreator) IsCached(tile [3]int) bool {
@@ -103,9 +102,9 @@ func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 
 func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 	if len(c.Sources) == 1 &&
-		c.TileMerger == nil && !(c.Sources[0].Coverage != nil &&
-		c.Sources[0].Coverage.IsClip() &&
-		c.Sources[0].Coverage.Intersects(query.BBox, query.Srs)) {
+		c.TileMerger == nil && !(c.Sources[0].GetCoverage() != nil &&
+		c.Sources[0].GetCoverage().IsClip() &&
+		c.Sources[0].GetCoverage().Intersects(query.BBox, query.Srs)) {
 		return c.Sources[0].GetMap(query)
 	}
 

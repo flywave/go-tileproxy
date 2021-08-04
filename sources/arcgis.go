@@ -13,7 +13,7 @@ type ArcGISSource struct {
 }
 
 func NewArcGISSource(client *client.WMSClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange, supported_srs *geo.SupportedSRS, supported_formats []string, error_handler HTTPSourceErrorHandler) *ArcGISSource {
-	return &ArcGISSource{WMSSource: WMSSource{Client: client, ImageOpts: image_opts, Coverage: coverage, ResRange: res_range, TransparentColor: nil, TransparentColorTolerance: nil, SupportedSRS: supported_srs, SupportedFormats: supported_formats, SupportsMetaTiles: false, ExtReqParams: nil, ErrorHandler: error_handler}}
+	return &ArcGISSource{WMSSource: WMSSource{Client: client, MapLayer: layer.MapLayer{Options: image_opts, Coverage: coverage, ResRange: res_range, SupportMetaTiles: false}, TransparentColor: nil, TransparentColorTolerance: nil, SupportedSRS: supported_srs, SupportedFormats: supported_formats, ExtReqParams: nil, ErrorHandler: error_handler}}
 }
 
 type ArcGISInfoSource struct {

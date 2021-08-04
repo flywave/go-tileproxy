@@ -22,6 +22,10 @@ func NewDebugSource() *DebugSource {
 	return &DebugSource{Extent: geo.MapExtentFromDefault(), SupportMetaTiles: true}
 }
 
+func (s *DebugSource) GetCoverage() geo.Coverage {
+	return s.Coverage
+}
+
 func (s *DebugSource) GetMap(query *layer.MapQuery) tile.Source {
 	bbox := query.BBox
 	w := bbox.Max[0] - bbox.Min[0]
@@ -49,6 +53,10 @@ func NewDummySource(cov geo.Coverage) *DummySource {
 		ds.Extent = &geo.MapExtent{BBox: cov.GetBBox(), Srs: cov.GetSrs()}
 	}
 	return ds
+}
+
+func (s *DummySource) GetCoverage() geo.Coverage {
+	return s.Coverage
 }
 
 func (s *DummySource) GetMap(query *layer.MapQuery) tile.Source {

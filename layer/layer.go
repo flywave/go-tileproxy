@@ -11,7 +11,7 @@ import (
 )
 
 type Layer interface {
-	GetMap(query *MapQuery) tile.Source
+	GetMap(query *MapQuery) (tile.Source, error)
 	GetInfo(query *InfoQuery) resource.FeatureInfoDoc
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
@@ -102,7 +102,7 @@ func (l *LimitedLayer) GetCoverage() geo.Coverage {
 	return l.layer.GetCoverage()
 }
 
-func (l *LimitedLayer) GetMap(query *MapQuery) tile.Source {
+func (l *LimitedLayer) GetMap(query *MapQuery) (tile.Source, error) {
 	return l.layer.GetMap(query)
 }
 
@@ -151,9 +151,9 @@ func NewResolutionConditional(a, b Layer, resolution float64, srs geo.Proj, ext 
 	return ret
 }
 
-func (r *ResolutionConditional) GetMap(query *MapQuery) tile.Source {
+func (r *ResolutionConditional) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil
+		return nil, errors.New("res error!")
 	}
 	bbox := query.BBox
 	if !query.Srs.Eq(r.srs) {
@@ -200,9 +200,9 @@ func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, opacity *float
 	return ret
 }
 
-func (r *SRSConditional) GetMap(query *MapQuery) tile.Source {
+func (r *SRSConditional) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil
+		return nil, errors.New("res error!")
 	}
 	layer := r.selectLayer(query.Srs)
 	return layer.GetMap(query)
@@ -222,9 +222,9 @@ func NewDirectMapLayer(src Layer, ext *geo.MapExtent) *DirectMapLayer {
 	return &DirectMapLayer{MapLayer: MapLayer{SupportMetaTiles: true, Extent: ext}, source: src}
 }
 
-func (r *DirectMapLayer) GetMap(query *MapQuery) tile.Source {
+func (r *DirectMapLayer) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil
+		return nil, errors.New("res error!")
 	}
 	return r.source.GetMap(query)
 }

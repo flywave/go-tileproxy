@@ -205,37 +205,7 @@ func NewRect(r vec2d.Rect) *vec2d.Rect {
 	return &r
 }
 
-type roundMode byte
-
-const (
-	closest roundMode = iota
-	down
-	up
-)
-
-func round(number, digits float64, mode roundMode) float64 {
-	var significance float64
-	if digits > 0 {
-		significance = math.Pow(1/10.0, digits)
-	} else {
-		significance = math.Pow(10.0, -digits)
-	}
-	val, res := math.Modf(number / significance)
-	switch mode {
-	case closest:
-		const eps = 0.499999999
-		if res >= eps {
-			val++
-		} else if res <= -eps {
-			val--
-		}
-	case down:
-	case up:
-		if res > 0 {
-			val++
-		} else if res < 0 {
-			val--
-		}
-	}
-	return val * significance
+func round(number float64, digits int) float64 {
+	n10 := math.Pow10(digits)
+	return math.Trunc((number+0.5/n10)*n10) / n10
 }

@@ -109,8 +109,8 @@ func alignedResolutions(min_res *float64, max_res *float64, res_factor interface
 
 	switch fac := res_factor.(type) {
 	case string:
-		if fac == "sqrt2" && round(factor_calculated, 8, closest) != round(math.Sqrt(2), 8, closest) {
-			if round(factor_calculated, 8, closest) == 2.0 {
+		if fac == "sqrt2" && round(factor_calculated, 8) != round(math.Sqrt(2), 8) {
+			if round(factor_calculated, 8) == 2.0 {
 				new_res := make([]float64, 0, len(res)*2)
 				for _, r := range res {
 					new_res = append(new_res, r)
@@ -120,8 +120,8 @@ func alignedResolutions(min_res *float64, max_res *float64, res_factor interface
 			}
 		}
 	case float64:
-		if fac == 2.0 && round(factor_calculated, 8, closest) != round(2.0, 8, closest) {
-			if round(factor_calculated, 8, closest) == round(math.Sqrt(2), 8, closest) {
+		if fac == 2.0 && round(factor_calculated, 8) != round(2.0, 8) {
+			if round(factor_calculated, 8) == round(math.Sqrt(2), 8) {
 				new_res := make([]float64, 0, len(alinged_res)/2)
 				for i := 0; i < len(res); i += 2 {
 					new_res = append(new_res, res[i])
@@ -546,7 +546,7 @@ func (t *TileGrid) ClosestLevel(res float64) int {
 	return level
 }
 
-func (t *TileGrid) Tile(x, y, level int) (cx, cy, clevel int) {
+func (t *TileGrid) Tile(x, y float64, level int) (cx, cy, clevel int) {
 	res := t.Resolution(level)
 	var fx, fy float64
 	fx = float64(x) - t.BBox.Min[0]
@@ -628,8 +628,8 @@ func (t *TileGrid) GetAffectedBBoxAndLevel(bbox vec2d.Rect, size [2]uint32, req_
 
 func (t *TileGrid) GetAffectedLevelTiles(bbox vec2d.Rect, level int) (vec2d.Rect, [2]int, *TileIter, error) {
 	delta := t.Resolutions[level] / 10.0
-	x0, y0, _ := t.Tile(int(bbox.Min[0]+delta), int(bbox.Min[1]+delta), level)
-	x1, y1, _ := t.Tile(int(bbox.Max[0]-delta), int(bbox.Max[1]-delta), level)
+	x0, y0, _ := t.Tile(bbox.Min[0]+delta, bbox.Min[1]+delta, level)
+	x1, y1, _ := t.Tile(bbox.Max[0]-delta, bbox.Max[1]-delta, level)
 	return t.tileIter(x0, y0, x1, y1, level)
 }
 
@@ -708,15 +708,15 @@ func (t *TileGrid) TileBBox(tile_coord [3]int, limit bool) vec2d.Rect {
 	x, y, z := tile_coord[0], tile_coord[1], tile_coord[2]
 	res := t.Resolution(z)
 
-	x0 := t.BBox.Min[0] + round(float64(x)*res*float64(t.TileSize[0]), 12, closest)
-	x1 := x0 + round(res*float64(t.TileSize[0]), 12, closest)
+	x0 := t.BBox.Min[0] + round(float64(x)*res*float64(t.TileSize[0]), 12)
+	x1 := x0 + round(res*float64(t.TileSize[0]), 12)
 	var y1, y0 float64
 	if t.FlippedYAxis {
-		y1 = t.BBox.Max[1] - round(float64(y)*res*float64(t.TileSize[1]), 12, closest)
-		y0 = y1 - round(res*float64(t.TileSize[1]), 12, closest)
+		y1 = t.BBox.Max[1] - round(float64(y)*res*float64(t.TileSize[1]), 12)
+		y0 = y1 - round(res*float64(t.TileSize[1]), 12)
 	} else {
-		y0 = t.BBox.Min[1] + round(float64(y)*res*float64(t.TileSize[1]), 12, closest)
-		y1 = y0 + round(res*float64(t.TileSize[1]), 12, closest)
+		y0 = t.BBox.Min[1] + round(float64(y)*res*float64(t.TileSize[1]), 12)
+		y1 = y0 + round(res*float64(t.TileSize[1]), 12)
 	}
 
 	if limit {
@@ -855,22 +855,22 @@ func (g *MetaGrid) bufferedBBox(bbox vec2d.Rect, level int, limit_to_grid_bbox b
 		if limit_to_grid_bbox {
 			if g.BBox.Min[0] > minx {
 				delta := g.BBox.Min[0] - minx
-				buffers[0] = buffers[0] - int(round(delta/res, 5, closest))
+				buffers[0] = buffers[0] - int(round(delta/res, 5))
 				minx = g.BBox.Min[0]
 			}
 			if g.BBox.Min[1] > miny {
 				delta := g.BBox.Min[1] - miny
-				buffers[1] = buffers[1] - int(round(delta/res, 5, closest))
+				buffers[1] = buffers[1] - int(round(delta/res, 5))
 				miny = g.BBox.Min[1]
 			}
 			if g.BBox.Max[0] < maxx {
 				delta := maxx - g.BBox.Max[0]
-				buffers[2] = buffers[2] - int(round(delta/res, 5, closest))
+				buffers[2] = buffers[2] - int(round(delta/res, 5))
 				maxx = g.BBox.Max[0]
 			}
 			if g.BBox.Max[1] < maxy {
 				delta := maxy - g.BBox.Max[1]
-				buffers[3] = buffers[3] - int(round(delta/res, 5, closest))
+				buffers[3] = buffers[3] - int(round(delta/res, 5))
 				maxy = g.BBox.Max[1]
 			}
 		}
@@ -1029,8 +1029,8 @@ func (g *MetaGrid) metaSize(level int) [2]uint32 {
 
 func (g *MetaGrid) GetAffectedLevelTiles(bbox vec2d.Rect, level int) (vec2d.Rect, [2]int, [][3]int) {
 	delta := g.Resolutions[level] / 10.0
-	x0, y0, _ := g.Tile(int(bbox.Min[0]+delta), int(bbox.Min[1]+delta), level)
-	x1, y1, _ := g.Tile(int(bbox.Max[0]-delta), int(bbox.Max[1]-delta), level)
+	x0, y0, _ := g.Tile(bbox.Min[0]+delta, bbox.Min[1]+delta, level)
+	x1, y1, _ := g.Tile(bbox.Max[0]-delta, bbox.Max[1]-delta, level)
 
 	meta_size := g.metaSize(level)
 

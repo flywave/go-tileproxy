@@ -164,7 +164,6 @@ func (req *StyleQuery) BuildURL(URL string, username string, accessToken string)
 
 type TileQuery struct {
 	Query
-	MapId   string
 	Y       int
 	X       int
 	Zoom    int
@@ -200,8 +199,8 @@ func (q *TileQuery) EQ(o *TileQuery) bool {
 	return true
 }
 
-func (req *TileQuery) BuildURL(URL string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/v4/%s", URL, url.QueryEscape(req.MapId))
+func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (string, error) {
+	urls := fmt.Sprintf("%s/v4/%s", URL, url.QueryEscape(mapid))
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {

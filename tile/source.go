@@ -29,3 +29,59 @@ type Source interface {
 	SetTileOptions(options TileOptions)
 	GetTileOptions() TileOptions
 }
+
+type DummyTileSource struct {
+	Source
+	Data      string
+	Cacheable *CacheInfo
+	Opts      TileOptions
+}
+
+func (s *DummyTileSource) GetType() TileType {
+	return TILE_IMAGERY
+}
+
+func (s *DummyTileSource) GetSource() interface{} {
+	return s.Data
+}
+
+func (s *DummyTileSource) SetSource(src interface{}) {
+	switch v := src.(type) {
+	case string:
+		s.Data = v
+	case []byte:
+		s.Data = string(v)
+	}
+}
+
+func (s *DummyTileSource) GetFileName() string {
+	return "dummy"
+}
+
+func (s *DummyTileSource) GetSize() [2]uint32 {
+	return [2]uint32{256, 256}
+}
+
+func (s *DummyTileSource) GetBuffer(format *TileFormat, in_tile_opts TileOptions) []byte {
+	return []byte(s.Data)
+}
+
+func (s *DummyTileSource) GetTile() interface{} {
+	return s.Data
+}
+
+func (s *DummyTileSource) GetCacheable() *CacheInfo {
+	return s.Cacheable
+}
+
+func (s *DummyTileSource) SetCacheable(c *CacheInfo) {
+	s.Cacheable = c
+}
+
+func (s *DummyTileSource) SetTileOptions(options TileOptions) {
+	s.Opts = options
+}
+
+func (s *DummyTileSource) GetTileOptions() TileOptions {
+	return s.Opts
+}

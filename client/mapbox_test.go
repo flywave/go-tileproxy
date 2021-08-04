@@ -12,9 +12,9 @@ import (
 func TestMapboxTileClient(t *testing.T) {
 	mock := &MockClient{code: 200, body: []byte{0}}
 
-	query := &layer.TileQuery{MapId: "mapbox.mapbox-streets-v8", X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: true}
+	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: true}
 
-	client := NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	client := NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
 
 	client.GetTile(query)
 

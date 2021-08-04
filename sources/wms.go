@@ -16,17 +16,13 @@ import (
 )
 
 type WMSSource struct {
+	layer.MapLayer
 	Client                    *client.WMSClient
-	ImageOpts                 *images.ImageOptions
-	SupportsMetaTiles         bool
 	SupportedSRS              *geo.SupportedSRS
 	SupportedFormats          []string
 	ExtReqParams              map[string]string
 	TransparentColor          color.Color
 	TransparentColorTolerance *float64
-	Coverage                  geo.Coverage
-	ResRange                  *geo.ResolutionRange
-	Extent                    *geo.MapExtent
 	ErrorHandler              HTTPSourceErrorHandler
 	Opacity                   *float64
 }
@@ -35,9 +31,9 @@ func NewWMSSource(client *client.WMSClient, image_opts *images.ImageOptions, cov
 	transparent_color color.Color, transparent_color_tolerance *float64,
 	supported_srs *geo.SupportedSRS, supported_formats []string, fwd_req_params map[string]string,
 	error_handler HTTPSourceErrorHandler) *WMSSource {
-	src := &WMSSource{Client: client, ImageOpts: image_opts, Coverage: coverage, ResRange: res_range, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, SupportsMetaTiles: false, ExtReqParams: fwd_req_params, ErrorHandler: error_handler}
+	src := &WMSSource{Client: client, MapLayer: layer.MapLayer{Options: image_opts, Coverage: coverage, ResRange: res_range, SupportMetaTiles: false}, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, ExtReqParams: fwd_req_params, ErrorHandler: error_handler}
 	if transparent_color != nil {
-		src.ImageOpts.Transparent = geo.NewBool(true)
+		src.Options.Transparent = geo.NewBool(true)
 	}
 	if coverage != nil {
 		src.Extent = &geo.MapExtent{BBox: coverage.GetBBox(), Srs: coverage.GetSrs()}
@@ -56,7 +52,7 @@ func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
 		return false
 	}
 
-	if s.ImageOpts.Transparent != nil && *s.ImageOpts.Transparent {
+	if s.Options.Transparent != nil && *s.Options.Transparent {
 		return false
 	}
 
@@ -76,11 +72,11 @@ func (s *WMSSource) IsOpaque(query layer.MapQuery) bool {
 
 func (s *WMSSource) GetMap(query *layer.MapQuery) tile.Source {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil)
+		return images.NewBlankImageSource(query.Size, s.Options, nil)
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.ImageOpts, nil)
+		return images.NewBlankImageSource(query.Size, s.Options, nil)
 	}
 	resp := s.getMap(query)
 	opts := resp.GetTileOptions().(*images.ImageOptions)
@@ -89,7 +85,7 @@ func (s *WMSSource) GetMap(query *layer.MapQuery) tile.Source {
 }
 
 func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
-	format := s.ImageOpts.Format
+	format := s.Options.Format
 	if format == "" {
 		format = tile.TileFormat(query.Format)
 	}
@@ -115,7 +111,7 @@ func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
 		return s.getSubQuery(query, format)
 	}
 	resp := s.Client.Retrieve(query, &format)
-	src := images.CreateImageSource(query.Size, s.ImageOpts)
+	src := images.CreateImageSource(query.Size, s.Options)
 	src.SetSource(bytes.NewBuffer(resp))
 	return src
 }
@@ -123,13 +119,13 @@ func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
 func (s *WMSSource) getSubQuery(query *layer.MapQuery, format tile.TileFormat) tile.Source {
 	size, offset, bbox := images.BBoxPositionInImage(query.BBox, query.Size, s.Extent.BBoxFor(query.Srs))
 	if size[0] == 0 || size[1] == 0 {
-		return images.NewBlankImageSource(size, s.ImageOpts, nil)
+		return images.NewBlankImageSource(size, s.Options, nil)
 	}
 	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: format, Dimensions: query.Dimensions}
 	resp := s.Client.Retrieve(src_query, &format)
-	src := images.CreateImageSource(query.Size, s.ImageOpts)
+	src := images.CreateImageSource(query.Size, s.Options)
 	src.SetSource(bytes.NewBuffer(resp))
-	return images.SubImageSource(src, query.Size, offset[:], s.ImageOpts, nil)
+	return images.SubImageSource(src, query.Size, offset[:], s.Options, nil)
 }
 
 func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat) tile.Source {
@@ -155,12 +151,12 @@ func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat
 		img = s.getSubQuery(src_query, format)
 	} else {
 		resp := s.Client.Retrieve(src_query, &format)
-		img = images.CreateImageSource(src_size, s.ImageOpts)
+		img = images.CreateImageSource(src_size, s.Options)
 		img.SetSource(bytes.NewBuffer(resp))
 	}
 
 	img = images.NewImageTransformer(src_srs, dst_srs, nil).Transform(img, src_bbox,
-		query.Size, dst_bbox, s.ImageOpts)
+		query.Size, dst_bbox, s.Options)
 
 	opts := img.GetTileOptions().(*images.ImageOptions)
 	opts.Format = format
@@ -216,7 +212,7 @@ func (s *WMSSource) CombinedLayer(other *WMSSource, query *layer.MapQuery) *WMSS
 		return nil
 	}
 
-	return NewWMSSource(wclient, s.ImageOpts, s.Coverage, s.ResRange, s.TransparentColor, s.TransparentColorTolerance, s.SupportedSRS, s.SupportedFormats, s.ExtReqParams, s.ErrorHandler)
+	return NewWMSSource(wclient, s.Options, s.Coverage, s.ResRange, s.TransparentColor, s.TransparentColorTolerance, s.SupportedSRS, s.SupportedFormats, s.ExtReqParams, s.ErrorHandler)
 }
 
 type WMSInfoSource struct {

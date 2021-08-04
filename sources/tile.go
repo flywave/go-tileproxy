@@ -12,7 +12,8 @@ import (
 
 type SourceCreater func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source
 
-type TileSourceLayer struct {
+type TileSource struct {
+	layer.MapLayer
 	Grid          *geo.TileGrid
 	Client        *client.TileClient
 	ImageOpts     tile.TileOptions
@@ -23,7 +24,7 @@ type TileSourceLayer struct {
 	SourceCreater SourceCreater
 }
 
-func (s *TileSourceLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
+func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	if s.Grid.TileSize[0] != query.Size[0] || s.Grid.TileSize[1] != query.Size[1] {
 		return nil, errors.New("tile size of cache and tile source do not match")
 	}

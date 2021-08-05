@@ -71,10 +71,12 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.WMTS100TileRequest)
 	s.checkRequest(tile_request, nil)
 
-	tile_layer := s.Layers[tile_request.Layer][tile_request.TileMatrixSet]
-	if tile_request.Format == "" {
+	params := request.NewWMTSTileRequestParams(tile_request.Params)
+
+	tile_layer := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]
+	if params.GetFormat() == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
-		tile_request.Format = tf
+		params.SetFormat(tf)
 	}
 
 	s.checkRequestDimensions(tile_layer, tile_request)
@@ -98,12 +100,17 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	infos := []resource.FeatureInfoDoc{}
 	info_request := req.(*request.WMTS100FeatureInfoRequest)
-	s.checkRequest(&info_request.WMTSRequest, &info_request.Infoformat)
 
-	tile_layer := s.Layers[info_request.Layer][info_request.TileMatrixSet]
-	if info_request.Format == "" {
+	params := request.NewWMTSFeatureInfoRequestParams(info_request.Params)
+
+	infoformat := params.GetInfoformat()
+
+	s.checkRequest(&info_request.WMTSRequest, &infoformat)
+
+	tile_layer := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]
+	if params.GetFormat() == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
-		info_request.Format = tf
+		params.SetFormat(tf)
 	}
 
 	var feature_count *int
@@ -115,9 +122,9 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 		}
 	}
 
-	bbox := tile_layer.GetGrid().TileBBox(info_request.Tile, false)
-	query := &layer.InfoQuery{BBox: bbox, Size: [2]uint32{tile_layer.GetGrid().TileSize[0], tile_layer.GetGrid().TileSize[1]}, Srs: tile_layer.GetGrid().Srs, Pos: info_request.Pos,
-		InfoFormat: info_request.Infoformat, FeatureCount: feature_count}
+	bbox := tile_layer.GetGrid().TileBBox(params.GetCoord(), false)
+	query := &layer.InfoQuery{BBox: bbox, Size: [2]uint32{tile_layer.GetGrid().TileSize[0], tile_layer.GetGrid().TileSize[1]}, Srs: tile_layer.GetGrid().Srs, Pos: params.GetPos(),
+		InfoFormat: infoformat, FeatureCount: feature_count}
 	s.checkRequestDimensions(tile_layer, req)
 
 	coverage := s.authorizeTileLayer(tile_layer, req, true)
@@ -134,7 +141,7 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 		}
 	}
 
-	mimetype := info_request.Infoformat
+	mimetype := infoformat
 
 	if infos == nil || len(infos) == 0 {
 		return NewResponse([]byte{}, 200, mimetype)
@@ -165,11 +172,13 @@ func (s *WMTSService) checkRequest(req request.Request, infoformat *string) erro
 	switch wreq := req.(type) {
 	case *request.WMTS100TileRequest:
 		{
-			if _, ok := s.Layers[wreq.Layer]; !ok {
-				return errors.New("unknown layer: " + wreq.Layer)
+			params := request.NewWMTSTileRequestParams(wreq.Params)
+
+			if _, ok := s.Layers[params.GetLayer()]; !ok {
+				return errors.New("unknown layer: " + params.GetLayer())
 			}
-			if _, ok := s.Layers[wreq.Layer][wreq.TileMatrixSet]; !ok {
-				return errors.New("unknown tilematrixset: " + wreq.TileMatrixSet)
+			if _, ok := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]; !ok {
+				return errors.New("unknown tilematrixset: " + params.GetTileMatrixSet())
 			}
 		}
 	case *request.WMTS100CapabilitiesRequest:
@@ -178,16 +187,18 @@ func (s *WMTSService) checkRequest(req request.Request, infoformat *string) erro
 		}
 	case *request.WMTS100FeatureInfoRequest:
 		{
-			if infoformat != nil {
-				if strings.Contains(wreq.Infoformat, "/") {
-					if _, ok := s.InfoFormats[wreq.Infoformat]; !ok {
-						return errors.New("unknown infoformat: " + wreq.Infoformat)
+			params := request.NewWMTSFeatureInfoRequestParams(wreq.Params)
+			infoformat := params.GetInfoformat()
+			if infoformat != "" {
+				if strings.Contains(infoformat, "/") {
+					if _, ok := s.InfoFormats[infoformat]; !ok {
+						return errors.New("unknown infoformat: " + infoformat)
 					}
 				} else {
-					if _, ok := s.InfoFormats[wreq.Infoformat]; !ok {
-						return errors.New("unknown infoformat: " + wreq.Infoformat)
+					if _, ok := s.InfoFormats[infoformat]; !ok {
+						return errors.New("unknown infoformat: " + infoformat)
 					}
-					wreq.Infoformat = s.InfoFormats[wreq.Infoformat]
+					params.SetInfoformat(s.InfoFormats[infoformat])
 				}
 			}
 		}

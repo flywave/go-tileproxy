@@ -104,6 +104,10 @@ func (r *WMTSTileRequestParams) SetLayers(ls []string) {
 	r.params.Set("layer", ls)
 }
 
+func (r *WMTSTileRequestParams) GetTileMatrixSet() string {
+	return r.params.GetOne("tilematrixset", "")
+}
+
 func (r *WMTSTileRequestParams) GetCoord() [3]int {
 	x, err := strconv.Atoi(r.params.GetOne("tilecol", "-1"))
 	if err != nil {
@@ -180,12 +184,6 @@ type WMTSRequest struct {
 
 type WMTS100TileRequest struct {
 	WMTSRequest
-	Layer         string
-	TileMatrixSet string
-	Format        tile.TileFormat
-	Tile          [3]int
-	Origin        geo.OriginType
-	Dimensions    map[string][]string
 }
 
 func (r *WMTSRequest) GetRequestHandler() string {
@@ -203,13 +201,6 @@ func (r *WMTS100TileRequest) init(param interface{}, url string, validate bool, 
 	r.RequestHandlerName = "tile"
 	r.FixedParams = map[string]string{"request": "GetTile", "version": "1.0.0", "service": "WMTS"}
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset", "tilematrix", "tilerow", "tilecol", "format"}
-	params := &WMTSTileRequestParams{params: r.Params}
-	r.Layer = params.params.GetOne("layer", "")
-	r.TileMatrixSet = params.params.GetOne("tilematrixset", "")
-	r.Format = tile.TileFormat(params.params.GetOne("format", ""))
-	r.Tile = params.GetCoord()
-	r.Origin = geo.ORIGIN_NW
-	r.Dimensions = params.GetDimensions()
 }
 
 func (r *WMTS100TileRequest) MakeRequest() map[string]interface{} {
@@ -253,6 +244,14 @@ func NewWMTSFeatureInfoRequestParams(params RequestParams) WMTSFeatureInfoReques
 	return WMTSFeatureInfoRequestParams{WMTSTileRequestParams: WMTSTileRequestParams{params: params}}
 }
 
+func (r *WMTSFeatureInfoRequestParams) GetInfoformat() string {
+	return r.params.GetOne("infoformat", "")
+}
+
+func (r *WMTSFeatureInfoRequestParams) SetInfoformat(info string) {
+	r.params.Set("infoformat", []string{info})
+}
+
 func (r *WMTSFeatureInfoRequestParams) GetPos() [2]float64 {
 	i, err := strconv.ParseFloat(r.params.GetOne("i", "-1"), 64)
 	if err != nil {
@@ -272,8 +271,6 @@ func (r *WMTSFeatureInfoRequestParams) SetPos(pos [2]float64) {
 
 type WMTS100FeatureInfoRequest struct {
 	WMTS100TileRequest
-	Infoformat string
-	Pos        [2]float64
 }
 
 func NewWMTS100FeatureInfoRequest(param interface{}, url string, validate bool, ht *http.Request) *WMTS100FeatureInfoRequest {
@@ -288,9 +285,6 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 	r.FixedParams = map[string]string{"request": "GetFeatureInfo", "version": "1.0.0", "service": "WMTS"}
 	r.ExpectedParam = []string{"version", "request", "layer", "style", "tilematrixset", "tilematrix", "tilerow", "tilecol", "format", "infoformat", "i", "j"}
 	r.NonStrictParams = mapset.NewSet("format", "styles")
-	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
-	r.Infoformat = params.params.GetOne("infoformat", "")
-	r.Pos = params.GetPos()
 }
 
 func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {

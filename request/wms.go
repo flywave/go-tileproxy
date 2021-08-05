@@ -224,15 +224,19 @@ type WMSMapRequest struct {
 func NewWMSMapRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSMapRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSMapRequest{WMSRequest{RequestHandlerName: "map", NonStrict: nonStrict, v: v}}
-	req.FixedParams = make(map[string]string)
-	req.FixedParams["request"] = "GetMap"
-	req.FixedParams["version"] = "1.3.0"
-	req.FixedParams["service"] = "WMS"
-	req.FixedParams["styles"] = ""
-	req.ExpectedParam = []string{"version", "request", "layers", "styles", "srs", "bbox",
-		"width", "height", "format"}
 	req.init(param, url, validate, ht)
 	return req
+}
+
+func (r *WMSMapRequest) init(param interface{}, url string, validate bool, http *http.Request) {
+	r.BaseRequest.init(param, url, validate, http)
+	r.FixedParams = make(map[string]string)
+	r.FixedParams["request"] = "GetMap"
+	r.FixedParams["version"] = "1.3.0"
+	r.FixedParams["service"] = "WMS"
+	r.FixedParams["styles"] = ""
+	r.ExpectedParam = []string{"version", "request", "layers", "styles", "srs", "bbox",
+		"width", "height", "format"}
 }
 
 func (r *WMSMapRequest) GetRequestParams() *WMSMapRequestParams {

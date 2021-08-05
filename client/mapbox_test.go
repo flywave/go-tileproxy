@@ -30,9 +30,9 @@ func TestMapboxSpriteClient(t *testing.T) {
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 
-	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, SpriteID: "testSprite", Retina: true}
+	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: true}
 
-	client := NewMapboxSpriteClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
 
 	src := client.GetSprite(query)
 

@@ -353,37 +353,3 @@ func MakeWMTSRequest(req *http.Request, validate bool) Request {
 	}
 	return nil
 }
-
-type WMTSLegendRequestParams struct {
-	params RequestParams
-}
-
-func NewWMTSLegendRequestParams(params RequestParams) WMTSLegendRequestParams {
-	return WMTSLegendRequestParams{params: params}
-}
-
-func (r *WMTSLegendRequestParams) GetFormat() tile.TileFormat {
-	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return tile.TileFormat(strs[1])
-}
-
-func (r *WMTSLegendRequestParams) SetFormat(fmrt tile.TileFormat) {
-	r.params.Set("format", []string{fmrt.MimeType()})
-}
-
-func (r *WMTSLegendRequestParams) SetScale(si int) {
-	scale := strconv.FormatInt(int64(si), 10)
-	r.params.Set("scale", []string{scale})
-}
-
-func (r *WMTSLegendRequestParams) GetScale() int {
-	if v, ok := r.params.Get("scale"); !ok {
-		return -1
-	} else {
-		vv, err := strconv.ParseInt(v[0], 10, 64)
-		if err != nil {
-			return -1
-		}
-		return int(vv)
-	}
-}

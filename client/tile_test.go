@@ -62,7 +62,7 @@ func TestTileClient(t *testing.T) {
 
 	ret := client.GetTile([3]int{5, 13, 9}, nil)
 
-	if mock.url == "" || ret != nil {
+	if mock.url == "" || ret == nil {
 		t.FailNow()
 	}
 }

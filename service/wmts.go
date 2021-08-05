@@ -57,7 +57,7 @@ func (s *WMTSService) serviceMetadata(tms_request request.Request) map[string]st
 func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 	tile_request := req.(*request.WMTS100CapabilitiesRequest)
 
-	service := s.serviceMetadata(&tile_request.WMTSRequest)
+	service := s.serviceMetadata(tile_request)
 	layers := s.authorizedTileLayers()
 
 	cap := newWMTSCapabilities(service, layers, s.MatrixSets, s.InfoFormats)
@@ -69,7 +69,7 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 
 func (s *WMTSService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.WMTS100TileRequest)
-	s.checkRequest(&tile_request.WMTSRequest, nil)
+	s.checkRequest(tile_request, nil)
 
 	tile_layer := s.Layers[tile_request.Layer][tile_request.TileMatrixSet]
 	if tile_request.Format == "" {
@@ -77,7 +77,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 		tile_request.Format = tf
 	}
 
-	s.checkRequestDimensions(tile_layer, &tile_request.WMTSRequest)
+	s.checkRequestDimensions(tile_layer, tile_request)
 
 	limited_to := s.authorizeTileLayer(tile_layer, tile_request, false)
 

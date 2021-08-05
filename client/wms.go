@@ -221,7 +221,7 @@ func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 
 func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 	req := *c.RequestTemplate
-	params := request.NewWMTSLegendRequestParams(req.GetParams())
+	params := request.NewWMSLegendGraphicRequestParams(req.GetParams())
 
 	if query.Format != "" {
 		params.SetFormat(tile.TileFormat(query.Format))

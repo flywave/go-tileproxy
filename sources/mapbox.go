@@ -71,16 +71,29 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 	return tile
 }
 
-type MapboxSpriteSource struct {
-	Client *client.MapboxSpriteClient
-	Cache  *resource.SpriteCache
+type MapboxStyleSource struct {
+	Client      *client.MapboxStyleClient
+	Cache       *resource.StyleCache
+	SpriteCache *resource.SpriteCache
 }
 
-func NewMapboxSpriteSource(c *client.MapboxSpriteClient, cache *resource.SpriteCache) *MapboxSpriteSource {
-	return &MapboxSpriteSource{Client: c, Cache: cache}
+func NewMapboxStyleSource(c *client.MapboxStyleClient, cache *resource.StyleCache) *MapboxStyleSource {
+	return &MapboxStyleSource{Client: c, Cache: cache}
 }
 
-func (s *MapboxSpriteSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite {
+func (s *MapboxStyleSource) GetSpriteJSON(query *layer.SpriteQuery) *resource.SpriteJSON {
+	id := query.GetID()
+
+	ret := &resource.SpriteJSON{BaseResource: resource.BaseResource{ID: id}}
+
+	if s.Cache != nil && s.Cache.Load(ret) == nil {
+		ret = s.Client.GetSpriteJSON(query)
+	}
+
+	return ret
+}
+
+func (s *MapboxStyleSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite {
 	id := query.GetID()
 
 	ret := &resource.Sprite{BaseResource: resource.BaseResource{ID: id}}
@@ -90,15 +103,6 @@ func (s *MapboxSpriteSource) GetSprite(query *layer.SpriteQuery) *resource.Sprit
 	}
 
 	return ret
-}
-
-type MapboxStyleSource struct {
-	Client *client.MapboxStyleClient
-	Cache  *resource.StyleCache
-}
-
-func NewMapboxStyleSource(c *client.MapboxStyleClient, cache *resource.StyleCache) *MapboxStyleSource {
-	return &MapboxStyleSource{Client: c, Cache: cache}
 }
 
 func (s *MapboxStyleSource) GetStyle(query *layer.StyleQuery) *resource.Style {

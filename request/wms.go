@@ -235,6 +235,10 @@ func NewWMSMapRequest(param interface{}, url string, validate bool, ht *http.Req
 	return req
 }
 
+func (r *WMSMapRequest) GetRequestParams() *WMSMapRequestParams {
+	return &WMSMapRequestParams{params: r.Params}
+}
+
 func (s *WMSMapRequest) Validate() error {
 	if err := s.ValidateParam(); err != nil {
 		return err
@@ -333,20 +337,20 @@ func (r *WMSLegendGraphicRequestParams) SetLayer(l string) {
 	r.params.Set("layer", []string{l})
 }
 
-func (r *WMSLegendGraphicRequestParams) GetScale() float64 {
+func (r *WMSLegendGraphicRequestParams) GetScale() int {
 	val, ok := r.params.Get("scale")
 	if ok {
-		f, err := strconv.ParseFloat(val[0], 64)
+		f, err := strconv.ParseInt(val[0], 10, 64)
 		if err != nil {
 			return 1
 		}
-		return f
+		return int(f)
 	}
 	return 1
 }
 
-func (r *WMSLegendGraphicRequestParams) SetScale(l float64) {
-	r.params.Set("scale", []string{strconv.FormatFloat(l, 'g', 1, 64)})
+func (r *WMSLegendGraphicRequestParams) SetScale(l int) {
+	r.params.Set("scale", []string{strconv.FormatInt(int64(l), 64)})
 }
 
 type WMSFeatureInfoRequestParams struct {
@@ -387,6 +391,10 @@ type WMSLegendGraphicRequest struct {
 	WMSRequest
 }
 
+func (r *WMSLegendGraphicRequest) GetRequestParams() *WMSLegendGraphicRequestParams {
+	return &WMSLegendGraphicRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: r.Params}}
+}
+
 func NewWMSLegendGraphicRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSLegendGraphicRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSLegendGraphicRequest{WMSRequest{RequestHandlerName: "legendgraphic", NonStrict: nonStrict, v: v}}
@@ -413,9 +421,20 @@ func NewWMSFeatureInfoRequest(param interface{}, url string, validate bool, ht *
 	return req
 }
 
+func (r *WMSFeatureInfoRequest) GetRequestParams() *WMSFeatureInfoRequestParams {
+	return &WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: r.Params}}
+}
+
 func (s *WMSFeatureInfoRequest) ValidateFormat(image_formats []string) bool {
 	return false
 }
+
+const (
+	CAPABILITIES_MIME_TYPE_XML  = "text/xml"
+	CAPABILITIES_MIME_TYPE_OGC  = "application/vnd.ogc.wms_xml"
+	CAPABILITIES_MIME_TYPE_TEXT = "text/plain"
+	CAPABILITIES_MIME_TYPE_HTML = "text/html"
+)
 
 type WMSCapabilitiesRequest struct {
 	WMSRequest

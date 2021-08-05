@@ -108,15 +108,12 @@ func (s *MapboxService) GetSprite(req request.Request) *Response {
 	}
 
 	if st, ok := s.Styles[sprite_req.StyleID]; ok {
-		if sp, ok := st.Sprites[sprite_req.SpriteID]; ok {
-			resp := sp.fetch(sprite_req)
-			var format string
-			if sprite_req.Format != nil {
-				format = string(*sprite_req.Format)
-			} else {
-				format = "image/png"
-			}
-			return NewResponse(resp, 200, format)
+		if sprite_req.Format == nil {
+			resp := st.fetchSprite(sprite_req)
+			return NewResponse(resp, 200, "application/json")
+		} else {
+			resp := st.fetchSprite(sprite_req)
+			return NewResponse(resp, 200, sprite_req.Format.MimeType())
 		}
 	}
 
@@ -141,18 +138,14 @@ func (c *MapboxGlyph) fetch(req *request.MapboxGlyphsRequest) []byte {
 	return nil
 }
 
-type MapboxSprite struct {
-}
-
-func (c *MapboxSprite) fetch(req *request.MapboxSpriteRequest) []byte {
-	return nil
-}
-
 type MapboxStyle struct {
-	Sprites map[string]*MapboxSprite
 }
 
 func (c *MapboxStyle) fetch(req *request.MapboxStyleRequest) []byte {
+	return nil
+}
+
+func (c *MapboxStyle) fetchSprite(req *request.MapboxSpriteRequest) []byte {
 	return nil
 }
 

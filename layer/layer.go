@@ -214,7 +214,7 @@ func (r *SRSConditional) GetMap(query *MapQuery) (tile.Source, error) {
 
 func (r *SRSConditional) selectLayer(query_srs geo.Proj) Layer {
 	srs, _ := r.supportedSRS.BestSrs(query_srs)
-	return r.srsMap[srs.GetDef()]
+	return r.srsMap[srs.GetSrsCode()]
 }
 
 type DirectMapLayer struct {

@@ -33,15 +33,27 @@ func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
 	return nil
 }
 
-type MapboxSpriteClient struct {
+type MapboxStyleClient struct {
 	MapboxClient
 }
 
-func NewMapboxSpriteClient(url string, userName string, token string, client HttpClient) *MapboxSpriteClient {
-	return &MapboxSpriteClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxStyleClient(url string, userName string, token string, client HttpClient) *MapboxStyleClient {
+	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token}}
 }
 
-func (c *MapboxSpriteClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
+func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.SpriteJSON {
+	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	status, resp := c.http.Open(url, nil)
+	if status == 200 {
+		return resource.CreateSpriteJSON(resp)
+	}
+	return nil
+}
+
+func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
@@ -51,14 +63,6 @@ func (c *MapboxSpriteClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 		return resource.CreateSprite(resp)
 	}
 	return nil
-}
-
-type MapboxStyleClient struct {
-	MapboxClient
-}
-
-func NewMapboxStyleClient(url string, userName string, token string, client HttpClient) *MapboxStyleClient {
-	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {

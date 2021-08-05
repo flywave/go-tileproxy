@@ -21,9 +21,9 @@ func NewArcGISExportRequestParams(params RequestParams) ArcGISExportRequestParam
 	return ArcGISExportRequestParams{params: params}
 }
 
-func (r *ArcGISExportRequestParams) GetFormat() tile.TileFormat {
+func (r *ArcGISExportRequestParams) GetFormat() string {
 	strs := SplitMimeType(r.params.GetOne("format", ""))
-	return tile.TileFormat(strs[1])
+	return strs[1]
 }
 
 func (r *ArcGISExportRequestParams) SetFormat(fmrt tile.TileFormat) {
@@ -304,6 +304,10 @@ func (r *ArcGISRequest) QueryString() string {
 	return params.QueryString()
 }
 
+func (r *ArcGISRequest) GetRequestParams() *ArcGISExportRequestParams {
+	return &ArcGISExportRequestParams{params: r.Params}
+}
+
 type ArcGISIdentifyRequest struct {
 	BaseRequest
 	Uri *url.URL
@@ -327,6 +331,10 @@ func (r *ArcGISIdentifyRequest) QueryString() string {
 		params[key] = []string{value}
 	}
 	return params.QueryString()
+}
+
+func (r *ArcGISIdentifyRequest) GetRequestParams() *ArcGISIdentifyRequestParams {
+	return &ArcGISIdentifyRequestParams{params: r.Params}
 }
 
 func urlParse(uri string) *url.URL {

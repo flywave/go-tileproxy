@@ -30,13 +30,7 @@ func (r *TileRequest) GetRequestHandler() string {
 
 func (r *TileRequest) init() {
 	r.RequestHandlerName = "map"
-	r.TileReqRegex = regexp.MustCompile(`^(?P<begin>/[^/]+)/
-            ((?P<version>1\.0\.0)/)?
-            (?P<layer>[^/]+)/
-            ((?P<layer_spec>[^/]+)/)?
-            (?P<z>-?\d+)/
-            (?P<x>-?\d+)/
-            (?P<y>-?\d+)\.(?P<format>\w+)`)
+	r.TileReqRegex = regexp.MustCompile(`(?P<begin>[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
 	r.UseProfiles = false
 	r.RequestPrefix = "/tiles"
 	r.Dimensions = make(map[string][]string)
@@ -48,7 +42,9 @@ func (r *TileRequest) initRequest() error {
 	groupNames := r.TileReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
-		result[name] = match[i]
+		if name != "" && match[i] != "" {
+			result[name] = match[i]
+		}
 	}
 
 	if match == nil || len(match) == 0 || result["begin"] != r.RequestPrefix {

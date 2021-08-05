@@ -234,27 +234,23 @@ func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (st
 
 type SpriteQuery struct {
 	StyleQuery
-	SpriteID string
-	Retina   bool
-	Format   *string
+	Retina bool
+	Format *string
 }
 
 func (q *SpriteQuery) EQ(o *SpriteQuery) bool {
 	if !q.StyleQuery.EQ(&o.StyleQuery) {
 		return false
 	}
-	if q.SpriteID != o.SpriteID {
-		return false
-	}
 	return true
 }
 
 func (req *SpriteQuery) GetID() string {
-	return fmt.Sprintf("%s-%s", req.StyleID, req.SpriteID)
+	return req.StyleID
 }
 
 func (req *SpriteQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/v1/%s/%s/%s/sprite", URL, username, req.StyleID, req.SpriteID)
+	urls := fmt.Sprintf("%s/styles/v1/%s/%s/sprite", URL, username, req.StyleID)
 	if req.Retina {
 		urls += "@2x"
 	}

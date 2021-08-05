@@ -69,6 +69,29 @@ func CreateStyle(content []byte) *Style {
 	return s
 }
 
+type SpriteJSON struct {
+	BaseResource
+	Buffer []byte
+}
+
+func (l *SpriteJSON) GetData() []byte {
+	return l.Buffer
+}
+
+func (l *SpriteJSON) SetData(data []byte) {
+	l.Buffer = data
+}
+
+func (l *SpriteJSON) Hash() []byte {
+	m := md5.New()
+	m.Write([]byte(l.ID))
+	return m.Sum(nil)
+}
+
+func CreateSpriteJSON(content []byte) *SpriteJSON {
+	return &SpriteJSON{Buffer: content}
+}
+
 type Sprite struct {
 	BaseResource
 	Source  *images.ImageSource

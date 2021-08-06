@@ -14,7 +14,7 @@ type VectorSource struct {
 	fname      string
 	Options    tile.TileOptions
 	size       []uint32
-	bounds     []float64
+	tile       [3]int
 	cacheable  *tile.CacheInfo
 	georef     *geo.GeoReference
 	decodeFunc func(r io.Reader) (interface{}, error)

@@ -219,8 +219,13 @@ func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (st
 	if req.Retina {
 		urls += "@2x"
 	}
-	urls += fmt.Sprintf(".%s", req.Format)
-
+	if req.Format != "" {
+		if strings.Contains(req.Format, "/") {
+			f := tile.TileFormat(req.Format)
+			req.Format = f.Extension()
+		}
+		urls += fmt.Sprintf(".%s", req.Format)
+	}
 	u, err := url.Parse(urls)
 	if err != nil {
 		return "", err
@@ -302,6 +307,65 @@ func (req *GlyphsQuery) BuildURL(URL string, username string, accessToken string
 
 	q := u.Query()
 	q.Set("access_token", accessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
+}
+
+type LuoKuangTileQuery struct {
+	Query
+	Y      int
+	X      int
+	Zoom   int
+	Width  int
+	Height int
+	Format string
+	Style  string
+}
+
+func (q *LuoKuangTileQuery) EQ(o *LuoKuangTileQuery) bool {
+	if q.Y != o.Y {
+		return false
+	}
+	if q.X != o.X {
+		return false
+	}
+	if q.Zoom != o.Zoom {
+		return false
+	}
+	if q.Width != o.Width {
+		return false
+	}
+	if q.Height != o.Height {
+		return false
+	}
+	if q.Format != o.Format {
+		return false
+	}
+	if q.Style != o.Style {
+		return false
+	}
+	return true
+}
+
+func (req *LuoKuangTileQuery) BuildURL(URL string, accessToken string, mapid string) (string, error) {
+	urls := fmt.Sprintf("%s/emg/v1/%s/tile", URL, mapid)
+
+	u, err := url.Parse(urls)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	if strings.Contains(req.Format, "/") {
+		f := tile.TileFormat(req.Format)
+		req.Format = f.Extension()
+	}
+	q.Set("format", req.Format)
+	q.Set("style", req.Style)
+	q.Set("zoom", fmt.Sprintf("%d", req.Zoom))
+	q.Set("x", fmt.Sprintf("%d", req.X))
+	q.Set("y", fmt.Sprintf("%d", req.Y))
+	q.Set("ak", accessToken)
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }

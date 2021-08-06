@@ -12,6 +12,7 @@ var (
 		"wbmp": "image/vnd.wap.wbmp",
 		"lerc": "image/lerc",
 		"mvt":  "application/vnd.mapbox-vector-tile",
+		"pbf":  "application/x-protobuf",
 	}
 )
 
@@ -39,6 +40,9 @@ func (i *TileFormat) Extension() string {
 	}
 	if ext == "vnd.mapbox-vector-tile" {
 		ext = "mvt"
+	}
+	if ext == "application/x-protobuf" {
+		ext = "pbf"
 	}
 
 	return ext

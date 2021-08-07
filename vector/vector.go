@@ -13,11 +13,11 @@ type VectorSource struct {
 	buf        []byte
 	fname      string
 	Options    tile.TileOptions
-	size       []uint32
 	tile       [3]int
 	cacheable  *tile.CacheInfo
 	georef     *geo.GeoReference
 	decodeFunc func(r io.Reader) (interface{}, error)
+	encodeFunc func(data interface{}) ([]byte, error)
 }
 
 func (s *VectorSource) GetType() tile.TileType {
@@ -40,10 +40,7 @@ func (s *VectorSource) GetFileName() string {
 }
 
 func (s *VectorSource) GetSize() [2]uint32 {
-	if s.size == nil {
-		s.size = make([]uint32, 2)
-	}
-	return [2]uint32{s.size[0], s.size[1]}
+	return [2]uint32{4096, 4096}
 }
 
 func (s *VectorSource) GetSource() interface{} {
@@ -73,7 +70,7 @@ func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.Tile
 }
 
 func (s *VectorSource) GetTile() interface{} {
-	return nil
+	return s.data
 }
 
 func (s *VectorSource) SetTileOptions(options tile.TileOptions) {

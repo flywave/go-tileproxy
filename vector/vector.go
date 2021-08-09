@@ -1,7 +1,10 @@
 package vector
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
+	"os"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -66,10 +69,35 @@ func (s *VectorSource) SetSource(src interface{}) {
 }
 
 func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
-	return nil
+	if s.buf == nil {
+		var err error
+		s.buf, err = s.encodeFunc(s.data)
+		if err != nil {
+			return nil
+		}
+	}
+	return s.buf
 }
 
 func (s *VectorSource) GetTile() interface{} {
+	if s.data == nil {
+		if s.buf == nil {
+			f, err := os.Open(s.fname)
+			if err != nil {
+				return nil
+			}
+			s.buf, err = ioutil.ReadAll(f)
+			if err != nil {
+				return nil
+			}
+		}
+		r := bytes.NewBuffer(s.buf)
+		var err error
+		s.data, err = s.decodeFunc(r)
+		if err != nil {
+			return nil
+		}
+	}
 	return s.data
 }
 

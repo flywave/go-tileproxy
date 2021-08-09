@@ -1,6 +1,7 @@
 package vector
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 
@@ -16,18 +17,24 @@ type GeoJSONVTSource struct {
 
 type GeoJSONVTOptions struct {
 	tile.TileOptions
-	VTOptions geojsonvt.TileOptions
+	Options geojsonvt.TileOptions
+}
+
+func (s *GeoJSONVTOptions) GetFormat() tile.TileFormat {
+	return tile.TileFormat("application/json")
 }
 
 func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource {
 	src := &GeoJSONVTSource{VectorSource: VectorSource{tile: tile, Options: options}}
 	src.decodeFunc = func(r io.Reader) (interface{}, error) {
 		geojsonOpt := options.(*GeoJSONVTOptions)
-		vt := LoadGeoJSONVT(r, tile, geojsonOpt.VTOptions)
+		vt := LoadGeoJSONVT(r, tile, geojsonOpt.Options)
 		return vt, nil
 	}
 	src.encodeFunc = func(data interface{}) ([]byte, error) {
-		return nil, nil
+		buf := &bytes.Buffer{}
+		err := SaveGeoJSONVT(buf, data.(*geojsonvt.Tile))
+		return buf.Bytes(), err
 	}
 
 	return src

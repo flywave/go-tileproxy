@@ -1,6 +1,7 @@
 package vector
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 
@@ -10,28 +11,39 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type PBFProto mvt.ProtoType
-
 const (
 	PBF_PTOTO_MAPBOX   mvt.ProtoType = mvt.PROTO_MAPBOX
 	PBF_PTOTO_LUOKUANG mvt.ProtoType = mvt.PROTO_LK
+	PBF_MIME_MAPBOX                  = "application/vnd.mapbox-vector-tile"
+	PBF_MIME_LUOKUANG                = "application/x-protobuf"
 )
 
 type PBF map[string][]*geom.Feature
 
-type MVTSource struct {
-	VectorSource
-	Proto PBFProto
+type MVTOptions struct {
+	tile.TileOptions
+	format tile.TileFormat
 }
 
-func NewMVTSource(tile [3]int, proto PBFProto, options tile.TileOptions) *MVTSource {
+func (s *MVTOptions) GetFormat() tile.TileFormat {
+	return s.format
+}
+
+type MVTSource struct {
+	VectorSource
+	Proto mvt.ProtoType
+}
+
+func NewMVTSource(tile [3]int, proto mvt.ProtoType, options tile.TileOptions) *MVTSource {
 	src := &MVTSource{Proto: proto, VectorSource: VectorSource{tile: tile, Options: options}}
 	src.decodeFunc = func(r io.Reader) (interface{}, error) {
 		PBF := LoadPBF(r, tile, src.Proto)
 		return PBF, nil
 	}
 	src.encodeFunc = func(data interface{}) ([]byte, error) {
-		return nil, nil
+		buf := &bytes.Buffer{}
+		err := SavePBF(buf, tile, src.Proto, data.(PBF))
+		return buf.Bytes(), err
 	}
 	return src
 }
@@ -49,7 +61,7 @@ func ConvertPBFToGeom(p PBF) *geom.FeatureCollection {
 	return fc
 }
 
-func LoadPBF(r io.Reader, coord [3]int, proto PBFProto) PBF {
+func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) PBF {
 	pbf := make(PBF)
 	pbfdata, _ := ioutil.ReadAll(r)
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
@@ -66,13 +78,12 @@ func LoadPBF(r io.Reader, coord [3]int, proto PBFProto) PBF {
 	return pbf
 }
 
-func SavePBF(w io.Writer, coord [3]int, proto PBFProto, vts PBF) error {
+func SavePBF(w io.Writer, coord [3]int, proto mvt.ProtoType, vts PBF) error {
 	data := []byte{}
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
 
 	for layer, feats := range vts {
 		conf := mvt.NewConfig(layer, tileid, mvt.ProtoType(proto))
-
 		data = append(data, mvt.WriteLayer(feats, conf)...)
 	}
 

@@ -4,15 +4,17 @@ import "strings"
 
 var (
 	mimeMaps = map[string]string{
-		"png":  "image/png",
-		"tif":  "image/tiff",
-		"tiff": "image/tiff",
-		"jpe":  "image/jpeg",
-		"jpeg": "image/jpeg",
-		"wbmp": "image/vnd.wap.wbmp",
-		"lerc": "image/lerc",
-		"mvt":  "application/vnd.mapbox-vector-tile",
-		"pbf":  "application/x-protobuf",
+		"png":     "image/png",
+		"tif":     "image/tiff",
+		"tiff":    "image/tiff",
+		"jpe":     "image/jpeg",
+		"jpeg":    "image/jpeg",
+		"wbmp":    "image/vnd.wap.wbmp",
+		"lerc":    "image/lerc",
+		"mvt":     "application/vnd.mapbox-vector-tile",
+		"pbf":     "application/x-protobuf",
+		"json":    "application/json",
+		"geojson": "application/json",
 	}
 )
 
@@ -43,6 +45,9 @@ func (i *TileFormat) Extension() string {
 	}
 	if ext == "application/x-protobuf" {
 		ext = "pbf"
+	}
+	if ext == "application/json" {
+		ext = "geojson"
 	}
 
 	return ext

@@ -10,8 +10,6 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type GeoJSONVT geojsonvt.Tile
-
 type GeoJSONVTSource struct {
 	VectorSource
 }
@@ -35,9 +33,16 @@ func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource 
 	return src
 }
 
-func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) *GeoJSONVT {
+func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) *geojsonvt.Tile {
 	jsondata, _ := ioutil.ReadAll(r)
 	geomdata, _ := general.UnmarshalFeatureCollection(jsondata)
 	geojson := geojson.NewGeoJSONFromGeomFeatureCollection(geomdata)
-	return (*GeoJSONVT)(geojsonvt.NewGeoJSONVT(geojson, opts).GetTile(uint32(tile[2]), uint32(tile[1]), uint32(tile[0])))
+	return (*geojsonvt.Tile)(geojsonvt.NewGeoJSONVT(geojson, opts).GetTile(uint32(tile[2]), uint32(tile[1]), uint32(tile[0])))
+}
+
+func SaveGeoJSONVT(w io.Writer, vts *geojsonvt.Tile) error {
+	fc := vts.GetFeatureCollection()
+	json := fc.Stringify()
+	_, err := w.Write([]byte(json))
+	return err
 }

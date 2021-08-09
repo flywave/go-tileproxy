@@ -65,3 +65,17 @@ func LoadPBF(r io.Reader, coord [3]int, proto PBFProto) PBF {
 	}
 	return pbf
 }
+
+func SavePBF(w io.Writer, coord [3]int, proto PBFProto, vts PBF) error {
+	data := []byte{}
+	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
+
+	for layer, feats := range vts {
+		conf := mvt.NewConfig(layer, tileid, mvt.ProtoType(proto))
+
+		data = append(data, mvt.WriteLayer(feats, conf)...)
+	}
+
+	_, err := w.Write(data)
+	return err
+}

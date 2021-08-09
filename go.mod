@@ -12,7 +12,7 @@ require (
 	github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20210806095420-f552f75b3da8
-	github.com/flywave/go-mbgeom v0.0.0-20210807073335-15a1b84117ca
+	github.com/flywave/go-mbgeom v0.0.0-20210809073323-5d1c9be6d68d
 	github.com/flywave/go-proj v0.0.0-20210803122823-117c8e760a27
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 

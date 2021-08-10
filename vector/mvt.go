@@ -36,16 +36,25 @@ type MVTSource struct {
 
 func NewMVTSource(tile [3]int, proto mvt.ProtoType, options tile.TileOptions) *MVTSource {
 	src := &MVTSource{Proto: proto, VectorSource: VectorSource{tile: tile, Options: options}}
-	src.decodeFunc = func(r io.Reader) (interface{}, error) {
-		PBF := LoadPBF(r, tile, src.Proto)
-		return PBF, nil
-	}
-	src.encodeFunc = func(data interface{}) ([]byte, error) {
-		buf := &bytes.Buffer{}
-		err := SavePBF(buf, tile, src.Proto, data.(PBF))
-		return buf.Bytes(), err
-	}
+	src.io = &PBFIO{tile: tile, proto: proto}
 	return src
+}
+
+type PBFIO struct {
+	VectorIO
+	tile  [3]int
+	proto mvt.ProtoType
+}
+
+func (i *PBFIO) Decode(r io.Reader) (interface{}, error) {
+	PBF := LoadPBF(r, i.tile, i.proto)
+	return PBF, nil
+}
+
+func (i *PBFIO) Encode(data interface{}) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	err := SavePBF(buf, i.tile, i.proto, data.(PBF))
+	return buf.Bytes(), err
 }
 
 func ConvertPBFToGeom(p PBF) *geom.FeatureCollection {

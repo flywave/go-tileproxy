@@ -7,7 +7,7 @@ import (
 )
 
 func TestGeojsonVTSource(t *testing.T) {
-	source := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096}})
+	source := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096, Buffer: 1024}})
 
 	source.SetSource("../data/us-states-tiles.json")
 	tile := source.GetTile()
@@ -16,7 +16,7 @@ func TestGeojsonVTSource(t *testing.T) {
 		t.FailNow()
 	}
 
-	source2 := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096}})
+	source2 := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096, Buffer: 1024}})
 
 	source2.SetSource(tile)
 

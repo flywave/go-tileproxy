@@ -1,6 +1,7 @@
 package vector
 
 import (
+	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mbgeom/vtile"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -9,28 +10,40 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type PBFMerger struct {
+type FeatureBuilder struct {
+	dst      [3]int
+	coverage geo.Coverage
+	Builder  *LayerBuilder
+}
+
+type LayerBuilder struct {
+	name     string
+	dst      [3]int
+	coverage geo.Coverage
+	result   []*geom.Feature
+}
+
+type TileBuilder struct {
+	dst      [3]int
+	coverage geo.Coverage
+	result   map[string][]*geom.Feature
+}
+
+type VectorMerger struct {
 	tile.Merger
 	Layers    []tile.Source
 	Coverages []geo.Coverage
 	Cacheable *tile.CacheInfo
-	tileBaton *vtile.TileBaton
 }
 
-func (l *PBFMerger) getTiles() []*vtile.TileObject {
+func (l *VectorMerger) getTiles() []*vtile.TileObject {
 	return nil
 }
 
-func (l *PBFMerger) AddSource(src tile.Source, cov geo.Coverage) {
+func (l *VectorMerger) AddSource(src tile.Source, cov geo.Coverage) {
 
 }
 
-func (l *PBFMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
-	tiles := l.getTiles()
-	l.tileBaton = vtile.NewTileBaton(len(l.Layers))
-	for i := range tiles {
-		l.tileBaton.AddTile(tiles[i])
-	}
-	vtile.Composite(l.tileBaton)
+func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
 	return nil
 }

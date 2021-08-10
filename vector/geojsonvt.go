@@ -29,19 +29,26 @@ func (s *GeoJSONVTOptions) GetFormat() tile.TileFormat {
 
 func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource {
 	src := &GeoJSONVTSource{VectorSource: VectorSource{tile: tile, Options: options}}
-	src.decodeFunc = func(r io.Reader) (interface{}, error) {
-		geojsonOpt := options.(*GeoJSONVTOptions)
-		vt := LoadGeoJSONVT(r, tile, geojsonOpt.Options)
-		return vt, nil
-	}
-	src.encodeFunc = func(data interface{}) ([]byte, error) {
-		buf := &bytes.Buffer{}
-		geojsonOpt := options.(*GeoJSONVTOptions)
-		err := SaveGeoJSONVT(buf, tile, geojsonOpt.Options, data.(GeoJSONVT))
-		return buf.Bytes(), err
-	}
-
+	geojsonOpt := options.(*GeoJSONVTOptions)
+	src.io = &GeoJSONVTIO{tile: tile, options: geojsonOpt.Options}
 	return src
+}
+
+type GeoJSONVTIO struct {
+	VectorIO
+	tile    [3]int
+	options geojsonvt.TileOptions
+}
+
+func (i *GeoJSONVTIO) Decode(r io.Reader) (interface{}, error) {
+	vt := LoadGeoJSONVT(r, i.tile, i.options)
+	return vt, nil
+}
+
+func (i *GeoJSONVTIO) Encode(data interface{}) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	err := SaveGeoJSONVT(buf, i.tile, i.options, data.(GeoJSONVT))
+	return buf.Bytes(), err
 }
 
 func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) GeoJSONVT {
@@ -95,7 +102,7 @@ func convertPoint(point []float64) []float64 {
 	return []float64{x, y}
 }
 
-func Ul(tileid [3]int) []float64 {
+func tile_ul(tileid [3]int) []float64 {
 	n := math.Pow(2.0, float64(tileid[2]))
 	lon_deg := float64(tileid[0])/n*360.0 - 180.0
 	lat_rad := math.Atan(math.Sinh(math.Pi * (1 - 2*float64(tileid[1])/n)))
@@ -103,9 +110,9 @@ func Ul(tileid [3]int) []float64 {
 	return []float64{lon_deg, lat_deg}
 }
 
-func Bounds(tileid [3]int) []float64 {
-	a := Ul(tileid)
-	b := Ul([3]int{tileid[0] + 1, tileid[1] + 1, tileid[2]})
+func tileBounds(tileid [3]int) []float64 {
+	a := tile_ul(tileid)
+	b := tile_ul([3]int{tileid[0] + 1, tileid[1] + 1, tileid[2]})
 	return []float64{a[0], b[1], b[0], a[1]}
 }
 
@@ -117,8 +124,8 @@ func unproject(line [][]float64, x0 float64, y0 float64, deltaX float64, deltaY 
 		factorx := (point[0] - x0) / deltaX
 		factory := (y0 - point[1]) / deltaY
 
-		xval := int16(factorx * float64(extent))
-		yval := int16(factory * float64(extent))
+		xval := int16(math.Round(factorx * float64(extent)))
+		yval := int16(math.Round(factory * float64(extent)))
 
 		retline[i] = [2]int16{xval, yval}
 	}
@@ -132,7 +139,7 @@ func ToGeoJSONVT(extent int, tile [3]int, feat *geom.Feature) (*geojsonvt.Featur
 			err = errors.New("Error in feature.ToGeoJSON()")
 		}
 	}()
-	bound := Bounds(tile)
+	bound := tileBounds(tile)
 	deltax := bound[2] - bound[0]
 	deltay := bound[3] - bound[1]
 

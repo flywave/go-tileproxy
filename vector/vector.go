@@ -12,15 +12,14 @@ import (
 
 type VectorSource struct {
 	tile.Source
-	data       interface{}
-	buf        []byte
-	fname      string
-	Options    tile.TileOptions
-	tile       [3]int
-	cacheable  *tile.CacheInfo
-	georef     *geo.GeoReference
-	decodeFunc func(r io.Reader) (interface{}, error)
-	encodeFunc func(data interface{}) ([]byte, error)
+	data      interface{}
+	buf       []byte
+	fname     string
+	Options   tile.TileOptions
+	tile      [3]int
+	cacheable *tile.CacheInfo
+	georef    *geo.GeoReference
+	io        VectorIO
 }
 
 func (s *VectorSource) GetType() tile.TileType {
@@ -71,7 +70,7 @@ func (s *VectorSource) SetSource(src interface{}) {
 func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
 	if s.buf == nil {
 		var err error
-		s.buf, err = s.encodeFunc(s.data)
+		s.buf, err = s.io.Encode(s.data)
 		if err != nil {
 			return nil
 		}
@@ -93,7 +92,7 @@ func (s *VectorSource) GetTile() interface{} {
 		}
 		r := bytes.NewBuffer(s.buf)
 		var err error
-		s.data, err = s.decodeFunc(r)
+		s.data, err = s.io.Decode(r)
 		if err != nil {
 			return nil
 		}
@@ -110,5 +109,5 @@ func (s *VectorSource) GetTileOptions() tile.TileOptions {
 }
 
 func (s *VectorSource) decode(r io.Reader) (interface{}, error) {
-	return s.decodeFunc(r)
+	return s.io.Decode(r)
 }

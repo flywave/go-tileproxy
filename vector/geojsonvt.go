@@ -5,11 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/flywave/go-geom/general"
-	"github.com/flywave/go-mbgeom/geojson"
 	"github.com/flywave/go-mbgeom/geojsonvt"
 	"github.com/flywave/go-tileproxy/tile"
 )
+
+type GeoJSONVT map[string]*geojsonvt.FeatureCollection
 
 type GeoJSONVTSource struct {
 	VectorSource
@@ -33,23 +33,21 @@ func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource 
 	}
 	src.encodeFunc = func(data interface{}) ([]byte, error) {
 		buf := &bytes.Buffer{}
-		err := SaveGeoJSONVT(buf, data.(*geojsonvt.Tile))
+		err := SaveGeoJSONVT(buf, data.(GeoJSONVT))
 		return buf.Bytes(), err
 	}
 
 	return src
 }
 
-func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) *geojsonvt.Tile {
+func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) GeoJSONVT {
 	jsondata, _ := ioutil.ReadAll(r)
-	geomdata, _ := general.UnmarshalFeatureCollection(jsondata)
-	geojson := geojson.NewGeoJSONFromGeomFeatureCollection(geomdata)
-	return (*geojsonvt.Tile)(geojsonvt.NewGeoJSONVT(geojson, opts).GetTile(uint32(tile[2]), uint32(tile[1]), uint32(tile[0])))
+	geojson := geojsonvt.ParseFeatureCollections(string(jsondata))
+	return geojson
 }
 
-func SaveGeoJSONVT(w io.Writer, vts *geojsonvt.Tile) error {
-	fc := vts.GetFeatureCollection()
-	json := fc.Stringify()
+func SaveGeoJSONVT(w io.Writer, fc GeoJSONVT) error {
+	json := geojsonvt.StringifyFeatureCollections(fc)
 	_, err := w.Write([]byte(json))
 	return err
 }

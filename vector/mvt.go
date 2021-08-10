@@ -66,6 +66,7 @@ func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) PBF {
 	pbfdata, _ := ioutil.ReadAll(r)
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
 	tile, _ := mvt.NewTile(pbfdata, mvt.ProtoType(proto))
+
 	for _, layer := range tile.LayerMap {
 		feats := []*geom.Feature{}
 		for layer.Next() {
@@ -75,6 +76,7 @@ func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) PBF {
 		}
 		pbf[layer.Name] = feats
 	}
+
 	return pbf
 }
 

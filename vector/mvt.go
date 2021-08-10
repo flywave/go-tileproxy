@@ -20,15 +20,6 @@ const (
 
 type PBF map[string][]*geom.Feature
 
-type MVTOptions struct {
-	tile.TileOptions
-	format tile.TileFormat
-}
-
-func (s *MVTOptions) GetFormat() tile.TileFormat {
-	return s.format
-}
-
 type MVTSource struct {
 	VectorSource
 	Proto mvt.ProtoType

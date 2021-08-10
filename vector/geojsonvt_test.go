@@ -3,22 +3,22 @@ package vector
 import (
 	"testing"
 
-	"github.com/flywave/go-mbgeom/geojsonvt"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 func TestGeojsonVTSource(t *testing.T) {
-	source := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096, Buffer: 1024}})
+	source := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &VectorOptions{Extent: 4096, Buffer: 1024, Format: tile.TileFormat("application/json")})
 
 	source.SetSource("../data/us-states-tiles.json")
-	tile := source.GetTile()
+	t1 := source.GetTile()
 
-	if tile == nil {
+	if t1 == nil {
 		t.FailNow()
 	}
 
-	source2 := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &GeoJSONVTOptions{Options: geojsonvt.TileOptions{Extent: 4096, Buffer: 1024}})
+	source2 := NewGeoJSONVTSource([3]int{13515, 6392, 14}, &VectorOptions{Extent: 4096, Buffer: 1024, Format: tile.TileFormat("application/json")})
 
-	source2.SetSource(tile)
+	source2.SetSource(t1)
 
 	bytes := source2.GetBuffer(nil, nil)
 

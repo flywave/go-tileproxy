@@ -13,7 +13,7 @@ var bytevals2, _ = ioutil.ReadFile("../data/tile.pbf")
 var tileid2 = m.TileID{X: 1686, Y: 776, Z: 11}
 
 func TestMVTSource(t *testing.T) {
-	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &MVTOptions{format: PBF_MIME_MAPBOX})
+	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: PBF_MIME_MAPBOX})
 
 	source.SetSource("../data/3194.mvt")
 	tile := source.GetTile()
@@ -24,7 +24,7 @@ func TestMVTSource(t *testing.T) {
 }
 
 func TestMVTSourceBuffer(t *testing.T) {
-	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &MVTOptions{format: PBF_MIME_MAPBOX})
+	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: PBF_MIME_MAPBOX})
 
 	source.SetSource(bytevals1)
 	tile := source.GetTile()
@@ -35,7 +35,7 @@ func TestMVTSourceBuffer(t *testing.T) {
 }
 
 func TestPBFSource(t *testing.T) {
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &MVTOptions{format: PBF_MIME_LUOKUANG})
+	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME_LUOKUANG})
 
 	source.SetSource("../data/tile.pbf")
 	tile := source.GetTile()
@@ -46,7 +46,7 @@ func TestPBFSource(t *testing.T) {
 }
 
 func TestPBFSourceBuffer(t *testing.T) {
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &MVTOptions{format: PBF_MIME_LUOKUANG})
+	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME_LUOKUANG})
 
 	source.SetSource(bytevals2)
 	tile := source.GetTile()

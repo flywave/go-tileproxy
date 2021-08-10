@@ -18,26 +18,17 @@ type GeoJSONVTSource struct {
 	VectorSource
 }
 
-type GeoJSONVTOptions struct {
-	tile.TileOptions
-	Options geojsonvt.TileOptions
-}
-
-func (s *GeoJSONVTOptions) GetFormat() tile.TileFormat {
-	return tile.TileFormat("application/json")
-}
-
 func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource {
 	src := &GeoJSONVTSource{VectorSource: VectorSource{tile: tile, Options: options}}
-	geojsonOpt := options.(*GeoJSONVTOptions)
-	src.io = &GeoJSONVTIO{tile: tile, options: geojsonOpt.Options}
+	geojsonOpt := options.(*VectorOptions)
+	src.io = &GeoJSONVTIO{tile: tile, options: geojsonOpt}
 	return src
 }
 
 type GeoJSONVTIO struct {
 	VectorIO
 	tile    [3]int
-	options geojsonvt.TileOptions
+	options *VectorOptions
 }
 
 func (i *GeoJSONVTIO) Decode(r io.Reader) (interface{}, error) {
@@ -51,7 +42,7 @@ func (i *GeoJSONVTIO) Encode(data interface{}) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) GeoJSONVT {
+func LoadGeoJSONVT(r io.Reader, tile [3]int, opts *VectorOptions) GeoJSONVT {
 	jsondata, _ := ioutil.ReadAll(r)
 	geojson := geojsonvt.ParseFeatureCollections(string(jsondata))
 	ret := make(GeoJSONVT)
@@ -65,7 +56,7 @@ func LoadGeoJSONVT(r io.Reader, tile [3]int, opts geojsonvt.TileOptions) GeoJSON
 	return ret
 }
 
-func SaveGeoJSONVT(w io.Writer, tile [3]int, opts geojsonvt.TileOptions, fc GeoJSONVT) error {
+func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc GeoJSONVT) error {
 	vtfc := make(map[string]*geojsonvt.FeatureCollection)
 	for k, v := range fc {
 		vtfc[k] = geojsonvt.NewFeatureCollection()

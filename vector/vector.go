@@ -10,6 +10,20 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type VectorOptions struct {
+	tile.TileOptions
+	Format      tile.TileFormat
+	Tolerance   float64
+	Extent      uint16
+	Buffer      uint16
+	LineMetrics bool
+	MaxZoom     uint8
+}
+
+func (s *VectorOptions) GetFormat() tile.TileFormat {
+	return s.Format
+}
+
 type VectorSource struct {
 	tile.Source
 	data      interface{}
@@ -42,7 +56,8 @@ func (s *VectorSource) GetFileName() string {
 }
 
 func (s *VectorSource) GetSize() [2]uint32 {
-	return [2]uint32{4096, 4096}
+	opt := s.Options.(*VectorOptions)
+	return [2]uint32{uint32(opt.Extent), uint32(opt.Extent)}
 }
 
 func (s *VectorSource) GetSource() interface{} {

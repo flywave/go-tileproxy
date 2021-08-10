@@ -12,9 +12,27 @@ import (
 
 type PointHandler struct{}
 
+func (h *PointHandler) pointsBegin(uint32) {}
+
+func (h *PointHandler) pointsPoint(pt []float64) {}
+
+func (h *PointHandler) pointsEnd() {}
+
 type LineStringHandler struct{}
 
+func (ls *LineStringHandler) linestringBegin(count uint32) {}
+
+func (ls *LineStringHandler) linestringPoint(pt []float64) {}
+
+func (ls *LineStringHandler) linestringEnd() {}
+
 type PolygonHandler struct{}
+
+func (h *PolygonHandler) ringBegin(uint32) {}
+
+func (h *PolygonHandler) ringPoint(pt []float64) {}
+
+func (h *PolygonHandler) ringEnd() {}
 
 type FeatureBuilder struct {
 	builder *LayerBuilder

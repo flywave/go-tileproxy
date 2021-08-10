@@ -27,16 +27,6 @@ github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuq
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9/go.mod h1:ViGRrCXmuOf68/rpxR2fHy9nKOxdCKgCFd5+/iyWRTs=
 github.com/flywave/go-mapbox v0.0.0-20210806095420-f552f75b3da8 h1:u4GX5KhiRgaLSwQJu+le2AexsjGCUghdhPcfOB8szHE=
 github.com/flywave/go-mapbox v0.0.0-20210806095420-f552f75b3da8/go.mod h1:FPaerFAwteQTHe6idQfouVsWvk95+gOxZpnlDuEJcR0=
-github.com/flywave/go-mbgeom v0.0.0-20210810012230-479164e7eef2 h1:GHJx+fAC+NN9KmTyWmx+oPN+Jor2Re4+gXa3zDE3RS8=
-github.com/flywave/go-mbgeom v0.0.0-20210810012230-479164e7eef2/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
-github.com/flywave/go-mbgeom v0.0.0-20210810025722-6da40f202186 h1:7VStqj6WGXL/HTw7NIQefSHHLVZZ53wTU3IKRqwT2sw=
-github.com/flywave/go-mbgeom v0.0.0-20210810025722-6da40f202186/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
-github.com/flywave/go-mbgeom v0.0.0-20210810065434-c358ac17a257 h1:5PcakWZ9BUvQMrBEiLiYEu+FpYqmQ4kqjJLLAL+/Ywg=
-github.com/flywave/go-mbgeom v0.0.0-20210810065434-c358ac17a257/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
-github.com/flywave/go-mbgeom v0.0.0-20210810065858-9a26a621f82f h1:DLpXpP/ScdyqwDGt6CM5IKZSgh4BXw4n+a6dH6v2W4Q=
-github.com/flywave/go-mbgeom v0.0.0-20210810065858-9a26a621f82f/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
-github.com/flywave/go-mbgeom v0.0.0-20210810072324-034bcc30de60 h1:94dLbstXu+5qIhZqn5xr2NJYSaJC7oqMvrKi5/qUoZA=
-github.com/flywave/go-mbgeom v0.0.0-20210810072324-034bcc30de60/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
 github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49 h1:xmIQvu1UXi/XGzKv1p3PtblEHbXkcHRAk1osAo+kZe4=
 github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
 github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e h1:BHGfBgDZ5CZlNtaMAgZjes6pP0ZpoDmPR1ePyUaI9Qk=

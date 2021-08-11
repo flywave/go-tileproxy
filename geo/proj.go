@@ -102,6 +102,13 @@ func (p *GCJ02Proj) transformToWGS84(points []vec2d.T) ([]vec2d.T, *SRSProj4) {
 	return ret, NewSRSProj4("EPSG:4326")
 }
 
+func (p *GCJ02Proj) Eq(o Proj) bool {
+	if _, ok := o.(*GCJ02Proj); ok {
+		return true
+	}
+	return false
+}
+
 func (p *GCJ02Proj) GetSrsCode() string {
 	return "GCJ02"
 }
@@ -206,4 +213,11 @@ func (p *BD09Proj) IsAxisOrderNE() bool {
 
 func (p *BD09Proj) ToString() string {
 	return "BD09"
+}
+
+func (p *BD09Proj) Eq(o Proj) bool {
+	if _, ok := o.(*BD09Proj); ok {
+		return true
+	}
+	return false
 }

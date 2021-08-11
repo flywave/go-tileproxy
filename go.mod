@@ -11,7 +11,7 @@ require (
 	github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c
 	github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20210806095420-f552f75b3da8
+	github.com/flywave/go-mapbox v0.0.0-20210811053840-9d936368d2e8
 	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
 	github.com/flywave/go-proj v0.0.0-20210803122823-117c8e760a27
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67

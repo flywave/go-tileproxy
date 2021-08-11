@@ -12,8 +12,6 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type GeoJSONVT map[string][]*geom.Feature
-
 type GeoJSONVTSource struct {
 	VectorSource
 }
@@ -38,14 +36,14 @@ func (i *GeoJSONVTIO) Decode(r io.Reader) (interface{}, error) {
 
 func (i *GeoJSONVTIO) Encode(data interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := SaveGeoJSONVT(buf, i.tile, i.options, data.(GeoJSONVT))
+	err := SaveGeoJSONVT(buf, i.tile, i.options, data.(Vector))
 	return buf.Bytes(), err
 }
 
-func LoadGeoJSONVT(r io.Reader, tile [3]int, opts *VectorOptions) GeoJSONVT {
+func LoadGeoJSONVT(r io.Reader, tile [3]int, opts *VectorOptions) Vector {
 	jsondata, _ := ioutil.ReadAll(r)
 	geojson := geojsonvt.ParseFeatureCollections(string(jsondata))
-	ret := make(GeoJSONVT)
+	ret := make(Vector)
 
 	for k, v := range geojson {
 		ret[k] = make([]*geom.Feature, v.Count())
@@ -56,7 +54,7 @@ func LoadGeoJSONVT(r io.Reader, tile [3]int, opts *VectorOptions) GeoJSONVT {
 	return ret
 }
 
-func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc GeoJSONVT) error {
+func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc Vector) error {
 	vtfc := make(map[string]*geojsonvt.FeatureCollection)
 	for k, v := range fc {
 		vtfc[k] = geojsonvt.NewFeatureCollection()
@@ -191,8 +189,9 @@ func ToGeoJSONVT(extent int, tile [3]int, feat *geom.Feature) (*geojsonvt.Featur
 	newFeature.SetPropertyMap(pmap)
 
 	identifier := geojsonvt.NewIdentifier(feat.ID)
-	newFeature.SetIdentifier(identifier)
-
+	if identifier != nil {
+		newFeature.SetIdentifier(identifier)
+	}
 	return newFeature, err
 }
 

@@ -18,8 +18,6 @@ const (
 	PBF_MIME_LUOKUANG                = "application/x-protobuf"
 )
 
-type PBF map[string][]*geom.Feature
-
 type MVTSource struct {
 	VectorSource
 	Proto mvt.ProtoType
@@ -44,11 +42,11 @@ func (i *PBFIO) Decode(r io.Reader) (interface{}, error) {
 
 func (i *PBFIO) Encode(data interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := SavePBF(buf, i.tile, i.proto, data.(PBF))
+	err := SavePBF(buf, i.tile, i.proto, data.(Vector))
 	return buf.Bytes(), err
 }
 
-func ConvertPBFToGeom(p PBF) *geom.FeatureCollection {
+func ConvertPBFToGeom(p Vector) *geom.FeatureCollection {
 	fc := &geom.FeatureCollection{}
 	for l, fs := range p {
 		for i := range fs {
@@ -61,8 +59,8 @@ func ConvertPBFToGeom(p PBF) *geom.FeatureCollection {
 	return fc
 }
 
-func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) PBF {
-	pbf := make(PBF)
+func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) Vector {
+	pbf := make(Vector)
 	pbfdata, _ := ioutil.ReadAll(r)
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
 	tile, _ := mvt.NewTile(pbfdata, mvt.ProtoType(proto))
@@ -80,12 +78,13 @@ func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) PBF {
 	return pbf
 }
 
-func SavePBF(w io.Writer, coord [3]int, proto mvt.ProtoType, vts PBF) error {
+func SavePBF(w io.Writer, coord [3]int, proto mvt.ProtoType, vts Vector) error {
 	data := []byte{}
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
 
 	for layer, feats := range vts {
 		conf := mvt.NewConfig(layer, tileid, mvt.ProtoType(proto))
+		conf.ExtentBool = false
 		data = append(data, mvt.WriteLayer(feats, conf)...)
 	}
 

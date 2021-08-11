@@ -17,9 +17,9 @@ func TestVectorTransformer(t *testing.T) {
 	source.SetSource("../data/tile.pbf")
 	tile := source.GetTile()
 
-	feats := tile.(PBF)
+	feats := tile.(Vector)
 
-	newfeats := make(PBF)
+	newfeats := make(Vector)
 
 	for k, f := range feats {
 		newfeats[k] = tran.Apply(f)

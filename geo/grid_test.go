@@ -5,6 +5,8 @@ import (
 	"math"
 	"testing"
 
+	m "github.com/flywave/go-mapbox/tileid"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
@@ -607,6 +609,31 @@ func TestMergeResolutions(t *testing.T) {
 	res_range = MergeResolutionRange(
 		CacleResolutionRange(NewFloat64(10000), NewFloat64(10), nil, nil), nil)
 	if res_range != nil {
+		t.FailNow()
+	}
+}
+
+func TestGCJ02Tile(t *testing.T) {
+	pgcj02 := NewGCJ02Proj(true)
+	srs900913 := NewSRSProj4("EPSG:900913")
+
+	conf := DefaultTileGridOptions()
+	conf[TILEGRID_SRS] = srs900913
+	conf[TILEGRID_RES_FACTOR] = 2.0
+	conf[TILEGRID_TILE_SIZE] = []uint32{4096, 4096}
+	conf[TILEGRID_ORIGIN] = ORIGIN_UL
+
+	grid := NewTileGrid(conf)
+
+	bbox := grid.TileBBox([3]int{1686, 776, 11}, false)
+	tileid2 := m.TileID{X: 1686, Y: 776, Z: 11}
+	bounds := m.Bounds(tileid2)
+
+	bbox = srs900913.TransformRectTo(pgcj02, bbox, 16)
+
+	_, rect, tiles, err := grid.GetAffectedTiles(bbox, [2]uint32{4096, 4096}, pgcj02)
+
+	if tiles != nil || err != nil || rect != [2]int{0, 0} || bounds.E != 0 {
 		t.FailNow()
 	}
 }

@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/flywave/go-geom"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
+
+type Vector map[string][]*geom.Feature
 
 type VectorOptions struct {
 	tile.TileOptions

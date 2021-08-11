@@ -14,12 +14,20 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	webp "github.com/chai2010/webp"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
 )
+
+func init() {
+	image.RegisterFormat("webp", "RIFF????WEBPVP8", webp.Decode, webp.DecodeConfig)
+	image.RegisterFormat("png", "\x89PNG\r\n\x1a\n", png.Decode, png.DecodeConfig)
+	image.RegisterFormat("jpeg", "\xff\xd8", jpeg.Decode, jpeg.DecodeConfig)
+}
 
 func stringIn(str string, slice []string) bool {
 	for _, s := range slice {
@@ -47,6 +55,10 @@ func isTiff(h string) bool {
 	return stringIn(h[:2], []string{"MM", "II"})
 }
 
+func isWEBP(h string) bool {
+	return h[:15] == "RIFF????WEBPVP8"
+}
+
 func PeekImageFormat(buf string) string {
 	if isJpeg(buf) {
 		return "jpeg"
@@ -56,6 +68,8 @@ func PeekImageFormat(buf string) string {
 		return "gif"
 	} else if isTiff(buf) {
 		return "tiff"
+	} else if isWEBP(buf) {
+		return "webp"
 	}
 	return ""
 }
@@ -169,7 +183,7 @@ func (s *ImageSource) makeImageBuf() error {
 func imageToBuf(image image.Image, image_opts *ImageOptions, georef *geo.GeoReference) []byte {
 	fname := image_opts.Format.Extension()
 	buf := &bytes.Buffer{}
-	encodeImage(fname, buf, image)
+	EncodeImage(fname, buf, image)
 	return buf.Bytes()
 }
 
@@ -222,22 +236,24 @@ func (s *ImageSource) GetImage() image.Image {
 			return nil
 		}
 		buf := bytes.NewBuffer(s.buf)
-		return decodeImage(s.fname, buf)
+		return DecodeImage(s.fname, buf)
 	}
 	return s.image
 }
 
-func encodeImage(inputName string, writer io.Writer, rgba image.Image) {
+func EncodeImage(inputName string, writer io.Writer, rgba image.Image) {
 	if strings.HasSuffix(inputName, "jpg") || strings.HasSuffix(inputName, "jpeg") {
 		jpeg.Encode(writer, rgba, nil)
 	} else if strings.HasSuffix(inputName, "png") {
 		png.Encode(writer, rgba)
 	} else if strings.HasSuffix(inputName, "gif") {
 		gif.Encode(writer, rgba, nil)
+	} else if strings.HasSuffix(inputName, "webp") {
+		webp.Encode(writer, rgba, &webp.Options{Lossless: true})
 	}
 }
 
-func decodeImage(inputName string, reader io.Reader) image.Image {
+func DecodeImage(inputName string, reader io.Reader) image.Image {
 	if strings.HasSuffix(inputName, "jpg") || strings.HasSuffix(inputName, "jpeg") {
 		img, err := jpeg.Decode(reader)
 		if err != nil {
@@ -252,6 +268,12 @@ func decodeImage(inputName string, reader io.Reader) image.Image {
 		return img
 	} else if strings.HasSuffix(inputName, "gif") {
 		img, err := gif.Decode(reader)
+		if err != nil {
+			return nil
+		}
+		return img
+	} else if strings.HasSuffix(inputName, "webp") {
+		img, err := webp.Decode(reader)
 		if err != nil {
 			return nil
 		}

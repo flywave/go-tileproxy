@@ -25,6 +25,22 @@ type LercRasterSource struct {
 	RasterSource
 }
 
+type LercIO struct {
+	RasterIO
+}
+
+func (d *LercIO) Decode(r io.Reader) (interface{}, error) {
+	return nil, nil
+}
+
+func (d *LercIO) Encode(tile interface{}) ([]byte, error) {
+	return nil, nil
+}
+
+func (d *LercIO) GetElevation(tile interface{}, x, y int) float64 {
+	return 0
+}
+
 func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -60,4 +76,9 @@ func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
 		return nil, v, binfo
 	}
 	return errors.New("format error"), nil, binfo
+}
+
+func EncodeLerc(data interface{}, dim int, cols int, rows int, bands int, maxZErr float64) ([]byte, error) {
+	mask := make([]byte, cols*rows)
+	return lerc.Encode(data, dim, cols, rows, bands, mask, maxZErr)
 }

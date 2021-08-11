@@ -1,6 +1,7 @@
 package raster
 
 import (
+	"bytes"
 	"io"
 
 	geotiff "github.com/flywave/go-geotiff"
@@ -30,4 +31,30 @@ func LoadTiff(r io.Reader) (error, *geotiff.Raster) {
 		return err, nil
 	}
 	return nil, raster
+}
+
+func EncodeTiff(r *geotiff.Raster) ([]byte, error) {
+	wr := &bytes.Buffer{}
+	r.SetWriter(wr)
+	err := r.Save()
+	if err != nil {
+		return nil, err
+	}
+	return wr.Bytes(), nil
+}
+
+type GeoTIFFIO struct {
+	RasterIO
+}
+
+func (d *GeoTIFFIO) Decode(r io.Reader) (interface{}, error) {
+	return nil, nil
+}
+
+func (d *GeoTIFFIO) Encode(tile interface{}) ([]byte, error) {
+	return nil, nil
+}
+
+func (d *GeoTIFFIO) GetElevation(tile interface{}, x, y int) float64 {
+	return 0
 }

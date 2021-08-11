@@ -10,7 +10,7 @@ var (
 		"jpe":     "image/jpeg",
 		"jpeg":    "image/jpeg",
 		"wbmp":    "image/vnd.wap.wbmp",
-		"lerc":    "image/lerc",
+		"atm":     "image/lerc",
 		"mvt":     "application/vnd.mapbox-vector-tile",
 		"pbf":     "application/x-protobuf",
 		"json":    "application/json",

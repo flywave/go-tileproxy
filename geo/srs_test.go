@@ -103,6 +103,7 @@ func TestBBox(t *testing.T) {
 		Max: vec2d.T{1095801.2374962866, 7044436.5267618448}}
 	dst_bbox := vec2d.Rect{Min: vec2d.T{939258.20260000182, 6887893.4908000007},
 		Max: vec2d.T{1095801.2365000017, 7044436.5247000009}}
+
 	if !BBoxEquals(src_bbox, dst_bbox, 61.1, 61.1) {
 		t.FailNow()
 	}

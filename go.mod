@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/beevik/etree v1.1.0
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
+	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
 	github.com/flywave/go-geom v0.0.0-20210705081559-eee15cf4b503

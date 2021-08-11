@@ -9,6 +9,8 @@ import (
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
 	m "github.com/flywave/go-mapbox/tileid"
+	"github.com/flywave/go-mbgeom/geojson"
+	"github.com/flywave/go-mbgeom/geojsonvt"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -112,7 +114,26 @@ func TestMergeLK(t *testing.T) {
 	f2.Write(json)
 	f2.Close()
 
+	fjson, _ := os.Open("test.json")
+	bytes, _ := ioutil.ReadAll(fjson)
+
+	jsonvtdata := geojson.Parse(string(bytes))
+
 	os.Remove("./test.json")
+
+	opts := &geojsonvt.TileOptions{Tolerance: 0, LineMetrics: true, Buffer: 2048, Extent: 4096, MaxZoom: 20, IndexMaxZoom: 5, IndexMaxPoints: 100000, GenerateId: false}
+
+	vt := geojsonvt.NewGeoJSONVT(jsonvtdata, *opts)
+	vttile := vt.GetTile(16, 53958, 24829)
+
+	fcc := vttile.GetFeatureCollection()
+
+	jsonvt := fcc.Stringify()
+
+	f3, _ := os.Create("./testvt.json")
+	f3.Write([]byte(jsonvt))
+	f3.Close()
+	os.Remove("./testvt.json")
 }
 
 func TestLK(t *testing.T) {

@@ -86,7 +86,7 @@ func TestImagingBlend(t *testing.T) {
 	img_opts := *PNG_FORMAT
 	img_opts.BgColor = color.Transparent
 
-	image1, _ := imaging.Open("./flowers.png")
+	image1, _ := imaging.Open("../data/flowers.png")
 
 	image2 := image.NewRGBA(image.Rect(0, 0, 600, 400))
 

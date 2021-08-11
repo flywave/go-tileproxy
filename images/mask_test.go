@@ -17,7 +17,7 @@ import (
 
 func TestMaskImage(t *testing.T) {
 	geom := "POLYGON((2 2, 2 8, 8 8, 8 2, 2 2), (4 4, 4 6, 6 6, 6 4, 4 4))"
-	img, _ := imaging.Open("./flowers.png")
+	img, _ := imaging.Open("../data/flowers.png")
 	img, mask := maskImage(img, vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, geo.NewSRSProj4("EPSG:4326"), geo.NewGeomCoverage(geos.CreateFromWKT(geom), geo.NewSRSProj4("EPSG:4326"), false))
 
 	gc := gg.NewContext(600, 400)

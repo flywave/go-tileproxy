@@ -3,9 +3,10 @@ package raster
 import (
 	"sort"
 
-	"github.com/flywave/go-tileproxy/geo"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
+
+	"github.com/flywave/go-tileproxy/geo"
 )
 
 type Coordinates []vec3d.T

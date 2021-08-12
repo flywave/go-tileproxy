@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	geotiff "github.com/flywave/go-geotiff"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
-
-	geotiff "github.com/flywave/go-geotiff"
 )
 
 var (

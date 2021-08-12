@@ -4,11 +4,11 @@ import (
 	"errors"
 	"math"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/utils"
-
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type TileWalker struct {

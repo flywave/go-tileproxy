@@ -102,32 +102,8 @@ func (h *DemGrid) GetBBox() vec3d.Box {
 	return *h.box
 }
 
-func (h *DemGrid) GetCoordinates() Coordinates {
-	return h.Coordinates
-}
-
 func (h *DemGrid) GetRange() float64 {
 	return h.Maximum - h.Minimum
-}
-
-func (h *DemGrid) GetMinimum() float64 {
-	return h.Minimum
-}
-
-func (h *DemGrid) GetMaximum() float64 {
-	return h.Maximum
-}
-
-func (h *DemGrid) GetWidth() int {
-	return h.Width
-}
-
-func (h *DemGrid) GetHeight() int {
-	return h.Height
-}
-
-func (h *DemGrid) GetCount() int {
-	return h.Count
 }
 
 func (h *DemGrid) Sort() {

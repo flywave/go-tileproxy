@@ -35,13 +35,13 @@ func NewGeoTIFFRasterSource(mode BorderMode, options tile.TileOptions) *GeoTIFFR
 	return src
 }
 
-func LoadTiff(r io.Reader) (error, *geotiff.Raster) {
+func LoadTiff(r io.Reader) (*geotiff.Raster, error) {
 	rat := r.(io.ReaderAt)
 	raster, err := geotiff.CreateRasterFromStream(rat)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return nil, raster
+	return raster, nil
 }
 
 func EncodeTiff(r *geotiff.Raster) ([]byte, error) {
@@ -60,7 +60,7 @@ type GeoTIFFIO struct {
 }
 
 func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
-	err, raster := LoadTiff(r)
+	raster, err := LoadTiff(r)
 	if err != nil {
 		return nil, err
 	}
@@ -126,10 +126,6 @@ func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
 	}
 	return tiledata, nil
 }
-
-var (
-	_SRS900913 = geo.NewSRSProj4("EPSG:900913")
-)
 
 func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	if d.Mode != tile.Border {

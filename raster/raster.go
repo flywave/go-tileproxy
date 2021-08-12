@@ -14,11 +14,18 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+const (
+	BILINEAR   = "bilinear"
+	HYPERBOLIC = "hyperbolic"
+)
+
 type RasterOptions struct {
 	tile.TileOptions
-	Format   tile.TileFormat
-	Mode     BorderMode
-	DataType RasterType
+	Format       tile.TileFormat
+	Mode         BorderMode
+	DataType     RasterType
+	Nodata       float64
+	Interpolator string
 }
 
 func (s *RasterOptions) GetFormat() tile.TileFormat {
@@ -27,17 +34,15 @@ func (s *RasterOptions) GetFormat() tile.TileFormat {
 
 type RasterSource struct {
 	tile.Source
-	data         *TileData
-	buf          []byte
-	fname        string
-	size         []uint32
-	pixelSize    []float64
-	cacheable    *tile.CacheInfo
-	georef       *geo.GeoReference
-	nodata       float64
-	Options      tile.TileOptions
-	io           RasterIO
-	interpolator Interpolator
+	data      *TileData
+	buf       []byte
+	fname     string
+	size      []uint32
+	pixelSize []float64
+	cacheable *tile.CacheInfo
+	georef    *geo.GeoReference
+	Options   tile.TileOptions
+	io        RasterIO
 }
 
 func (s *RasterSource) GetType() tile.TileType {
@@ -137,10 +142,6 @@ func (s *RasterSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
-func (s *RasterSource) decode(r io.Reader) (interface{}, error) {
-	return s.io.Decode(r)
-}
-
 func (s *RasterSource) caclulatePixelSize(georef *geo.GeoReference) {
 	if s.pixelSize == nil {
 		s.pixelSize = []float64{0, 0}
@@ -149,7 +150,7 @@ func (s *RasterSource) caclulatePixelSize(georef *geo.GeoReference) {
 	}
 }
 
-func GetAverageExceptForNoDataValue(noData, valueIfAllBad float64, values ...float64) float64 {
+func getAverageExceptForNoDataValue(noData, valueIfAllBad float64, values ...float64) float64 {
 	withValues := []float64{}
 
 	epsilon := math.Nextafter(1, 2) - 1
@@ -175,7 +176,7 @@ const (
 	NO_DATA_OUT = 0
 )
 
-func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference) float64 {
+func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference, interpolator Interpolator) float64 {
 	heightValue := 0.0
 	if georef == nil && s.georef != nil {
 		georef = s.georef
@@ -185,20 +186,22 @@ func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference) 
 		s.caclulatePixelSize(georef)
 	}
 
+	opt := s.Options.(*RasterOptions)
+
 	epsilon := math.Nextafter(1, 2) - 1
 
-	noData := s.nodata
+	noData := opt.Nodata
 
 	var yPixel, xPixel, xInterpolationAmount, yInterpolationAmount float64
 
-	dataEndLat := s.georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
+	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
 	if float64(s.pixelSize[1]) > 0 {
 		yPixel = (dataEndLat - lat) / float64(s.pixelSize[1])
 	} else {
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
-	xPixel = (lon - s.georef.GetOrigin()[0]) / float64(s.pixelSize[0])
+	xPixel = (lon - georef.GetOrigin()[0]) / float64(s.pixelSize[0])
 
 	_, xInterpolationAmount = math.Modf(float64(xPixel))
 	_, yInterpolationAmount = math.Modf(float64(yPixel))
@@ -221,7 +224,7 @@ func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference) 
 		southWest := s.getElevation(xFloor, yCeiling)
 		southEast := s.getElevation(xCeiling, yCeiling)
 
-		avgHeight := GetAverageExceptForNoDataValue(noData, NO_DATA_OUT, southWest, southEast, northWest, northEast)
+		avgHeight := getAverageExceptForNoDataValue(noData, NO_DATA_OUT, southWest, southEast, northWest, northEast)
 
 		if northWest == noData {
 			northWest = avgHeight
@@ -236,7 +239,7 @@ func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference) 
 			southEast = avgHeight
 		}
 
-		heightValue = s.interpolator.Interpolate(southWest, southEast, northWest, northEast, xInterpolationAmount, yInterpolationAmount)
+		heightValue = interpolator.Interpolate(southWest, southEast, northWest, northEast, xInterpolationAmount, yInterpolationAmount)
 	}
 
 	return heightValue
@@ -250,16 +253,30 @@ func (s *RasterSource) getElevation(x, y int) float64 {
 	return 0
 }
 
-func (s *RasterSource) Resample(georef *geo.GeoReference, grid *DemGrid) error {
+func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 	if georef == nil && s.georef != nil {
 		georef = s.georef
 	}
 	if georef == nil {
 		return errors.New("source georef is nil")
 	}
-	if !geo.BBoxContains(georef.GetBBox(), grid.GetRect()) {
+	bbox := grid.GetRect()
+	if !grid.srs.Eq(georef.GetSrs()) {
+		bbox = grid.srs.TransformRectTo(georef.GetSrs(), bbox, 16)
+	}
+	if !geo.BBoxContains(georef.GetBBox(), bbox) {
 		return errors.New("not Contains target grid")
 	}
+	opt := s.Options.(*RasterOptions)
+
+	var interpolator Interpolator
+
+	if opt.Interpolator == HYPERBOLIC {
+		interpolator = &HyperbolicInterpolator{}
+	} else {
+		interpolator = &BilinearInterpolator{}
+	}
+
 	for i := range grid.Coordinates {
 		coord := grid.Coordinates[i]
 		lat, lon := coord[0], coord[1]
@@ -267,7 +284,7 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *DemGrid) error {
 			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lat, lon}})
 			lat, lon = d[0][0], d[0][1]
 		}
-		grid.Coordinates[i][2] = s.GetElevation(lat, lon, georef)
+		grid.Coordinates[i][2] = s.GetElevation(lat, lon, georef, interpolator)
 	}
 	return nil
 }

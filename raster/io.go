@@ -3,8 +3,9 @@ package raster
 import (
 	"io"
 
-	"github.com/flywave/go-tileproxy/geo"
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-tileproxy/geo"
 )
 
 type RasterType uint32
@@ -149,6 +150,41 @@ func (d *TileData) GetExtend32() ([]float32, [2]uint32) {
 		ret[i] = float32(rawdata[i])
 	}
 	return ret, si
+}
+
+func (d *TileData) CopyFrom(src *TileData, pos [2]int) {
+	x_, y_ := pos[0], pos[1]
+	for y := y_; y < int(src.Size[1]); y++ {
+		copy(d.Datas[y*int(d.Size[0])+x_:y*int(d.Size[0])+x_+int(src.Size[0])], src.Datas[(y-y_)*int(src.Size[0]):(y-y_+1)*int(src.Size[0])])
+	}
+
+	isCopyLeftBorder := (x_ == 0) && d.HasBorder()
+	if isCopyLeftBorder {
+		copy(d.LeftBorder[y_:y_+int(src.Size[1])], src.LeftBorder)
+	}
+
+	isCopyRightBorder := (src.Size[0]+uint32(x_) == d.Size[0]) && d.IsBilateral()
+	if isCopyRightBorder {
+		copy(d.RightBorder[y_:y_+int(src.Size[1])], src.RightBorder)
+	}
+
+	isCopyTopBorder := (y_ == 0) && d.HasBorder()
+	if isCopyTopBorder {
+		offx := 1
+		if x_ == 0 {
+			offx = 0
+		}
+		copy(d.TopBorder[offx+y_:offx+y_+int(src.Size[0])], src.TopBorder[offx:])
+	}
+
+	isCopyBottomBorder := (src.Size[1]+uint32(y_) == d.Size[1]) && d.IsBilateral()
+	if isCopyBottomBorder {
+		offx := 1
+		if x_ == 0 {
+			offx = 0
+		}
+		copy(d.BottomBorder[offx+y_:offx+y_+int(src.Size[0])], src.BottomBorder[offx:])
+	}
 }
 
 type RasterIO interface {

@@ -23,9 +23,9 @@ func TestGrid(t *testing.T) {
 
 	georef := geo.NewGeoReference(bbox2, srs4326)
 
-	demgrid := CaclulateDemGrid(512, 512, BORDER_BILATERAL, georef)
+	Grid := CaclulateGrid(512, 512, BORDER_BILATERAL, georef)
 
-	if demgrid != nil {
+	if Grid != nil {
 		t.FailNow()
 	}
 }

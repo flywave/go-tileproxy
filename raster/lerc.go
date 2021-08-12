@@ -32,41 +32,41 @@ func NewLercRasterSource(mode BorderMode, maxZError float64, options tile.TileOp
 	return src
 }
 
-func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
+func LoadLerc(r io.Reader) (interface{}, lerc.BlobInfo, error) {
 	src, err := ioutil.ReadAll(r)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	binfo, err := lerc.GetBlobInfo(src)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	newImg, _, err := lerc.Decode(src)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	switch v := newImg.(type) {
 	case []int8:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []uint8:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []int16:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []uint16:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []int32:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []uint32:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []float32:
-		return nil, v, binfo
+		return v, binfo, nil
 	case []float64:
-		return nil, v, binfo
+		return v, binfo, nil
 	}
-	return errors.New("format error"), nil, binfo
+	return nil, binfo, errors.New("format error")
 }
 
 func EncodeLerc(data interface{}, dim int, cols int, rows int, bands int, maxZErr float64) ([]byte, error) {
@@ -104,7 +104,7 @@ func getValue(data interface{}, row, col int, cols int) float64 {
 }
 
 func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
-	err, vec, blobInfo := LoadLerc(r)
+	vec, blobInfo, err := LoadLerc(r)
 	if err != nil {
 		return nil, err
 	}

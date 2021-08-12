@@ -25,7 +25,7 @@ func TestRaster(t *testing.T) {
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
 	conf[geo.TILEGRID_RES_FACTOR] = 2.0
-	conf[geo.TILEGRID_TILE_SIZE] = []uint32{514, 514}
+	conf[geo.TILEGRID_TILE_SIZE] = []uint32{512, 512}
 	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
 
 	grid := geo.NewTileGrid(conf)

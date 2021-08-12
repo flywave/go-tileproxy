@@ -349,9 +349,8 @@ func (s *SupportedSRS) Eq(o *SupportedSRS) bool {
 }
 
 type GeoReference struct {
-	bbox   vec2d.Rect
-	origin vec2d.T
-	srs    Proj
+	bbox vec2d.Rect
+	srs  Proj
 }
 
 func NewGeoReference(bbox vec2d.Rect, srs Proj) *GeoReference {
@@ -359,7 +358,7 @@ func NewGeoReference(bbox vec2d.Rect, srs Proj) *GeoReference {
 }
 
 func (g *GeoReference) GetOrigin() vec2d.T {
-	return g.origin
+	return g.bbox.Min
 }
 
 func (g *GeoReference) GetBBox() vec2d.Rect {

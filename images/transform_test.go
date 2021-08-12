@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"os"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
-	"github.com/fogleman/gg"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/imaging"
 )
@@ -64,8 +65,6 @@ func TestMergeTransform(t *testing.T) {
 	bbox2 := srs900913.TransformRectTo(srs4326, bbox1, 16)
 	bbox := srs4326.TransformRectTo(pgcj02, bbox2, 16)
 
-	bbox3 := srs4326.TransformRectTo(srs900913, bbox, 16)
-
 	rect, grids, tiles, _ := grid.GetAffectedTiles(bbox, [2]uint32{256, 256}, srs4326)
 
 	tilesCoord := [][3]int{}
@@ -93,8 +92,7 @@ func TestMergeTransform(t *testing.T) {
 	img_opts.BgColor = color.Transparent
 
 	result := CreateImage([2]uint32{uint32(grids[0] * 256), uint32(grids[1] * 256)}, &img_opts)
-
-	dc := gg.NewContextForImage(result)
+	var sources []tile.Source
 
 	for i := range tilesCoord {
 		z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]
@@ -103,22 +101,26 @@ func TestMergeTransform(t *testing.T) {
 
 		source.SetSource(fmt.Sprintf("../data/%d_%d_%d.png", z, x, y))
 
-		img := source.GetImage()
-
-		dc.DrawImage(img, (x-minx)*256, (y-miny)*256)
+		sources = append(sources, source)
 	}
 
-	img := dc.Image()
+	m := NewTileMerger(grids, [2]uint32{256, 256})
+	rr := m.Merge(sources, PNG_FORMAT)
+	img := rr.GetTile().(image.Image)
 
-	facx := (bbox3.Min[0] - rect.Min[0]) / (rect.Max[0] - rect.Min[0])
-	facy := (bbox3.Min[1] - rect.Min[1]) / (rect.Max[1] - rect.Min[1])
+	imaging.Save(img, "./all.png")
 
-	offx := int(facx * 512)
-	offy := int(facy * 512)
+	os.Remove("./all.png")
 
-	subimg := imaging.Crop(img, image.Rect(offx, offy, offx+256, offy+256))
+	sp := NewTileSplitter(rr, PNG_FORMAT)
+
+	off := imageTileOffset(rect, srs900913, [2]uint32{uint32(grids[0] * 256), uint32(grids[1] * 256)}, bbox, srs4326)
+
+	subimg := sp.GetTile(off, [2]uint32{256, 256}).GetImage()
 
 	imaging.Save(subimg, "./result.png")
+
+	os.Remove("./result.png")
 
 	if result != nil || rect.Max[0] == 0 {
 		t.FailNow()

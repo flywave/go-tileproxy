@@ -1,43 +1,43 @@
 package raster
 
 import (
+	"bytes"
+	"errors"
 	"io"
+	"io/ioutil"
 	"math"
+	"os"
 
-	vec3d "github.com/flywave/go3d/float64/vec3"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type RasterType uint32
+type RasterOptions struct {
+	tile.TileOptions
+	Format   tile.TileFormat
+	Mode     BorderMode
+	DataType RasterType
+}
 
-const (
-	RT_CHAR   RasterType = 0
-	RT_UCHAR  RasterType = 1
-	RT_SHORT  RasterType = 2
-	RT_USHORT RasterType = 3
-	RT_INT    RasterType = 4
-	RT_UINT   RasterType = 5
-	RT_FLOAT  RasterType = 6
-	RT_DOUBLE RasterType = 7
-)
+func (s *RasterOptions) GetFormat() tile.TileFormat {
+	return s.Format
+}
 
 type RasterSource struct {
 	tile.Source
-	data             interface{}
-	tp               RasterType
-	buf              []byte
-	fname            string
-	size             []uint32
-	pixelSize        []float64
-	cacheable        *tile.CacheInfo
-	georef           *geo.GeoReference
-	nodata           float64
-	Options          tile.TileOptions
-	decodeFunc       func(r io.Reader) (interface{}, error)
-	getElevationFunc func(d interface{}, x, y int) float64
-	interpolator     Interpolator
+	data         *TileData
+	buf          []byte
+	fname        string
+	size         []uint32
+	pixelSize    []float64
+	cacheable    *tile.CacheInfo
+	georef       *geo.GeoReference
+	nodata       float64
+	Options      tile.TileOptions
+	io           RasterIO
+	interpolator Interpolator
 }
 
 func (s *RasterSource) GetType() tile.TileType {
@@ -57,6 +57,36 @@ func (s *RasterSource) SetCacheable(c *tile.CacheInfo) {
 
 func (s *RasterSource) GetFileName() string {
 	return s.fname
+}
+
+func (s *RasterSource) GetTile() interface{} {
+	return s.GetTileData()
+}
+
+func (s *RasterSource) GetTileData() *TileData {
+	if s.data == nil {
+		if s.buf == nil {
+			f, err := os.Open(s.fname)
+			if err != nil {
+				return nil
+			}
+			s.buf, err = ioutil.ReadAll(f)
+			if err != nil {
+				return nil
+			}
+		}
+		r := bytes.NewBuffer(s.buf)
+		var err error
+		s.data, err = s.io.Decode(r)
+		if err != nil {
+			return nil
+		}
+		s.size = s.data.Size[:]
+		if s.data.Boxsrs != nil {
+			s.georef = geo.NewGeoReference(s.data.Box, s.data.Boxsrs)
+		}
+	}
+	return s.data
 }
 
 func (s *RasterSource) GetSize() [2]uint32 {
@@ -80,12 +110,23 @@ func (s *RasterSource) SetSource(src interface{}) {
 	s.buf = nil
 	switch ss := src.(type) {
 	case io.Reader:
-		s.data, _ = s.decode(ss)
+		s.data, _ = s.io.Decode(ss)
 	case string:
 		s.fname = ss
 	default:
-		s.data = ss
+		s.data = ss.(*TileData)
 	}
+}
+
+func (s *RasterSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
+	if s.buf == nil {
+		var err error
+		s.buf, err = s.io.Encode(s.data)
+		if err != nil {
+			return nil
+		}
+	}
+	return s.buf
 }
 
 func (s *RasterSource) SetTileOptions(options tile.TileOptions) {
@@ -97,14 +138,14 @@ func (s *RasterSource) GetTileOptions() tile.TileOptions {
 }
 
 func (s *RasterSource) decode(r io.Reader) (interface{}, error) {
-	return s.decodeFunc(r)
+	return s.io.Decode(r)
 }
 
-func (s *RasterSource) caclulatePixelSize() {
+func (s *RasterSource) caclulatePixelSize(georef *geo.GeoReference) {
 	if s.pixelSize == nil {
 		s.pixelSize = []float64{0, 0}
-		s.pixelSize[0] = (s.georef.GetBBox().Max[0] - s.georef.GetBBox().Min[0]) / float64(s.size[0])
-		s.pixelSize[1] = (s.georef.GetBBox().Max[1] - s.georef.GetBBox().Min[1]) / float64(s.size[1])
+		s.pixelSize[0] = (georef.GetBBox().Max[0] - georef.GetBBox().Min[0]) / float64(s.size[0])
+		s.pixelSize[1] = (georef.GetBBox().Max[1] - georef.GetBBox().Min[1]) / float64(s.size[1])
 	}
 }
 
@@ -134,11 +175,14 @@ const (
 	NO_DATA_OUT = 0
 )
 
-func (s *RasterSource) GetElevation(lat, lon float64) float64 {
+func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference) float64 {
 	heightValue := 0.0
+	if georef == nil && s.georef != nil {
+		georef = s.georef
+	}
 
 	if s.pixelSize == nil {
-		s.caclulatePixelSize()
+		s.caclulatePixelSize(georef)
 	}
 
 	epsilon := math.Nextafter(1, 2) - 1
@@ -199,37 +243,31 @@ func (s *RasterSource) GetElevation(lat, lon float64) float64 {
 }
 
 func (s *RasterSource) getElevation(x, y int) float64 {
-	return s.getElevationFunc(s.data, x, y)
+	data := s.GetTileData()
+	if data != nil {
+		return data.Get(x, y)
+	}
+	return 0
 }
 
-func (s *RasterSource) GetHeightMap() *HeightMap {
-	opts := s.Options.(*RasterOptions)
-	heightMap := NewHeightMap(int(s.size[0]), int(s.size[1]))
-	heightMap.Count = heightMap.Width * heightMap.Height
-	heightMap.srs = s.georef.GetSrs()
-	coords := make(Coordinates, heightMap.Count)
-
-	if s.pixelSize == nil {
-		s.caclulatePixelSize()
+func (s *RasterSource) Resample(georef *geo.GeoReference, grid *DemGrid) error {
+	if georef == nil && s.georef != nil {
+		georef = s.georef
 	}
-
-	for y := 0; y < int(s.size[1]); y++ {
-		latitude := s.georef.GetOrigin()[1] + (float64(s.pixelSize[1]) * float64(y))
-		for x := 0; x < int(s.size[0]); x++ {
-			longitude := s.georef.GetOrigin()[0] + (float64(s.pixelSize[0]) * float64(x))
-
-			heightValue := s.getElevation(x, y)
-
-			if heightValue < float64(32768) {
-				heightMap.Minimum = math.Min(opts.MinimumAltitude, heightValue)
-				heightMap.Maximum = math.Max(opts.MaximumAltitude, heightValue)
-			} else {
-				heightValue = 0
-			}
-			coords = append(coords, vec3d.T{latitude, longitude, heightValue})
+	if georef == nil {
+		return errors.New("source georef is nil")
+	}
+	if !geo.BBoxContains(georef.GetBBox(), grid.GetRect()) {
+		return errors.New("not Contains target grid")
+	}
+	for i := range grid.Coordinates {
+		coord := grid.Coordinates[i]
+		lat, lon := coord[0], coord[1]
+		if !grid.srs.Eq(georef.GetSrs()) {
+			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lat, lon}})
+			lat, lon = d[0][0], d[0][1]
 		}
+		grid.Coordinates[i][2] = s.GetElevation(lat, lon, georef)
 	}
-
-	heightMap.Coordinates = coords
-	return heightMap
+	return nil
 }

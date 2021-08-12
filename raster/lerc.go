@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/flywave/go-lerc"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 var (
@@ -25,20 +26,10 @@ type LercRasterSource struct {
 	RasterSource
 }
 
-type LercIO struct {
-	RasterIO
-}
-
-func (d *LercIO) Decode(r io.Reader) (interface{}, error) {
-	return nil, nil
-}
-
-func (d *LercIO) Encode(tile interface{}) ([]byte, error) {
-	return nil, nil
-}
-
-func (d *LercIO) GetElevation(tile interface{}, x, y int) float64 {
-	return 0
+func NewLercRasterSource(mode BorderMode, maxZError float64, options tile.TileOptions) *LercRasterSource {
+	src := &LercRasterSource{RasterSource: RasterSource{Options: options}}
+	src.io = &LercIO{Mode: mode, MaxZError: maxZError}
+	return src
 }
 
 func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
@@ -53,7 +44,7 @@ func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
 	}
 
 	newImg, _, err := lerc.Decode(src)
-	if err == nil {
+	if err != nil {
 		return err, nil, nil
 	}
 
@@ -81,4 +72,114 @@ func LoadLerc(r io.Reader) (error, interface{}, lerc.BlobInfo) {
 func EncodeLerc(data interface{}, dim int, cols int, rows int, bands int, maxZErr float64) ([]byte, error) {
 	mask := make([]byte, cols*rows)
 	return lerc.Encode(data, dim, cols, rows, bands, mask, maxZErr)
+}
+
+type LercIO struct {
+	RasterIO
+	Mode      BorderMode
+	MaxZError float64
+	LercDT    int
+}
+
+func getValue(data interface{}, row, col int, cols int) float64 {
+	switch v := data.(type) {
+	case []int8:
+		return float64(v[row*cols+col])
+	case []uint8:
+		return float64(v[row*cols+col])
+	case []int16:
+		return float64(v[row*cols+col])
+	case []uint16:
+		return float64(v[row*cols+col])
+	case []int32:
+		return float64(v[row*cols+col])
+	case []uint32:
+		return float64(v[row*cols+col])
+	case []float32:
+		return float64(v[row*cols+col])
+	case []float64:
+		return v[row*cols+col]
+	}
+	return 99999
+}
+
+func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
+	err, vec, blobInfo := LoadLerc(r)
+	if err != nil {
+		return nil, err
+	}
+	off := 0
+	if d.Mode == BORDER_UNILATERAL {
+		off = 1
+	} else if d.Mode == BORDER_BILATERAL {
+		off = 2
+	}
+
+	row, col := int(blobInfo.Rows()), int(blobInfo.Cols())
+
+	tiledata := NewTileData([2]uint32{uint32(col - off), uint32(row - off)}, d.Mode)
+	if d.Mode == BORDER_UNILATERAL {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				if x > 0 && y > 0 {
+					tiledata.Set(x-1, y-1, getValue(vec, y, x, col))
+				}
+
+				if x == 0 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_LEFT, y-1, getValue(vec, y, x, col))
+				}
+
+				if y == 0 {
+					tiledata.FillBorder(BORDER_TOP, x, getValue(vec, y, x, col))
+				}
+			}
+		}
+	} else if d.Mode == BORDER_BILATERAL {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				if x > 0 && y > 0 && x < col-1 && y < row-1 {
+					tiledata.Set(x-1, y-1, getValue(vec, y, x, col))
+				}
+
+				if x == 0 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_LEFT, y-1, getValue(vec, y, x, col))
+				}
+
+				if x == col-1 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_RIGHT, y-1, getValue(vec, y, x, col))
+				}
+
+				if y == 0 {
+					tiledata.FillBorder(BORDER_TOP, x, getValue(vec, y, x, col))
+				}
+
+				if y == row-1 {
+					tiledata.FillBorder(BORDER_BOTTOM, x, getValue(vec, y, x, col))
+				}
+			}
+		}
+	} else {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				tiledata.Set(x, y, getValue(vec, y, x, col))
+			}
+		}
+	}
+	return tiledata, nil
+}
+
+func (d *LercIO) Encode(tile *TileData) ([]byte, error) {
+	if d.Mode != tile.Border {
+		return nil, errors.New("Border mode error")
+	}
+	data, si := tile.GetExtend32()
+
+	maxZError := d.MaxZError
+	if maxZError == 0 {
+		maxZErrorWanted := 0.1
+		eps := 0.0001
+		maxZError = maxZErrorWanted - eps
+	}
+
+	return EncodeLerc(data, 1, int(si[0]), int(si[1]), 1, maxZError)
 }

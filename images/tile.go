@@ -51,6 +51,7 @@ func (t *TileMerger) Merge(ordered_tiles []tile.Source, image_opts *ImageOptions
 		tile = imaging.Resize(tile, int(t.Size[0]), int(t.Size[1]), imaging.Lanczos)
 		dcresult.DrawImage(tile, pos[0], pos[1])
 	}
+	result = dcresult.Image()
 	return &ImageSource{image: result, size: src_size[:], Options: image_opts, cacheable: cacheable}
 }
 
@@ -118,4 +119,15 @@ func (t *TiledImage) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [
 	transformer := NewImageTransformer(t.SrcSRS, req_srs, nil)
 	src_img := t.GetImage(image_opts)
 	return transformer.Transform(src_img, t.SrcBBox, out_size, req_bbox, image_opts)
+}
+
+func imageTileOffset(srcbox vec2d.Rect, src_srs geo.Proj, src_size [2]uint32, dst_bbox vec2d.Rect, dst_srs geo.Proj) [2]int {
+	if src_srs != nil && dst_srs != nil && !src_srs.Eq(dst_srs) {
+		srcbox = src_srs.TransformRectTo(dst_srs, srcbox, 16)
+	}
+
+	facx := (dst_bbox.Min[0] - srcbox.Min[0]) / (srcbox.Max[0] - srcbox.Min[0])
+	facy := (srcbox.Max[1] - dst_bbox.Max[1]) / (srcbox.Max[1] - srcbox.Min[1])
+
+	return [2]int{int(facx * float64(src_size[0])), int(facy * float64(src_size[1]))}
 }

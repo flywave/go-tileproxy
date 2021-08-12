@@ -2,7 +2,12 @@ package raster
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
+
+	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 
 	geotiff "github.com/flywave/go-geotiff"
 )
@@ -22,6 +27,12 @@ var (
 
 type GeoTIFFRasterSource struct {
 	RasterSource
+}
+
+func NewGeoTIFFRasterSource(mode BorderMode, options tile.TileOptions) *GeoTIFFRasterSource {
+	src := &GeoTIFFRasterSource{RasterSource: RasterSource{Options: options}}
+	src.io = &GeoTIFFIO{Mode: mode}
+	return src
 }
 
 func LoadTiff(r io.Reader) (error, *geotiff.Raster) {
@@ -45,16 +56,102 @@ func EncodeTiff(r *geotiff.Raster) ([]byte, error) {
 
 type GeoTIFFIO struct {
 	RasterIO
+	Mode BorderMode
 }
 
-func (d *GeoTIFFIO) Decode(r io.Reader) (interface{}, error) {
-	return nil, nil
+func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
+	err, raster := LoadTiff(r)
+	if err != nil {
+		return nil, err
+	}
+	off := 0
+	if d.Mode == BORDER_UNILATERAL {
+		off = 1
+	} else if d.Mode == BORDER_BILATERAL {
+		off = 2
+	}
+
+	row, col := raster.Rows(), raster.Columns()
+	tiledata := NewTileData([2]uint32{uint32(col - off), uint32(row - off)}, d.Mode)
+
+	tiledata.Box.Min[0], tiledata.Box.Min[1], tiledata.Box.Max[0], tiledata.Box.Max[1] = raster.West(), raster.South(), raster.East(), raster.North()
+	tiledata.Boxsrs = geo.NewSRSProj4(fmt.Sprintf("EPSG:%d", raster.GetRasterConfig().EPSGCode))
+
+	if d.Mode == BORDER_UNILATERAL {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				if x > 0 && y > 0 {
+					tiledata.Set(x-1, y-1, raster.Value(y, x))
+				}
+
+				if x == 0 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_LEFT, y-1, raster.Value(y, x))
+				}
+
+				if y == 0 {
+					tiledata.FillBorder(BORDER_TOP, x, raster.Value(y, x))
+				}
+			}
+		}
+	} else if d.Mode == BORDER_BILATERAL {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				if x > 0 && y > 0 && x < col-1 && y < row-1 {
+					tiledata.Set(x-1, y-1, raster.Value(y, x))
+				}
+
+				if x == 0 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_LEFT, y-1, raster.Value(y, x))
+				}
+
+				if x == col-1 && y != 0 && y != row-1 {
+					tiledata.FillBorder(BORDER_RIGHT, y-1, raster.Value(y, x))
+				}
+
+				if y == 0 {
+					tiledata.FillBorder(BORDER_TOP, x, raster.Value(y, x))
+				}
+
+				if y == row-1 {
+					tiledata.FillBorder(BORDER_BOTTOM, x, raster.Value(y, x))
+				}
+			}
+		}
+	} else {
+		for x := 0; x < col; x++ {
+			for y := 0; y < row; y++ {
+				tiledata.Set(x, y, raster.Value(y, x))
+			}
+		}
+	}
+	return tiledata, nil
 }
 
-func (d *GeoTIFFIO) Encode(tile interface{}) ([]byte, error) {
-	return nil, nil
-}
+var (
+	_SRS900913 = geo.NewSRSProj4("EPSG:900913")
+)
 
-func (d *GeoTIFFIO) GetElevation(tile interface{}, x, y int) float64 {
-	return 0
+func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
+	if d.Mode != tile.Border {
+		return nil, errors.New("Border mode error")
+	}
+	data, si := tile.GetExtend()
+	box := tile.Box
+
+	west, south, east, north := box.Min[0], box.Min[1], box.Max[0], box.Max[1]
+
+	conf := geotiff.NewDefaultRasterConfig()
+	conf.EPSGCode = geo.GetEpsgNum(tile.Boxsrs.GetSrsCode())
+
+	raster, err := geotiff.CreateNewRaster("", int(si[1]), int(si[0]), north, south, east, west, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	raster.SetData(data)
+	writer := &bytes.Buffer{}
+	raster.SetWriter(writer)
+	raster.Save()
+
+	return writer.Bytes(), nil
 }

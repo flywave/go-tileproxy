@@ -10,7 +10,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
@@ -24,7 +24,7 @@ type WMSService struct {
 	RootLayer           *WMSGroupLayer
 	Layers              map[string]wmsLayer
 	Strict              bool
-	ImageFormats        map[string]*images.ImageOptions
+	ImageFormats        map[string]*imagery.ImageOptions
 	TileLayers          []*TileLayer
 	Metadata            map[string]string
 	InfoFormats         map[string]string
@@ -61,11 +61,11 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 				img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
 				img_opts.BgColor = mapreq.GetBGColor()
 				img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
-				img := images.NewBlankImageSource(mapreq.GetSize(), img_opts, nil)
+				img := imagery.NewBlankImageSource(mapreq.GetSize(), img_opts, nil)
 
 				return NewResponse(img.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 			}
-			sub_size, offset, sub_bbox = images.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
+			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
 			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewSRSProj4(mapreq.GetSrs()), Format: mapreq.GetFormat()}
 		}
 	}
@@ -99,7 +99,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 
 	renderer := &LayerRenderer{layers: render_layers, query: query, params: mapreq}
 
-	merger := &images.LayerMerger{}
+	merger := &imagery.LayerMerger{}
 	renderer.render(merger)
 
 	img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
@@ -109,12 +109,12 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	result := merger.Merge(img_opts, si[:], mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs()), coverage)
 
 	if !query.EQ(orig_query) {
-		imageSrc := result.(*images.ImageSource)
-		result = images.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
+		imageSrc := result.(*imagery.ImageSource)
+		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
 	}
 
 	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewSRSProj4(mapreq.GetSrs()), BBox: mapreq.GetBBox()})
-	imagesource := result.(*images.ImageSource)
+	imagesource := result.(*imagery.ImageSource)
 
 	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs())))
 	result_buf := result.GetBuffer(nil, img_opts)
@@ -335,7 +335,7 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 	}
 	legends := s.Layers[layer].legend(req.(*request.WMSLegendGraphicRequest))
 
-	result := images.ConcatLegends(legends, images.RGBA, tile.TileFormat("png"), nil, color.White, true)
+	result := imagery.ConcatLegends(legends, imagery.RGBA, tile.TileFormat("png"), nil, color.White, true)
 	mimetype := mapparams.GetFormatMimeType()
 	if mimetype == "" {
 		mimetype = "image/png"
@@ -371,7 +371,7 @@ func (c *WMSCapabilities) fetch(req *request.WMSRequest) []byte {
 	return nil
 }
 
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileLayer, imageFormats map[string]*images.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileLayer, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
 	return nil
 }
 
@@ -381,7 +381,7 @@ type LayerRenderer struct {
 	params request.WMSMapRequestParams
 }
 
-func (l *LayerRenderer) render(layer *images.LayerMerger) {
+func (l *LayerRenderer) render(layer *imagery.LayerMerger) {
 }
 
 type wmsLayer interface {

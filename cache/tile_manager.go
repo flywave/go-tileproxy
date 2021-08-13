@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -92,8 +92,8 @@ func (tm *TileManager) GetTileOptions() tile.TileOptions {
 	return tm.tileOpts
 }
 
-func (tm *TileManager) GetImageOptions() *images.ImageOptions {
-	return tm.tileOpts.(*images.ImageOptions)
+func (tm *TileManager) GetImageOptions() *imagery.ImageOptions {
+	return tm.tileOpts.(*imagery.ImageOptions)
 }
 
 func (tm *TileManager) GetFormat() string {
@@ -193,7 +193,7 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 }
 
 var (
-	RESCALE_TILE_MISSING = images.NewBlankImageSource([2]uint32{256, 256}, &images.ImageOptions{}, nil)
+	RESCALE_TILE_MISSING = imagery.NewBlankImageSource([2]uint32{256, 256}, &imagery.ImageOptions{}, nil)
 )
 
 func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCollection) *Tile {
@@ -250,7 +250,7 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 		}
 	}
 
-	tiled_image := images.NewTiledImage(tile_sources, src_tile_grid, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, src_bbox, tm.grid.Srs)
+	tiled_image := imagery.NewTiledImage(tile_sources, src_tile_grid, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, src_bbox, tm.grid.Srs)
 	t.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.GetImageOptions())
 
 	if tm.cacheRescaledTiles {

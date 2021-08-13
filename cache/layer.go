@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -18,7 +18,7 @@ type CacheMapLayer struct {
 	maxTileLimit *int
 }
 
-func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, image_opts *images.ImageOptions, maxTileLimit *int) *CacheMapLayer {
+func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, image_opts *imagery.ImageOptions, maxTileLimit *int) *CacheMapLayer {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
@@ -77,7 +77,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	_, tile_collection := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
 	if tile_collection.Empty() {
-		return &images.BlankImageSource{}, nil
+		return &imagery.BlankImageSource{}, nil
 	}
 
 	if query.TiledOnly {
@@ -92,8 +92,8 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	tiled_image := images.NewTiledImage(tile_sources, tile_grid, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, src_bbox, r.grid.Srs)
-	return tiled_image.Transform(query.BBox, query.Srs, query.Size, r.tileManager.GetTileOptions().(*images.ImageOptions)), nil
+	tiled_image := imagery.NewTiledImage(tile_sources, tile_grid, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, src_bbox, r.grid.Srs)
+	return tiled_image.Transform(query.BBox, query.Srs, query.Size, r.tileManager.GetTileOptions().(*imagery.ImageOptions)), nil
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
@@ -109,18 +109,18 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	var result tile.Source
 	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(query_extent) {
 		if !r.Extent.Intersects(query_extent) {
-			return &images.BlankImageSource{}, nil
+			return &imagery.BlankImageSource{}, nil
 		}
-		size, offset, bbox := images.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
+		size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
 		if size[0] == 0 || size[1] == 0 {
-			return &images.BlankImageSource{}, nil
+			return &imagery.BlankImageSource{}, nil
 		}
 		src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: query.Format}
 		resp, err := r.getSource(src_query)
 		if err != nil {
-			return &images.BlankImageSource{}, nil
+			return &imagery.BlankImageSource{}, nil
 		}
-		result = images.SubImageSource(resp.(*images.ImageSource), query.Size, offset[:], r.Options, resp.GetCacheable())
+		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options, resp.GetCacheable())
 	} else {
 		result, _ = r.getSource(query)
 	}

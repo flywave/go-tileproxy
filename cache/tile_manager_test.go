@@ -13,7 +13,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/sources"
@@ -57,11 +57,11 @@ func TestTileManager(t *testing.T) {
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	ccreater := func(location string) tile.Source {
 		data, _ := os.ReadFile(location)
-		s := images.CreateImageSourceFromBufer(data, imageopts)
+		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
 
@@ -126,11 +126,11 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	ccreater := func(location string) tile.Source {
 		data, _ := os.ReadFile(location)
-		s := images.CreateImageSourceFromBufer(data, imageopts)
+		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
 
@@ -173,11 +173,11 @@ func (s *mockSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	rgba := image.NewRGBA(image.Rect(0, 0, int(query.Size[0]), int(query.Size[1])))
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	s.requested = append(s.requested, requestInfo{bbox: query.BBox, size: query.Size, srs: query.Srs.GetSrsCode()})
 
-	return images.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
+	return imagery.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
 }
 
 func TestTileManagerMultipleSources(t *testing.T) {
@@ -185,11 +185,11 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	ccreater := func(location string) tile.Source {
 		data, _ := os.ReadFile(location)
-		s := images.CreateImageSourceFromBufer(data, imageopts)
+		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
 
@@ -216,11 +216,11 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	ccreater := func(location string) tile.Source {
 		data, _ := os.ReadFile(location)
-		s := images.CreateImageSourceFromBufer(data, imageopts)
+		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
 
@@ -247,11 +247,11 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	ccreater := func(location string) tile.Source {
 		data, _ := os.ReadFile(location)
-		s := images.CreateImageSourceFromBufer(data, imageopts)
+		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
 

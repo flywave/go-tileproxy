@@ -4,7 +4,7 @@ import (
 	"image/color"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -32,10 +32,10 @@ func (h *HTTPSourceErrorHandler) Handle(status_code string, query *layer.MapQuer
 		return nil
 	}
 
-	image_opts := &images.ImageOptions{
+	image_opts := &imagery.ImageOptions{
 		BgColor:     info.Color,
 		Transparent: geo.NewBool(true),
 	}
-	img_source := images.NewBlankImageSource(query.Size, image_opts, info.Cacheable)
+	img_source := imagery.NewBlankImageSource(query.Size, image_opts, info.Cacheable)
 	return img_source
 }

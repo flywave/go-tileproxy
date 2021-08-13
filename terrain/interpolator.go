@@ -1,4 +1,4 @@
-package raster
+package terrain
 
 type Interpolator interface {
 	Interpolate(southWestHeight, southEastHeight, northWestHeight, northEastHeight, x, y float64) float64

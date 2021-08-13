@@ -11,7 +11,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/tile"
@@ -36,7 +36,7 @@ func TestWMSSource(t *testing.T) {
 
 	client := client.NewWMSClient(req, mock)
 
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	source := NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 

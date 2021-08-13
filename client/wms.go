@@ -9,7 +9,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
@@ -204,7 +204,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 	resp := c.retrieve(query)
 	format := request.SplitMimeType(query.Format)[1]
 
-	src := &images.ImageSource{Options: &images.ImageOptions{Format: tile.TileFormat(format)}}
+	src := &imagery.ImageSource{Options: &imagery.ImageOptions{Format: tile.TileFormat(format)}}
 	src.SetSource(bytes.NewBuffer(resp))
 
 	id := c.RequestTemplate.Url

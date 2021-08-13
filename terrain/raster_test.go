@@ -1,12 +1,24 @@
-package raster
+package terrain
 
 import (
 	"testing"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
-func TestGrid(t *testing.T) {
+func TestRaster(t *testing.T) {
+	opts := &RasterOptions{Format: tile.TileFormat("webp"), Mode: BORDER_BILATERAL}
+
+	source := NewDemRasterSource(ModeMapbox, opts)
+
+	source.SetSource("../data/14_13733_6366.webp")
+	t1 := source.GetTile()
+
+	if t1 == nil {
+		t.FailNow()
+	}
+
 	srs900913 := geo.NewSRSProj4("EPSG:900913")
 	srs4326 := geo.NewSRSProj4("EPSG:4326")
 
@@ -23,9 +35,7 @@ func TestGrid(t *testing.T) {
 
 	georef := geo.NewGeoReference(bbox2, srs4326)
 
-	Grid := CaclulateGrid(512, 512, BORDER_BILATERAL, georef)
-
-	if Grid != nil {
+	if georef == nil {
 		t.FailNow()
 	}
 }

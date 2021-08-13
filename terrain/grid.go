@@ -1,4 +1,4 @@
-package raster
+package terrain
 
 import (
 	"sort"

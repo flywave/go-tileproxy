@@ -11,7 +11,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/tile"
@@ -344,7 +344,7 @@ func (r *tileResponse) getCacheable() bool {
 }
 
 func (r *tileResponse) peekFormat() string {
-	return images.PeekImageFormat(string(r.buf))
+	return imagery.PeekImageFormat(string(r.buf))
 }
 
 type TileLayer struct {
@@ -429,7 +429,7 @@ func (t *TileLayer) empty_response() RenderResponse {
 	}
 	if t.empty_tile == nil {
 		si := t.grid.grid.TileSize
-		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
+		img := imagery.NewBlankImageSource([2]uint32{si[0], si[1]}, &imagery.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
 		t.empty_tile = img.GetBuffer(nil, nil)
 	}
 	return newImageResponse(t.empty_tile, format, time.Now())
@@ -479,19 +479,19 @@ func (tl *TileLayer) Render(req request.Request, use_profiles bool, coverage geo
 		t.Source = decorate_tile(t.Source)
 	}
 	var format *tile.TileFormat
-	var image_opts *images.ImageOptions
+	var image_opts *imagery.ImageOptions
 	if coverage_intersects {
 		if tl.empty_response_as_png {
 			tf := tile.TileFormat("png")
 			format = &tf
-			image_opts = &images.ImageOptions{Transparent: geo.NewBool(true), Format: tile.TileFormat("png")}
+			image_opts = &imagery.ImageOptions{Transparent: geo.NewBool(true), Format: tile.TileFormat("png")}
 		} else {
 			tf := tile.TileFormat(tl.GetFormat())
 			format = &tf
-			image_opts = t.Source.GetTileOptions().(*images.ImageOptions)
+			image_opts = t.Source.GetTileOptions().(*imagery.ImageOptions)
 		}
 
-		t.Source = images.MaskImageSourceFromCoverage(
+		t.Source = imagery.MaskImageSourceFromCoverage(
 			t.Source, tile_bbox, tl.grid.srs, coverage, image_opts)
 
 		return newTileResponse(t, format, nil, image_opts)

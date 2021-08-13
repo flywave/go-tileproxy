@@ -3,7 +3,7 @@ package cache
 import (
 	"image/color"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 )
 
 type Watermark struct {
@@ -41,7 +41,7 @@ func (w *Watermark) Apply(tile *Tile) *Tile {
 		double_spacing = true
 	}
 	placement := tileWatermarkPlacement(tile.Coord, double_spacing)
-	wimg := images.NewWatermarkImage(w.text, tile.Source.GetTileOptions().(*images.ImageOptions),
+	wimg := imagery.NewWatermarkImage(w.text, tile.Source.GetTileOptions().(*imagery.ImageOptions),
 		placement, w.opacity, w.font_color, w.font_size)
 	tile.Source, _ = wimg.Draw(tile.Source, nil, false)
 	return tile

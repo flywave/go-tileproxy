@@ -6,7 +6,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -33,7 +33,7 @@ func (s *DebugSource) GetMap(query *layer.MapQuery) tile.Source {
 	res_x := w / float64(query.Size[0])
 	res_y := h / float64(query.Size[1])
 	debug_info := fmt.Sprintf("bbox: {Min: {%.8f, %.8f}, Max: {%.8f, %.8f}} \nres: %.8f(%.8f)", bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1], res_x, res_y)
-	return images.GenMessageImage(debug_info, query.Size, &images.ImageOptions{Transparent: geo.NewBool(true)}, nil, true)
+	return imagery.GenMessageImage(debug_info, query.Size, &imagery.ImageOptions{Transparent: geo.NewBool(true)}, nil, true)
 }
 
 type DummySource struct {
@@ -60,5 +60,5 @@ func (s *DummySource) GetCoverage() geo.Coverage {
 }
 
 func (s *DummySource) GetMap(query *layer.MapQuery) tile.Source {
-	return images.NewBlankImageSource(query.Size, &images.ImageOptions{Transparent: geo.NewBool(true)}, nil)
+	return imagery.NewBlankImageSource(query.Size, &imagery.ImageOptions{Transparent: geo.NewBool(true)}, nil)
 }

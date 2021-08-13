@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -20,7 +20,7 @@ type Legend struct {
 	BaseResource
 	Source  tile.Source
 	Scale   int
-	Options *images.ImageOptions
+	Options *imagery.ImageOptions
 }
 
 func (l *Legend) GetData() []byte {
@@ -31,7 +31,7 @@ func (l *Legend) GetData() []byte {
 }
 
 func (l *Legend) SetData(data []byte) {
-	l.Source = images.CreateImageSourceFromBufer(data, l.Options)
+	l.Source = imagery.CreateImageSourceFromBufer(data, l.Options)
 }
 
 func (l *Legend) Hash() []byte {

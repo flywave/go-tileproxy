@@ -8,7 +8,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -219,7 +219,7 @@ func (t *MapboxTileLayer) empty_response() RenderResponse {
 	format := t.GetFormat()
 	if t.empty_tile == nil {
 		si := t.GetGrid().TileSize
-		img := images.NewBlankImageSource([2]uint32{si[0], si[1]}, &images.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
+		img := imagery.NewBlankImageSource([2]uint32{si[0], si[1]}, &imagery.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
 		t.empty_tile = img.GetBuffer(nil, nil)
 	}
 	return newImageResponse(t.empty_tile, format, time.Now())

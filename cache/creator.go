@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -117,9 +117,9 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			layers = append(layers, img)
 		}
 	}
-	imageOptions, ok := c.Manager.GetTileOptions().(*images.ImageOptions)
+	imageOptions, ok := c.Manager.GetTileOptions().(*imagery.ImageOptions)
 	if ok && imageOptions != nil {
-		return images.MergeImages(layers, c.Manager.GetTileOptions().(*images.ImageOptions), query.Size, query.BBox, query.Srs, c.TileMerger), nil
+		return imagery.MergeImages(layers, c.Manager.GetTileOptions().(*imagery.ImageOptions), query.Size, query.BBox, query.Srs, c.TileMerger), nil
 	}
 	return nil, errors.New("error")
 }
@@ -140,8 +140,8 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
 	return created_tiles
 }
 
-func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, image_opts *images.ImageOptions) *TileCollection {
-	splitter := images.NewTileSplitter(meta_tile, image_opts)
+func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, image_opts *imagery.ImageOptions) *TileCollection {
+	splitter := imagery.NewTileSplitter(meta_tile, image_opts)
 	split_tiles := NewTileCollection(nil)
 	for _, tile := range tiles {
 		tile_coord, crop_coord := tile.Tiles, tile.Sizes
@@ -181,7 +181,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 				return nil
 			}
 			splitted_tiles = splitMetaTiles(meta_tile_image, meta_tile.GetTilePattern(),
-				[2]uint32{tile_size[0], tile_size[1]}, c.Manager.GetTileOptions().(*images.ImageOptions))
+				[2]uint32{tile_size[0], tile_size[1]}, c.Manager.GetTileOptions().(*imagery.ImageOptions))
 			for i, t := range splitted_tiles.tiles {
 				splitted_tiles.UpdateItem(i, c.Manager.ApplyTileFilter(t))
 			}

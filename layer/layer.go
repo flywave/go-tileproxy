@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -27,10 +27,10 @@ type MapLayer struct {
 	ResRange         *geo.ResolutionRange
 	Coverage         geo.Coverage
 	Extent           *geo.MapExtent
-	Options          *images.ImageOptions
+	Options          *imagery.ImageOptions
 }
 
-func NewMapLayer(opts *images.ImageOptions) *MapLayer {
+func NewMapLayer(opts *imagery.ImageOptions) *MapLayer {
 	return &MapLayer{Options: opts}
 }
 

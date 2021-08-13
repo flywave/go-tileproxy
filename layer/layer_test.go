@@ -9,7 +9,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -22,11 +22,11 @@ func (s *mockSource) GetMap(query *MapQuery) (tile.Source, error) {
 	rgba := image.NewRGBA(image.Rect(0, 0, 256, 256))
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	s.requested = true
 
-	return images.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
+	return imagery.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
 }
 
 var (
@@ -115,11 +115,11 @@ func (s *mockRequestSource) GetMap(query *MapQuery) (tile.Source, error) {
 	rgba := image.NewRGBA(image.Rect(0, 0, int(query.Size[0]), int(query.Size[1])))
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
-	imageopts := &images.ImageOptions{Format: tile.TileFormat("png")}
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
 	s.requested = append(s.requested, requestInfo{bbox: query.BBox, size: query.Size, srs: query.Srs.GetSrsCode()})
 
-	return images.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
+	return imagery.CreateImageSourceFromBufer(imagedata.Bytes(), imageopts), nil
 }
 
 func TestDirectMapLayer(t *testing.T) {

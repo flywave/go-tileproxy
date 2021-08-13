@@ -1,6 +1,6 @@
 package cache
 
-import "github.com/flywave/go-tileproxy/images"
+import "github.com/flywave/go-tileproxy/imagery"
 
 type TileCollection struct {
 	tiles     []*Tile
@@ -73,7 +73,7 @@ func (c *TileCollection) GetMap() map[[3]int]*Tile {
 func (c *TileCollection) AllBlank() bool {
 	r := true
 	for _, t := range c.tiles {
-		if _, ok := t.Source.(*images.BlankImageSource); !ok {
+		if _, ok := t.Source.(*imagery.BlankImageSource); !ok {
 			r = false
 		}
 	}

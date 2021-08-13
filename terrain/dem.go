@@ -1,4 +1,4 @@
-package raster
+package terrain
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 
 	mraster "github.com/flywave/go-mapbox/raster"
 
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -54,7 +54,7 @@ func EncodeDEM(d *mraster.DEMData, format tile.TileFormat) ([]byte, error) {
 		}
 	}
 	rets := &bytes.Buffer{}
-	images.EncodeImage(format.Extension(), rets, img)
+	imagery.EncodeImage(format.Extension(), rets, img)
 
 	return rets.Bytes(), nil
 }
@@ -142,7 +142,7 @@ func (d *DemIO) Encode(tile *TileData) ([]byte, error) {
 		}
 	}
 	writer := &bytes.Buffer{}
-	images.EncodeImage(d.Format.Extension(), writer, img)
+	imagery.EncodeImage(d.Format.Extension(), writer, img)
 
 	return writer.Bytes(), nil
 }

@@ -7,8 +7,7 @@ import (
 	"fmt"
 
 	"github.com/flywave/go-mapbox/style"
-
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 )
 
 type StyleCache struct {
@@ -94,9 +93,9 @@ func CreateSpriteJSON(content []byte) *SpriteJSON {
 
 type Sprite struct {
 	BaseResource
-	Source  *images.ImageSource
+	Source  *imagery.ImageSource
 	Scale   int
-	Options *images.ImageOptions
+	Options *imagery.ImageOptions
 }
 
 func (l *Sprite) GetData() []byte {
@@ -107,7 +106,7 @@ func (l *Sprite) GetData() []byte {
 }
 
 func (l *Sprite) SetData(data []byte) {
-	l.Source = images.CreateImageSourceFromBufer(data, l.Options)
+	l.Source = imagery.CreateImageSourceFromBufer(data, l.Options)
 }
 
 func (l *Sprite) Hash() []byte {

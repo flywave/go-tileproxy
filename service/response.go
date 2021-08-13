@@ -67,11 +67,10 @@ func StatusCode(code int) string {
 }
 
 type Response struct {
-	response      []byte
-	status        int
-	timestamp     *time.Time
-	last_modified time.Time
-	headers       http.Header
+	response  []byte
+	status    int
+	timestamp *time.Time
+	headers   http.Header
 }
 
 func NewResponse(response []byte, status int, mimetype string) *Response {
@@ -145,7 +144,7 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 		r.SetETag(etagFor([]byte(hash_src)))
 	}
 
-	r.last_modified = *timestamp
+	r.SetLastModified(*timestamp)
 	if (timestamp != nil || etag_data != nil) && max_age != -1 {
 		r.headers["Cache-Control"] = []string{fmt.Sprintf("public, max-age=%d, s-maxage=%d", max_age, max_age)}
 	}

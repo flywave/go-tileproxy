@@ -7,7 +7,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/images"
+	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
@@ -26,7 +26,7 @@ type WMSSource struct {
 	Opacity                   *float64
 }
 
-func NewWMSSource(client client.MapClient, image_opts *images.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
+func NewWMSSource(client client.MapClient, image_opts *imagery.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange,
 	transparent_color color.Color, transparent_color_tolerance *float64,
 	supported_srs *geo.SupportedSRS, supported_formats []string, fwd_req_params map[string]string) *WMSSource {
 	src := &WMSSource{Client: client, MapLayer: layer.MapLayer{Options: image_opts, Coverage: coverage, ResRange: res_range, SupportMetaTiles: true}, TransparentColor: transparent_color, TransparentColorTolerance: transparent_color_tolerance, SupportedSRS: supported_srs, SupportedFormats: supported_formats, ExtReqParams: fwd_req_params}
@@ -70,14 +70,14 @@ func (s *WMSSource) IsOpaque(query *layer.MapQuery) bool {
 
 func (s *WMSSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.Options, nil), nil
+		return imagery.NewBlankImageSource(query.Size, s.Options, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return images.NewBlankImageSource(query.Size, s.Options, nil), nil
+		return imagery.NewBlankImageSource(query.Size, s.Options, nil), nil
 	}
 	resp := s.getMap(query)
-	opts := resp.GetTileOptions().(*images.ImageOptions)
+	opts := resp.GetTileOptions().(*imagery.ImageOptions)
 	opts.Opacity = s.Opacity
 	return resp, nil
 }
@@ -109,21 +109,21 @@ func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
 		return s.getSubQuery(query, format)
 	}
 	resp := s.Client.Retrieve(query, &format)
-	src := images.CreateImageSource(query.Size, s.Options)
+	src := imagery.CreateImageSource(query.Size, s.Options)
 	src.SetSource(bytes.NewBuffer(resp))
 	return src
 }
 
 func (s *WMSSource) getSubQuery(query *layer.MapQuery, format tile.TileFormat) tile.Source {
-	size, offset, bbox := images.BBoxPositionInImage(query.BBox, query.Size, s.Extent.BBoxFor(query.Srs))
+	size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, s.Extent.BBoxFor(query.Srs))
 	if size[0] == 0 || size[1] == 0 {
-		return images.NewBlankImageSource(size, s.Options, nil)
+		return imagery.NewBlankImageSource(size, s.Options, nil)
 	}
 	src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: format, Dimensions: query.Dimensions}
 	resp := s.Client.Retrieve(src_query, &format)
-	src := images.CreateImageSource(query.Size, s.Options)
+	src := imagery.CreateImageSource(query.Size, s.Options)
 	src.SetSource(bytes.NewBuffer(resp))
-	return images.SubImageSource(src, query.Size, offset[:], s.Options, nil)
+	return imagery.SubImageSource(src, query.Size, offset[:], s.Options, nil)
 }
 
 func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat) tile.Source {
@@ -149,14 +149,14 @@ func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat
 		img = s.getSubQuery(src_query, format)
 	} else {
 		resp := s.Client.Retrieve(src_query, &format)
-		img = images.CreateImageSource(src_size, s.Options)
+		img = imagery.CreateImageSource(src_size, s.Options)
 		img.SetSource(bytes.NewBuffer(resp))
 	}
 
-	img = images.NewImageTransformer(src_srs, dst_srs, nil).Transform(img, src_bbox,
+	img = imagery.NewImageTransformer(src_srs, dst_srs, nil).Transform(img, src_bbox,
 		query.Size, dst_bbox, s.Options)
 
-	opts := img.GetTileOptions().(*images.ImageOptions)
+	opts := img.GetTileOptions().(*imagery.ImageOptions)
 	opts.Format = format
 	return img
 }
@@ -275,7 +275,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 
 	format := request.SplitMimeType(query.Format)[0]
 	legend = &resource.Legend{
-		Source:       images.ConcatLegends(legends, images.RGBA, tile.TileFormat(format), nil, nil, false),
+		Source:       imagery.ConcatLegends(legends, imagery.RGBA, tile.TileFormat(format), nil, nil, false),
 		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale,
 	}
 

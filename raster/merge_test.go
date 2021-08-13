@@ -106,7 +106,7 @@ func TestRasterMerger(t *testing.T) {
 
 	rsource := rr.(*DemRasterSource)
 
-	rsource.Resample(ogeoref, Grid, 0.005)
+	rsource.Resample(ogeoref, Grid)
 
 	smtd := Grid.GetTileDate(BORDER_BILATERAL)
 

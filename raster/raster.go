@@ -184,7 +184,7 @@ const (
 	NO_DATA_OUT = 0
 )
 
-func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, interpolator Interpolator, epsilon float64) float64 {
+func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, interpolator Interpolator) float64 {
 	heightValue := 0.0
 	if georef == nil && s.georef != nil {
 		georef = s.georef
@@ -208,6 +208,8 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
 	xPixel = (lon - georef.GetOrigin()[0]) / float64(s.pixelSize[0])
+
+	epsilon := math.Max(float64(s.pixelSize[0])/10, float64(s.pixelSize[1])/10)
 
 	_, xInterpolationAmount = math.Modf(float64(xPixel))
 	_, yInterpolationAmount = math.Modf(float64(yPixel))
@@ -259,7 +261,7 @@ func (s *RasterSource) getElevation(x, y int) float64 {
 	return 0
 }
 
-func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid, epsilon float64) error {
+func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 	if georef == nil && s.georef != nil {
 		georef = s.georef
 	}
@@ -290,7 +292,7 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid, epsilon fl
 			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
 			lon, lat = d[0][0], d[0][1]
 		}
-		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator, epsilon)
+		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator)
 	}
 	return nil
 }

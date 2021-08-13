@@ -73,7 +73,7 @@ func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) str
 
 func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.WMSMapRequest {
 	req := *c.RequestTemplate
-	params := request.NewWMTSTileRequestParams(req.GetParams())
+	params := request.NewWMSMapRequestParams(req.GetParams())
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetSrs(query.Srs.GetSrsCode())
@@ -89,10 +89,12 @@ func (c *WMSClient) CombinedClient(other MapClient, query *layer.MapQuery) MapCl
 	}
 
 	new_req := *c.RequestTemplate
-	params := request.NewWMTSTileRequestParams(new_req.GetParams())
-	other_params := request.NewWMTSTileRequestParams(oc.RequestTemplate.Params)
+	params := request.NewWMSMapRequestParams(new_req.GetParams())
+	other_params := request.NewWMSMapRequestParams(oc.RequestTemplate.Params)
 
-	params.SetLayers([]string{params.GetLayer(), other_params.GetLayer()})
+	layers := params.GetLayers()
+	layers = append(layers, other_params.GetLayers()...)
+	params.AddLayers(layers)
 
 	return &WMSClient{RequestTemplate: &new_req, BaseClient: c.BaseClient, HttpMethod: c.HttpMethod, FWDReqParams: c.FWDReqParams}
 }
@@ -165,7 +167,7 @@ func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 
 func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	req := c.RequestTemplate
-	params := request.NewWMTSFeatureInfoRequestParams(req.GetParams())
+	params := request.NewWMSFeatureInfoRequestParams(req.GetParams())
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetPos(query.Pos)

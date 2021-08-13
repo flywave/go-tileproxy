@@ -37,13 +37,26 @@ func (r *ArcGISExportRequestParams) GetBBox() vec2d.Rect {
 		if len(v) == 4 {
 			bbox := [4]float64{}
 			for i := range v {
-				v, err := strconv.ParseFloat(v[i], 64)
+				v_, err := strconv.ParseFloat(v[i], 64)
 				if err != nil {
 					return vec2d.Rect{}
 				}
-				bbox[i] = v
+				bbox[i] = v_
 			}
 			return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
+		} else if len(v) == 1 {
+			bstr := strings.Split(v[0], ",")
+			if len(bstr) == 4 {
+				bbox := [4]float64{}
+				for i := range bstr {
+					v, err := strconv.ParseFloat(bstr[i], 64)
+					if err != nil {
+						return vec2d.Rect{}
+					}
+					bbox[i] = v
+				}
+				return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
+			}
 		}
 	}
 	return vec2d.Rect{}
@@ -54,32 +67,67 @@ func (r *ArcGISExportRequestParams) SetBBox(bbox vec2d.Rect) {
 	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
 	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
 	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
-	r.params.Set("bbox", []string{strings.Join([]string{minx, miny, maxx, maxy}, ",")})
+	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
 }
 
-func (r *ArcGISExportRequestParams) GetSize() [2]int {
+func (r *ArcGISExportRequestParams) GetSize() [2]uint32 {
 	if v, ok := r.params.Get("size"); !ok {
-		return [2]int{-1, -1}
+		return [2]uint32{0, 0}
 	} else {
 		if len(v) >= 2 {
-			si := [2]int{}
+			si := [2]uint32{0, 0}
 			for i := range v[:2] {
 				v, err := strconv.ParseInt(v[i], 10, 64)
 				if err != nil {
 					return si
 				}
-				si[i] = int(v)
+				si[i] = uint32(v)
 			}
 			return si
+		} else if len(v) == 1 {
+			bstr := strings.Split(v[0], ",")
+			if len(bstr) == 2 {
+				si := [2]uint32{0, 0}
+				for i := range bstr {
+					v, err := strconv.ParseInt(v[i], 10, 64)
+					if err != nil {
+						return si
+					}
+					si[i] = uint32(v)
+				}
+				return si
+			}
 		}
 	}
-	return [2]int{-1, -1}
+	return [2]uint32{0, 0}
 }
 
 func (r *ArcGISExportRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
 	r.params.Set("size", []string{width, height})
+}
+
+func (r *ArcGISExportRequestParams) GetLayers() []string {
+	l, ok := r.params.Get("layers")
+	if ok {
+		return l
+	}
+	return []string{}
+}
+
+func (r *ArcGISExportRequestParams) AddLayer(layer string) {
+	l, ok := r.params.Get("layers")
+	if ok {
+		l = append(l, layer)
+		r.params.Set("layers", l)
+		return
+	}
+	r.params.Set("layers", []string{layer})
+}
+
+func (r *ArcGISExportRequestParams) AddLayers(layers []string) {
+	r.params.Set("layers", layers)
 }
 
 func (r *ArcGISExportRequestParams) GetBBOxSrs() string {
@@ -130,7 +178,7 @@ func (r *ArcGISIdentifyRequestParams) GetFormat() tile.TileFormat {
 }
 
 func (r *ArcGISIdentifyRequestParams) SetFormat(fmrt tile.TileFormat) {
-	r.params.Set("tilematrix", []string{fmrt.MimeType()})
+	r.params.Set("format", []string{fmrt.MimeType()})
 }
 
 func (r *ArcGISIdentifyRequestParams) GetBBox() vec2d.Rect {
@@ -173,36 +221,36 @@ func (r *ArcGISIdentifyRequestParams) SetBBox(bbox vec2d.Rect) {
 	r.params.Set("mapExtent", []string{minx, miny, maxx, maxy})
 }
 
-func (r *ArcGISIdentifyRequestParams) GetSize() [2]int {
+func (r *ArcGISIdentifyRequestParams) GetSize() [2]uint32 {
 	if v, ok := r.params.Get("imageDisplay"); !ok {
-		return [2]int{-1, -1}
+		return [2]uint32{0, 0}
 	} else {
 		if len(v) >= 2 {
-			si := [2]int{}
+			si := [2]uint32{0, 0}
 			for i := range v[:2] {
 				v, err := strconv.ParseInt(v[i], 10, 64)
 				if err != nil {
 					return si
 				}
-				si[i] = int(v)
+				si[i] = uint32(v)
 			}
 			return si
 		} else if len(v) == 1 {
 			bstr := strings.Split(v[0], ",")
 			if len(bstr) == 2 {
-				si := [2]int{}
+				si := [2]uint32{0, 0}
 				for i := range bstr {
 					v, err := strconv.ParseInt(v[i], 10, 64)
 					if err != nil {
 						return si
 					}
-					si[i] = int(v)
+					si[i] = uint32(v)
 				}
 				return si
 			}
 		}
 	}
-	return [2]int{-1, -1}
+	return [2]uint32{0, 0}
 }
 
 func (r *ArcGISIdentifyRequestParams) SetSize(si [2]uint32) {
@@ -264,7 +312,7 @@ func (r *ArcGISIdentifyRequestParams) SetSrs(srs string) {
 }
 
 func (r *ArcGISIdentifyRequestParams) GetTransparent() bool {
-	str := r.params.GetOne("format", "false")
+	str := r.params.GetOne("transparent", "false")
 	if strings.ToLower(str) == "true" {
 		return true
 	}
@@ -277,6 +325,28 @@ func (r *ArcGISIdentifyRequestParams) SetTransparent(b bool) {
 	} else {
 		r.params.Set("transparent", []string{"false"})
 	}
+}
+
+func (r *ArcGISIdentifyRequestParams) GetLayers() []string {
+	l, ok := r.params.Get("layers")
+	if ok {
+		return l
+	}
+	return []string{}
+}
+
+func (r *ArcGISIdentifyRequestParams) AddLayer(layer string) {
+	l, ok := r.params.Get("layers")
+	if ok {
+		l = append(l, layer)
+		r.params.Set("layers", l)
+		return
+	}
+	r.params.Set("layers", []string{layer})
+}
+
+func (r *ArcGISIdentifyRequestParams) AddLayers(layers []string) {
+	r.params.Set("layers", layers)
 }
 
 type ArcGISRequest struct {

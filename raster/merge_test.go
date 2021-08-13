@@ -90,6 +90,8 @@ func TestRasterMerger(t *testing.T) {
 	f.Write(raw)
 	f.Close()
 
+	os.Remove("./data.webp")
+
 	rminx := rect.Min[0] + ((rect.Max[0] - rect.Min[0]) * 0.25)
 	rminy := rect.Min[1] + ((rect.Max[1] - rect.Min[1]) * 0.25)
 
@@ -98,15 +100,13 @@ func TestRasterMerger(t *testing.T) {
 
 	newbox := vec2d.Rect{Min: vec2d.T{rminx, rminy}, Max: vec2d.T{rmaxx, rmaxy}}
 
-	ogeoref := geo.NewGeoReference(rect, srs900913)
-
 	georef := geo.NewGeoReference(newbox, srs900913)
 
 	Grid := CaclulateGrid(512, 512, BORDER_BILATERAL, georef)
 
 	rsource := rr.(*DemRasterSource)
 
-	rsource.Resample(ogeoref, Grid)
+	rsource.Resample(nil, Grid)
 
 	smtd := Grid.GetTileDate(BORDER_BILATERAL)
 
@@ -116,7 +116,5 @@ func TestRasterMerger(t *testing.T) {
 	f.Write(raw)
 	f.Close()
 
-	if rsource != nil || Grid != nil {
-		t.FailNow()
-	}
+	os.Remove("./smtd.webp")
 }

@@ -75,11 +75,7 @@ type TMSRequest struct {
 }
 
 func (r *TMSRequest) init() {
-	r.RequestHandlerName = "map"
-	r.CapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?
-	(/(?P<layer>[^/]+))?
-	(/(?P<layer_spec>[^/]+))?
-	$`)
+	r.CapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
 	r.RootRequestRegex = regexp.MustCompile(`/tms/?$`)
 	r.UseProfiles = true
 	r.RequestPrefix = "/tms"
@@ -93,7 +89,7 @@ func (r *TMSRequest) init() {
 		cap_match[name] = match[i]
 	}
 
-	root_match := r.CapabilitiesRegex.FindString(r.Http.URL.Path)
+	root_match := r.RootRequestRegex.FindString(r.Http.URL.Path)
 
 	if len(cap_match) > 0 {
 		if layer, ok := cap_match["layer"]; ok {
@@ -106,6 +102,7 @@ func (r *TMSRequest) init() {
 	} else if root_match != "" {
 		r.RequestHandlerName = "tms_root_resource"
 	} else {
+		r.RequestHandlerName = "map"
 		r.initRequest()
 	}
 }

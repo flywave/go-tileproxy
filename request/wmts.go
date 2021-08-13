@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	mapset "github.com/deckarep/golang-set"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -23,71 +22,6 @@ func NewWMTSTileRequestParams(params RequestParams) WMTSTileRequestParams {
 	return WMTSTileRequestParams{params: params}
 }
 
-func (r *WMTSTileRequestParams) GetBBox() vec2d.Rect {
-	if v, ok := r.params.Get("bbox"); !ok {
-		return vec2d.Rect{}
-	} else {
-		if len(v) == 4 {
-			bbox := [4]float64{}
-			for i := range v {
-				v, err := strconv.ParseFloat(v[i], 64)
-				if err != nil {
-					return vec2d.Rect{}
-				}
-				bbox[i] = v
-			}
-			return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
-		} else if len(v) == 1 {
-			bstr := strings.Split(v[0], ",")
-			if len(bstr) == 4 {
-				bbox := [4]float64{}
-				for i := range bstr {
-					v, err := strconv.ParseFloat(bstr[i], 64)
-					if err != nil {
-						return vec2d.Rect{}
-					}
-					bbox[i] = v
-				}
-				return vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}
-			}
-		}
-	}
-	return vec2d.Rect{}
-}
-
-func (r *WMTSTileRequestParams) SetBBox(bbox vec2d.Rect) {
-	minx := strconv.FormatFloat(bbox.Min[0], 'f', -1, 64)
-	miny := strconv.FormatFloat(bbox.Min[1], 'f', -1, 64)
-	maxx := strconv.FormatFloat(bbox.Max[0], 'f', -1, 64)
-	maxy := strconv.FormatFloat(bbox.Max[1], 'f', -1, 64)
-	r.params.Set("bbox", []string{minx, miny, maxx, maxy})
-}
-
-func (r *WMTSTileRequestParams) GetSize() [2]int {
-	w, okw := r.params.Get("width")
-	h, okh := r.params.Get("height")
-	if !okw || !okh {
-		return [2]int{-1, -1}
-	} else {
-		ws, err := strconv.ParseInt(w[0], 10, 64)
-		if err != nil {
-			return [2]int{-1, -1}
-		}
-		hs, err := strconv.ParseInt(h[0], 10, 64)
-		if err != nil {
-			return [2]int{-1, -1}
-		}
-		return [2]int{int(ws), int(hs)}
-	}
-}
-
-func (r *WMTSTileRequestParams) SetSize(si [2]uint32) {
-	width := strconv.FormatInt(int64(si[0]), 10)
-	height := strconv.FormatInt(int64(si[1]), 10)
-	r.params.Set("width", []string{width})
-	r.params.Set("height", []string{height})
-}
-
 func (r *WMTSTileRequestParams) GetLayer() string {
 	val, ok := r.params.Get("layer")
 	if ok {
@@ -100,8 +34,8 @@ func (r *WMTSTileRequestParams) SetLayer(l string) {
 	r.params.Set("layer", []string{l})
 }
 
-func (r *WMTSTileRequestParams) SetLayers(ls []string) {
-	r.params.Set("layer", ls)
+func (r *WMTSTileRequestParams) SetTileMatrixSet(tms string) {
+	r.params.Set("tilematrixset", []string{tms})
 }
 
 func (r *WMTSTileRequestParams) GetTileMatrixSet() string {
@@ -165,14 +99,6 @@ func (r *WMTSTileRequestParams) Update(params map[string]string) {
 	}
 }
 
-func (r *WMTSTileRequestParams) GetSrs() string {
-	return r.params.GetOne("srs", "EPSG:4326")
-}
-
-func (r *WMTSTileRequestParams) SetSrs(srs string) {
-	r.params.Set("srs", []string{srs})
-}
-
 type WMTSRequest struct {
 	BaseRequest
 	RequestHandlerName string
@@ -184,6 +110,10 @@ type WMTSRequest struct {
 
 type WMTS100TileRequest struct {
 	WMTSRequest
+}
+
+func (r *WMTSRequest) GetRequestParams() WMTSTileRequestParams {
+	return WMTSTileRequestParams{params: r.Params}
 }
 
 func (r *WMTSRequest) GetRequestHandler() string {
@@ -279,6 +209,10 @@ func NewWMTS100FeatureInfoRequest(param interface{}, url string, validate bool, 
 	return req
 }
 
+func (r *WMTS100FeatureInfoRequest) GetRequestParams() WMTSFeatureInfoRequestParams {
+	return WMTSFeatureInfoRequestParams{WMTSTileRequestParams: WMTSTileRequestParams{params: r.Params}}
+}
+
 func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "featureinfo"
@@ -296,6 +230,43 @@ func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 	return ret
 }
 
+const (
+	UpdateSequenceNone   = "none"
+	UpdateSequenceAny    = "any"
+	UpdateSequenceEqual  = "equal"
+	UpdateSequenceLower  = "lower"
+	UpdateSequenceHigher = "higher"
+)
+
+type WMTSCapabilitiesRequestParams struct {
+	params RequestParams
+}
+
+func NewWMTSCapabilitiesRequestParams(params RequestParams) WMTSCapabilitiesRequestParams {
+	return WMTSCapabilitiesRequestParams{params: params}
+}
+
+func (r *WMTSCapabilitiesRequestParams) GetFormat() tile.TileFormat {
+	strs := SplitMimeType(r.params.GetOne("format", ""))
+	return tile.TileFormat(strs[1])
+}
+
+func (r *WMTSCapabilitiesRequestParams) SetFormat(fmrt tile.TileFormat) {
+	r.params.Set("format", []string{fmrt.MimeType()})
+}
+
+func (r *WMTSCapabilitiesRequestParams) GetFormatMimeType() string {
+	return r.params.GetOne("format", "")
+}
+
+func (r *WMTSCapabilitiesRequestParams) SetUpdateSequence(s string) {
+	r.params.Set("updatesequence", []string{s})
+}
+
+func (r *WMTSCapabilitiesRequestParams) GetUpdateSequence() string {
+	return r.params.GetOne("updatesequence", "")
+}
+
 type WMTS100CapabilitiesRequest struct {
 	WMTSRequest
 	CapabilitiesTemplate string
@@ -308,12 +279,17 @@ func NewWMTS100CapabilitiesRequest(param interface{}, url string, validate bool,
 	return req
 }
 
+func (r *WMTS100CapabilitiesRequest) GetRequestParams() WMTSCapabilitiesRequestParams {
+	return WMTSCapabilitiesRequestParams{params: r.Params}
+}
+
 func (r *WMTS100CapabilitiesRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "capabilities"
+	r.FixedParams = map[string]string{"request": "GetCapabilities", "version": "1.0.0", "service": "WMTS"}
+	r.ExpectedParam = []string{"version", "request", "format", "updateSequence"}
 	r.CapabilitiesTemplate = "wmts100capabilities.xml"
 	r.MimeType = "text/xml"
-	r.FixedParams = map[string]string{}
 }
 
 func parseWMTSRequestType(req *http.Request) string {

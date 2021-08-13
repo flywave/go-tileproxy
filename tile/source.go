@@ -1,6 +1,10 @@
 package tile
 
-import "time"
+import (
+	"time"
+
+	"github.com/flywave/go-tileproxy/geo"
+)
 
 type TileType uint8
 
@@ -28,6 +32,7 @@ type Source interface {
 	SetCacheable(c *CacheInfo)
 	SetTileOptions(options TileOptions)
 	GetTileOptions() TileOptions
+	GetGeoReference() *geo.GeoReference
 }
 
 type DummyTileSource struct {
@@ -35,6 +40,7 @@ type DummyTileSource struct {
 	Data      string
 	Cacheable *CacheInfo
 	Opts      TileOptions
+	Georef    *geo.GeoReference
 }
 
 func (s *DummyTileSource) GetType() TileType {
@@ -84,4 +90,8 @@ func (s *DummyTileSource) SetTileOptions(options TileOptions) {
 
 func (s *DummyTileSource) GetTileOptions() TileOptions {
 	return s.Opts
+}
+
+func (s *DummyTileSource) GetGeoReference() *geo.GeoReference {
+	return s.Georef
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/lucasb-eyer/go-colorful"
 
 	mapset "github.com/deckarep/golang-set"
 
@@ -40,6 +41,16 @@ func NewWMSMapRequestParams(params RequestParams) WMSMapRequestParams {
 
 func (r *WMSMapRequestParams) switchBBox() {
 	r.SetBBox(switchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
+}
+
+func (r *WMSMapRequestParams) Update(params map[string]string) {
+	for key, value := range params {
+		if _, ok := r.params[key]; !ok {
+			r.params[key] = []string{value}
+		} else {
+			r.params[key] = append(r.params[key], value)
+		}
+	}
 }
 
 func (r *WMSMapRequestParams) GetBBox() vec2d.Rect {
@@ -83,22 +94,25 @@ func (r *WMSMapRequestParams) SetBBox(bbox vec2d.Rect) {
 }
 
 func (r *WMSMapRequestParams) GetLayers() []string {
-	val, ok := r.params.Get("layer")
+	l, ok := r.params.Get("layers")
 	if ok {
-		layers := []string{}
-		for i := range val {
-			tmps := strings.Split(layers[i], ",")
-			for _, l := range tmps {
-				layers = append(layers, l)
-			}
-		}
-		return layers
+		return l
 	}
-	return nil
+	return []string{}
 }
 
-func (r *WMSMapRequestParams) SetLayers(l []string) {
-	r.params.Set("layer", []string{strings.Join(l, ",")})
+func (r *WMSMapRequestParams) AddLayer(layer string) {
+	l, ok := r.params.Get("layers")
+	if ok {
+		l = append(l, layer)
+		r.params.Set("layers", l)
+		return
+	}
+	r.params.Set("layers", []string{layer})
+}
+
+func (r *WMSMapRequestParams) AddLayers(layers []string) {
+	r.params.Set("layers", layers)
 }
 
 func (r *WMSMapRequestParams) GetSize() [2]uint32 {
@@ -127,11 +141,11 @@ func (r *WMSMapRequestParams) SetSize(si [2]uint32) {
 }
 
 func (r *WMSMapRequestParams) GetSrs() string {
-	return r.params.GetOne("bboxSR", "EPSG:4326")
+	return r.params.GetOne("crs", "EPSG:4326")
 }
 
 func (r *WMSMapRequestParams) SetSrs(srs string) {
-	r.params.Set("bboxSR", []string{srs})
+	r.params.Set("crs", []string{srs})
 }
 
 func (r *WMSMapRequestParams) GetFormat() tile.TileFormat {
@@ -153,7 +167,7 @@ func (r *WMSMapRequestParams) GetFormatMimeType() string {
 }
 
 func (r *WMSMapRequestParams) GetTransparent() bool {
-	str := r.params.GetOne("format", "false")
+	str := r.params.GetOne("transparent", "false")
 	if strings.ToLower(str) == "true" {
 		return true
 	}
@@ -162,15 +176,21 @@ func (r *WMSMapRequestParams) GetTransparent() bool {
 
 func (r *WMSMapRequestParams) SetTransparent(transparent bool) {
 	if transparent {
-		r.params.Set("format", []string{"true"})
+		r.params.Set("transparent", []string{"true"})
 	} else {
-		r.params.Set("format", []string{"false"})
+		r.params.Set("transparent", []string{"false"})
 	}
 }
 
 func (r *WMSMapRequestParams) GetBGColor() color.Color {
 	str := r.params.GetOne("bgcolor", "#ffffff")
-	return utils.ColorRGBFromHex(str)
+	c := utils.HexColor(str)
+	return &c
+}
+
+func (r *WMSMapRequestParams) SetBGColor(c color.Color) {
+	cc, _ := colorful.MakeColor(c)
+	r.params.Set("bgcolor", []string{cc.Hex()})
 }
 
 type WMSRequest struct {
@@ -344,7 +364,7 @@ func (r *WMSLegendGraphicRequestParams) SetLayer(l string) {
 func (r *WMSLegendGraphicRequestParams) GetScale() int {
 	val, ok := r.params.Get("scale")
 	if ok {
-		f, err := strconv.ParseInt(val[0], 10, 64)
+		f, err := strconv.Atoi(val[0])
 		if err != nil {
 			return 1
 		}
@@ -354,7 +374,7 @@ func (r *WMSLegendGraphicRequestParams) GetScale() int {
 }
 
 func (r *WMSLegendGraphicRequestParams) SetScale(l int) {
-	r.params.Set("scale", []string{strconv.FormatInt(int64(l), 64)})
+	r.params.Set("scale", []string{strconv.Itoa(l)})
 }
 
 type WMSFeatureInfoRequestParams struct {
@@ -440,9 +460,40 @@ const (
 	CAPABILITIES_MIME_TYPE_HTML = "text/html"
 )
 
+type WMSCapabilitiesRequestParams struct {
+	params RequestParams
+}
+
+func NewWMSCapabilitiesRequestParams(params RequestParams) WMSCapabilitiesRequestParams {
+	ret := WMSCapabilitiesRequestParams{params: params}
+	return ret
+}
+
+func (r *WMSCapabilitiesRequestParams) GetFormat() tile.TileFormat {
+	strs := SplitMimeType(r.params.GetOne("format", ""))
+	return tile.TileFormat(strs[1])
+}
+
+func (r *WMSCapabilitiesRequestParams) GetFormatString() string {
+	strs := SplitMimeType(r.params.GetOne("format", ""))
+	return strs[1]
+}
+
+func (r *WMSCapabilitiesRequestParams) SetFormat(fmrt tile.TileFormat) {
+	r.params.Set("format", []string{fmrt.MimeType()})
+}
+
+func (r *WMSCapabilitiesRequestParams) GetFormatMimeType() string {
+	return r.params.GetOne("format", "")
+}
+
 type WMSCapabilitiesRequest struct {
 	WMSRequest
 	MimeType string
+}
+
+func (r *WMSCapabilitiesRequest) GetRequestParams() *WMSCapabilitiesRequestParams {
+	return &WMSCapabilitiesRequestParams{params: r.Params}
 }
 
 func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht *http.Request) *WMSCapabilitiesRequest {
@@ -452,6 +503,7 @@ func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht 
 	req.FixedParams["request"] = "GetCapabilities"
 	req.FixedParams["version"] = "1.3.0"
 	req.FixedParams["service"] = "WMS"
+	req.ExpectedParam = []string{"format", "namespace", "rootLayer"}
 	req.init(param, url, validate, ht)
 	return req
 }

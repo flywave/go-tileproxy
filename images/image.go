@@ -165,6 +165,10 @@ func (s *ImageSource) GetSize() [2]uint32 {
 	return [2]uint32{s.size[0], s.size[1]}
 }
 
+func (s *ImageSource) GetGeoReference() *geo.GeoReference {
+	return s.georef
+}
+
 func (s *ImageSource) makeImageBuf() error {
 	if len(s.fname) != 0 {
 		f, err := os.Open(s.fname)

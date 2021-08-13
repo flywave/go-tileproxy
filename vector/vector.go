@@ -39,6 +39,10 @@ type VectorSource struct {
 	io        VectorIO
 }
 
+func (s *VectorSource) GetGeoReference() *geo.GeoReference {
+	return s.georef
+}
+
 func (s *VectorSource) GetType() tile.TileType {
 	return tile.TILE_VECTOR
 }

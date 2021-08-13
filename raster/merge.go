@@ -5,6 +5,7 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -31,10 +32,17 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 	var cacheable *tile.CacheInfo
 
 	fdata := ordered_tiles[0].GetTile().(*TileData)
+	georef := ordered_tiles[0].GetGeoReference()
+
+	var bbox vec2d.Rect
+	var bbox_srs geo.Proj
+
+	if georef != nil {
+		bbox = georef.GetBBox()
+		bbox_srs = georef.GetSrs()
+	}
 
 	mode := fdata.Border
-	bbox := fdata.Box
-	bbox_srs := fdata.Boxsrs
 
 	tiledata := NewTileData(src_size, mode)
 
@@ -48,13 +56,15 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 		}
 
 		tdata := source.GetTile().(*TileData)
+		georef := source.GetGeoReference()
 
 		if tdata.Border != mode {
 			continue
 		}
-
-		bbox = vec2d.Joined(&bbox, &tdata.Box)
-
+		if georef != nil {
+			bboxss := georef.GetBBox()
+			bbox = vec2d.Joined(&bbox, &bboxss)
+		}
 		pos := t.tileOffset(i)
 
 		tiledata.CopyFrom(tdata, pos)

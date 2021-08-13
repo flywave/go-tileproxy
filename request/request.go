@@ -71,7 +71,11 @@ func (p RequestParams) QueryString() string {
 func (p RequestParams) copy() RequestParams {
 	map_copy := make(RequestParams)
 	for index, element := range p {
-		map_copy[index] = element
+		newElement := make([]string, len(element))
+		for i := range element {
+			newElement[i] = element[i]
+		}
+		map_copy[index] = newElement
 	}
 	return map_copy
 }

@@ -204,7 +204,7 @@ func (t *MapboxTileLayer) getFormatMimeType() string {
 	if t.type_ == MapboxVector {
 		return "application/vnd.mapbox-vector-tile"
 	}
-	return "image/png"
+	return "image/webp"
 }
 
 func (t *MapboxTileLayer) GetFormat() string {

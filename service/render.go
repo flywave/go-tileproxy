@@ -14,6 +14,7 @@ type TileResponse interface {
 	getBuffer() []byte
 	getTimestamp() *time.Time
 	getFormat() string
+	getFormatMime() string
 	getSize() int
 	getCacheable() bool
 }

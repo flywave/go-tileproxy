@@ -69,6 +69,11 @@ func (d *TileData) NoDataValue() float64 {
 	return d.NoData
 }
 
+func (d *TileData) GetGeoTransform() [6]float64 {
+	//TODO
+	return [6]float64{}
+}
+
 func (d *TileData) HasBorder() bool {
 	return d.Border != BORDER_NONE
 }
@@ -110,7 +115,8 @@ func (d *TileData) Get(x, y int) float64 {
 	return d.Datas[y*int(d.Size[0])+x]
 }
 
-func (d *TileData) GetExtend() ([]float64, [2]uint32) {
+func (d *TileData) GetExtend(m *BorderMode) ([]float64, [2]uint32) {
+	//TODO
 	if !d.HasBorder() {
 		return d.Datas[:], d.Size
 	}
@@ -148,8 +154,8 @@ func (d *TileData) GetExtend() ([]float64, [2]uint32) {
 	return nil, [2]uint32{}
 }
 
-func (d *TileData) GetExtend32() ([]float32, [2]uint32) {
-	rawdata, si := d.GetExtend()
+func (d *TileData) GetExtend32(m *BorderMode) ([]float32, [2]uint32) {
+	rawdata, si := d.GetExtend(m)
 	ret := make([]float32, len(rawdata))
 	for i := range rawdata {
 		ret[i] = float32(rawdata[i])

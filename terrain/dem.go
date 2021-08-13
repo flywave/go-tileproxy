@@ -111,7 +111,7 @@ func (d *DemIO) Encode(tile *TileData) ([]byte, error) {
 	if !tile.IsBilateral() {
 		return nil, errors.New("dem must sample bilateral border!")
 	}
-	data, si := tile.GetExtend()
+	data, si := tile.GetExtend(nil)
 	if si[0] != si[1] {
 		return nil, errors.New("row === col!")
 	}

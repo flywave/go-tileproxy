@@ -157,9 +157,10 @@ func GenTerrainSource(data *TileData, options *TerrainOptions) (*TerrainSource, 
 		return nil, errors.New("error")
 	}
 
-	var tsf [6]float64
-	var raw []float64
-	xsize, ysize := int(data.Size[0]+1), int(data.Size[0]+1)
+	tsf := data.GetGeoTransform()
+	m := BORDER_UNILATERAL
+	raw, si := data.GetExtend(&m)
+	xsize, ysize := int(si[0]), int(si[0])
 
 	ypos := tsf[3] + tsf[5]*float64(ysize)
 

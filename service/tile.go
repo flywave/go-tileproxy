@@ -335,6 +335,11 @@ func (r *tileResponse) getFormat() string {
 	return r.format
 }
 
+func (r *tileResponse) getFormatMime() string {
+	tf := tile.TileFormat(r.format)
+	return tf.MimeType()
+}
+
 func (r *tileResponse) getSize() int {
 	return r.size
 }

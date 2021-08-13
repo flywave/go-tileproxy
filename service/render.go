@@ -10,7 +10,7 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type RenderResponse interface {
+type TileResponse interface {
 	getBuffer() []byte
 	getTimestamp() *time.Time
 	getFormat() string
@@ -18,12 +18,12 @@ type RenderResponse interface {
 	getCacheable() bool
 }
 
-type RenderLayer interface {
+type TileProvider interface {
 	GetName() string
 	GetGrid() *geo.TileGrid
 	GetBBox() vec2d.Rect
 	GetSrs() geo.Proj
 	GetFormat() string
 	GetTileBBox(request request.Request, use_profiles bool, limit bool) vec2d.Rect
-	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) RenderResponse
+	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) TileResponse
 }

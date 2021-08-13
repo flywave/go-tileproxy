@@ -8,13 +8,15 @@ require (
 	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
-	github.com/flywave/go-geom v0.0.0-20210705081559-eee15cf4b503
+	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
 	github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c
-	github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54
+	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20210811053840-9d936368d2e8
+	github.com/flywave/go-mapbox v0.0.0-20210811060824-aa7db9dca12d
 	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
 	github.com/flywave/go-proj v0.0.0-20210803122823-117c8e760a27
+	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
+	github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
 	github.com/flywave/imaging v1.6.5
@@ -33,5 +35,3 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
-
-replace boringssl.googlesource.com/boringssl => github.com/google/boringssl v0.0.0-20210514210023-ddecaabdc8c9

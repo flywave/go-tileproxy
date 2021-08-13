@@ -22,10 +22,10 @@ func TestMapboxServiceGetGlyphs(t *testing.T) {
 
 }
 
-func TestMapboxGlyph(t *testing.T) {
+func TestMapboxGlyphProvider(t *testing.T) {
 
 }
 
-func TestMapboxStyle(t *testing.T) {
+func TestMapboxStyleProvider(t *testing.T) {
 
 }

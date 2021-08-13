@@ -15,9 +15,9 @@ import (
 
 type MapboxService struct {
 	BaseService
-	Tilesets   map[string]RenderLayer
-	Styles     map[string]*MapboxStyle
-	Fonts      map[string]*MapboxGlyph
+	Tilesets   map[string]TileProvider
+	Styles     map[string]*StyleProvider
+	Fonts      map[string]*GlyphProvider
 	Metadata   map[string]string
 	MaxTileAge *time.Duration
 	Origin     string
@@ -70,7 +70,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	return resp
 }
 
-func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) RenderLayer {
+func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) TileProvider {
 	id := tile_request.TilesetID
 	if l, ok := s.Tilesets[id]; ok {
 		return l
@@ -132,21 +132,21 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 	return NewResponse(nil, 404, "")
 }
 
-type MapboxGlyph struct {
+type GlyphProvider struct {
 }
 
-func (c *MapboxGlyph) fetch(req *request.MapboxGlyphsRequest) []byte {
+func (c *GlyphProvider) fetch(req *request.MapboxGlyphsRequest) []byte {
 	return nil
 }
 
-type MapboxStyle struct {
+type StyleProvider struct {
 }
 
-func (c *MapboxStyle) fetch(req *request.MapboxStyleRequest) []byte {
+func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
 	return nil
 }
 
-func (c *MapboxStyle) fetchSprite(req *request.MapboxSpriteRequest) []byte {
+func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
 	return nil
 }
 
@@ -159,7 +159,7 @@ const (
 )
 
 type MapboxTileLayer struct {
-	RenderLayer
+	TileProvider
 	name        string
 	title       string
 	metadata    map[string]string
@@ -215,7 +215,7 @@ func (t *MapboxTileLayer) GetFormat() string {
 	return formats[1]
 }
 
-func (t *MapboxTileLayer) empty_response() RenderResponse {
+func (t *MapboxTileLayer) empty_response() TileResponse {
 	format := t.GetFormat()
 	if t.empty_tile == nil {
 		si := t.GetGrid().TileSize
@@ -225,7 +225,7 @@ func (t *MapboxTileLayer) empty_response() RenderResponse {
 	return newImageResponse(t.empty_tile, format, time.Now())
 }
 
-func (tl *MapboxTileLayer) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) RenderResponse {
+func (tl *MapboxTileLayer) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) TileResponse {
 	tile_request := req.(*request.MapboxTileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return nil

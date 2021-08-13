@@ -26,14 +26,14 @@ var (
 
 type TileService struct {
 	BaseService
-	Layers             map[string]RenderLayer
+	Layers             map[string]TileProvider
 	Metadata           map[string]string
 	MaxTileAge         *time.Duration
 	UseDimensionLayers bool
 	Origin             string
 }
 
-func NewTileService(layers map[string]RenderLayer, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
+func NewTileService(layers map[string]TileProvider, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
 	return &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
 }
 
@@ -66,7 +66,7 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	return resp
 }
 
-func (s *TileService) internalLayer(tile_request *request.TileRequest) RenderLayer {
+func (s *TileService) internalLayer(tile_request *request.TileRequest) TileProvider {
 	var name string
 	if v, ok := tile_request.Dimensions["_layer_spec"]; ok {
 		name = tile_request.Layer + "_" + v[0]
@@ -88,7 +88,7 @@ func (s *TileService) internalLayer(tile_request *request.TileRequest) RenderLay
 	return nil
 }
 
-func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) RenderLayer {
+func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) TileProvider {
 	var name string
 	if v, ok := tile_request.Dimensions["_layer_spec"]; ok {
 		name = tile_request.Layer + "_" + v[0]
@@ -101,8 +101,8 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	return nil
 }
 
-func (s *TileService) getLayer(tile_request *request.TileRequest) (RenderLayer, geo.Coverage) {
-	var internal_layer RenderLayer
+func (s *TileService) getLayer(tile_request *request.TileRequest) (TileProvider, geo.Coverage) {
+	var internal_layer TileProvider
 	if s.UseDimensionLayers {
 		internal_layer = s.internalDimensionLayer(tile_request)
 	} else {
@@ -116,12 +116,12 @@ func (s *TileService) getLayer(tile_request *request.TileRequest) (RenderLayer, 
 	return internal_layer, limit_to
 }
 
-func (s *TileService) authorizeTileLayer(tile_layer RenderLayer, tile_request *request.TileRequest) geo.Coverage {
+func (s *TileService) authorizeTileLayer(tile_layer TileProvider, tile_request *request.TileRequest) geo.Coverage {
 	return nil
 }
 
-func (s *TileService) authorizedTileLayers() []RenderLayer {
-	ret := []RenderLayer{}
+func (s *TileService) authorizedTileLayers() []TileProvider {
+	ret := []TileProvider{}
 	for _, v := range s.Layers {
 		ret = append(ret, v)
 	}
@@ -133,7 +133,7 @@ func (s *TileService) GetCapabilities(tms_request *request.TileRequest) *Respons
 	var result []byte
 	if tms_request.Layer != "" {
 		layer, _ := s.getLayer(tms_request)
-		result = s.renderGetLayer([]RenderLayer{layer}, service)
+		result = s.renderGetLayer([]TileProvider{layer}, service)
 	} else {
 		layer := s.authorizedTileLayers()
 		result = s.renderCapabilities(layer, service)
@@ -147,11 +147,11 @@ func (s *TileService) serviceMetadata(tms_request *request.TileRequest) map[stri
 	return md
 }
 
-func (s *TileService) renderCapabilities(layer []RenderLayer, service map[string]string) []byte {
+func (s *TileService) renderCapabilities(layer []TileProvider, service map[string]string) []byte {
 	return nil
 }
 
-func (s *TileService) renderGetLayer(layer []RenderLayer, service map[string]string) []byte {
+func (s *TileService) renderGetLayer(layer []TileProvider, service map[string]string) []byte {
 	return nil
 }
 
@@ -277,7 +277,7 @@ func (t *TileServiceGrid) ExternalTileCoord(tile_coord [3]int, use_profiles bool
 }
 
 type imageResponse struct {
-	RenderResponse
+	TileResponse
 	img       []byte
 	timestamp time.Time
 	format    string
@@ -310,7 +310,7 @@ func (r *imageResponse) getCacheable() bool {
 }
 
 type tileResponse struct {
-	RenderResponse
+	TileResponse
 	buf       []byte
 	tile      *cache.Tile
 	timestamp *time.Time
@@ -348,7 +348,7 @@ func (r *tileResponse) peekFormat() string {
 }
 
 type TileLayer struct {
-	RenderLayer
+	TileProvider
 	name                  string
 	title                 string
 	metadata              map[string]string
@@ -420,7 +420,7 @@ func (t *TileLayer) getInternalTileCoord(tile_request *request.TileRequest, use_
 	return nil, tile_coord
 }
 
-func (t *TileLayer) empty_response() RenderResponse {
+func (t *TileLayer) empty_response() TileResponse {
 	var format string
 	if t.empty_response_as_png {
 		format = "png"
@@ -449,7 +449,7 @@ func (tl *TileLayer) checkedDimensions(request *request.TileRequest) utils.Dimen
 	return dimensions
 }
 
-func (tl *TileLayer) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) RenderResponse {
+func (tl *TileLayer) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) TileResponse {
 	tile_request := req.(*request.TileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return nil

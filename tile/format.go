@@ -15,6 +15,7 @@ var (
 		"pbf":     "application/x-protobuf",
 		"json":    "application/json",
 		"geojson": "application/json",
+		"terrain": "application/vnd.quantized-mesh,application/octet-stream;q=0.9",
 	}
 )
 
@@ -48,6 +49,9 @@ func (i *TileFormat) Extension() string {
 	}
 	if ext == "application/json" {
 		ext = "geojson"
+	}
+	if strings.Contains(ext, "application/vnd.quantized-mesh") {
+		ext = "terrain"
 	}
 
 	return ext

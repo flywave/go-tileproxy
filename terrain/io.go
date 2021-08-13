@@ -46,6 +46,7 @@ type TileData struct {
 	TopBorder    []float64
 	RightBorder  []float64
 	BottomBorder []float64
+	NoData       float64
 	Box          vec2d.Rect
 	Boxsrs       geo.Proj
 }
@@ -62,6 +63,10 @@ func NewTileData(size [2]uint32, border BorderMode) *TileData {
 		d.BottomBorder = make([]float64, size[0]+2)
 	}
 	return d
+}
+
+func (d *TileData) NoDataValue() float64 {
+	return d.NoData
 }
 
 func (d *TileData) HasBorder() bool {

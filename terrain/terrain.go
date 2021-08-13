@@ -16,6 +16,16 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
+type TerrainOptions struct {
+	tile.TileOptions
+	Format   tile.TileFormat
+	MaxError float64
+}
+
+func (s *TerrainOptions) GetFormat() tile.TileFormat {
+	return s.Format
+}
+
 type TerrainSource struct {
 	tile.Source
 	data      *qmt.QuantizedMeshTile
@@ -142,7 +152,7 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
-func GenTerrainSource(data *TileData, maxError float64) (*TerrainSource, error) {
+func GenTerrainSource(data *TileData, options *TerrainOptions) (*TerrainSource, error) {
 	if !data.HasBorder() {
 		return nil, errors.New("error")
 	}
@@ -154,10 +164,10 @@ func GenTerrainSource(data *TileData, maxError float64) (*TerrainSource, error) 
 	ypos := tsf[3] + tsf[5]*float64(ysize)
 
 	rd := tin.NewRasterDoubleWithData(xsize, ysize, raw)
-
+	rd.NoData = data.NoDataValue()
 	rd.SetXYPos(tsf[0], ypos, tsf[1])
 
-	mesh1 := tin.GenerateTinMesh(rd, maxError)
+	mesh1 := tin.GenerateTinMesh(rd, options.MaxError)
 	mk := tin.NewTileMaker(mesh1)
 
 	mesh, _ := mk.GenTile(tsf, xsize, ysize)
@@ -170,9 +180,7 @@ func GenTerrainSource(data *TileData, maxError float64) (*TerrainSource, error) 
 	qmesh := &qmt.QuantizedMeshTile{}
 	qmesh.SetMesh(qdt, false)
 
-	opts := &RasterOptions{Format: tile.TileFormat("terrain"), Mode: BORDER_BILATERAL}
-
-	source := NewTerrainSource(opts)
+	source := NewTerrainSource(options)
 
 	source.SetSource(qmesh)
 

@@ -28,7 +28,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if s.Origin != "" && tile_request.Origin == "" {
 		tile_request.Origin = s.Origin
 	}
-	layer := s.GetLayer(tile_request)
+	layer := s.getLayer(tile_request)
 	var format string
 	if tile_request.Format != nil {
 		format = string(*tile_request.Format)
@@ -51,7 +51,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	decorate_tile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileLayer)
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, false, false)}
-		return s.DecorateImg(image, "tms", []string{tilelayer.name}, query_extent)
+		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
 	}
 
 	tile := layer.Render(tile_request, false, nil, decorate_tile)
@@ -70,7 +70,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	return resp
 }
 
-func (s *MapboxService) GetLayer(tile_request *request.MapboxTileRequest) RenderLayer {
+func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) RenderLayer {
 	id := tile_request.TilesetID
 	if l, ok := s.Tilesets[id]; ok {
 		return l

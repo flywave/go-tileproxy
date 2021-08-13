@@ -41,12 +41,12 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	if s.Origin != "" && tile_request.Origin == "" {
 		tile_request.Origin = s.Origin
 	}
-	layer, limit_to := s.GetLayer(tile_request)
+	layer, limit_to := s.getLayer(tile_request)
 
 	decorate_tile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileLayer)
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
-		return s.DecorateImg(image, "tms", []string{tilelayer.name}, query_extent)
+		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
 	}
 
 	tile := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorate_tile)
@@ -101,7 +101,7 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	return nil
 }
 
-func (s *TileService) GetLayer(tile_request *request.TileRequest) (RenderLayer, geo.Coverage) {
+func (s *TileService) getLayer(tile_request *request.TileRequest) (RenderLayer, geo.Coverage) {
 	var internal_layer RenderLayer
 	if s.UseDimensionLayers {
 		internal_layer = s.internalDimensionLayer(tile_request)
@@ -128,11 +128,11 @@ func (s *TileService) authorizedTileLayers() []RenderLayer {
 	return ret
 }
 
-func (s *TileService) Capabilities(tms_request *request.TileRequest) *Response {
+func (s *TileService) GetCapabilities(tms_request *request.TileRequest) *Response {
 	service := s.serviceMetadata(tms_request)
 	var result []byte
 	if tms_request.Layer != "" {
-		layer, _ := s.GetLayer(tms_request)
+		layer, _ := s.getLayer(tms_request)
 		result = s.renderGetLayer([]RenderLayer{layer}, service)
 	} else {
 		layer := s.authorizedTileLayers()

@@ -86,7 +86,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	decorate_tile := func(image tile.Source) tile.Source {
 		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
-		return s.DecorateImg(image, "wmts", []string{tile_layer.GetName()}, query_extent)
+		return s.DecorateTile(image, "wmts", []string{tile_layer.GetName()}, query_extent)
 	}
 
 	tile := tile_layer.Render(tile_request, false, limited_to, decorate_tile)

@@ -113,7 +113,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		result = images.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
 	}
 
-	result = s.DecorateImg(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewSRSProj4(mapreq.GetSrs()), BBox: mapreq.GetBBox()})
+	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewSRSProj4(mapreq.GetSrs()), BBox: mapreq.GetBBox()})
 	imagesource := result.(*images.ImageSource)
 
 	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs())))

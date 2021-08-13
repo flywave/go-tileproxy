@@ -69,7 +69,6 @@ func StatusCode(code int) string {
 type Response struct {
 	response      []byte
 	status        int
-	etag          string
 	timestamp     *time.Time
 	last_modified time.Time
 	headers       http.Header
@@ -105,12 +104,12 @@ func (r *Response) GetStatus() int {
 
 func (r *Response) SetLastModified(date time.Time) {
 	r.timestamp = &date
-	r.headers["Last-modified"] = []string{utils.FormatDateTime(*r.timestamp)}
+	r.headers["Last-modified"] = []string{utils.FormatHTTPDate(*r.timestamp)}
 }
 
 func (r *Response) GetLastModified() *time.Time {
 	if vs, ok := r.headers["Last-modified"]; ok {
-		t, err := utils.ParseDateTime(vs[0])
+		t, err := utils.ParseHTTPDate(vs[0])
 		if err != nil {
 			return nil
 		}
@@ -143,7 +142,7 @@ func (r *Response) noCacheHeaders() {
 func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_age int) {
 	if etag_data != nil {
 		hash_src := strings.Join(etag_data, "")
-		r.etag = etagFor([]byte(hash_src))
+		r.SetETag(etagFor([]byte(hash_src)))
 	}
 
 	r.last_modified = *timestamp
@@ -154,7 +153,7 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 
 func (r *Response) makeConditional(req *http.Request) {
 	not_modified := false
-	if v := req.Header.Get("If-none-match"); v == r.etag {
+	if v := req.Header.Get("If-none-match"); v == r.GetETag() {
 		not_modified = true
 	} else if r.timestamp != nil {
 		if date := req.Header.Get("If-modified-since"); date != "" {

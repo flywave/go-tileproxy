@@ -34,6 +34,6 @@ func (s *BaseService) RequestParser(r *http.Request) request.Request {
 	return nil
 }
 
-func (s *BaseService) DecorateImg(image tile.Source, service string, layers []string, query_extent *geo.MapExtent) tile.Source {
+func (s *BaseService) DecorateTile(image tile.Source, service string, layers []string, query_extent *geo.MapExtent) tile.Source {
 	return image
 }

@@ -154,7 +154,7 @@ func (d *TileData) GetExtend32() ([]float32, [2]uint32) {
 
 func (d *TileData) CopyFrom(src *TileData, pos [2]int) {
 	x_, y_ := pos[0], pos[1]
-	for y := y_; y < int(src.Size[1]); y++ {
+	for y := y_; y < int(y_+int(src.Size[1])); y++ {
 		copy(d.Datas[y*int(d.Size[0])+x_:y*int(d.Size[0])+x_+int(src.Size[0])], src.Datas[(y-y_)*int(src.Size[0]):(y-y_+1)*int(src.Size[0])])
 	}
 
@@ -174,7 +174,7 @@ func (d *TileData) CopyFrom(src *TileData, pos [2]int) {
 		if x_ == 0 {
 			offx = 0
 		}
-		copy(d.TopBorder[offx+y_:offx+y_+int(src.Size[0])], src.TopBorder[offx:])
+		copy(d.TopBorder[offx+x_:offx+x_+int(src.Size[0])], src.TopBorder[offx:])
 	}
 
 	isCopyBottomBorder := (src.Size[1]+uint32(y_) == d.Size[1]) && d.IsBilateral()
@@ -183,7 +183,7 @@ func (d *TileData) CopyFrom(src *TileData, pos [2]int) {
 		if x_ == 0 {
 			offx = 0
 		}
-		copy(d.BottomBorder[offx+y_:offx+y_+int(src.Size[0])], src.BottomBorder[offx:])
+		copy(d.BottomBorder[offx+x_:offx+x_+int(src.Size[0])], src.BottomBorder[offx:])
 	}
 }
 

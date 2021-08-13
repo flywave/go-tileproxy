@@ -116,10 +116,18 @@ func (s *RasterSource) SetSource(src interface{}) {
 	switch ss := src.(type) {
 	case io.Reader:
 		s.data, _ = s.io.Decode(ss)
+		s.size = s.data.Size[:]
+		if s.data.Boxsrs != nil {
+			s.georef = geo.NewGeoReference(s.data.Box, s.data.Boxsrs)
+		}
 	case string:
 		s.fname = ss
 	default:
 		s.data = ss.(*TileData)
+		s.size = s.data.Size[:]
+		if s.data.Boxsrs != nil {
+			s.georef = geo.NewGeoReference(s.data.Box, s.data.Boxsrs)
+		}
 	}
 }
 
@@ -176,7 +184,7 @@ const (
 	NO_DATA_OUT = 0
 )
 
-func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference, interpolator Interpolator) float64 {
+func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, interpolator Interpolator, epsilon float64) float64 {
 	heightValue := 0.0
 	if georef == nil && s.georef != nil {
 		georef = s.georef
@@ -187,8 +195,6 @@ func (s *RasterSource) GetElevation(lat, lon float64, georef *geo.GeoReference, 
 	}
 
 	opt := s.Options.(*RasterOptions)
-
-	epsilon := math.Nextafter(1, 2) - 1
 
 	noData := opt.Nodata
 
@@ -253,7 +259,7 @@ func (s *RasterSource) getElevation(x, y int) float64 {
 	return 0
 }
 
-func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
+func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid, epsilon float64) error {
 	if georef == nil && s.georef != nil {
 		georef = s.georef
 	}
@@ -279,12 +285,12 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 
 	for i := range grid.Coordinates {
 		coord := grid.Coordinates[i]
-		lat, lon := coord[0], coord[1]
+		lon, lat := coord[0], coord[1]
 		if !grid.srs.Eq(georef.GetSrs()) {
-			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lat, lon}})
-			lat, lon = d[0][0], d[0][1]
+			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
+			lon, lat = d[0][0], d[0][1]
 		}
-		grid.Coordinates[i][2] = s.GetElevation(lat, lon, georef, interpolator)
+		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator, epsilon)
 	}
 	return nil
 }

@@ -5,21 +5,20 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
 type RasterMerger struct {
 	Grid    [2]int
 	Size    [2]uint32
-	Creater func(data *TileData, opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, cacheable *tile.CacheInfo) tile.Source
+	Creater func(data *TileData, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source
 }
 
-func NewRasterMerger(tile_grid [2]int, tile_size [2]uint32, creater func(data *TileData, opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, cacheable *tile.CacheInfo) tile.Source) *RasterMerger {
+func NewRasterMerger(tile_grid [2]int, tile_size [2]uint32, creater func(data *TileData, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source) *RasterMerger {
 	return &RasterMerger{Grid: tile_grid, Size: tile_size, Creater: creater}
 }
 
-func (t *RasterMerger) Merge(ordered_tiles []tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, opts *RasterOptions) tile.Source {
+func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) tile.Source {
 	if t.Grid[0] == 1 && t.Grid[1] == 1 {
 		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
 			tile := ordered_tiles[0]
@@ -32,7 +31,10 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, bbox vec2d.Rect, bbox_
 	var cacheable *tile.CacheInfo
 
 	fdata := ordered_tiles[0].GetTile().(*TileData)
+
 	mode := fdata.Border
+	bbox := fdata.Box
+	bbox_srs := fdata.Boxsrs
 
 	tiledata := NewTileData(src_size, mode)
 
@@ -51,11 +53,16 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, bbox vec2d.Rect, bbox_
 			continue
 		}
 
+		bbox = vec2d.Joined(&bbox, &tdata.Box)
+
 		pos := t.tileOffset(i)
 
 		tiledata.CopyFrom(tdata, pos)
 	}
-	return t.Creater(tiledata, opts, src_size[:], bbox, bbox_srs, cacheable)
+	tiledata.Box = bbox
+	tiledata.Boxsrs = bbox_srs
+
+	return t.Creater(tiledata, opts, cacheable)
 }
 
 func (t *RasterMerger) srcSize() [2]uint32 {

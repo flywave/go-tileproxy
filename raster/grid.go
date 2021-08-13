@@ -67,19 +67,19 @@ func CaclulateGrid(width, height int, mode BorderMode, georef *geo.GeoReference)
 	pixelSize := caclulatePixelSize(grid.Width, grid.Height, georef)
 
 	if mode == BORDER_UNILATERAL || mode == BORDER_BILATERAL {
-		for y := 0; y < grid.Height; y++ {
+		for y := grid.Height - 1; y >= 0; y-- {
 			latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y-1))
 			for x := 0; x < grid.Width; x++ {
 				longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x-1))
-				coords = append(coords, vec3d.T{latitude, longitude, 0})
+				coords = append(coords, vec3d.T{longitude, latitude, 0})
 			}
 		}
 	} else {
-		for y := 0; y < grid.Height; y++ {
+		for y := grid.Height - 1; y >= 0; y-- {
 			latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y))
 			for x := 0; x < grid.Width; x++ {
 				longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x))
-				coords = append(coords, vec3d.T{latitude, longitude, 0})
+				coords = append(coords, vec3d.T{longitude, latitude, 0})
 			}
 		}
 	}
@@ -94,7 +94,7 @@ func (h *Grid) GetRect() vec2d.Rect {
 
 func (h *Grid) GetBBox() vec3d.Box {
 	if h.box == nil {
-		r := vec3d.Box{}
+		r := vec3d.Box{Min: vec3d.MaxVal, Max: vec3d.MinVal}
 		for i := range h.Coordinates {
 			r.Extend(&h.Coordinates[i])
 		}

@@ -32,7 +32,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if tile_request.Format != nil {
 		format = *tile_request.Format
 	} else {
-		format = tile.TileFormat("image/png")
+		format = tile.TileFormat("image/wbmp")
 	}
 
 	if layer == nil {

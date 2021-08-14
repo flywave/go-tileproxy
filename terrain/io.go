@@ -69,11 +69,6 @@ func (d *TileData) NoDataValue() float64 {
 	return d.NoData
 }
 
-func (d *TileData) GetGeoTransform() [6]float64 {
-	//TODO
-	return [6]float64{}
-}
-
 func (d *TileData) HasBorder() bool {
 	return d.Border != BORDER_NONE
 }
@@ -115,30 +110,48 @@ func (d *TileData) Get(x, y int) float64 {
 	return d.Datas[y*int(d.Size[0])+x]
 }
 
-func (d *TileData) GetExtend(m *BorderMode) ([]float64, [2]uint32) {
-	//TODO
-	if !d.HasBorder() {
-		return d.Datas[:], d.Size
+func (d *TileData) GetExtend(m *BorderMode) ([]float64, [2]uint32, [6]float64) {
+	pixelsize := caclulatePixelSize(int(d.Size[0]), int(d.Size[1]), d.Box)
+
+	if (!d.HasBorder() && m == nil) || (m != nil && *m == BORDER_NONE) {
+		return d.Datas[:], d.Size, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
 	}
 	if d.IsBilateral() {
-		w, h := (d.Size[0] + 2), (d.Size[1] + 2)
-		ret := make([]float64, w*h)
-		copy(ret[:w], d.TopBorder)
+		if m == nil || *m == BORDER_BILATERAL {
+			w, h := (d.Size[0] + 2), (d.Size[1] + 2)
+			ret := make([]float64, w*h)
+			copy(ret[:w], d.TopBorder)
 
-		for y := 0; y < int(d.Size[1]); y++ {
-			off := (y+1)*int(w) + 1
-			ret[off-1] = d.LeftBorder[y]
-			ret[off+int(d.Size[0])] = d.RightBorder[y]
+			for y := 0; y < int(d.Size[1]); y++ {
+				off := (y+1)*int(w) + 1
+				ret[off-1] = d.LeftBorder[y]
+				ret[off+int(d.Size[0])] = d.RightBorder[y]
 
-			copy(ret[off:off+int(d.Size[0])], d.Datas[y*int(d.Size[0]):(y+1)*int(d.Size[0])])
+				copy(ret[off:off+int(d.Size[0])], d.Datas[y*int(d.Size[0]):(y+1)*int(d.Size[0])])
+			}
+
+			off := (d.Size[1] + 1) * w
+			copy(ret[off:int(off+w)], d.BottomBorder)
+
+			return ret, [2]uint32{(d.Size[0] + 2), (d.Size[1] + 2)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
+		} else if *m == BORDER_UNILATERAL {
+			w, h := (d.Size[0] + 1), (d.Size[1] + 1)
+			ret := make([]float64, w*h)
+			copy(ret[:w], d.TopBorder)
+
+			for y := 0; y < int(d.Size[1]); y++ {
+				off := (y+1)*int(w) + 1
+				ret[off-1] = d.LeftBorder[y]
+				copy(ret[off:off+int(d.Size[0])], d.Datas[y*int(d.Size[0]):(y+1)*int(d.Size[0])])
+			}
+
+			return ret, [2]uint32{(d.Size[0] + 1), (d.Size[1] + 1)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
 		}
-
-		off := (d.Size[1] + 1) * w
-		copy(ret[off:int(off+w)], d.BottomBorder)
-
-		return ret, [2]uint32{(d.Size[0] + 2), (d.Size[1] + 2)}
 	}
 	if d.IsUnilateral() {
+		if m == nil || *m == BORDER_BILATERAL {
+			return nil, [2]uint32{}, [6]float64{}
+		}
 		w, h := (d.Size[0] + 1), (d.Size[1] + 1)
 		ret := make([]float64, w*h)
 		copy(ret[:w], d.TopBorder)
@@ -149,18 +162,18 @@ func (d *TileData) GetExtend(m *BorderMode) ([]float64, [2]uint32) {
 			copy(ret[off:off+int(d.Size[0])], d.Datas[y*int(d.Size[0]):(y+1)*int(d.Size[0])])
 		}
 
-		return ret, [2]uint32{(d.Size[0] + 1), (d.Size[1] + 1)}
+		return ret, [2]uint32{(d.Size[0] + 1), (d.Size[1] + 1)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
 	}
-	return nil, [2]uint32{}
+	return nil, [2]uint32{}, [6]float64{}
 }
 
-func (d *TileData) GetExtend32(m *BorderMode) ([]float32, [2]uint32) {
-	rawdata, si := d.GetExtend(m)
+func (d *TileData) GetExtend32(m *BorderMode) ([]float32, [2]uint32, [6]float64) {
+	rawdata, si, tran := d.GetExtend(m)
 	ret := make([]float32, len(rawdata))
 	for i := range rawdata {
 		ret[i] = float32(rawdata[i])
 	}
-	return ret, si
+	return ret, si, tran
 }
 
 func (d *TileData) CopyFrom(src *TileData, pos [2]int) {

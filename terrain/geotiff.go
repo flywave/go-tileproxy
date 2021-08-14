@@ -131,10 +131,23 @@ func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	if d.Mode != tile.Border {
 		return nil, errors.New("Border mode error")
 	}
-	data, si := tile.GetExtend(nil)
-	box := tile.Box
+	data, si, tran := tile.GetExtend(nil)
 
-	west, south, east, north := box.Min[0], box.Min[1], box.Max[0], box.Max[1]
+	var north, south, east, west float64
+	if tran[5] < 0 {
+		north = tran[3]
+		south = tran[3] + tran[5]*float64(si[1])
+	} else {
+		south = tran[3]
+		north = tran[3] + tran[5]*float64(si[1])
+	}
+	if tran[1] < 0 {
+		east = tran[0]
+		west = tran[0] + tran[1]*float64(si[0])
+	} else {
+		west = tran[0]
+		east = tran[0] + tran[1]*float64(si[0])
+	}
 
 	conf := geotiff.NewDefaultRasterConfig()
 	conf.EPSGCode = geo.GetEpsgNum(tile.Boxsrs.GetSrsCode())

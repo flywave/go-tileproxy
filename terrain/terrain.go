@@ -157,9 +157,8 @@ func GenTerrainSource(data *TileData, options *TerrainOptions) (*TerrainSource, 
 		return nil, errors.New("error")
 	}
 
-	tsf := data.GetGeoTransform()
 	m := BORDER_UNILATERAL
-	raw, si := data.GetExtend(&m)
+	raw, si, tsf := data.GetExtend(&m)
 	xsize, ysize := int(si[0]), int(si[0])
 
 	ypos := tsf[3] + tsf[5]*float64(ysize)

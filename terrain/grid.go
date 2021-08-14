@@ -49,10 +49,10 @@ func NewGrid(width, height int, mode BorderMode) *Grid {
 	return &Grid{Width: width + off, Height: height + off, Border: mode, Count: width * height, Minimum: 15000, Maximum: -15000}
 }
 
-func caclulatePixelSize(width, height int, georef *geo.GeoReference) []float64 {
+func caclulatePixelSize(width, height int, bbox vec2d.Rect) []float64 {
 	pixelSize := []float64{0, 0}
-	pixelSize[0] = (georef.GetBBox().Max[0] - georef.GetBBox().Min[0]) / float64(width)
-	pixelSize[1] = (georef.GetBBox().Max[1] - georef.GetBBox().Min[1]) / float64(height)
+	pixelSize[0] = (bbox.Max[0] - bbox.Min[0]) / float64(width)
+	pixelSize[1] = (bbox.Max[1] - bbox.Min[1]) / float64(height)
 	return pixelSize
 }
 
@@ -64,7 +64,7 @@ func CaclulateGrid(width, height int, mode BorderMode, georef *geo.GeoReference)
 
 	coords := make(Coordinates, 0, grid.Count)
 
-	pixelSize := caclulatePixelSize(grid.Width, grid.Height, georef)
+	pixelSize := caclulatePixelSize(grid.Width, grid.Height, georef.GetBBox())
 
 	if mode == BORDER_UNILATERAL || mode == BORDER_BILATERAL {
 		for y := grid.Height - 1; y >= 0; y-- {
@@ -115,6 +115,29 @@ func (h *Grid) Value(row, column int) float64 {
 	return h.Coordinates[row*h.Width+column][2]
 }
 
+func (h *Grid) getBBox(mode BorderMode) vec3d.Box {
+	row, col := h.Height, h.Width
+	if mode == BORDER_UNILATERAL {
+		r := vec3d.Box{Min: vec3d.MaxVal, Max: vec3d.MinVal}
+		for x := 1; x < col; x++ {
+			for y := 1; y < row; y++ {
+				r.Extend(&h.Coordinates[y*col+x])
+			}
+		}
+		return r
+	} else if mode == BORDER_BILATERAL {
+		r := vec3d.Box{Min: vec3d.MaxVal, Max: vec3d.MinVal}
+		for x := 1; x < col-1; x++ {
+			for y := 1; y < row-1; y++ {
+				r.Extend(&h.Coordinates[y*col+x])
+			}
+		}
+		return r
+	} else {
+		return h.GetBBox()
+	}
+}
+
 func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 	off := 0
 	if mode == BORDER_UNILATERAL {
@@ -126,7 +149,8 @@ func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 	tiledata := NewTileData([2]uint32{uint32(h.Width - off), uint32(h.Height - off)}, mode)
 
 	if h.box != nil {
-		tiledata.Box = h.GetRect()
+		bbox := h.getBBox(mode)
+		tiledata.Box = vec2d.Rect{Min: vec2d.T{bbox.Min[0], bbox.Min[1]}, Max: vec2d.T{bbox.Max[0], bbox.Max[1]}}
 		tiledata.Boxsrs = h.srs
 	}
 

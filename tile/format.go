@@ -7,7 +7,7 @@ var (
 		"png":     "image/png",
 		"tif":     "image/tiff",
 		"tiff":    "image/tiff",
-		"jpe":     "image/jpeg",
+		"jpg":     "image/jpeg",
 		"jpeg":    "image/jpeg",
 		"wbmp":    "image/vnd.wap.wbmp",
 		"atm":     "image/lerc",

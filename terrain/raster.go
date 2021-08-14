@@ -24,6 +24,7 @@ type RasterOptions struct {
 	Format       tile.TileFormat
 	Mode         BorderMode
 	DataType     RasterType
+	MaxError     float64
 	Nodata       float64
 	Interpolator string
 }
@@ -297,6 +298,35 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 			lon, lat = d[0][0], d[0][1]
 		}
 		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator)
+	}
+	return nil
+}
+
+func NewBlankRasterSource(size [2]uint32, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source {
+	switch opt := opts.(type) {
+	case *RasterOptions:
+		td := NewTileData(size, opt.Mode)
+		if opt.Format.Extension() == "wbmp" || opt.Format.Extension() == "png" {
+			src := NewDemRasterSource(ModeMapbox, opt)
+			src.SetSource(td)
+			return src
+		} else if opt.Format.Extension() == "atm" {
+			src := NewLercRasterSource(opt.Mode, opt.MaxError, opt)
+			src.SetSource(td)
+			return src
+		} else if opt.Format.Extension() == "tif" || opt.Format.Extension() == "tiff" {
+			src := NewGeoTIFFRasterSource(opt.Mode, opt)
+			src.SetSource(td)
+			return src
+		}
+	case *TerrainOptions:
+		tiledata := NewTileData(size, BORDER_UNILATERAL)
+		source, err := GenTerrainSource(tiledata, opt)
+
+		if err != nil {
+			return nil
+		}
+		return source
 	}
 	return nil
 }

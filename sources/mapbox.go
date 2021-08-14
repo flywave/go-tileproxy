@@ -35,11 +35,11 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return s.SourceCreater(query.Size, s.Options, nil), nil
+		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return s.SourceCreater(query.Size, s.Options, nil), nil
+		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -56,7 +56,7 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 
 	tilequery := s.buildTileQuery(x, y, z, query)
 	resp := s.Client.GetTile(tilequery)
-	src := s.SourceCreater(query.Size, s.Options, bytes.NewBuffer(resp))
+	src := s.SourceCreater.Create(query.Size, s.Options, bytes.NewBuffer(resp))
 	return src, nil
 }
 

@@ -10,7 +10,9 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type SourceCreater func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source
+type SourceCreater interface {
+	Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source
+}
 
 type TileSource struct {
 	layer.MapLayer
@@ -36,11 +38,11 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return s.SourceCreater(query.Size, s.Options, nil), nil
+		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return s.SourceCreater(query.Size, s.Options, nil), nil
+		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -56,6 +58,6 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z}, &query.Format)
-	src := s.SourceCreater(query.Size, s.Options, bytes.NewBuffer(resp))
+	src := s.SourceCreater.Create(query.Size, s.Options, bytes.NewBuffer(resp))
 	return src, nil
 }

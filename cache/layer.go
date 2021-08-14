@@ -77,7 +77,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	_, tile_collection := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
 	if tile_collection.Empty() {
-		return &imagery.BlankImageSource{}, nil
+		return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
 	}
 
 	if query.TiledOnly {
@@ -92,8 +92,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	tiled_image := imagery.NewTiledImage(tile_sources, tile_grid, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, src_bbox, r.grid.Srs)
-	return tiled_image.Transform(query.BBox, query.Srs, query.Size, r.tileManager.GetTileOptions().(*imagery.ImageOptions)), nil
+	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions()), nil
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {

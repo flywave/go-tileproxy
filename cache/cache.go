@@ -36,7 +36,7 @@ func NewLocalCache(cache_dir string, file_ext string, directory_layout string, c
 	return c
 }
 
-func (c *LocalCache) tile_location(tile *Tile, create_dir bool) string {
+func (c *LocalCache) TileLocation(tile *Tile, create_dir bool) string {
 	return c.tileLocation(tile, c.cacheDir, c.fileExt, create_dir)
 }
 
@@ -49,7 +49,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 		return nil
 	}
 
-	location := c.tile_location(tile, false)
+	location := c.TileLocation(tile, false)
 
 	if ok, _ := utils.FileExists(location); ok {
 		if withMetadata {
@@ -75,7 +75,7 @@ func (c *LocalCache) StoreTile(tile *Tile) error {
 	if tile.Stored {
 		return nil
 	}
-	tile_loc := c.tile_location(tile, true)
+	tile_loc := c.TileLocation(tile, true)
 	return c.store(tile, tile_loc)
 }
 
@@ -98,7 +98,7 @@ func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 }
 
 func (c *LocalCache) RemoveTile(tile *Tile) error {
-	location := c.tile_location(tile, false)
+	location := c.TileLocation(tile, false)
 	return os.Remove(location)
 }
 
@@ -114,7 +114,7 @@ func (c *LocalCache) RemoveTiles(tiles *TileCollection) error {
 
 func (c *LocalCache) IsCached(tile *Tile) bool {
 	if tile.IsMissing() {
-		location := c.tile_location(tile, false)
+		location := c.TileLocation(tile, false)
 		if ok, _ := utils.FileExists(location); ok {
 			return true
 		} else {
@@ -126,7 +126,7 @@ func (c *LocalCache) IsCached(tile *Tile) bool {
 }
 
 func (c *LocalCache) LoadTileMetadata(tile *Tile) error {
-	location := c.tile_location(tile, false)
+	location := c.TileLocation(tile, false)
 	stats, err := os.Stat(location)
 	if err != nil {
 		return err

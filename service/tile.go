@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"strconv"
-	"strings"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -26,14 +25,14 @@ var (
 
 type TileService struct {
 	BaseService
-	Layers             map[string]TileProvider
+	Layers             map[string]Provider
 	Metadata           map[string]string
 	MaxTileAge         *time.Duration
 	UseDimensionLayers bool
 	Origin             string
 }
 
-func NewTileService(layers map[string]TileProvider, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
+func NewTileService(layers map[string]Provider, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
 	return &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
 }
 
@@ -43,21 +42,20 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	}
 	layer, limit_to := s.getLayer(tile_request)
 
-	decorate_tile := func(image tile.Source) tile.Source {
-		tilelayer := layer.(*TileLayer)
+	decorateTile := func(image tile.Source) tile.Source {
+		tilelayer := layer.(*TileProvider)
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
 		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
 	}
 
-	tile := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorate_tile)
-	tile_format := tile.getFormat()
+	t := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorateTile)
+	tile_format := tile.TileFormat(t.getFormat())
 	if tile_format == "" {
-		tile_format = string(*tile_request.Format)
+		tile_format = tile.TileFormat(*tile_request.Format)
 	}
-	resp := NewResponse(tile.getBuffer(), -1, "image/"+string(tile_format))
-	if tile.getCacheable() {
-		resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())},
-			int(s.MaxTileAge.Seconds()))
+	resp := NewResponse(t.getBuffer(), -1, "image/"+string(tile_format))
+	if t.getCacheable() {
+		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, int(s.MaxTileAge.Seconds()))
 	} else {
 		resp.noCacheHeaders()
 	}
@@ -66,7 +64,7 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	return resp
 }
 
-func (s *TileService) internalLayer(tile_request *request.TileRequest) TileProvider {
+func (s *TileService) internalLayer(tile_request *request.TileRequest) Provider {
 	var name string
 	if v, ok := tile_request.Dimensions["_layer_spec"]; ok {
 		name = tile_request.Layer + "_" + v[0]
@@ -88,7 +86,7 @@ func (s *TileService) internalLayer(tile_request *request.TileRequest) TileProvi
 	return nil
 }
 
-func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) TileProvider {
+func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) Provider {
 	var name string
 	if v, ok := tile_request.Dimensions["_layer_spec"]; ok {
 		name = tile_request.Layer + "_" + v[0]
@@ -101,8 +99,8 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	return nil
 }
 
-func (s *TileService) getLayer(tile_request *request.TileRequest) (TileProvider, geo.Coverage) {
-	var internal_layer TileProvider
+func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo.Coverage) {
+	var internal_layer Provider
 	if s.UseDimensionLayers {
 		internal_layer = s.internalDimensionLayer(tile_request)
 	} else {
@@ -116,12 +114,12 @@ func (s *TileService) getLayer(tile_request *request.TileRequest) (TileProvider,
 	return internal_layer, limit_to
 }
 
-func (s *TileService) authorizeTileLayer(tile_layer TileProvider, tile_request *request.TileRequest) geo.Coverage {
+func (s *TileService) authorizeTileLayer(tile_layer Provider, tile_request *request.TileRequest) geo.Coverage {
 	return nil
 }
 
-func (s *TileService) authorizedTileLayers() []TileProvider {
-	ret := []TileProvider{}
+func (s *TileService) authorizedTileLayers() []Provider {
+	ret := []Provider{}
 	for _, v := range s.Layers {
 		ret = append(ret, v)
 	}
@@ -133,7 +131,7 @@ func (s *TileService) GetCapabilities(tms_request *request.TileRequest) *Respons
 	var result []byte
 	if tms_request.Layer != "" {
 		layer, _ := s.getLayer(tms_request)
-		result = s.renderGetLayer([]TileProvider{layer}, service)
+		result = s.renderGetLayer([]Provider{layer}, service)
 	} else {
 		layer := s.authorizedTileLayers()
 		result = s.renderCapabilities(layer, service)
@@ -147,11 +145,11 @@ func (s *TileService) serviceMetadata(tms_request *request.TileRequest) map[stri
 	return md
 }
 
-func (s *TileService) renderCapabilities(layer []TileProvider, service map[string]string) []byte {
+func (s *TileService) renderCapabilities(layer []Provider, service map[string]string) []byte {
 	return nil
 }
 
-func (s *TileService) renderGetLayer(layer []TileProvider, service map[string]string) []byte {
+func (s *TileService) renderGetLayer(layer []Provider, service map[string]string) []byte {
 	return nil
 }
 
@@ -273,7 +271,6 @@ func (t *TileServiceGrid) ExternalTileCoord(tile_coord [3]int, use_profiles bool
 		z = int(math.Floor(float64(z / 2)))
 	}
 	return []int{x, y, z}
-
 }
 
 type imageResponse struct {
@@ -352,101 +349,84 @@ func (r *tileResponse) peekFormat() string {
 	return imagery.PeekImageFormat(string(r.buf))
 }
 
-type TileLayer struct {
-	TileProvider
-	name                  string
-	title                 string
-	metadata              map[string]string
-	tileManager           cache.Manager
-	infoSources           []layer.Layer
-	dimensions            utils.Dimensions
-	grid                  *TileServiceGrid
-	extent                *geo.MapExtent
-	empty_tile            []byte
-	mixed_format          bool
-	empty_response_as_png bool
+type TileProvider struct {
+	Provider
+	name        string
+	title       string
+	metadata    map[string]string
+	tileManager cache.Manager
+	infoSources []layer.Layer
+	dimensions  utils.Dimensions
+	grid        *TileServiceGrid
+	extent      *geo.MapExtent
+	emptyTile   []byte
 }
 
-func NewTileLayer(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []layer.Layer, dimensions utils.Dimensions) *TileLayer {
-	ret := &TileLayer{name: name, title: title, metadata: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid()), mixed_format: true, empty_response_as_png: true}
-	if v, ok := ret.metadata["format"]; ok {
-		if strings.ToLower(v) == "true" {
-			ret.mixed_format = true
-		} else {
-			ret.mixed_format = false
-		}
-	}
+func NewTileProvider(name string, title string, md map[string]string, tile_manager cache.Manager, info_sources []layer.Layer, dimensions utils.Dimensions) *TileProvider {
+	ret := &TileProvider{name: name, title: title, metadata: md, tileManager: tile_manager, infoSources: info_sources, dimensions: dimensions, grid: NewTileServiceGrid(tile_manager.GetGrid()), extent: geo.MapExtentFromGrid(tile_manager.GetGrid())}
 	return ret
 }
 
-func (t *TileLayer) GetName() string {
+func (t *TileProvider) GetName() string {
 	return t.name
 }
 
-func (t *TileLayer) GetGrid() *geo.TileGrid {
+func (t *TileProvider) GetGrid() *geo.TileGrid {
 	return t.grid.grid
 }
 
-func (t *TileLayer) GetBBox() vec2d.Rect {
+func (t *TileProvider) GetBBox() vec2d.Rect {
 	return t.grid.GetBBox()
 }
 
-func (t *TileLayer) GetSrs() geo.Proj {
+func (t *TileProvider) GetSrs() geo.Proj {
 	return t.grid.srs
 }
 
-func (t *TileLayer) getFormatMimeType() string {
-	if t.mixed_format {
-		return "image/png"
-	}
+func (t *TileProvider) getFormatMimeType() string {
 	if f, ok := t.metadata["format"]; ok {
 		return f
 	}
 	return "image/png"
 }
 
-func (t *TileLayer) GetFormat() string {
+func (t *TileProvider) GetFormat() string {
 	formats := request.SplitMimeType(t.getFormatMimeType())
 	return formats[1]
 }
 
-func (t *TileLayer) getInternalTileCoord(tile_request *request.TileRequest, use_profiles bool) (error, []int) {
+func (t *TileProvider) getInternalTileCoord(tile_request *request.TileRequest, use_profiles bool) (error, []int) {
 	tile_coord := t.grid.InternalTileCoord([3]int{tile_request.Tile[0], tile_request.Tile[1], tile_request.Tile[2]}, use_profiles)
 	if tile_coord == nil {
 		return errors.New("The requested tile is outside the bounding box  of the tile map."), nil
 	}
 	if tile_request.Origin == "nw" && !utils.ContainsString([]string{"ul", "nw"}, t.grid.GetOrigin()) {
-		x, y, z := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
-		tile_coord = []int{x, y, z}
+		coords := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
+		tile_coord = coords[:]
 	} else if tile_request.Origin == "sw" && !utils.ContainsString([]string{"ll", "sw"}, t.grid.GetOrigin()) {
-		x, y, z := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
-		tile_coord = []int{x, y, z}
+		coords := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
+		tile_coord = coords[:]
 	}
 	return nil, tile_coord
 }
 
-func (t *TileLayer) empty_response() TileResponse {
-	var format string
-	if t.empty_response_as_png {
-		format = "png"
-	} else {
-		format = t.GetFormat()
-	}
-	if t.empty_tile == nil {
+func (t *TileProvider) emptyResponse() TileResponse {
+	format := t.GetFormat()
+	if t.emptyTile == nil {
 		si := t.grid.grid.TileSize
-		img := imagery.NewBlankImageSource([2]uint32{si[0], si[1]}, &imagery.ImageOptions{Format: tile.TileFormat(format), Transparent: geo.NewBool(true)}, nil)
-		t.empty_tile = img.GetBuffer(nil, nil)
+		tile := cache.GetEmptyTile([2]uint32{si[0], si[1]}, t.tileManager.GetTileOptions())
+		t.emptyTile = tile.GetBuffer(nil, nil)
 	}
-	return newImageResponse(t.empty_tile, format, time.Now())
+	return newImageResponse(t.emptyTile, format, time.Now())
 }
 
-func (tl *TileLayer) GetTileBBox(req request.Request, use_profiles bool, limit bool) vec2d.Rect {
-	tile_request := req.(*request.TileRequest)
-	_, tile_coord := tl.getInternalTileCoord(tile_request, use_profiles)
+func (tl *TileProvider) GetTileBBox(req request.Request, use_profiles bool, limit bool) vec2d.Rect {
+	tileRequest := req.(*request.TileRequest)
+	_, tile_coord := tl.getInternalTileCoord(tileRequest, use_profiles)
 	return tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
 }
 
-func (tl *TileLayer) checkedDimensions(request *request.TileRequest) utils.Dimensions {
+func (tl *TileProvider) checkedDimensions(request *request.TileRequest) utils.Dimensions {
 	dimensions := make(utils.Dimensions)
 	for dimension, values := range tl.dimensions {
 		dimensions[dimension] = values
@@ -454,57 +434,35 @@ func (tl *TileLayer) checkedDimensions(request *request.TileRequest) utils.Dimen
 	return dimensions
 }
 
-func (tl *TileLayer) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) TileResponse {
-	tile_request := req.(*request.TileRequest)
-	if string(*tile_request.Format) != tl.GetFormat() {
+func (tl *TileProvider) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse {
+	tileRequest := req.(*request.TileRequest)
+	if string(*tileRequest.Format) != tl.GetFormat() {
 		return nil
 	}
-	_, tile_coord := tl.getInternalTileCoord(tile_request, use_profiles)
+	_, tile_coord := tl.getInternalTileCoord(tileRequest, use_profiles)
 	var tile_bbox vec2d.Rect
-	coverage_intersects := false
 	if coverage != nil {
 		tile_bbox = tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, false)
 		if coverage.Contains(tile_bbox, tl.grid.srs) {
 			//
 		} else if coverage.Intersects(tile_bbox, tl.grid.srs) {
-			coverage_intersects = true
+			//
 		} else {
-			return tl.empty_response()
+			return tl.emptyResponse()
 		}
 	}
 
-	dimensions := tl.checkedDimensions(tile_request)
+	dimensions := tl.checkedDimensions(tileRequest)
 
 	_, t := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
 	if t.Source == nil {
-		return tl.empty_response()
+		return tl.emptyResponse()
 	}
 
-	if decorate_tile != nil {
-		t.Source = decorate_tile(t.Source)
+	if decorateTile != nil {
+		t.Source = decorateTile(t.Source)
 	}
-	var format *tile.TileFormat
-	var image_opts *imagery.ImageOptions
-	if coverage_intersects {
-		if tl.empty_response_as_png {
-			tf := tile.TileFormat("png")
-			format = &tf
-			image_opts = &imagery.ImageOptions{Transparent: geo.NewBool(true), Format: tile.TileFormat("png")}
-		} else {
-			tf := tile.TileFormat(tl.GetFormat())
-			format = &tf
-			image_opts = t.Source.GetTileOptions().(*imagery.ImageOptions)
-		}
 
-		t.Source = imagery.MaskImageSourceFromCoverage(
-			t.Source, tile_bbox, tl.grid.srs, coverage, image_opts)
-
-		return newTileResponse(t, format, nil, image_opts)
-	}
-	if tl.mixed_format {
-		format = nil
-	} else {
-		format = tile_request.Format
-	}
+	format := tileRequest.Format
 	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }

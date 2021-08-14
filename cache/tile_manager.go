@@ -92,10 +92,6 @@ func (tm *TileManager) GetTileOptions() tile.TileOptions {
 	return tm.tileOpts
 }
 
-func (tm *TileManager) GetImageOptions() *imagery.ImageOptions {
-	return tm.tileOpts.(*imagery.ImageOptions)
-}
-
 func (tm *TileManager) GetFormat() string {
 	return tm.format
 }
@@ -250,8 +246,7 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 		}
 	}
 
-	tiled_image := imagery.NewTiledImage(tile_sources, src_tile_grid, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, src_bbox, tm.grid.Srs)
-	t.Source = tiled_image.Transform(tile_bbox, tm.grid.Srs, [2]uint32{tm.grid.TileSize[0], tm.grid.TileSize[1]}, tm.GetImageOptions())
+	t.Source = ScaleTiles(tile_sources, tile_bbox, tm.grid.Srs, src_tile_grid, tm.grid, src_bbox, tm.tileOpts)
 
 	if tm.cacheRescaledTiles {
 		tm.cache.StoreTile(t)

@@ -19,12 +19,12 @@ type TileResponse interface {
 	getCacheable() bool
 }
 
-type TileProvider interface {
+type Provider interface {
 	GetName() string
 	GetGrid() *geo.TileGrid
 	GetBBox() vec2d.Rect
 	GetSrs() geo.Proj
 	GetFormat() string
 	GetTileBBox(request request.Request, use_profiles bool, limit bool) vec2d.Rect
-	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorate_tile func(image tile.Source) tile.Source) TileResponse
+	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse
 }

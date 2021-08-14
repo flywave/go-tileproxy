@@ -13,6 +13,18 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type dummyCreater struct {
+}
+
+func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
+	if data != nil {
+		reader := data.(io.Reader)
+		buf, _ := ioutil.ReadAll(reader)
+		return &tile.DummyTileSource{Data: string(buf)}
+	}
+	return nil
+}
+
 func TestMapboxTileSource(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
 
@@ -21,14 +33,7 @@ func TestMapboxTileSource(t *testing.T) {
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 
-	creater := func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
-		if data != nil {
-			reader := data.(io.Reader)
-			buf, _ := ioutil.ReadAll(reader)
-			return &tile.DummyTileSource{Data: string(buf)}
-		}
-		return nil
-	}
+	creater := &dummyCreater{}
 
 	client := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
 

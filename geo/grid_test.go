@@ -153,15 +153,15 @@ func TestTileGridFlipTileCoord(t *testing.T) {
 	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:900913")
 
 	grid := NewTileGrid(conf)
-	x, y, z := grid.FlipTileCoord(0, 1, 1)
+	tile := grid.FlipTileCoord(0, 1, 1)
 
-	if x != 0 || y != 0 || z != 1 {
+	if tile[0] != 0 || tile[1] != 0 || tile[2] != 1 {
 		t.FailNow()
 	}
 
-	x, y, z = grid.FlipTileCoord(1, 3, 2)
+	tile = grid.FlipTileCoord(1, 3, 2)
 
-	if x != 1 || y != 0 || z != 2 {
+	if tile[0] != 1 || tile[1] != 0 || tile[2] != 2 {
 		t.FailNow()
 	}
 }

@@ -133,3 +133,15 @@ func (s *VectorSource) GetTileOptions() tile.TileOptions {
 func (s *VectorSource) decode(r io.Reader) (interface{}, error) {
 	return s.io.Decode(r)
 }
+
+func NewBlankVectorSource(size [2]uint32, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source {
+	format := opts.GetFormat()
+	if format.Extension() == "mvt" {
+		return NewEmptyMVTSource(PBF_PTOTO_MAPBOX, opts)
+	} else if format.Extension() == "pbf" {
+		return NewEmptyMVTSource(PBF_PTOTO_LUOKUANG, opts)
+	} else if format.Extension() == "json" || format.Extension() == "geojson" {
+		return NewEmptyGeoJSONVTSource(opts)
+	}
+	return nil
+}

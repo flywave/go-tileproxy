@@ -29,6 +29,13 @@ func NewMVTSource(tile [3]int, proto mvt.ProtoType, options tile.TileOptions) *M
 	return src
 }
 
+func NewEmptyMVTSource(proto mvt.ProtoType, options tile.TileOptions) *MVTSource {
+	src := &MVTSource{Proto: proto, VectorSource: VectorSource{tile: [3]int{0, 0, 0}, Options: options}}
+	src.io = &PBFIO{tile: [3]int{0, 0, 0}, proto: proto}
+	src.SetSource(Vector{})
+	return src
+}
+
 type PBFIO struct {
 	VectorIO
 	tile  [3]int

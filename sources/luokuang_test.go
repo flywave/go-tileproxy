@@ -1,8 +1,6 @@
 package sources
 
 import (
-	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/flywave/go-tileproxy/client"
@@ -20,14 +18,7 @@ func TestLuoKuangTileSource(t *testing.T) {
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 
-	creater := func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
-		if data != nil {
-			reader := data.(io.Reader)
-			buf, _ := ioutil.ReadAll(reader)
-			return &tile.DummyTileSource{Data: string(buf)}
-		}
-		return nil
-	}
+	creater := &dummyCreater{}
 
 	client := client.NewLuoKuangTileClient("https://api.luokuang.com", "DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8", "map", mock)
 

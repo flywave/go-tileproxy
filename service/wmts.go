@@ -24,13 +24,13 @@ type WMTSService struct {
 	InfoFormats map[string]string
 }
 
-func NewWMTSService(layers []*TileLayer, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSRestService {
+func NewWMTSService(layers []*TileProvider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSRestService {
 	return nil
 }
 
-func (s *WMTSService) getMatrixSets(tlayers []*TileLayer) (map[string]*WMTSTileLayer, map[string]*TileMatrixSet) {
+func (s *WMTSService) getMatrixSets(tlayers []*TileProvider) (map[string]*WMTSTileLayer, map[string]*TileMatrixSet) {
 	sets := make(map[string]*TileMatrixSet)
-	layers_grids := make(map[string][]*TileLayer)
+	layers_grids := make(map[string][]*TileProvider)
 	for _, layer := range tlayers {
 		grid := layer.GetGrid()
 		if !grid.SupportsAccessWithOrigin(geo.ORIGIN_NW) {
@@ -84,16 +84,15 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	limited_to := s.authorizeTileLayer(tile_layer, tile_request, false)
 
-	decorate_tile := func(image tile.Source) tile.Source {
+	decorateTile := func(image tile.Source) tile.Source {
 		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
 		return s.DecorateTile(image, "wmts", []string{tile_layer.GetName()}, query_extent)
 	}
 
-	tile := tile_layer.Render(tile_request, false, limited_to, decorate_tile)
+	tile := tile_layer.Render(tile_request, false, limited_to, decorateTile)
 
 	resp := NewResponse(tile.getBuffer(), -1, tile.getFormatMime())
-	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())},
-		int(s.MaxTileAge.Seconds()))
+	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())}, int(s.MaxTileAge.Seconds()))
 	resp.makeConditional(tile_request.Http)
 	return resp
 }
@@ -153,7 +152,7 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	return NewResponse(resp, 200, mimetype)
 }
 
-func (s *WMTSService) authorizeTileLayer(tile_layer *TileLayer, tile_request request.Request, featureinfo bool) geo.Coverage {
+func (s *WMTSService) authorizeTileLayer(tile_layer *TileProvider, tile_request request.Request, featureinfo bool) geo.Coverage {
 	return nil
 }
 
@@ -165,7 +164,7 @@ func (s *WMTSService) authorizedTileLayers() []WMTSTileLayer {
 	return ret
 }
 
-func (s *WMTSService) checkRequestDimensions(tile_layer *TileLayer, request request.Request) {
+func (s *WMTSService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) {
 	//
 }
 
@@ -220,17 +219,17 @@ type WMTSRestService struct {
 	infoTemplate   string
 }
 
-func NewWMTSRestService(layers []*TileLayer, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
+func NewWMTSRestService(layers []*TileProvider, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
 	return nil
 }
 
-func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileLayer, request request.Request) {
+func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) {
 	//
 }
 
-type WMTSTileLayer map[string]*TileLayer
+type WMTSTileLayer map[string]*TileProvider
 
-func NewWMTSTileLayer(layer []*TileLayer) *WMTSTileLayer {
+func NewWMTSTileLayer(layer []*TileProvider) *WMTSTileLayer {
 	return nil
 }
 
@@ -285,8 +284,8 @@ func NewTileMatrixSet(grid *geo.TileGrid) *TileMatrixSet {
 func (s *TileMatrixSet) GetTileMatrices() map[string]interface{} {
 	ret := make(map[string]interface{})
 	for level, res := range s.grid.Resolutions {
-		x, y, z := s.grid.OriginTile(level, geo.ORIGIN_UL)
-		bbox := s.grid.TileBBox([3]int{x, y, z}, false)
+		tile_coord := s.grid.OriginTile(level, geo.ORIGIN_UL)
+		bbox := s.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, false)
 		topleft := []float64{bbox.Min[0], bbox.Max[1]}
 		if s.grid.Srs.IsAxisOrderNE() {
 			topleft = []float64{bbox.Max[1], bbox.Min[0]}

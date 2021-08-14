@@ -9,6 +9,7 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
@@ -25,7 +26,7 @@ type WMSService struct {
 	Layers              map[string]wmsLayer
 	Strict              bool
 	ImageFormats        map[string]*imagery.ImageOptions
-	TileLayers          []*TileLayer
+	TileLayers          []*TileProvider
 	Metadata            map[string]string
 	InfoFormats         map[string]string
 	Srs                 []geo.Proj
@@ -61,9 +62,9 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 				img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
 				img_opts.BgColor = mapreq.GetBGColor()
 				img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
-				img := imagery.NewBlankImageSource(mapreq.GetSize(), img_opts, nil)
+				tile := cache.GetEmptyTile(mapreq.GetSize(), img_opts)
 
-				return NewResponse(img.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
+				return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 			}
 			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
 			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewSRSProj4(mapreq.GetSrs()), Format: mapreq.GetFormat()}
@@ -135,7 +136,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	return resp
 }
 
-func (s *WMSService) authorizedLayers(feature string, layers []string, ext *geo.MapExtent) ([]*TileLayer, geo.Coverage) {
+func (s *WMSService) authorizedLayers(feature string, layers []string, ext *geo.MapExtent) ([]*TileProvider, geo.Coverage) {
 	return nil, nil
 }
 
@@ -143,7 +144,7 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 	params := req.GetParams()
 	map_request := req.(*request.WMSRequest)
 
-	var tile_layers []*TileLayer
+	var tile_layers []*TileProvider
 
 	if strings.ToLower(params.GetOne("tiled", "false")) == "true" {
 		tile_layers = s.TileLayers
@@ -217,7 +218,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
 		infos = nil
 	} else {
-		info_layers := []*TileLayer{}
+		info_layers := []*TileProvider{}
 		for _, layers := range authorized_layers {
 			info_layers = append(info_layers, layers)
 		}
@@ -356,7 +357,7 @@ func (s *WMSService) serviceMetadata(tms_request request.Request) map[string]str
 	return md
 }
 
-func (s *WMSService) filterActualLayers(actual_layers map[string]wmsLayer, layers []string, authorized_layers []*TileLayer) {
+func (s *WMSService) filterActualLayers(actual_layers map[string]wmsLayer, layers []string, authorized_layers []*TileProvider) {
 
 }
 
@@ -371,7 +372,7 @@ func (c *WMSCapabilities) fetch(req *request.WMSRequest) []byte {
 	return nil
 }
 
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileLayer, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
 	return nil
 }
 

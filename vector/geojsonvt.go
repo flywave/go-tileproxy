@@ -23,6 +23,14 @@ func NewGeoJSONVTSource(tile [3]int, options tile.TileOptions) *GeoJSONVTSource 
 	return src
 }
 
+func NewEmptyGeoJSONVTSource(options tile.TileOptions) *GeoJSONVTSource {
+	src := &GeoJSONVTSource{VectorSource: VectorSource{tile: [3]int{0, 0, 0}, Options: options}}
+	geojsonOpt := options.(*VectorOptions)
+	src.io = &GeoJSONVTIO{tile: [3]int{0, 0, 0}, options: geojsonOpt}
+	src.SetSource(Vector{})
+	return src
+}
+
 type GeoJSONVTIO struct {
 	VectorIO
 	tile    [3]int

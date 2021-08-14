@@ -35,7 +35,7 @@ func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte)
 }
 
 func create_cached_tile(tile [3]int, data []byte, cache *LocalCache, timestamp *time.Time) {
-	loc := cache.tile_location(NewTile(tile), true)
+	loc := cache.TileLocation(NewTile(tile), true)
 	if f, err := os.Create(loc); err != nil {
 		f.Write(data)
 		f.Close()

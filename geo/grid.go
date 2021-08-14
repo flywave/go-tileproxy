@@ -560,8 +560,8 @@ func (t *TileGrid) Tile(x, y float64, level int) (cx, cy, clevel int) {
 	return int(math.Floor(tile_x)), int(math.Floor(tile_y)), level
 }
 
-func (t *TileGrid) FlipTileCoord(x, y, level int) (cx, xy, clevel int) {
-	return x, int(t.GridSizes[level][1]) - 1 - y, level
+func (t *TileGrid) FlipTileCoord(x, y, level int) [3]int {
+	return [3]int{x, int(t.GridSizes[level][1]) - 1 - y, level}
 }
 
 func (t *TileGrid) SupportsAccessWithOrigin(origin OriginType) bool {
@@ -583,14 +583,14 @@ func (t *TileGrid) SupportsAccessWithOrigin(origin OriginType) bool {
 	return true
 }
 
-func (t *TileGrid) OriginTile(level int, origin OriginType) (cx, cy, clevel int) {
+func (t *TileGrid) OriginTile(level int, origin OriginType) [3]int {
 	if t.SupportsAccessWithOrigin(origin) {
 		panic("tile origins are incompatible")
 	}
-	cx, cy, clevel = 0, 0, level
+	cx, cy, clevel := 0, 0, level
 
 	if t.Origin == origin {
-		return
+		return [3]int{0, 0, level}
 	}
 
 	return t.FlipTileCoord(cx, cy, clevel)

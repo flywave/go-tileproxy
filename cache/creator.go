@@ -140,23 +140,6 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
 	return created_tiles
 }
 
-func splitMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, image_opts *imagery.ImageOptions) *TileCollection {
-	splitter := imagery.NewTileSplitter(meta_tile, image_opts)
-	split_tiles := NewTileCollection(nil)
-	for _, tile := range tiles {
-		tile_coord, crop_coord := tile.Tiles, tile.Sizes
-		if tile_coord[0] < 0 || tile_coord[1] < 0 || tile_coord[2] < 0 {
-			continue
-		}
-		data := splitter.GetTile(crop_coord, tile_size)
-		new_tile := NewTile(tile_coord)
-		new_tile.SetCacheInfo(meta_tile.GetCacheable())
-		new_tile.Source = data
-		split_tiles.SetItem(new_tile)
-	}
-	return split_tiles
-}
-
 func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	tile_size := c.Grid.TileSize
 	query := &layer.MapQuery{BBox: meta_tile.GetBBox(), Size: meta_tile.GetSize(), Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
@@ -180,7 +163,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 			if meta_tile_image == nil || err != nil {
 				return nil
 			}
-			splitted_tiles = splitMetaTiles(meta_tile_image, meta_tile.GetTilePattern(),
+			splitted_tiles = SplitTiles(meta_tile_image, meta_tile.GetTilePattern(),
 				[2]uint32{tile_size[0], tile_size[1]}, c.Manager.GetTileOptions().(*imagery.ImageOptions))
 			for i, t := range splitted_tiles.tiles {
 				splitted_tiles.UpdateItem(i, c.Manager.ApplyTileFilter(t))

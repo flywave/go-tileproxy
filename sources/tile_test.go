@@ -1,8 +1,6 @@
 package sources
 
 import (
-	"io"
-	"io/ioutil"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -39,14 +37,7 @@ func TestTileSource(t *testing.T) {
 
 	client := client.NewTileClient(grid, urlTemplate, mock)
 
-	creater := func(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
-		if data != nil {
-			reader := data.(io.Reader)
-			buf, _ := ioutil.ReadAll(reader)
-			return &tile.DummyTileSource{Data: string(buf)}
-		}
-		return nil
-	}
+	creater := &dummyCreater{}
 
 	box := grid.TileBBox([3]int{0, 0, 1}, false)
 

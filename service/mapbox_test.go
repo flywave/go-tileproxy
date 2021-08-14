@@ -2,7 +2,7 @@ package service
 
 import "testing"
 
-func TestMapboxTileLayer(t *testing.T) {
+func TestMapboxTileProvider(t *testing.T) {
 
 }
 

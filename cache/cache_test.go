@@ -119,7 +119,7 @@ func TestPath(t *testing.T) {
 	for _, p := range paths {
 		cache := NewLocalCache("/tmp/foo", "png", p.key, nil)
 
-		abs, _ := filepath.Abs(cache.tile_location(NewTile(p.coord), false))
+		abs, _ := filepath.Abs(cache.TileLocation(NewTile(p.coord), false))
 
 		if abs != p.path {
 			t.FailNow()

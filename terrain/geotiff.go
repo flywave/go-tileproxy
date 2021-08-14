@@ -131,7 +131,7 @@ func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	if d.Mode != tile.Border {
 		return nil, errors.New("Border mode error")
 	}
-	data, si, tran := tile.GetExtend(nil)
+	data, si, tran := tile.GetExtend()
 
 	var north, south, east, west float64
 	if tran[5] < 0 {

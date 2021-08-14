@@ -67,7 +67,7 @@ func TestGenTerrainSource(t *testing.T) {
 	tiledata.Box = bbox
 	tiledata.Boxsrs = srs900913
 
-	opts := &TerrainOptions{Format: tile.TileFormat("terrain"), MaxError: 0.2}
+	opts := &TerrainOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
 
 	source, err := GenTerrainSource(tiledata, opts)
 

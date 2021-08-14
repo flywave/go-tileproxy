@@ -67,7 +67,7 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 		}
 		pos := t.tileOffset(i)
 
-		tiledata.CopyFrom(tdata, pos)
+		tiledata.copyFrom(tdata, pos)
 	}
 	tiledata.Box = bbox
 	tiledata.Boxsrs = bbox_srs

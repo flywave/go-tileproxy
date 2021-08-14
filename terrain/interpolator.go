@@ -11,7 +11,6 @@ type BilinearInterpolator struct {
 func Lerp(value1, value2, amount float64) float64 { return value1 + (value2-value1)*amount }
 
 func (i *BilinearInterpolator) Interpolate(southWestHeight, southEastHeight, northWestHeight, northEastHeight, x, y float64) float64 {
-
 	sw := southWestHeight
 	se := southEastHeight
 	nw := northWestHeight

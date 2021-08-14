@@ -159,10 +159,14 @@ func (d *TileData) GetExtend32() ([]float32, [2]uint32, [6]float64) {
 	return ret, si, tran
 }
 
-func (d *TileData) CopyFrom(src *TileData, pos [2]int) {
+func (d *TileData) copyFrom(src *TileData, pos [2]int) {
+	if pos[0]+int(src.Size[0]) > int(d.Size[0]) || pos[1]+int(src.Size[1]) > int(d.Size[1]) {
+		return
+	}
+
 	x_, y_ := pos[0], pos[1]
 	for y := y_; y < int(y_+int(src.Size[1])); y++ {
-		copy(d.Datas[y*int(d.Size[0])+x_:y*int(d.Size[0])+x_+int(src.Size[0])], src.Datas[(y-y_)*int(src.Size[0]):(y-y_+1)*int(src.Size[0])])
+		copy(d.Datas[y*int(d.Size[0])+x_:y*int(d.Size[0])+x_+int(src.Size[1])], src.Datas[(y-y_)*int(src.Size[0]):(y-y_+1)*int(src.Size[0])])
 	}
 
 	isCopyLeftBorder := (x_ == 0) && d.HasBorder()

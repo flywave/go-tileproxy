@@ -112,12 +112,12 @@ func (tm *TileManager) GetRescaleTiles() int {
 	return tm.rescaleTiles
 }
 
-func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (error, *Tile) {
-	err, tiles := tm.LoadTileCoords([][3]int{tile_coord}, dimensions, with_metadata)
-	return err, tiles.GetItem(0)
+func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error) {
+	tiles, err := tm.LoadTileCoords([][3]int{tile_coord}, dimensions, with_metadata)
+	return tiles.GetItem(0), err
 }
 
-func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (error, *TileCollection) {
+func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (*TileCollection, error) {
 	tiles := NewTileCollection(tile_coords)
 	rescale_till_zoom := 0
 
@@ -145,7 +145,7 @@ func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions utils.Dim
 		}
 	}
 
-	return nil, tiles
+	return tiles, nil
 }
 
 func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Dimensions, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
@@ -276,10 +276,7 @@ func (tm *TileManager) IsCached(tile_coord [3]int, dimensions utils.Dimensions) 
 func (tm *TileManager) IsStale(tile_coord [3]int, dimensions utils.Dimensions) bool {
 	tile := NewTile(tile_coord)
 	if tm.cache.IsCached(tile) {
-		if !tm.IsCached(tile_coord, nil) {
-			return true
-		}
-		return false
+		return !tm.IsCached(tile_coord, nil)
 	}
 	return false
 }

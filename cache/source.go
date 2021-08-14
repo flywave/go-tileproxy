@@ -24,7 +24,11 @@ func GetEmptyTile(size [2]uint32, opts tile.TileOptions) tile.Source {
 	return nil
 }
 
-func MergeTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj) tile.Source {
+func MergeTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) tile.Source {
+	switch opt := opts.(type) {
+	case *imagery.ImageOptions:
+		return imagery.MergeImages(layers, opt, size, bbox, Srs, tileMerger)
+	}
 	return nil
 }
 
@@ -46,6 +50,10 @@ func splitImageMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_si
 }
 
 func SplitTiles(layers tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, opts tile.TileOptions) *TileCollection {
+	switch opt := opts.(type) {
+	case *imagery.ImageOptions:
+		return splitImageMetaTiles(layers, tiles, tile_size, opt)
+	}
 	return nil
 }
 

@@ -454,7 +454,7 @@ func (tl *TileProvider) Render(req request.Request, use_profiles bool, coverage 
 
 	dimensions := tl.checkedDimensions(tileRequest)
 
-	_, t := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
+	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
 	if t.Source == nil {
 		return tl.emptyResponse()
 	}

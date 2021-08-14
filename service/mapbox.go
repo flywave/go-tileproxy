@@ -160,7 +160,6 @@ const (
 type MapboxTileProvider struct {
 	Provider
 	name        string
-	title       string
 	metadata    map[string]string
 	tileManager cache.Manager
 	extent      *geo.MapExtent
@@ -242,7 +241,7 @@ func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, cov
 		}
 	}
 
-	_, t := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
+	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
 	if t.Source == nil {
 		return tl.emptyResponse()
 	}

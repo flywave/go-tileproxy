@@ -22,8 +22,8 @@ type Manager interface {
 	SetMinimizeMetaRequests(f bool)
 	GetMinimizeMetaRequests() bool
 	GetRescaleTiles() int
-	LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (error, *Tile)
-	LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (error, *TileCollection)
+	LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error)
+	LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (*TileCollection, error)
 	RemoveTileCoords(tile_coord [][3]int) error
 	IsCached(tile_coord [3]int, dimensions utils.Dimensions) bool
 	IsStale(tile_coord [3]int, dimensions utils.Dimensions) bool

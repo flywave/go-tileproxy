@@ -74,7 +74,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		coords = append(coords, [3]int{x, y, zoom})
 	}
 
-	_, tile_collection := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
+	tile_collection, _ := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
 	if tile_collection.Empty() {
 		return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
@@ -104,20 +104,20 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		r.checkTiled(query)
 	}
 
-	query_extent := &geo.MapExtent{BBox: query.BBox, Srs: query.Srs}
+	queryExtent := &geo.MapExtent{BBox: query.BBox, Srs: query.Srs}
 	var result tile.Source
-	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(query_extent) {
-		if !r.Extent.Intersects(query_extent) {
-			return &imagery.BlankImageSource{}, nil
+	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(queryExtent) {
+		if !r.Extent.Intersects(queryExtent) {
+			return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
 		}
 		size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
 		if size[0] == 0 || size[1] == 0 {
-			return &imagery.BlankImageSource{}, nil
+			return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
 		}
 		src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: query.Format}
 		resp, err := r.getSource(src_query)
 		if err != nil {
-			return &imagery.BlankImageSource{}, nil
+			return GetEmptyTile(size, r.tileManager.GetTileOptions()), nil
 		}
 		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options, resp.GetCacheable())
 	} else {

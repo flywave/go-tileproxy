@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
@@ -117,11 +116,7 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			layers = append(layers, img)
 		}
 	}
-	imageOptions, ok := c.Manager.GetTileOptions().(*imagery.ImageOptions)
-	if ok && imageOptions != nil {
-		return imagery.MergeImages(layers, c.Manager.GetTileOptions().(*imagery.ImageOptions), query.Size, query.BBox, query.Srs, c.TileMerger), nil
-	}
-	return nil, errors.New("error")
+	return MergeTiles(layers, c.Manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.TileMerger), nil
 }
 
 func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {

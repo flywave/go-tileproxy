@@ -18,7 +18,7 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-func switchBBoxEpsgAxisOrder(rect vec2d.Rect, srs string) vec2d.Rect {
+func SwitchBBoxEpsgAxisOrder(rect vec2d.Rect, srs string) vec2d.Rect {
 	bbox := *rect.Array()
 	if bbox != [4]float64{0, 0, 0, 0} && srs != "" {
 		prj := geo.NewSRSProj4(srs)
@@ -40,7 +40,7 @@ func NewWMSMapRequestParams(params RequestParams) WMSMapRequestParams {
 }
 
 func (r *WMSMapRequestParams) switchBBox() {
-	r.SetBBox(switchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
+	r.SetBBox(SwitchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
 }
 
 func (r *WMSMapRequestParams) Update(params map[string]string) {

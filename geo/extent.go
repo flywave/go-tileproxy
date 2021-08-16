@@ -84,7 +84,7 @@ func (m *MapExtent) Intersection(other *MapExtent) *MapExtent {
 		Srs: m.Srs}
 }
 
-func (m *MapExtent) transform(srs Proj) *MapExtent {
+func (m *MapExtent) Transform(srs Proj) *MapExtent {
 	return &MapExtent{BBox: m.BBoxFor(srs), Srs: srs}
 }
 

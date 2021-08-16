@@ -85,6 +85,12 @@ type MapboxStyleRequest struct {
 	StyleID  string
 }
 
+func NewMapboxStyleRequest(hreq *http.Request) *MapboxStyleRequest {
+	req := &MapboxStyleRequest{}
+	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	return req
+}
+
 func (r *MapboxStyleRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "style"
@@ -123,6 +129,12 @@ type MapboxSpriteRequest struct {
 	StyleID  string
 	Format   *tile.TileFormat
 	Retina   *int
+}
+
+func NewMapboxSpriteRequest(hreq *http.Request) *MapboxSpriteRequest {
+	req := &MapboxSpriteRequest{}
+	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	return req
 }
 
 func (r *MapboxSpriteRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -168,6 +180,12 @@ type MapboxGlyphsRequest struct {
 	Font     string
 	Start    int
 	End      int
+}
+
+func NewMapboxGlyphsRequest(hreq *http.Request) *MapboxGlyphsRequest {
+	req := &MapboxGlyphsRequest{}
+	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	return req
 }
 
 func (r *MapboxGlyphsRequest) init(param interface{}, url string, validate bool, http *http.Request) {

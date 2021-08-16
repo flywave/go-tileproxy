@@ -16,6 +16,7 @@ import (
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/vector"
@@ -52,11 +53,19 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	creater := &dummyCreater{}
 
-	client := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
+	tileClient := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
 
-	source := &sources.MapboxTileSource{Grid: grid, Client: client, SourceCreater: creater}
+	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
 
 	locker := &cache.DummyTileLocker{}
+
+	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	glyphsCache := resource.NewGlyphsCache("./test_glyphs_cache", "pbf")
+	glyphProvider := &GlyphProvider{sources.NewMapboxGlyphsSource(mockGlyphsClient, glyphsCache)}
+
+	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	stylesCache := resource.NewStyleCache("./test_styles_cache", "json")
+	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, stylesCache)}
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
@@ -68,7 +77,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 		t.FailNow()
 	}
 
-	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, nil, nil, md, nil, "ul")
+	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, map[string]*GlyphProvider{"font": glyphProvider}, md, nil, "ul")
 
 	hreq := &http.Request{}
 	hreq.URL, _ = url.Parse("https://127.0.0.1/v4/mapbox.mapbox-streets-v8/14/13515/6392.mvt")
@@ -76,6 +85,17 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	tileReq := request.NewMapboxTileRequest(hreq)
 
 	resp := service.GetTile(tileReq)
+
+	if resp == nil {
+		t.FailNow()
+	}
+
+	hreq = &http.Request{}
+	hreq.URL, _ = url.Parse("https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7")
+
+	styleReq := request.NewMapboxStyleRequest(hreq)
+
+	resp = service.GetStyle(styleReq)
 
 	if resp == nil {
 		t.FailNow()

@@ -381,3 +381,12 @@ func (g *GeoReference) PixelScale(img_size [2]int) vec3d.T {
 	height := g.bbox.Max[1] - g.bbox.Min[1]
 	return vec3d.T{width / float64(img_size[0]), height / float64(img_size[1]), 0.0}
 }
+
+func SrcInProj(srscode string, projs []Proj) bool {
+	for i := range projs {
+		if projs[i].GetSrsCode() == srscode {
+			return true
+		}
+	}
+	return false
+}

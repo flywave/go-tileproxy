@@ -88,7 +88,7 @@ func (s *MapboxStyleSource) GetSpriteJSON(query *layer.SpriteQuery) *resource.Sp
 
 	ret := &resource.SpriteJSON{BaseResource: resource.BaseResource{ID: id}}
 
-	if s.Cache != nil && s.Cache.Load(ret) == nil {
+	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetSpriteJSON(query)
 	}
 
@@ -100,7 +100,7 @@ func (s *MapboxStyleSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite
 
 	ret := &resource.Sprite{BaseResource: resource.BaseResource{ID: id}}
 
-	if s.Cache != nil && s.Cache.Load(ret) == nil {
+	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetSprite(query)
 	}
 
@@ -112,7 +112,7 @@ func (s *MapboxStyleSource) GetStyle(query *layer.StyleQuery) *resource.Style {
 
 	ret := &resource.Style{BaseResource: resource.BaseResource{ID: id}}
 
-	if s.Cache != nil && s.Cache.Load(ret) == nil {
+	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetStyle(query)
 	}
 
@@ -133,7 +133,7 @@ func (s *MapboxGlyphsSource) GetGlyphs(query *layer.GlyphsQuery) *resource.Glyph
 
 	ret := &resource.Glyphs{BaseResource: resource.BaseResource{ID: id}}
 
-	if s.Cache != nil && s.Cache.Load(ret) == nil {
+	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetGlyphs(query)
 	}
 

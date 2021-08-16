@@ -28,7 +28,7 @@ func NewWMTSService(layers []*TileProvider, md map[string]string, MaxTileAge *ti
 	return nil
 }
 
-func (s *WMTSService) getMatrixSets(tlayers []*TileProvider) (map[string]*WMTSTileLayer, map[string]*TileMatrixSet) {
+func (s *WMTSService) getMatrixSets(tlayers []*TileProvider) (map[string]WMTSTileLayer, map[string]*TileMatrixSet) {
 	sets := make(map[string]*TileMatrixSet)
 	layers_grids := make(map[string][]*TileProvider)
 	for _, layer := range tlayers {
@@ -41,7 +41,7 @@ func (s *WMTSService) getMatrixSets(tlayers []*TileProvider) (map[string]*WMTSTi
 		}
 		layers_grids[grid.Name] = append(layers_grids[grid.Name], layer)
 	}
-	wmts_layers := make(map[string]*WMTSTileLayer)
+	wmts_layers := make(map[string]WMTSTileLayer)
 	for layer_name, layers := range layers_grids {
 		wmts_layers[layer_name] = NewWMTSTileLayer(layers)
 	}
@@ -62,7 +62,6 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 	layers := s.authorizedTileLayers()
 
 	cap := newWMTSCapabilities(service, layers, s.MatrixSets, s.InfoFormats)
-
 	result := cap.render(tile_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -229,35 +228,12 @@ func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, reque
 
 type WMTSTileLayer map[string]*TileProvider
 
-func NewWMTSTileLayer(layer []*TileProvider) *WMTSTileLayer {
-	return nil
-}
-
-type WMTSCapabilities struct {
-	Service     map[string]string
-	Layers      []WMTSTileLayer
-	MatrixSets  map[string]*TileMatrixSet
-	InfoFormats map[string]string
-}
-
-func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
-	return nil
-}
-
-func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
-	return nil
-}
-
-type WMTSRestfulCapabilities struct {
-	WMTSCapabilities
-}
-
-func newWMTSRestfulCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
-	return nil
-}
-
-func (c *WMTSRestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
-	return nil
+func NewWMTSTileLayer(layer []*TileProvider) WMTSTileLayer {
+	ret := make(WMTSTileLayer)
+	for i := range layer {
+		ret[layer[i].name] = layer[i]
+	}
+	return ret
 }
 
 const (

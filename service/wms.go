@@ -29,7 +29,7 @@ type WMSService struct {
 	TileLayers          []*TileProvider
 	Metadata            map[string]string
 	InfoFormats         map[string]string
-	Srs                 []geo.Proj
+	Srs                 *geo.SupportedSRS
 	SrsExtents          map[string]*geo.MapExtent
 	MaxOutputPixels     int
 	MaxTileAge          time.Duration
@@ -93,7 +93,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 
 	s.filterActualLayers(actual_layers, mapreq.GetLayers(), authorized_layers)
 
-	render_layers := []wmsLayer{}
+	render_layers := []layer.Layer{}
 	for _, v := range actual_layers {
 		render_layers = append(render_layers, v)
 	}
@@ -137,7 +137,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 }
 
 func (s *WMSService) authorizedLayers(feature string, layers []string, ext *geo.MapExtent) ([]*TileProvider, geo.Coverage) {
-	return nil, nil
+	return s.TileLayers, nil
 }
 
 func (s *WMSService) GetCapabilities(req request.Request) *Response {
@@ -172,7 +172,7 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 	}
 
 	cap := newCapabilities(service, root_layer, tile_layers, s.ImageFormats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
-	result := cap.fetch(map_request)
+	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "application/xml")
 }
@@ -200,7 +200,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	for _, layer_name := range freq.GetLayers() {
 		layer := s.Layers[layer_name]
 		if !layer.Queryable() {
-			//raise RequestError('layer %s is not queryable' % layer_name, request=request)
+			return NewResponse(nil, 400, DefaultContentType)
 		}
 		for layer_name, map_layers := range layer.infoLayersForQuery(query) {
 			actual_layers[layer_name] = map_layers
@@ -285,7 +285,7 @@ func (s *WMSService) checkMapRequest(req request.Request) error {
 	mapreq.ValidateFormat(formats)
 
 	srss := []string{}
-	for _, s := range s.Srs {
+	for _, s := range s.Srs.Srs {
 		srss = append(srss, s.GetDef())
 	}
 
@@ -298,7 +298,7 @@ func (s *WMSService) checkFeatureinfoRequest(req request.Request) {
 	s.validateLayers(req)
 
 	srss := []string{}
-	for _, s := range s.Srs {
+	for _, s := range s.Srs.Srs {
 		srss = append(srss, s.GetDef())
 	}
 
@@ -332,7 +332,7 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 
 	s.checkLegendRequest(req)
 	if !s.Layers[layer].HasLegend() {
-		//raise RequestError('layer %s has no legend graphic' % layer, request=request)
+		return NewResponse(nil, 400, DefaultContentType)
 	}
 	legends := s.Layers[layer].legend(req.(*request.WMSLegendGraphicRequest))
 
@@ -362,27 +362,39 @@ func (s *WMSService) filterActualLayers(actual_layers map[string]wmsLayer, layer
 }
 
 func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
+	return s.RootLayer
+}
+
+func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	return nil
 }
 
-type WMSCapabilities struct {
-}
-
-func (c *WMSCapabilities) fetch(req *request.WMSRequest) []byte {
-	return nil
-}
-
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs []geo.Proj, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
-	return nil
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
+	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, info_formats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, maxOutputPixels: maxOutputPixels}
 }
 
 type LayerRenderer struct {
-	layers []wmsLayer
+	layers []layer.Layer
 	query  *layer.MapQuery
 	params request.WMSMapRequestParams
 }
 
-func (l *LayerRenderer) render(layer *imagery.LayerMerger) {
+func (l *LayerRenderer) render(layer_merger *imagery.LayerMerger) {
+	render_layers := CombinedLayers(l.layers, l.query)
+	if render_layers == nil {
+		return
+	}
+	for i := range render_layers {
+		layer, layer_img := l.renderLayer(render_layers[i])
+		if layer_img != nil {
+			layer_merger.AddSource(layer_img, layer.GetCoverage())
+		}
+	}
+}
+
+func (l *LayerRenderer) renderLayer(layer layer.Layer) (layer.Layer, tile.Source) {
+	layer_img, _ := layer.GetMap(l.query)
+	return layer, layer_img
 }
 
 type wmsLayer interface {

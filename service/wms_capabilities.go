@@ -95,7 +95,7 @@ func copyMapExtents(extent map[string]*geo.MapExtent) map[string]*geo.MapExtent 
 	return ret
 }
 
-func limit_srs_extents(srs_extents map[string]*geo.MapExtent, supported_srs *geo.SupportedSRS) map[string]*geo.MapExtent {
+func limitSrsExtents(srs_extents map[string]*geo.MapExtent, supported_srs *geo.SupportedSRS) map[string]*geo.MapExtent {
 	if srs_extents != nil {
 		srs_extents = copyMapExtents(srs_extents)
 	} else {

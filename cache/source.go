@@ -24,7 +24,7 @@ func GetEmptyTile(size [2]uint32, opts tile.TileOptions) tile.Source {
 	return nil
 }
 
-func MergeTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) tile.Source {
+func BlendTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) tile.Source {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
 		return imagery.MergeImages(layers, opt, size, bbox, Srs, tileMerger)

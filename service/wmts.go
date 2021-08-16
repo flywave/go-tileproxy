@@ -91,7 +91,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	tile := tile_layer.Render(tile_request, false, limited_to, decorateTile)
 
-	resp := NewResponse(tile.getBuffer(), -1, tile.getFormatMime())
+	resp := NewResponse(tile.getBuffer(), -1, tile.GetFormatMime())
 	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())}, int(s.MaxTileAge.Seconds()))
 	resp.makeConditional(tile_request.Http)
 	return resp

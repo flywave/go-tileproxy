@@ -11,11 +11,11 @@ func TestFormat(t *testing.T) {
 		t.FailNow()
 	}
 
-	f = TileFormat("image/vnd.wap.wbmp")
-	if f.MimeType() != "image/vnd.wap.wbmp" {
+	f = TileFormat("image/webp")
+	if f.MimeType() != "image/webp" {
 		t.FailNow()
 	}
-	if f.Extension() != "wbmp" {
+	if f.Extension() != "webp" {
 		t.FailNow()
 	}
 }

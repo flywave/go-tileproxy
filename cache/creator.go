@@ -2,10 +2,10 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -116,7 +116,12 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			layers = append(layers, img)
 		}
 	}
-	return MergeTiles(layers, c.Manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.TileMerger), nil
+	ret := BlendTiles(layers, c.Manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.TileMerger)
+
+	if ret == nil {
+		return nil, errors.New("no blend")
+	}
+	return ret, nil
 }
 
 func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
@@ -139,7 +144,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	tile_size := c.Grid.TileSize
 	query := &layer.MapQuery{BBox: meta_tile.GetBBox(), Size: meta_tile.GetSize(), Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
-	var splitted_tiles *TileCollection
+	var splittedTiles *TileCollection
 
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -154,17 +159,16 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 		}
 
 		if !flag {
-			meta_tile_image, err := c.querySources(query)
-			if meta_tile_image == nil || err != nil {
+			metaTileImage, err := c.querySources(query)
+			if metaTileImage == nil || err != nil {
 				return nil
 			}
-			splitted_tiles = SplitTiles(meta_tile_image, meta_tile.GetTilePattern(),
-				[2]uint32{tile_size[0], tile_size[1]}, c.Manager.GetTileOptions().(*imagery.ImageOptions))
-			for i, t := range splitted_tiles.tiles {
-				splitted_tiles.UpdateItem(i, c.Manager.ApplyTileFilter(t))
+			splittedTiles = SplitTiles(metaTileImage, meta_tile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.Manager.GetTileOptions())
+			for i, t := range splittedTiles.tiles {
+				splittedTiles.UpdateItem(i, c.Manager.ApplyTileFilter(t))
 			}
-			if meta_tile_image.GetCacheable() != nil {
-				c.Cache.StoreTiles(splitted_tiles)
+			if metaTileImage.GetCacheable() != nil {
+				c.Cache.StoreTiles(splittedTiles)
 			}
 		}
 		return nil

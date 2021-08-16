@@ -174,7 +174,7 @@ type TileQuery struct {
 	Width   int
 	Height  int
 	Format  string
-	Retina  bool
+	Retina  *int
 	Markers []*Marker
 }
 
@@ -216,8 +216,8 @@ func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (st
 		urls += s
 	}
 	urls += fmt.Sprintf("/%d/%d/%d", req.Zoom, req.X, req.Y)
-	if req.Retina {
-		urls += "@2x"
+	if req.Retina != nil {
+		urls += fmt.Sprintf("@%dx", *req.Retina)
 	}
 	if req.Format != "" {
 		if strings.Contains(req.Format, "/") {
@@ -239,8 +239,8 @@ func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (st
 
 type SpriteQuery struct {
 	StyleQuery
-	Retina bool
-	Format *string
+	Retina *int
+	Format *tile.TileFormat
 }
 
 func (q *SpriteQuery) EQ(o *SpriteQuery) bool {
@@ -256,11 +256,11 @@ func (req *SpriteQuery) GetID() string {
 
 func (req *SpriteQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
 	urls := fmt.Sprintf("%s/styles/v1/%s/%s/sprite", URL, username, req.StyleID)
-	if req.Retina {
-		urls += "@2x"
+	if req.Retina != nil {
+		urls += fmt.Sprintf("@%dx", *req.Retina)
 	}
 	if req.Format != nil {
-		urls += fmt.Sprintf(".%s", *req.Format)
+		urls += fmt.Sprintf(".%s", req.Format.Extension())
 	}
 	u, err := url.Parse(urls)
 	if err != nil {

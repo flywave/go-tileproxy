@@ -6,13 +6,14 @@ import (
 	"image/png"
 	"testing"
 
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 )
 
 func TestMapboxTileClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
 
-	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: true}
+	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: geo.NewInt(2)}
 
 	client := NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
 
@@ -30,7 +31,7 @@ func TestMapboxSpriteClient(t *testing.T) {
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 
-	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: true}
+	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: geo.NewInt(2)}
 
 	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
 

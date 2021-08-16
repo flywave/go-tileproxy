@@ -71,10 +71,12 @@ func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc Vector) err
 			vtfc[k].Append(fea)
 		}
 	}
-
-	json := geojsonvt.StringifyFeatureCollections(vtfc)
-	_, err := w.Write([]byte(json))
-	return err
+	if len(vtfc) > 0 {
+		json := geojsonvt.StringifyFeatureCollections(vtfc)
+		_, err := w.Write([]byte(json))
+		return err
+	}
+	return nil
 }
 
 func project(line [][]int16, x0 float64, y0 float64, size float64) [][]float64 {

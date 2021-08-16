@@ -9,7 +9,7 @@ var (
 		"tiff":    "image/tiff",
 		"jpg":     "image/jpeg",
 		"jpeg":    "image/jpeg",
-		"wbmp":    "image/vnd.wap.wbmp",
+		"webp":    "image/webp",
 		"atm":     "image/lerc",
 		"mvt":     "application/vnd.mapbox-vector-tile",
 		"pbf":     "application/x-protobuf",
@@ -38,9 +38,6 @@ func (i *TileFormat) Extension() string {
 	}
 	ext = strings.Trim(ext, " ")
 
-	if ext == "vnd.wap.wbmp" {
-		ext = "wbmp"
-	}
 	if ext == "vnd.mapbox-vector-tile" {
 		ext = "mvt"
 	}

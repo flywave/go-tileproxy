@@ -27,10 +27,10 @@ type TileManager struct {
 	rescaleTiles         int
 	cacheRescaledTiles   bool
 	locker               TileLocker
-	bulk_meta_tiles      bool
+	bulkMetaTiles        bool
 }
 
-func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, locker TileLocker, identifier string, format string, opts tile.TileOptions, minimize_meta_requests bool, bulk_meta_tiles bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
+func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, locker TileLocker, identifier string, format string, opts tile.TileOptions, minimize_meta_requests bool, bulkMetaTiles bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
 	ret := &TileManager{}
 	ret.grid = grid
 	ret.cache = cache
@@ -44,7 +44,7 @@ func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, lock
 	ret.rescaleTiles = rescale_tiles
 	ret.cacheRescaledTiles = cache_rescaled_tiles
 	ret.locker = locker
-	ret.bulk_meta_tiles = false
+	ret.bulkMetaTiles = false
 
 	if metaBuffer != -1 || (metaSize != [2]uint32{1, 1}) {
 		allsm := true
@@ -55,9 +55,9 @@ func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, lock
 		}
 		if allsm {
 			ret.metaGrid = geo.NewMetaGrid(ret.grid, metaSize, metaBuffer)
-		} else if metaSize != [2]uint32{1, 1} && bulk_meta_tiles {
+		} else if metaSize != [2]uint32{1, 1} && bulkMetaTiles {
 			ret.metaGrid = geo.NewMetaGrid(ret.grid, metaSize, 0)
-			ret.bulk_meta_tiles = true
+			ret.bulkMetaTiles = true
 		}
 	}
 	return ret
@@ -297,7 +297,7 @@ func (tm *TileManager) ApplyTileFilter(tile *Tile) *Tile {
 }
 
 func (tm *TileManager) Creator(dimensions utils.Dimensions) *TileCreator {
-	return NewTileCreator(tm, dimensions, nil, tm.bulk_meta_tiles)
+	return NewTileCreator(tm, dimensions, nil, tm.bulkMetaTiles)
 }
 
 func (tm *TileManager) Lock(ctx context.Context, tile *Tile, run func() error) error {

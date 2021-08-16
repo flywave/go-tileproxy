@@ -40,7 +40,7 @@ func (c *LocalCache) TileLocation(tile *Tile, create_dir bool) string {
 	return c.tileLocation(tile, c.cacheDir, c.fileExt, create_dir)
 }
 
-func (c *LocalCache) level_location(level int) string {
+func (c *LocalCache) LevelLocation(level int) string {
 	return c.levelLocation(level, c.cacheDir)
 }
 

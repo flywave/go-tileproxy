@@ -81,12 +81,17 @@ func (s *RasterSource) GetTileData() *TileData {
 				return nil
 			}
 		}
+
+		opt := s.Options.(*RasterOptions)
+		noData := opt.Nodata
+
 		r := bytes.NewBuffer(s.buf)
 		var err error
 		s.data, err = s.io.Decode(r)
 		if err != nil {
 			return nil
 		}
+		s.data.NoData = noData
 		s.size = s.data.Size[:]
 		if s.data.Boxsrs != nil {
 			s.georef = geo.NewGeoReference(s.data.Box, s.data.Boxsrs)
@@ -120,8 +125,11 @@ func (s *RasterSource) SetSource(src interface{}) {
 	s.buf = nil
 	switch ss := src.(type) {
 	case io.Reader:
+		opt := s.Options.(*RasterOptions)
+		noData := opt.Nodata
 		s.data, _ = s.io.Decode(ss)
 		s.size = s.data.Size[:]
+		s.data.NoData = noData
 		if s.data.Boxsrs != nil {
 			s.georef = geo.NewGeoReference(s.data.Box, s.data.Boxsrs)
 		}
@@ -306,7 +314,7 @@ func NewBlankRasterSource(size [2]uint32, opts tile.TileOptions, cacheable *tile
 	switch opt := opts.(type) {
 	case *RasterOptions:
 		td := NewTileData(size, opt.Mode)
-		if opt.Format.Extension() == "wbmp" || opt.Format.Extension() == "png" {
+		if opt.Format.Extension() == "webp" || opt.Format.Extension() == "png" {
 			src := NewDemRasterSource(ModeMapbox, opt)
 			src.SetSource(td)
 			return src
@@ -320,7 +328,8 @@ func NewBlankRasterSource(size [2]uint32, opts tile.TileOptions, cacheable *tile
 			return src
 		}
 	case *TerrainOptions:
-		tiledata := NewTileData(size, BORDER_UNILATERAL)
+		tiledata := NewTileData(size, opt.Mode)
+		tiledata.NoData = -9999
 		source, err := GenTerrainSource(tiledata, opt)
 
 		if err != nil {

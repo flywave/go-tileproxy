@@ -14,7 +14,7 @@ type TileResponse interface {
 	getBuffer() []byte
 	getTimestamp() *time.Time
 	getFormat() string
-	getFormatMime() string
+	GetFormatMime() string
 	getSize() int
 	getCacheable() bool
 }
@@ -24,7 +24,9 @@ type Provider interface {
 	GetGrid() *geo.TileGrid
 	GetBBox() vec2d.Rect
 	GetSrs() geo.Proj
+	GetFormatMimeType() string
 	GetFormat() string
+	GetMetadata() map[string]string
 	GetTileBBox(request request.Request, use_profiles bool, limit bool) vec2d.Rect
 	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse
 }

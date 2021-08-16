@@ -24,13 +24,19 @@ type TileRequest struct {
 	Http               *http.Request
 }
 
+func NewTileRequest(req *http.Request) *TileRequest {
+	r := &TileRequest{Http: req}
+	r.init()
+	return r
+}
+
 func (r *TileRequest) GetRequestHandler() string {
 	return r.RequestHandlerName
 }
 
 func (r *TileRequest) init() {
 	r.RequestHandlerName = "map"
-	r.TileReqRegex = regexp.MustCompile(`(?P<begin>[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+	r.TileReqRegex = regexp.MustCompile(`(?P<begin>/[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
 	r.UseProfiles = false
 	r.RequestPrefix = "/tiles"
 	r.Dimensions = make(map[string][]string)
@@ -56,14 +62,15 @@ func (r *TileRequest) initRequest() error {
 	if _, ok := result["layer_spec"]; ok {
 		r.Dimensions["_layer_spec"] = []string{result["layer_spec"]}
 	}
-	if r.Tile != nil {
+	if r.Tile == nil {
 		x, _ := strconv.ParseInt(result["x"], 10, 64)
 		y, _ := strconv.ParseInt(result["y"], 10, 64)
 		z, _ := strconv.ParseInt(result["z"], 10, 64)
 		r.Tile = []int{int(x), int(y), int(z)}
 	}
-	if r.Format != nil {
-		*r.Format = tile.TileFormat(result["format"])
+	if format, ok := result["format"]; r.Format == nil && ok {
+		tf := tile.TileFormat(format)
+		r.Format = &tf
 	}
 	return nil
 }
@@ -72,6 +79,12 @@ type TMSRequest struct {
 	TileRequest
 	CapabilitiesRegex *regexp.Regexp
 	RootRequestRegex  *regexp.Regexp
+}
+
+func NewTMSRequest(req *http.Request) *TMSRequest {
+	r := &TMSRequest{TileRequest: TileRequest{Http: req}}
+	r.init()
+	return r
 }
 
 func (r *TMSRequest) init() {
@@ -83,15 +96,20 @@ func (r *TMSRequest) init() {
 	r.Origin = "sw"
 
 	match := r.CapabilitiesRegex.FindStringSubmatch(r.Http.URL.Path)
-	groupNames := r.CapabilitiesRegex.SubexpNames()
 	cap_match := make(map[string]string)
-	for i, name := range groupNames {
-		cap_match[name] = match[i]
+
+	if len(match) > 0 {
+		groupNames := r.CapabilitiesRegex.SubexpNames()
+		for i, name := range groupNames {
+			if name != "" && match[i] != "" {
+				cap_match[name] = match[i]
+			}
+		}
 	}
 
-	root_match := r.RootRequestRegex.FindString(r.Http.URL.Path)
+	root_match := r.RootRequestRegex.MatchString(r.Http.URL.Path)
 
-	if len(cap_match) > 0 {
+	if len(match) > 0 {
 		if layer, ok := cap_match["layer"]; ok {
 			r.Layer = layer
 			if layer_spec, ok := cap_match["layer_spec"]; ok {
@@ -99,7 +117,7 @@ func (r *TMSRequest) init() {
 			}
 		}
 		r.RequestHandlerName = "tms_capabilities"
-	} else if root_match != "" {
+	} else if root_match {
 		r.RequestHandlerName = "tms_root_resource"
 	} else {
 		r.RequestHandlerName = "map"

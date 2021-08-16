@@ -41,8 +41,7 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
-	src_bbox, tile_grid, affected_tile_coords, err :=
-		r.grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
+	src_bbox, tile_grid, affected_tile_coords, err := r.grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
 	if err != nil {
 		return nil, err
 	}

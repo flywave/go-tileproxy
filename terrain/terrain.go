@@ -20,6 +20,7 @@ type TerrainOptions struct {
 	tile.TileOptions
 	Format   tile.TileFormat
 	MaxError float64
+	Mode     BorderMode
 }
 
 func (s *TerrainOptions) GetFormat() tile.TileFormat {
@@ -155,6 +156,10 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 func GenTerrainSource(data *TileData, options *TerrainOptions) (*TerrainSource, error) {
 	if !data.HasBorder() {
 		return nil, errors.New("error")
+	}
+
+	if data.NoDataValue() == 0 {
+		data.NoData = -9999
 	}
 
 	raw, si, tsf := data.GetExtend()

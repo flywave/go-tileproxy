@@ -8,7 +8,9 @@ import (
 
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -22,6 +24,10 @@ type MapboxService struct {
 	Origin     string
 }
 
+func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, fonts map[string]*GlyphProvider, md map[string]string, max_tile_age *time.Duration, origin string) *MapboxService {
+	return &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age, Origin: origin}
+}
+
 func (s *MapboxService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.MapboxTileRequest)
 	if s.Origin != "" && tile_request.Origin == "" {
@@ -32,19 +38,11 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if tile_request.Format != nil {
 		format = *tile_request.Format
 	} else {
-		format = tile.TileFormat("image/wbmp")
+		format = tile.TileFormat("image/webp")
 	}
 
 	if layer == nil {
 		return NewResponse(nil, 404, format.MimeType())
-	}
-
-	if tile_request.AccessToken == "" {
-		if token, ok := s.Metadata["access_token"]; ok {
-			tile_request.AccessToken = token
-		} else {
-			return NewResponse(nil, 401, format.MimeType())
-		}
 	}
 
 	decorateTile := func(image tile.Source) tile.Source {
@@ -80,14 +78,6 @@ func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) Provid
 func (s *MapboxService) GetStyle(req request.Request) *Response {
 	style_req := req.(*request.MapboxStyleRequest)
 
-	if style_req.AccessToken == "" {
-		if token, ok := s.Metadata["access_token"]; ok {
-			style_req.AccessToken = token
-		} else {
-			return NewResponse(nil, 401, "")
-		}
-	}
-
 	if st, ok := s.Styles[style_req.StyleID]; ok {
 		resp := st.fetch(style_req)
 		return NewResponse(resp, 200, "application/json")
@@ -98,14 +88,6 @@ func (s *MapboxService) GetStyle(req request.Request) *Response {
 
 func (s *MapboxService) GetSprite(req request.Request) *Response {
 	sprite_req := req.(*request.MapboxSpriteRequest)
-
-	if sprite_req.AccessToken == "" {
-		if token, ok := s.Metadata["access_token"]; ok {
-			sprite_req.AccessToken = token
-		} else {
-			return NewResponse(nil, 401, "")
-		}
-	}
 
 	if st, ok := s.Styles[sprite_req.StyleID]; ok {
 		if sprite_req.Format == nil {
@@ -132,21 +114,37 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 }
 
 type GlyphProvider struct {
+	source *sources.MapboxGlyphsSource
 }
 
 func (c *GlyphProvider) fetch(req *request.MapboxGlyphsRequest) []byte {
-	return nil
+	query := &layer.GlyphsQuery{Font: req.Font, Start: req.Start, End: req.End}
+	glyphs := c.source.GetGlyphs(query)
+	return glyphs.GetData()
 }
 
 type StyleProvider struct {
+	source *sources.MapboxStyleSource
 }
 
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
-	return nil
+	query := &layer.StyleQuery{StyleID: req.StyleID}
+	styles := c.source.GetStyle(query)
+	return styles.GetData()
 }
 
 func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
-	return nil
+	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: req.StyleID}}
+	if req.Retina != nil {
+		query.Retina = req.Retina
+	}
+	if req.Format != nil {
+		query.Format = req.Format
+		styles := c.source.GetSprite(query)
+		return styles.GetData()
+	}
+	styles := c.source.GetSpriteJSON(query)
+	return styles.GetData()
 }
 
 type MapboxTileType uint32
@@ -165,6 +163,11 @@ type MapboxTileProvider struct {
 	extent      *geo.MapExtent
 	empty_tile  []byte
 	type_       MapboxTileType
+}
+
+func NewMapboxTileProvider(name string, md map[string]string, tileManager cache.Manager) *MapboxTileProvider {
+	ret := &MapboxTileProvider{name: name, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid())}
+	return ret
 }
 
 func (t *MapboxTileProvider) GetName() string {
@@ -195,7 +198,7 @@ func (t *MapboxTileProvider) IsRasterDem() bool {
 	return t.type_ == MapboxRasterDem
 }
 
-func (t *MapboxTileProvider) getFormatMimeType() string {
+func (t *MapboxTileProvider) GetFormatMimeType() string {
 	if f, ok := t.metadata["format"]; ok {
 		return f
 	}
@@ -206,7 +209,7 @@ func (t *MapboxTileProvider) getFormatMimeType() string {
 }
 
 func (t *MapboxTileProvider) GetFormat() string {
-	formats := request.SplitMimeType(t.getFormatMimeType())
+	formats := request.SplitMimeType(t.GetFormatMimeType())
 	if formats[1] == "vnd.mapbox-vector-tile" {
 		return "mvt"
 	}
@@ -226,7 +229,7 @@ func (t *MapboxTileProvider) emptyResponse() TileResponse {
 func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse {
 	tile_request := req.(*request.MapboxTileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
-		return nil
+		return tl.emptyResponse()
 	}
 	tile_coord := tile_request.Tile
 	var tile_bbox vec2d.Rect

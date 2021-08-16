@@ -555,6 +555,7 @@ func NewWMSGroupLayer(name string, title string, this wmsLayer, layers map[strin
 
 	all_layers := cloneLayers(layers)
 	all_layers[this.GetName()] = this
+
 	ret.extent = mergeLayerExtents(all_layers)
 	ret.resRange = mergeLayerResRanges(all_layers)
 

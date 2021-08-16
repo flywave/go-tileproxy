@@ -29,6 +29,12 @@ type MapboxTileRequest struct {
 	Origin    string
 }
 
+func NewMapboxTileRequest(hreq *http.Request) *MapboxTileRequest {
+	req := &MapboxTileRequest{}
+	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	return req
+}
+
 func (r *MapboxTileRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
@@ -60,14 +66,15 @@ func (r *MapboxTileRequest) initRequest() error {
 		rt, _ := strconv.ParseInt(v, 10, 64)
 		r.Retina = geo.NewInt(int(rt))
 	}
-	if r.Tile != nil {
+	if r.Tile == nil {
 		x, _ := strconv.ParseInt(result["x"], 10, 64)
 		y, _ := strconv.ParseInt(result["y"], 10, 64)
 		z, _ := strconv.ParseInt(result["zoom"], 10, 64)
 		r.Tile = []int{int(x), int(y), int(z)}
 	}
-	if r.Format != nil {
-		*r.Format = tile.TileFormat(result["format"])
+	if v, ok := result["format"]; ok && r.Format == nil {
+		tf := tile.TileFormat(v)
+		r.Format = &tf
 	}
 	return nil
 }
@@ -159,6 +166,8 @@ type MapboxGlyphsRequest struct {
 	MapboxRequest
 	Username string
 	Font     string
+	Start    int
+	End      int
 }
 
 func (r *MapboxGlyphsRequest) init(param interface{}, url string, validate bool, http *http.Request) {
@@ -194,6 +203,14 @@ func (r *MapboxGlyphsRequest) initRequest() error {
 	}
 	if v, ok := result["font"]; ok {
 		r.Font = v
+	}
+
+	if v, ok := result["start"]; ok {
+		r.Start, _ = strconv.Atoi(v)
+	}
+
+	if v, ok := result["end"]; ok {
+		r.End, _ = strconv.Atoi(v)
 	}
 
 	return nil

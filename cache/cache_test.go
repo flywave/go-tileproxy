@@ -155,7 +155,7 @@ func TestLevelPath(t *testing.T) {
 	for _, p := range levelPaths {
 		cache := NewLocalCache("/tmp/foo", "png", p.key, nil)
 
-		abs, _ := filepath.Abs(cache.level_location(p.level))
+		abs, _ := filepath.Abs(cache.LevelLocation(p.level))
 
 		if abs != p.path {
 			t.FailNow()

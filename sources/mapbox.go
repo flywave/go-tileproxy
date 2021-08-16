@@ -3,6 +3,7 @@ package sources
 import (
 	"bytes"
 	"errors"
+	"strconv"
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
@@ -61,10 +62,11 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 }
 
 func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *layer.TileQuery {
-	retina := false
+	var retina *int
 	if query.Dimensions != nil {
-		if _, ok := query.Dimensions["retina"]; ok {
-			retina = true
+		if v, ok := query.Dimensions["retina"]; ok {
+			r, _ := strconv.Atoi(v.GetFirstValue())
+			retina = geo.NewInt(r)
 		}
 	}
 	tile := &layer.TileQuery{X: x, Y: y, Zoom: z, Width: int(query.Size[0]), Height: int(query.Size[1]), Format: query.Format.Extension(), Retina: retina}

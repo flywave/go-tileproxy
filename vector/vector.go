@@ -92,7 +92,7 @@ func (s *VectorSource) SetSource(src interface{}) {
 func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
 	if s.buf == nil {
 		var err error
-		s.buf, err = s.io.Encode(s.data)
+		s.buf, err = s.io.Encode(s.GetTile())
 		if err != nil {
 			return nil
 		}

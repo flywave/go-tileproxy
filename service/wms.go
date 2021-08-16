@@ -16,8 +16,6 @@ import (
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-
-	_ "github.com/flywave/ogc-specifications/pkg/wms130"
 )
 
 type WMSService struct {
@@ -33,7 +31,7 @@ type WMSService struct {
 	SrsExtents          map[string]*geo.MapExtent
 	MaxOutputPixels     int
 	MaxTileAge          time.Duration
-	InspireMetadata     map[string]string
+	InspireMetadata     *ExtendedCapabilities
 	FeatureTransformers map[string]*resource.XSLTransformer
 }
 
@@ -171,7 +169,12 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 		info_formats = append(info_formats, request.MimetypeFromInfotype(info_types[i]))
 	}
 
-	cap := newCapabilities(service, root_layer, tile_layers, s.ImageFormats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
+	image_formats := []string{}
+	for k := range s.ImageFormats {
+		image_formats = append(info_formats, k)
+	}
+
+	cap := newCapabilities(service, root_layer, tile_layers, image_formats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
 	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -365,12 +368,8 @@ func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
 	return s.RootLayer
 }
 
-func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
-	return nil
-}
-
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats map[string]*imagery.ImageOptions, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, inspireMetadata map[string]string, maxOutputPixels int) *WMSCapabilities {
-	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, info_formats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, maxOutputPixels: maxOutputPixels}
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, inspireMetadata *ExtendedCapabilities, maxOutputPixels int) *WMSCapabilities {
+	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, maxOutputPixels: maxOutputPixels}
 }
 
 type LayerRenderer struct {

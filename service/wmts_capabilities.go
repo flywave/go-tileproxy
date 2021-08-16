@@ -1,6 +1,9 @@
 package service
 
-import "github.com/flywave/go-tileproxy/request"
+import (
+	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/ogc-specifications/pkg/wmts100"
+)
 
 type WMTSCapabilities struct {
 	Service     map[string]string
@@ -10,7 +13,8 @@ type WMTSCapabilities struct {
 }
 
 func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
-	return nil
+	resp := wmts100.GetCapabilitiesResponse{}
+	return resp.ToXML()
 }
 
 func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
@@ -26,5 +30,6 @@ func newWMTSRestfulCapabilities(md map[string]string, layers []WMTSTileLayer, ma
 }
 
 func (c *WMTSRestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
-	return nil
+	resp := wmts100.GetCapabilitiesResponse{}
+	return resp.ToXML()
 }

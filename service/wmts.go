@@ -11,8 +11,6 @@ import (
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-
-	_ "github.com/flywave/ogc-specifications/pkg/wmts100"
 )
 
 type WMTSService struct {

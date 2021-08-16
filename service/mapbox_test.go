@@ -103,15 +103,3 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	os.RemoveAll("./test_cache")
 }
-
-func TestMapboxServiceGetStyle(t *testing.T) {
-
-}
-
-func TestMapboxServiceGetSprite(t *testing.T) {
-
-}
-
-func TestMapboxServiceGetGlyphs(t *testing.T) {
-
-}

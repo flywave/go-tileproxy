@@ -20,7 +20,7 @@ require (
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
 	github.com/flywave/imaging v1.6.5
-	github.com/flywave/ogc-specifications v0.2.6
+	github.com/flywave/ogc-specifications v0.2.7-0.20210816121348-5c236972fe7d
 	github.com/fogleman/gg v1.3.0
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0

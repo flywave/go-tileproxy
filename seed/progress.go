@@ -14,6 +14,10 @@ type SeedProgress struct {
 	oldLevelProgresses       [][2]int
 }
 
+func NewSeedProgress() *SeedProgress {
+	return &SeedProgress{levelProgressPercentages: []float32{1.0}}
+}
+
 func (p *SeedProgress) StepForward(subtiles int) {
 	p.progress += float32(p.levelProgresses[len(p.levelProgresses)-1][0]) / float32(subtiles)
 }
@@ -28,7 +32,8 @@ func statusSymbol(i, total int) string {
 	if 0 < i && i > total {
 		return "X"
 	} else {
-		return string(symbols[int(math.Ceil(float64(i)/float64(total/4)))])
+		x := uint32(math.Ceil(float64(i) / float64(total/4)))
+		return string(symbols[x])
 	}
 }
 
@@ -54,7 +59,7 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
 }
 
 func (p *SeedProgress) Running() bool {
-	return false
+	return true
 }
 
 func (p *SeedProgress) AlreadyProcessed() bool {

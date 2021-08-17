@@ -24,13 +24,15 @@ type TileWalker struct {
 	count                  int
 	seededTiles            map[int]*utils.Deque
 	progressLogger         ProgressLogger
+	handleStale            bool
+	handleUncached         bool
 }
 
 func NewTileWalker(task Task, ctx *Context,
 	work_on_metatiles bool, skip_geoms_for_last_levels int, progress_logger ProgressLogger,
-	seed_progress *SeedProgress) *TileWalker {
+	seed_progress *SeedProgress, handle_stale, handle_uncached bool) *TileWalker {
 	ret := &TileWalker{Ctx: ctx, task: task, manager: task.GetManager(), workOnMetatiles: work_on_metatiles,
-		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress, progressLogger: progress_logger}
+		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress, progressLogger: progress_logger, handleStale: handle_stale, handleUncached: handle_uncached}
 
 	num_seed_levels := len(task.GetLevels())
 	if num_seed_levels >= 4 {
@@ -50,7 +52,7 @@ func NewTileWalker(task Task, ctx *Context,
 	if seed_progress != nil {
 		ret.seedProgress = seed_progress
 	} else {
-		ret.seedProgress = &SeedProgress{}
+		ret.seedProgress = NewSeedProgress()
 	}
 
 	ret.seededTiles = make(map[int]*utils.Deque)
@@ -87,6 +89,26 @@ func limitSubBBox(bbox, sub_bbox vec2d.Rect) *vec2d.Rect {
 	maxx := math.Min(bbox.Max[0], sub_bbox.Max[0])
 	maxy := math.Min(bbox.Max[1], sub_bbox.Max[1])
 	return &vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
+}
+
+func filterIsCached(manager cache.Manager, handle_tiles [][3]int) [][3]int {
+	ret := make([][3]int, 0, len(handle_tiles))
+	for i := range handle_tiles {
+		if !manager.IsCached(handle_tiles[i], nil) {
+			ret = append(ret, handle_tiles[i])
+		}
+	}
+	return ret
+}
+
+func filterIsStale(manager cache.Manager, handle_tiles [][3]int) [][3]int {
+	ret := make([][3]int, 0, len(handle_tiles))
+	for i := range handle_tiles {
+		if manager.IsStale(handle_tiles[i], nil) {
+			ret = append(ret, handle_tiles[i])
+		}
+	}
+	return ret
 }
 
 func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, all_subtiles bool) error {
@@ -159,6 +181,12 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 			handle_tiles = t.grid.TileList([3]int{subtile[0], subtile[1], subtile[2]})
 		} else {
 			handle_tiles = append(handle_tiles, [3]int{subtile[0], subtile[1], subtile[2]})
+		}
+
+		if t.handleUncached {
+			handle_tiles = filterIsCached(t.manager, handle_tiles)
+		} else if t.handleStale {
+			handle_tiles = filterIsStale(t.manager, handle_tiles)
 		}
 
 		if handle_tiles != nil {
@@ -253,8 +281,9 @@ func seedTask(task Task, skipGeomsForLastLevels int, progress_logger ProgressLog
 	if task.GetManager().GetRescaleTiles() != 0 {
 		work_on_metatiles = false
 	}
+
 	ctx := &Context{}
-	tile_walker := NewTileWalker(task, ctx, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress)
+	tile_walker := NewTileWalker(task, ctx, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
 	return nil

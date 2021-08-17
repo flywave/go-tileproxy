@@ -12,7 +12,6 @@ import (
 )
 
 type Task interface {
-	Run() error
 	GetID() string
 	GetManager() cache.Manager
 	GetLevels() []int
@@ -24,15 +23,19 @@ type BaseTask struct {
 	Metadata map[string]string
 	Manager  cache.Manager
 	Coverage geo.Coverage
-	Grid     *geo.MetaGrid
+	Grid     *geo.TileGrid
 	Levels   []int
+}
+
+func (t *BaseTask) GetManager() cache.Manager {
+	return t.Manager
 }
 
 func (t *BaseTask) GetLevels() []int {
 	return t.Levels
 }
 
-func (t *BaseTask) GetGrid() *geo.MetaGrid {
+func (t *BaseTask) GetGrid() *geo.TileGrid {
 	return t.Grid
 }
 
@@ -52,7 +55,11 @@ func (t *BaseTask) Intersects(bbox vec2d.Rect) IntersectionType {
 
 type TileSeedTask struct {
 	BaseTask
-	RefreshTimestamp time.Time
+	RefreshTimestamp *time.Time
+}
+
+func NewTileSeedTask(md map[string]string, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
+	return &TileSeedTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RefreshTimestamp: refresh_timestamp}
 }
 
 func (t *TileSeedTask) GetID() string {
@@ -67,6 +74,10 @@ type TileCleanupTask struct {
 	BaseTask
 	RemoveTimestamp time.Time
 	CompleteExtent  bool
+}
+
+func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage, complete_extent bool) *TileCleanupTask {
+	return &TileCleanupTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RemoveTimestamp: remove_timestamp, CompleteExtent: complete_extent}
 }
 
 func (t *TileCleanupTask) GetID() string {

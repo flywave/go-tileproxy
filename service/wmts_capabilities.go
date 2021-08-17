@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/xml"
 	"html/template"
 
 	"github.com/flywave/go-tileproxy/request"
@@ -31,6 +32,14 @@ func formatResourceTemplate(layer WMTSTileLayer, tpl string, service map[string]
 
 func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
 	resp := wmts100.GetCapabilitiesResponse{}
+	resp.Namespaces.Xmlns = "http://www.opengis.net/wmts/1.0"
+	resp.Namespaces.XmlnsOws = "http://www.opengis.net/ows/1.1"
+	resp.Namespaces.XmlnsXlink = "http://www.w3.org/1999/xlink"
+	resp.Namespaces.XmlnsXSI = "http://www.w3.org/2001/XMLSchema-instance"
+	resp.Namespaces.XmlnsGml = "http://www.opengis.net/gml"
+	resp.Namespaces.SchemaLocation = "http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd"
+	resp.Namespaces.Version = "1.0.0"
+
 	identification := &resp.ServiceIdentification
 	identification.Title = c.Service["title"]
 	identification.Abstract = c.Service["abstract"]
@@ -157,7 +166,9 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 
 	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"
 
-	return resp.ToXML()
+	si, _ := xml.MarshalIndent(resp, "", "")
+
+	return si
 }
 
 func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {

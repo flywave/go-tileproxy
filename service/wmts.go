@@ -18,13 +18,17 @@ import (
 type WMTSService struct {
 	BaseService
 	Metadata    map[string]string
-	MaxTileAge  time.Duration
+	MaxTileAge  *time.Duration
 	Layers      map[string]WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
 }
 
 func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSRestService {
+	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
+	lay, ms := ret.getMatrixSets(layers)
+	ret.Layers = lay
+	ret.MatrixSets = ms
 	return nil
 }
 
@@ -211,8 +215,8 @@ func (s *WMTSService) checkRequest(req request.Request, infoformat *string) erro
 }
 
 const (
-	DEFAULT_WMTS_TEMPLATE      = "/{{ .Layer }}/{{ .TileMatrixSet }}/{{ .TileMatrix }}/{{ .TileCol }}/{{ .TileRow }}.{{ .Format }}"
-	DEFAULT_WMTS_INFO_TEMPLATE = "/{{ .Layer }}/{{ .TileMatrixSet }}/{{ .TileMatrix }}/{{ .TileCol }}/{{ .TileRow }}/{{ .I }}/{{ .J }}.{{ .InfoFormat }}"
+	DEFAULT_WMTS_TEMPLATE      = "/{{ .Layer }}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}.{{ .Format }}"
+	DEFAULT_WMTS_INFO_TEMPLATE = "/{{ .Layer }}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}/{I}/{J}.{{ .InfoFormat }}"
 )
 
 type WMTSRestService struct {

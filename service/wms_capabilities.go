@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/xml"
 	"math"
 	"strconv"
 	"strings"
@@ -16,7 +17,6 @@ import (
 type WMSCapabilities struct {
 	service         map[string]string
 	root_layer      *WMSGroupLayer
-	tile_layers     []*TileProvider
 	imageFormats    []string
 	infoFormats     []string
 	srs             *geo.SupportedSRS
@@ -26,13 +26,13 @@ type WMSCapabilities struct {
 	contact         *ContactInformation
 }
 
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
 	inspireMetadata := extendedCapabilitiesFromMetadata(service)
 	contact := contactInformationFromMetadata(service)
-	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
+	return &WMSCapabilities{service: service, root_layer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
 }
 
-func (c *WMSCapabilities) layerSrsBBox(layer *TileProvider, epsg_axis_order bool) map[string]vec2d.Rect {
+func (c *WMSCapabilities) layerSrsBBox(layer wmsLayer, epsgAxisOrder bool) map[string]vec2d.Rect {
 	ret := make(map[string]vec2d.Rect)
 	for srs, extent := range c.srsExtents {
 		if !geo.SrcInProj(srs, c.srs.Srs) {
@@ -40,26 +40,26 @@ func (c *WMSCapabilities) layerSrsBBox(layer *TileProvider, epsg_axis_order bool
 		}
 		var bbox vec2d.Rect
 		if extent.IsDefault() {
-			bbox = layer.extent.BBoxFor(geo.NewSRSProj4(srs))
-		} else if layer.extent.IsDefault() {
+			bbox = layer.GetExtent().BBoxFor(geo.NewSRSProj4(srs))
+		} else if layer.GetExtent().IsDefault() {
 			bbox = extent.BBoxFor(geo.NewSRSProj4(srs))
 		} else {
 			a := extent.Transform(geo.NewSRSProj4("EPSG:4326"))
-			b := layer.extent.Transform(geo.NewSRSProj4("EPSG:4326"))
+			b := layer.GetExtent().Transform(geo.NewSRSProj4("EPSG:4326"))
 			bbox = a.Intersection(b).BBoxFor(geo.NewSRSProj4(srs))
 		}
 
-		if epsg_axis_order {
+		if epsgAxisOrder {
 			bbox = request.SwitchBBoxEpsgAxisOrder(bbox, srs)
 		}
 
 		ret[srs] = bbox
 	}
 
-	layer_srs_code := layer.extent.Srs.GetSrsCode()
+	layer_srs_code := layer.GetExtent().Srs.GetSrsCode()
 	if _, ok := c.srsExtents[layer_srs_code]; ok {
-		bbox := layer.extent.BBox
-		if epsg_axis_order {
+		bbox := layer.GetExtent().BBox
+		if epsgAxisOrder {
 			bbox = request.SwitchBBoxEpsgAxisOrder(bbox, layer_srs_code)
 		}
 		if !geo.SrcInProj(layer_srs_code, c.srs.Srs) {
@@ -69,12 +69,12 @@ func (c *WMSCapabilities) layerSrsBBox(layer *TileProvider, epsg_axis_order bool
 	return ret
 }
 
-func (c *WMSCapabilities) layerLLBBox(layer *TileProvider) vec2d.Rect {
+func (c *WMSCapabilities) layerLLBBox(layer wmsLayer) vec2d.Rect {
 	if srs, ok := c.srsExtents["EPSG:4326"]; ok {
-		llbbox := srs.Intersection(layer.extent).GetLLBBox()
+		llbbox := srs.Intersection(layer.GetExtent()).GetLLBBox()
 		return limitLLBBox(llbbox)
 	}
-	return limitLLBBox(layer.extent.GetLLBBox())
+	return limitLLBBox(layer.GetExtent().GetLLBBox())
 }
 
 func limitLLBBox(bbox vec2d.Rect) vec2d.Rect {
@@ -126,6 +126,15 @@ func limitSrsExtents(srs_extents map[string]*geo.MapExtent, supported_srs *geo.S
 
 func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	cam := &wms130.GetCapabilitiesResponse{}
+	cam.Namespaces.XmlnsWMS = "http://www.opengis.net/wms"
+	cam.Namespaces.XmlnsSLD = "http://www.opengis.net/sld"
+	cam.Namespaces.XmlnsXlink = "http://www.w3.org/1999/xlink"
+	cam.Namespaces.XmlnsXSI = "http://www.w3.org/2001/XMLSchema-instance"
+	cam.Namespaces.XmlnsInspireCommon = "http://inspire.ec.europa.eu/schemas/common/1.0"
+	cam.Namespaces.XmlnsInspireVs = "http://inspire.ec.europa.eu/schemas/inspire_vs/1.0"
+	cam.Namespaces.SchemaLocation = "http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd"
+	cam.Namespaces.Version = "1.0.0"
+
 	service := &cam.WMSService
 	service.Name = "WMS"
 	service.Title = c.service["title"]
@@ -159,6 +168,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		service.ContactInformation.ContactFacsimileTelephone = c.contact.ContactFacsimileTelephone
 		service.ContactInformation.ContactElectronicMailAddress = c.contact.ContactElectronicMailAddress
 	}
+
 	if f, ok := c.service["fees"]; ok {
 		service.Fees = f
 	} else {
@@ -184,16 +194,20 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	capabilities := &cam.Capabilities.WMSCapabilities
 
 	capabilities.Request.GetCapabilities.Format = []string{"text/xml"}
+	capabilities.Request.GetCapabilities.DCPType.HTTP.Get = &wms130.Method{}
 	capabilities.Request.GetCapabilities.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
 	if len(c.imageFormats) > 0 {
 		capabilities.Request.GetMap.Format = c.imageFormats[:]
 	}
+	capabilities.Request.GetMap.DCPType.HTTP.Get = &wms130.Method{}
 	capabilities.Request.GetMap.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
 	if len(c.infoFormats) > 0 {
+		capabilities.Request.GetFeatureInfo = &wms130.RequestType{}
 		capabilities.Request.GetFeatureInfo.Format = c.infoFormats[:]
 	}
+	capabilities.Request.GetFeatureInfo.DCPType.HTTP.Get = &wms130.Method{}
 	capabilities.Request.GetFeatureInfo.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
 	capabilities.Exception.Format = []string{"XML", "INIMAGE", "BLANK"}
@@ -210,12 +224,13 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		capabilities.ExtendedCapabilities = ec
 	}
 
-	for _, l := range c.tile_layers {
+	for _, l := range c.root_layer.layers {
 		layer := &wms130.Layer{}
-		layer.Name = &l.name
-		layer.Title = l.title
+		name := l.GetName()
+		layer.Name = &name
+		layer.Title = l.GetTitle()
 		layer.Queryable = geo.NewInt(1)
-		metadata := l.metadata
+		metadata := l.GetMetadata()
 		if ab, ok := metadata["abstract"]; ok {
 			layer.Abstract = ab
 		}
@@ -310,7 +325,9 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		}
 	}
 
-	return cam.ToXML()
+	si, _ := xml.MarshalIndent(cam, "", "")
+
+	return si
 }
 
 type ContactInformation struct {
@@ -475,7 +492,6 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		}
 		ret.AuthorityURL.OnlineResource.Href = &l
 	}
-
 	if l, ok := metadata["tilemetadata.identifier.authority"]; ok {
 		if ret.Identifier == nil {
 			ret.Identifier = &Identifier{}
@@ -488,7 +504,6 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		}
 		ret.Identifier.Value = l
 	}
-
 	var style *Style
 	if l, ok := metadata["tilemetadata.style.name"]; ok {
 		if style == nil {
@@ -498,7 +513,6 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		}
 		style.Name = l
 	}
-
 	if l, ok := metadata["tilemetadata.style.legend.width"]; ok {
 		if style == nil {
 			style = &Style{}
@@ -507,7 +521,6 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		}
 		style.LegendURL.Width, _ = strconv.Atoi(l)
 	}
-
 	if l, ok := metadata["tilemetadata.style.legend.height"]; ok {
 		if style == nil {
 			style = &Style{}
@@ -516,7 +529,6 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		}
 		style.LegendURL.Height, _ = strconv.Atoi(l)
 	}
-
 	if l, ok := metadata["tilemetadata.style.legend.url"]; ok {
 		if style == nil {
 			style = &Style{}
@@ -529,6 +541,5 @@ func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
 		u := url + l
 		style.LegendURL.OnlineResource.Href = &u
 	}
-
 	return ret
 }

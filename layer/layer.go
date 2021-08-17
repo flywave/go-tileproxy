@@ -6,6 +6,7 @@ import (
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
+	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -13,6 +14,7 @@ import (
 type Layer interface {
 	GetMap(query *MapQuery) (tile.Source, error)
 	GetInfo(query *InfoQuery) resource.FeatureInfoDoc
+	GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
 	GetExtent() *geo.MapExtent
@@ -117,6 +119,10 @@ func (l *LimitedLayer) GetInfo(query *InfoQuery) resource.FeatureInfoDoc {
 		}
 	}
 	return l.layer.GetInfo(query)
+}
+
+func (l *LimitedLayer) GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source {
+	return l.layer.GetLegend(query)
 }
 
 func (l *LimitedLayer) GetExtent() *geo.MapExtent {

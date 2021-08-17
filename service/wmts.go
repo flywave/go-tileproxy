@@ -7,12 +7,13 @@ import (
 	"strings"
 	"time"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type WMTSService struct {
@@ -227,8 +228,14 @@ type WMTSRestService struct {
 	infoTemplate   string
 }
 
-func NewWMTSRestService(layers []*TileProvider, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
-	return nil
+func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
+	ret := &WMTSRestService{names: []string{"wmts"}, requestMethods: []string{"tile", "capabilities"}, WMTSService: WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}}
+	lay, ms := ret.getMatrixSets(layers)
+	ret.Layers = lay
+	ret.MatrixSets = ms
+	ret.template = DEFAULT_WMTS_TEMPLATE
+	ret.infoTemplate = DEFAULT_WMTS_INFO_TEMPLATE
+	return ret
 }
 
 func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) {

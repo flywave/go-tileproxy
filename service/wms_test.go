@@ -4,12 +4,13 @@ import (
 	"os"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestWMSLayer(t *testing.T) {

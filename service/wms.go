@@ -396,7 +396,7 @@ type wmsLayer interface {
 	GetLegendSize() int
 	GetName() string
 	GetTitle() string
-	GetLegendUrl() string
+	GetLegendURL() string
 	HasLegend() bool
 	Queryable() bool
 	GetMetadata() map[string]string
@@ -608,8 +608,8 @@ func (l *WMSGroupLayer) GetLegendSize() int {
 	return l.this.GetLegendSize()
 }
 
-func (l *WMSGroupLayer) GetLegendUrl() string {
-	return l.this.GetLegendUrl()
+func (l *WMSGroupLayer) GetLegendURL() string {
+	return l.this.GetLegendURL()
 }
 
 func (l *WMSGroupLayer) rendersQuery(query *layer.MapQuery) bool {

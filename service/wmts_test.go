@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
@@ -11,7 +13,6 @@ import (
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestWMTSServiceGetCapabilities(t *testing.T) {

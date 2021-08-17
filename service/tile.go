@@ -54,7 +54,7 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	if tile_format == "" {
 		tile_format = tile.TileFormat(*tile_request.Format)
 	}
-	resp := NewResponse(t.getBuffer(), -1, "image/"+string(tile_format))
+	resp := NewResponse(t.getBuffer(), -1, tile_format.MimeType())
 	if t.getCacheable() {
 		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, int(s.MaxTileAge.Seconds()))
 	} else {

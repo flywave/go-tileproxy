@@ -47,10 +47,6 @@ github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290 h1:d/Quyfh7G/2QqZzsNs
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
 github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs=
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
-github.com/flywave/ogc-specifications v0.2.7-0.20210816121348-5c236972fe7d h1:rKhjyUwYhfO/PlUmj20VPpbjCfBQQtgbSO8e/ftcwGg=
-github.com/flywave/ogc-specifications v0.2.7-0.20210816121348-5c236972fe7d/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
-github.com/flywave/ogc-specifications v0.2.7-0.20210817013155-6f1d3060027a h1:olRSBYbASPFoIxTLjcEQn6NNIesKwFF4MBL8dOABpGU=
-github.com/flywave/ogc-specifications v0.2.7-0.20210817013155-6f1d3060027a/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/flywave/ogc-specifications v0.2.7-0.20210817071931-49e39507b5ec h1:dfQsVizMlSBSc2Mmw4aa39c+NOlzl71IIa6aX28lt1I=
 github.com/flywave/ogc-specifications v0.2.7-0.20210817071931-49e39507b5ec/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=

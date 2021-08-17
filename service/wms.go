@@ -31,7 +31,6 @@ type WMSService struct {
 	SrsExtents          map[string]*geo.MapExtent
 	MaxOutputPixels     int
 	MaxTileAge          time.Duration
-	InspireMetadata     *ExtendedCapabilities
 	FeatureTransformers map[string]*resource.XSLTransformer
 }
 
@@ -174,7 +173,7 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 		image_formats = append(info_formats, k)
 	}
 
-	cap := newCapabilities(service, root_layer, tile_layers, image_formats, info_formats, s.Srs, s.SrsExtents, s.InspireMetadata, s.MaxOutputPixels)
+	cap := newCapabilities(service, root_layer, tile_layers, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
 	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -366,10 +365,6 @@ func (s *WMSService) filterActualLayers(actual_layers map[string]wmsLayer, layer
 
 func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
 	return s.RootLayer
-}
-
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, inspireMetadata *ExtendedCapabilities, maxOutputPixels int) *WMSCapabilities {
-	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, maxOutputPixels: maxOutputPixels}
 }
 
 type LayerRenderer struct {

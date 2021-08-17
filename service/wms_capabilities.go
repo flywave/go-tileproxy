@@ -2,6 +2,7 @@ package service
 
 import (
 	"math"
+	"strconv"
 	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -23,6 +24,12 @@ type WMSCapabilities struct {
 	inspireMetadata *ExtendedCapabilities
 	maxOutputPixels int
 	contact         *ContactInformation
+}
+
+func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, tile_layers []*TileProvider, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
+	inspireMetadata := extendedCapabilitiesFromMetadata(service)
+	contact := contactInformationFromMetadata(service)
+	return &WMSCapabilities{service: service, root_layer: root_layer, tile_layers: tile_layers, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
 }
 
 func (c *WMSCapabilities) layerSrsBBox(layer *TileProvider, epsg_axis_order bool) map[string]vec2d.Rect {
@@ -137,6 +144,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	} else {
 		service.OnlineResource.Href = &url
 	}
+
 	if c.contact != nil {
 		service.ContactInformation.ContactPersonPrimary.ContactPerson = c.contact.ContactPersonPrimary.ContactPerson
 		service.ContactInformation.ContactPersonPrimary.ContactOrganization = c.contact.ContactPersonPrimary.ContactOrganization
@@ -197,7 +205,6 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		ec.MetadataURL.MediaType = c.inspireMetadata.MetadataURL.MediaType
 
 		ec.SupportedLanguages.DefaultLanguage.Language = c.inspireMetadata.SupportedLanguages.DefaultLanguage.Language
-
 		ec.ResponseLanguage.Language = c.inspireMetadata.ResponseLanguage.Language
 
 		capabilities.ExtendedCapabilities = ec
@@ -207,6 +214,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		layer := &wms130.Layer{}
 		layer.Name = &l.name
 		layer.Title = l.title
+		layer.Queryable = geo.NewInt(1)
 		metadata := l.metadata
 		if ab, ok := metadata["abstract"]; ok {
 			layer.Abstract = ab
@@ -258,20 +266,24 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 			layer.BoundingBox = append(layer.BoundingBox, bbox1)
 		}
 
-		tm := TileMetadataFromMetadata(metadata)
+		tm := tileMetadataFromMetadata(metadata)
 
 		if tm != nil {
-			au := &wms130.AuthorityURL{}
-			au.Name = tm.AuthorityURL.Name
-			au.OnlineResource.Type = tm.AuthorityURL.OnlineResource.Type
-			au.OnlineResource.Href = tm.AuthorityURL.OnlineResource.Href
-			au.OnlineResource.Xlink = tm.AuthorityURL.OnlineResource.Xlink
-			layer.AuthorityURL = au
+			if tm.AuthorityURL != nil {
+				au := &wms130.AuthorityURL{}
+				au.Name = tm.AuthorityURL.Name
+				au.OnlineResource.Type = tm.AuthorityURL.OnlineResource.Type
+				au.OnlineResource.Href = tm.AuthorityURL.OnlineResource.Href
+				au.OnlineResource.Xlink = tm.AuthorityURL.OnlineResource.Xlink
+				layer.AuthorityURL = au
+			}
 
-			id := &wms130.Identifier{}
-			id.Authority = tm.Identifier.Authority
-			id.Value = tm.Identifier.Value
-			layer.Identifier = id
+			if tm.Identifier != nil {
+				id := &wms130.Identifier{}
+				id.Authority = tm.Identifier.Authority
+				id.Value = tm.Identifier.Value
+				layer.Identifier = id
+			}
 
 			for i := range tm.MetadataURL {
 				u := &wms130.MetadataURL{}
@@ -282,6 +294,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 				u.OnlineResource.Href = tm.MetadataURL[i].OnlineResource.Href
 				layer.MetadataURL = append(layer.MetadataURL, u)
 			}
+
 			for i := range tm.Style {
 				s := &wms130.Style{}
 				s.Name = tm.Style[i].Name
@@ -319,6 +332,47 @@ type ContactInformation struct {
 	ContactElectronicMailAddress string
 }
 
+func contactInformationFromMetadata(metadata map[string]string) *ContactInformation {
+	ret := &ContactInformation{}
+	if l, ok := metadata["contactinformation.contactpersonprimary.contactperson"]; ok {
+		ret.ContactPersonPrimary.ContactPerson = l
+	}
+	if l, ok := metadata["contactinformation.contactpersonprimary.contactorganization"]; ok {
+		ret.ContactPersonPrimary.ContactOrganization = l
+	}
+	if l, ok := metadata["contactinformation.contactposition"]; ok {
+		ret.ContactPosition = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.addresstype"]; ok {
+		ret.ContactAddress.AddressType = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.address"]; ok {
+		ret.ContactAddress.Address = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.city"]; ok {
+		ret.ContactAddress.City = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.stateorprovince"]; ok {
+		ret.ContactAddress.StateOrProvince = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.postcode"]; ok {
+		ret.ContactAddress.PostCode = l
+	}
+	if l, ok := metadata["contactinformation.contactaddress.country"]; ok {
+		ret.ContactAddress.Country = l
+	}
+	if l, ok := metadata["contactinformation.contactvoicetelephone"]; ok {
+		ret.ContactVoiceTelephone = l
+	}
+	if l, ok := metadata["contactinformation.contactfacsimiletelephone"]; ok {
+		ret.ContactFacsimileTelephone = l
+	}
+	if l, ok := metadata["contactinformation.contactelectronicmailaddress"]; ok {
+		ret.ContactElectronicMailAddress = l
+	}
+	return ret
+}
+
 type ExtendedCapabilities struct {
 	MetadataURL struct {
 		Type      string
@@ -335,15 +389,24 @@ type ExtendedCapabilities struct {
 	}
 }
 
-type TileMetadata struct {
-	AuthorityURL *AuthorityURL
-	Identifier   *Identifier
-	MetadataURL  []*MetadataURL
-	Style        []*Style
-}
-
-func TileMetadataFromMetadata(data map[string]string) *TileMetadata {
-	return nil
+func extendedCapabilitiesFromMetadata(metadata map[string]string) *ExtendedCapabilities {
+	ret := &ExtendedCapabilities{}
+	if l, ok := metadata["extendedcapabilities.metadataurl.type"]; ok {
+		ret.MetadataURL.Type = l
+	}
+	if l, ok := metadata["extendedcapabilities.metadataurl.url"]; ok {
+		ret.MetadataURL.URL = l
+	}
+	if l, ok := metadata["extendedcapabilities.metadataurl.mediatype"]; ok {
+		ret.MetadataURL.MediaType = l
+	}
+	if l, ok := metadata["supportedlanguages.defaultlanguage.language"]; ok {
+		ret.SupportedLanguages.DefaultLanguage.Language = l
+	}
+	if l, ok := metadata["responselanguage.language"]; ok {
+		ret.ResponseLanguage.Language = l
+	}
+	return ret
 }
 
 type OnlineResource struct {
@@ -377,4 +440,95 @@ type Style struct {
 		Format         string
 		OnlineResource OnlineResource
 	}
+}
+
+type TileMetadata struct {
+	AuthorityURL *AuthorityURL
+	Identifier   *Identifier
+	MetadataURL  []*MetadataURL
+	Style        []*Style
+}
+
+func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
+	ret := &TileMetadata{}
+	if l, ok := metadata["tilemetadata.authorityurl.name"]; ok {
+		if ret.AuthorityURL == nil {
+			ret.AuthorityURL = &AuthorityURL{}
+		}
+		ret.AuthorityURL.Name = l
+	}
+	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.xlink"]; ok {
+		if ret.AuthorityURL == nil {
+			ret.AuthorityURL = &AuthorityURL{}
+		}
+		ret.AuthorityURL.OnlineResource.Xlink = &l
+	}
+	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.type"]; ok {
+		if ret.AuthorityURL == nil {
+			ret.AuthorityURL = &AuthorityURL{}
+		}
+		ret.AuthorityURL.OnlineResource.Type = &l
+	}
+	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.href"]; ok {
+		if ret.AuthorityURL == nil {
+			ret.AuthorityURL = &AuthorityURL{}
+		}
+		ret.AuthorityURL.OnlineResource.Href = &l
+	}
+
+	if l, ok := metadata["tilemetadata.identifier.authority"]; ok {
+		if ret.Identifier == nil {
+			ret.Identifier = &Identifier{}
+		}
+		ret.Identifier.Authority = l
+	}
+	if l, ok := metadata["tilemetadata.identifier.value"]; ok {
+		if ret.Identifier == nil {
+			ret.Identifier = &Identifier{}
+		}
+		ret.Identifier.Value = l
+	}
+
+	var style *Style
+	if l, ok := metadata["tilemetadata.style.name"]; ok {
+		if style == nil {
+			style = &Style{}
+			style.Title = "default"
+			style.LegendURL.Format = "image/png"
+		}
+		style.Name = l
+	}
+
+	if l, ok := metadata["tilemetadata.style.legend.width"]; ok {
+		if style == nil {
+			style = &Style{}
+			style.Title = "default"
+			style.LegendURL.Format = "image/png"
+		}
+		style.LegendURL.Width, _ = strconv.Atoi(l)
+	}
+
+	if l, ok := metadata["tilemetadata.style.legend.height"]; ok {
+		if style == nil {
+			style = &Style{}
+			style.Title = "default"
+			style.LegendURL.Format = "image/png"
+		}
+		style.LegendURL.Height, _ = strconv.Atoi(l)
+	}
+
+	if l, ok := metadata["tilemetadata.style.legend.url"]; ok {
+		if style == nil {
+			style = &Style{}
+			style.Title = "default"
+			style.LegendURL.Format = "image/png"
+		}
+		url := metadata["url"]
+		s := "simple"
+		style.LegendURL.OnlineResource.Type = &s
+		u := url + l
+		style.LegendURL.OnlineResource.Href = &u
+	}
+
+	return ret
 }

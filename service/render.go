@@ -24,6 +24,7 @@ type Provider interface {
 	GetGrid() *geo.TileGrid
 	GetBBox() vec2d.Rect
 	GetSrs() geo.Proj
+	GetExtent() *geo.MapExtent
 	GetFormatMimeType() string
 	GetFormat() string
 	GetMetadata() map[string]string

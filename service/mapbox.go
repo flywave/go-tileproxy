@@ -170,6 +170,10 @@ func NewMapboxTileProvider(name string, md map[string]string, tileManager cache.
 	return ret
 }
 
+func (t *MapboxTileProvider) GetExtent() *geo.MapExtent {
+	return t.extent
+}
+
 func (t *MapboxTileProvider) GetName() string {
 	return t.name
 }

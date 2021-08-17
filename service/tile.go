@@ -436,6 +436,10 @@ func NewTileProvider(name string, title string, md map[string]string, tileManage
 	return ret
 }
 
+func (t *TileProvider) GetExtent() *geo.MapExtent {
+	return t.extent
+}
+
 func (t *TileProvider) GetName() string {
 	return t.name
 }

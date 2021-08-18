@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/tile"
-
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type mockClient struct {
@@ -29,8 +29,36 @@ func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte)
 	return c.code, c.body
 }
 
+type mockContext struct {
+	Context
+	c *mockClient
+}
+
+func (c *mockContext) GetHttpClient() HttpClient {
+	return c.c
+}
+
+func (c *mockContext) Run() error {
+	return nil
+}
+
+func (c *mockContext) Stop() {
+}
+
+func (c *mockContext) Empty() bool {
+	return false
+}
+
+func (c *mockContext) Size() int {
+	return 1
+}
+
+func (c *mockContext) Sync() {
+}
+
 func TestWMSClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	param := http.Header{
 		"layers":      []string{"foo"},
@@ -39,7 +67,7 @@ func TestWMSClient(t *testing.T) {
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
 
-	client := NewWMSClient(req, mock)
+	client := NewWMSClient(req, ctx)
 	format := tile.TileFormat("png")
 	client.Retrieve(query, &format)
 
@@ -51,6 +79,8 @@ func TestWMSClient(t *testing.T) {
 func TestWMSInfoClient(t *testing.T) {
 	mockF := "text"
 	mock := &mockClient{code: 200, body: []byte(mockF)}
+	ctx := &mockContext{c: mock}
+
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
@@ -58,7 +88,7 @@ func TestWMSInfoClient(t *testing.T) {
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewSRSProj4("EPSG:25832")}}
 
-	client := NewWMSInfoClient(req, srs, mock)
+	client := NewWMSInfoClient(req, srs, ctx)
 
 	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:4326"), Pos: [2]float64{128, 64}, Format: "text/plain"}
 
@@ -75,12 +105,14 @@ func TestWMSLegendClient(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
+
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
 	req := request.NewWMSLegendGraphicRequest(param, "/service?map=foo", false, nil, false)
 
-	client := NewWMSLegendClient(req, mock)
+	client := NewWMSLegendClient(req, ctx)
 
 	query := &layer.LegendQuery{Scale: 2}
 

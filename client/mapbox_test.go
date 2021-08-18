@@ -12,10 +12,11 @@ import (
 
 func TestMapboxTileClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: geo.NewInt(2)}
 
-	client := NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
+	client := NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
 	client.GetTile(query)
 
@@ -30,10 +31,11 @@ func TestMapboxSpriteClient(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: geo.NewInt(2)}
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	src := client.GetSprite(query)
 
@@ -44,10 +46,11 @@ func TestMapboxSpriteClient(t *testing.T) {
 
 func TestMapboxStyleClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	query := &layer.StyleQuery{StyleID: "testStylteId"}
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	client.GetStyle(query)
 
@@ -58,10 +61,11 @@ func TestMapboxStyleClient(t *testing.T) {
 
 func TestMapboxGlyphsClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	query := &layer.GlyphsQuery{Font: "Arial Unicode MS", Start: 0, End: 255}
 
-	client := NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", mock)
+	client := NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	f := client.GetGlyphs(query)
 

@@ -25,8 +25,36 @@ func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte)
 	return c.code, c.body
 }
 
+type mockContext struct {
+	client.Context
+	c *mockClient
+}
+
+func (c *mockContext) GetHttpClient() client.HttpClient {
+	return c.c
+}
+
+func (c *mockContext) Run() error {
+	return nil
+}
+
+func (c *mockContext) Stop() {
+}
+
+func (c *mockContext) Empty() bool {
+	return false
+}
+
+func (c *mockContext) Size() int {
+	return 1
+}
+
+func (c *mockContext) Sync() {
+}
+
 func TestTileSource(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -35,7 +63,7 @@ func TestTileSource(t *testing.T) {
 
 	urlTemplate := client.NewURLTemplate("/{{ .tms_path }}.png", "")
 
-	client := client.NewTileClient(grid, urlTemplate, mock)
+	client := client.NewTileClient(grid, urlTemplate, ctx)
 
 	creater := &dummyCreater{}
 

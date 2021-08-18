@@ -69,9 +69,9 @@ type MapClient interface {
 }
 
 type BaseClient struct {
-	http HttpClient
+	ctx Context
 }
 
 func (c *BaseClient) GetHttpClient() HttpClient {
-	return c.http
+	return c.ctx.GetHttpClient()
 }

@@ -12,6 +12,7 @@ import (
 
 func TestLuoKuangTileSource(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -20,7 +21,7 @@ func TestLuoKuangTileSource(t *testing.T) {
 
 	creater := &dummyCreater{}
 
-	client := client.NewLuoKuangTileClient("https://api.luokuang.com", "DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8", "map", mock)
+	client := client.NewLuoKuangTileClient("https://api.luokuang.com", "DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8", "map", ctx)
 
 	source := &LuoKuangTileSource{Grid: grid, Client: client, SourceCreater: creater}
 

@@ -25,6 +25,7 @@ func TestCacheMapLayer(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -45,7 +46,7 @@ func TestCacheMapLayer(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
@@ -72,6 +73,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -92,7 +94,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
@@ -119,6 +121,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -139,7 +142,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 

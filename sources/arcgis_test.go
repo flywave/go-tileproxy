@@ -23,6 +23,7 @@ func TestArcGISSource(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -34,7 +35,7 @@ func TestArcGISSource(t *testing.T) {
 	}
 	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
 
-	client := client.NewArcGISClient(req, mock)
+	client := client.NewArcGISClient(req, ctx)
 
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 

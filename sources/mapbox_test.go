@@ -27,6 +27,7 @@ func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interf
 
 func TestMapboxTileSource(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -35,7 +36,7 @@ func TestMapboxTileSource(t *testing.T) {
 
 	creater := &dummyCreater{}
 
-	client := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", mock)
+	client := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
 	source := &MapboxTileSource{Grid: grid, Client: client, SourceCreater: creater}
 

@@ -49,27 +49,51 @@ func makeBBoxTask(tile_mgr cache.Manager, bbox vec2d.Rect, srs geo.Proj, levels 
 	return NewTileSeedTask(md, tile_mgr, levels, nil, coverage)
 }
 
-type MockProgressLogger struct {
+type MockLogWriter struct {
+	LogWriter
+	out []string
 }
 
-func (m *MockProgressLogger) LogMessage() {
-
+func (l *MockLogWriter) WriteString(s string) (n int, err error) {
+	l.out = append(l.out, s)
+	return len(s), nil
 }
 
-func (m *MockProgressLogger) LogStep(progress *SeedProgress) {
-
+func (l *MockLogWriter) Flush() error {
+	return nil
 }
 
-func (m *MockProgressLogger) LogProgress(seed *SeedProgress, level int, bbox vec2d.Rect, tiles int) {
-
+type mockContext struct {
+	client.Context
+	c *mockClient
 }
 
-func (m *MockProgressLogger) SetCurrentTaskID(id string) {
+func (c *mockContext) GetHttpClient() client.HttpClient {
+	return c.c
+}
 
+func (c *mockContext) Run() error {
+	return nil
+}
+
+func (c *mockContext) Stop() {
+}
+
+func (c *mockContext) Empty() bool {
+	return false
+}
+
+func (c *mockContext) Size() int {
+	return 1
+}
+
+func (c *mockContext) Sync() {
 }
 
 func TestSeeder(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
+
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
 	opts := geo.DefaultTileGridOptions()
@@ -79,7 +103,7 @@ func TestSeeder(t *testing.T) {
 
 	urlTemplate := client.NewURLTemplate("/{{ .tms_path }}.png", "")
 
-	client := client.NewTileClient(grid, urlTemplate, mock)
+	client := client.NewTileClient(grid, urlTemplate, ctx)
 
 	creater := &dummyCreater{}
 
@@ -99,10 +123,16 @@ func TestSeeder(t *testing.T) {
 
 	seedTask := makeBBoxTask(manager, vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, geo.NewSRSProj4("EPSG:4326"), []int{0, 1, 2})
 
-	ctx := &Context{}
+	local := NewLocalProgressStore("./test.task", false)
 
-	mockLog := &MockProgressLogger{}
+	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
 
-	seeder := NewTileWalker(seedTask, ctx, false, 0, mockLog, nil, false, true)
+	tile_worker_pool := NewTileWorkerPool(seedTask, logger)
+
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, nil, false, true)
 	seeder.Walk()
+
+	if mock != nil {
+		t.FailNow()
+	}
 }

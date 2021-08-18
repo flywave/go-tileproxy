@@ -112,13 +112,13 @@ func (tm *TileManager) GetRescaleTiles() int {
 	return tm.rescaleTiles
 }
 
-func (tm *TileManager) LoadTileCoord(tile_coord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error) {
-	tiles, err := tm.LoadTileCoords([][3]int{tile_coord}, dimensions, with_metadata)
+func (tm *TileManager) LoadTileCoord(tileCoord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error) {
+	tiles, err := tm.LoadTileCoords([][3]int{tileCoord}, dimensions, with_metadata)
 	return tiles.GetItem(0), err
 }
 
-func (tm *TileManager) LoadTileCoords(tile_coords [][3]int, dimensions utils.Dimensions, with_metadata bool) (*TileCollection, error) {
-	tiles := NewTileCollection(tile_coords)
+func (tm *TileManager) LoadTileCoords(tileCoords [][3]int, dimensions utils.Dimensions, with_metadata bool) (*TileCollection, error) {
+	tiles := NewTileCollection(tileCoords)
 	rescale_till_zoom := 0
 
 	if tm.rescaleTiles != -1 {

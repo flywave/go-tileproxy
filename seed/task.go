@@ -13,6 +13,7 @@ import (
 
 type Task interface {
 	GetID() string
+	GetMetadata() map[string]string
 	GetManager() cache.Manager
 	GetLevels() []int
 	GetCoverage() geo.Coverage
@@ -25,6 +26,10 @@ type BaseTask struct {
 	Coverage geo.Coverage
 	Grid     *geo.TileGrid
 	Levels   []int
+}
+
+func (t *BaseTask) GetMetadata() map[string]string {
+	return t.Metadata
 }
 
 func (t *BaseTask) GetManager() cache.Manager {

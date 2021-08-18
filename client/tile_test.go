@@ -52,13 +52,14 @@ func TestTileURLTemplate(t *testing.T) {
 
 func TestTileClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	ut := NewURLTemplate("/key={{ .quadkey }}&format={{ .format }}", "png")
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
 	grid := geo.NewTileGrid(opts)
 
-	client := NewTileClient(grid, ut, mock)
+	client := NewTileClient(grid, ut, ctx)
 
 	ret := client.GetTile([3]int{5, 13, 9}, nil)
 

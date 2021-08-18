@@ -17,8 +17,8 @@ type MapboxTileClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileClient(url string, userName string, token string, mapid string, client HttpClient) *MapboxTileClient {
-	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token, MapId: mapid}}
+func NewMapboxTileClient(url string, userName string, token string, mapid string, ctx Context) *MapboxTileClient {
+	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token, MapId: mapid}}
 }
 
 func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
@@ -26,7 +26,7 @@ func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -37,8 +37,8 @@ type MapboxStyleClient struct {
 	MapboxClient
 }
 
-func NewMapboxStyleClient(url string, userName string, token string, client HttpClient) *MapboxStyleClient {
-	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxStyleClient(url string, userName string, token string, ctx Context) *MapboxStyleClient {
+	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.SpriteJSON {
@@ -46,7 +46,7 @@ func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.Sprite
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateSpriteJSON(resp)
 	}
@@ -58,7 +58,7 @@ func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateSprite(resp)
 	}
@@ -70,7 +70,7 @@ func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateStyle(resp)
 	}
@@ -81,8 +81,8 @@ type MapboxGlyphsClient struct {
 	MapboxClient
 }
 
-func NewMapboxGlyphsClient(url string, userName string, token string, client HttpClient) *MapboxGlyphsClient {
-	return &MapboxGlyphsClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxGlyphsClient(url string, userName string, token string, ctx Context) *MapboxGlyphsClient {
+	return &MapboxGlyphsClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
@@ -90,7 +90,7 @@ func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateGlyphs(resp)
 	}

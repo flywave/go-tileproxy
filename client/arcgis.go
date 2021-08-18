@@ -19,14 +19,14 @@ type ArcGISClient struct {
 	RequestTemplate *request.ArcGISRequest
 }
 
-func NewArcGISClient(req *request.ArcGISRequest, client HttpClient) *ArcGISClient {
-	ret := &ArcGISClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
+func NewArcGISClient(req *request.ArcGISRequest, ctx Context) *ArcGISClient {
+	ret := &ArcGISClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}}
 	return ret
 }
 
 func (c *ArcGISClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
 	url := c.queryURL(query, format)
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -57,8 +57,8 @@ type ArcGISInfoClient struct {
 	Tolerance        int
 }
 
-func NewArcGISInfoClient(req *request.ArcGISIdentifyRequest, supported_srs *geo.SupportedSRS, client HttpClient, return_geometries bool, tolerance int) *ArcGISInfoClient {
-	ret := &ArcGISInfoClient{BaseClient: BaseClient{http: client}, RequestTemplate: req, SupportedSrs: supported_srs, ReturnGeometries: return_geometries, Tolerance: tolerance}
+func NewArcGISInfoClient(req *request.ArcGISIdentifyRequest, supported_srs *geo.SupportedSRS, ctx Context, return_geometries bool, tolerance int) *ArcGISInfoClient {
+	ret := &ArcGISInfoClient{BaseClient: BaseClient{ctx: ctx}, RequestTemplate: req, SupportedSrs: supported_srs, ReturnGeometries: return_geometries, Tolerance: tolerance}
 	return ret
 }
 
@@ -90,7 +90,7 @@ func (c *ArcGISInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.In
 
 func (c *ArcGISInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}

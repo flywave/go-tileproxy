@@ -23,8 +23,8 @@ type WMSClient struct {
 	FWDReqParams    map[string]string
 }
 
-func NewWMSClient(req *request.WMSMapRequest, client HttpClient) *WMSClient {
-	return &WMSClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
+func NewWMSClient(req *request.WMSMapRequest, ctx Context) *WMSClient {
+	return &WMSClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}}
 }
 
 func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
@@ -49,7 +49,7 @@ func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []b
 		url = c.queryURL(query, format)
 		data = nil
 	}
-	status, resp := c.http.Open(url, data)
+	status, resp := c.GetHttpClient().Open(url, data)
 	if status == 200 {
 		return resp
 	}
@@ -105,8 +105,8 @@ type WMSInfoClient struct {
 	SupportedSrs    *geo.SupportedSRS
 }
 
-func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, client HttpClient) *WMSInfoClient {
-	return &WMSInfoClient{RequestTemplate: req, SupportedSrs: supported_srs, BaseClient: BaseClient{http: client}}
+func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, ctx Context) *WMSInfoClient {
+	return &WMSInfoClient{RequestTemplate: req, SupportedSrs: supported_srs, BaseClient: BaseClient{ctx: ctx}}
 }
 
 func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
@@ -158,7 +158,7 @@ func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQ
 
 func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -196,8 +196,8 @@ type WMSLegendClient struct {
 	RequestTemplate *request.WMSLegendGraphicRequest
 }
 
-func NewWMSLegendClient(req *request.WMSLegendGraphicRequest, client HttpClient) *WMSLegendClient {
-	return &WMSLegendClient{RequestTemplate: req, BaseClient: BaseClient{http: client}}
+func NewWMSLegendClient(req *request.WMSLegendGraphicRequest, ctx Context) *WMSLegendClient {
+	return &WMSLegendClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}}
 }
 
 func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
@@ -214,7 +214,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 	url := c.queryURL(query)
-	states, resp := c.http.Open(url, nil)
+	states, resp := c.GetHttpClient().Open(url, nil)
 	if states == 200 {
 		return resp
 	}

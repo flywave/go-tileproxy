@@ -6,8 +6,8 @@ type LuoKuangTileClient struct {
 	MapboxClient
 }
 
-func NewLuoKuangTileClient(url string, token string, mapid string, client HttpClient) *LuoKuangTileClient {
-	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{http: client}, BaseURL: url, AccessToken: token, MapId: mapid}}
+func NewLuoKuangTileClient(url string, token string, mapid string, ctx Context) *LuoKuangTileClient {
+	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, AccessToken: token, MapId: mapid}}
 }
 
 func (c *LuoKuangTileClient) GetTile(q *layer.LuoKuangTileQuery) []byte {
@@ -15,7 +15,7 @@ func (c *LuoKuangTileClient) GetTile(q *layer.LuoKuangTileQuery) []byte {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.http.Open(url, nil)
+	status, resp := c.GetHttpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}

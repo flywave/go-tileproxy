@@ -19,7 +19,7 @@ func NewSeedProgress() *SeedProgress {
 }
 
 func (p *SeedProgress) StepForward(subtiles int) {
-	p.progress += float32(p.levelProgresses[len(p.levelProgresses)-1][0]) / float32(subtiles)
+	p.progress += float32(p.levelProgressPercentages[len(p.levelProgressPercentages)-1]) / float32(subtiles)
 }
 
 func (p *SeedProgress) ToString() string {
@@ -37,7 +37,7 @@ func statusSymbol(i, total int) string {
 	}
 }
 
-func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
+func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 	if p.levelProgresses == nil {
 		p.levelProgresses = [][2]int{}
 	}
@@ -47,7 +47,9 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
 	p.progressStrParts = append(p.progressStrParts, statusSymbol(i, subtiles))
 	p.levelProgressPercentages = append(p.levelProgressPercentages, p.levelProgressPercentages[len(p.levelProgressPercentages)-1]/float32(subtiles))
 
-	task()
+	if !task() {
+		return false
+	}
 
 	p.levelProgressPercentages = p.levelProgressPercentages[1:]
 	p.progressStrParts = p.progressStrParts[1:]
@@ -56,6 +58,7 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func()) {
 	if p.levelProgressesLevel == 0 {
 		p.levelProgresses = [][2]int{}
 	}
+	return true
 }
 
 func (p *SeedProgress) Running() bool {
@@ -64,6 +67,13 @@ func (p *SeedProgress) Running() bool {
 
 func (p *SeedProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
+}
+
+func (p *SeedProgress) CurrentProgressIdentifier() [][2]int {
+	if p.AlreadyProcessed() || p.levelProgresses == nil {
+		return p.oldLevelProgresses
+	}
+	return p.levelProgresses[:]
 }
 
 func iziplongest(fillvalue int, iterables ...[][2]int) [][]int {

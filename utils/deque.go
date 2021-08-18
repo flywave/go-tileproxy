@@ -212,3 +212,13 @@ func (q *Deque) resize() {
 	q.tail = q.count
 	q.buf = newBuf
 }
+
+func (q *Deque) Contains(v interface{}, Eq func(a, b interface{}) bool) bool {
+	modBits := len(q.buf) - 1
+	for h := q.head; h != q.tail; h = (h + 1) & modBits {
+		if Eq(q.buf[h], v) {
+			return true
+		}
+	}
+	return false
+}

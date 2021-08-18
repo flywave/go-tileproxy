@@ -14,6 +14,7 @@ import (
 
 func TestArcGISClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -21,7 +22,7 @@ func TestArcGISClient(t *testing.T) {
 	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
 
-	client := NewArcGISClient(req, mock)
+	client := NewArcGISClient(req, ctx)
 	format := tile.TileFormat("png")
 	client.Retrieve(query, &format)
 
@@ -33,6 +34,7 @@ func TestArcGISClient(t *testing.T) {
 func TestArcGISInfoClient(t *testing.T) {
 	mockF := "text"
 	mock := &mockClient{code: 200, body: []byte(mockF)}
+	ctx := &mockContext{c: mock}
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -42,7 +44,7 @@ func TestArcGISInfoClient(t *testing.T) {
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewSRSProj4("EPSG:4326")}}
 
-	client := NewArcGISInfoClient(req, srs, mock, false, 5)
+	client := NewArcGISInfoClient(req, srs, ctx, false, 5)
 
 	feature := client.GetInfo(query)
 

@@ -23,6 +23,7 @@ func TestWMSSource(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -34,7 +35,7 @@ func TestWMSSource(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 

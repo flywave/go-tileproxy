@@ -3,6 +3,7 @@ package seed
 import (
 	"errors"
 	"math"
+	"reflect"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -12,7 +13,6 @@ import (
 )
 
 type TileWalker struct {
-	Ctx                    *Context
 	manager                cache.Manager
 	task                   Task
 	workOnMetatiles        bool
@@ -26,13 +26,14 @@ type TileWalker struct {
 	progressLogger         ProgressLogger
 	handleStale            bool
 	handleUncached         bool
+	pool                   *TileWorkerPool
 }
 
-func NewTileWalker(task Task, ctx *Context,
-	work_on_metatiles bool, skip_geoms_for_last_levels int, progress_logger ProgressLogger,
-	seed_progress *SeedProgress, handle_stale, handle_uncached bool) *TileWalker {
-	ret := &TileWalker{Ctx: ctx, task: task, manager: task.GetManager(), workOnMetatiles: work_on_metatiles,
-		skipGeomsForLastLevels: skip_geoms_for_last_levels, seedProgress: seed_progress, progressLogger: progress_logger, handleStale: handle_stale, handleUncached: handle_uncached}
+func NewTileWalker(task Task, tileWorkerPool *TileWorkerPool,
+	workOnMetatiles bool, skipGeomsForLastLevels int, progressLogger ProgressLogger,
+	seedProgress *SeedProgress, handleStale, handleUNCached bool) *TileWalker {
+	ret := &TileWalker{pool: tileWorkerPool, task: task, manager: task.GetManager(), workOnMetatiles: workOnMetatiles,
+		skipGeomsForLastLevels: skipGeomsForLastLevels, seedProgress: seedProgress, progressLogger: progressLogger, handleStale: handleStale, handleUncached: handleUNCached}
 
 	num_seed_levels := len(task.GetLevels())
 	if num_seed_levels >= 4 {
@@ -49,8 +50,8 @@ func NewTileWalker(task Task, ctx *Context,
 	ret.tilesPerMetatile = int(metaSize[0] * metaSize[1])
 	ret.grid = &geo.MetaGrid{TileGrid: *ret.manager.GetGrid(), MetaSize: metaSize, MetaBuffer: 0}
 	ret.count = 0
-	if seed_progress != nil {
-		ret.seedProgress = seed_progress
+	if seedProgress != nil {
+		ret.seedProgress = seedProgress
 	} else {
 		ret.seedProgress = NewSeedProgress()
 	}
@@ -111,13 +112,13 @@ func filterIsStale(manager cache.Manager, handle_tiles [][3]int) [][3]int {
 	return ret
 }
 
-func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, all_subtiles bool) error {
+func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, all_subtiles bool) bool {
 	_, tiles, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, current_level)
-	total_subtiles := tiles[0] * tiles[1]
+	total_subtiles := int(tiles[0] * tiles[1])
 	if len(levels) < t.skipGeomsForLastLevels {
 		all_subtiles = true
 	}
-	subtiles_it := t.filterSubtiles(subtiles, all_subtiles, t.grid, t.task)
+	subtiles_it := t.filterSubtiles(subtiles, all_subtiles)
 
 	if levelInLevels(current_level, levels) && current_level <= t.reportTillLevel {
 		t.reportProgress(current_level, cur_bbox)
@@ -128,7 +129,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 			t.reportProgress(current_level, cur_bbox)
 		}
 		t.manager.Cleanup()
-		return nil
+		return false
 	}
 
 	process := false
@@ -145,7 +146,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 			continue
 		}
 
-		if levels != nil {
+		if len(levels) > 0 {
 			sub_bbox = limitSubBBox(cur_bbox, *sub_bbox)
 			if intersection == CONTAINS {
 				all_subtiles = true
@@ -153,27 +154,38 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 				all_subtiles = false
 			}
 
-			t.seedProgress.StepDown(i, total_subtiles, func() {
+			if !t.seedProgress.StepDown(i, total_subtiles, func() bool {
 				if t.seedProgress.AlreadyProcessed() {
 					t.seedProgress.StepForward(1)
 				} else {
-					t.walk(*sub_bbox, levels, current_level+1,
-						all_subtiles)
+					if !t.walk(*sub_bbox, levels, current_level+1, all_subtiles) {
+						return false
+					}
 				}
-			})
+				return true
+			}) {
+				return false
+			}
 		}
 
 		if !process {
 			continue
 		}
 
-		if _, ok := t.seededTiles[current_level]; ok {
-			if levels == nil {
+		if t.seededTiles[current_level].Contains(subtile, func(a, b interface{}) bool {
+			aa := a.([]int)
+			bb := b.([]int)
+			if aa[0] == bb[0] && aa[1] == bb[1] && aa[2] == bb[2] {
+				return true
+			}
+			return false
+		}) {
+			if len(levels) == 0 {
 				t.seedProgress.StepForward(total_subtiles)
 			}
 			continue
 		}
-		t.seededTiles[current_level].PushBack(subtile)
+		t.seededTiles[current_level].PushFront(subtile)
 
 		var handle_tiles [][3]int
 
@@ -191,7 +203,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 		if handle_tiles != nil {
 			t.count += 1
-			t.process(handle_tiles, t.seedProgress)
+			t.pool.Process(handle_tiles, t.seedProgress)
 		}
 
 		if levels == nil {
@@ -204,14 +216,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 	if len(levels) >= 4 {
 		t.manager.Cleanup()
 	}
-	return nil
-}
-
-func (t *TileWalker) process(tiles [][3]int, progress *SeedProgress) {
-	//TODO
-	if t.progressLogger != nil {
-		t.progressLogger.LogStep(progress)
-	}
+	return true
 }
 
 func (t *TileWalker) reportProgress(level int, bbox vec2d.Rect) {
@@ -266,11 +271,11 @@ func (it *TileIterator) Next() (rsubtile []int, rsub_bbox *vec2d.Rect, intersect
 	}
 }
 
-func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool, grid *geo.MetaGrid, task Task) *TileIterator {
-	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: grid, task: task}
+func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool) *TileIterator {
+	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: t.grid, task: t.task}
 }
 
-func seedTask(task Task, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
+func seedTask(task Task, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null!")
 	}
@@ -282,36 +287,50 @@ func seedTask(task Task, skipGeomsForLastLevels int, progress_logger ProgressLog
 		work_on_metatiles = false
 	}
 
-	ctx := &Context{}
-	tile_walker := NewTileWalker(task, ctx, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
+	tile_worker_pool := NewTileWorkerPool(task, progress_logger)
+	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
 	return nil
 }
 
-func Seed(tasks []Task, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
+func reverse(slice interface{}) interface{} {
+	s := reflect.ValueOf(slice)
+
+	if s.Kind() == reflect.Ptr {
+		s = s.Elem()
+	}
+	swp := reflect.Swapper(s.Interface())
+	for i, j := 0, s.Len()-1; i < j; i, j = i+1, j-1 {
+		swp(i, j)
+	}
+	return slice
+}
+
+func Seed(tasks []Task, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
 
 	active_tasks := tasks[:]
+	reverse(active_tasks)
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
-		if err := cache_locker.Lock("cache_name", func() error {
+		md := task.GetMetadata()
+		if err := cache_locker.Lock(md["cache_name"], func() error {
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskID(task.GetID())
-				start_progress = progress_store.LoadProgress(task.GetID())
+				start_progress = progress_store.Get(task.GetID())
 			} else {
 				start_progress = nil
 			}
 			seed_progress := &SeedProgress{oldLevelProgresses: start_progress}
-			return seedTask(task, skipGeomsForLastLevels, progress_logger, seed_progress)
+			return seedTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
-			temp := []Task{task}
-			active_tasks = append(temp, active_tasks[:len(active_tasks)-1]...)
+			active_tasks = append([]Task{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
-			active_tasks = active_tasks[:len(active_tasks)-2]
+			active_tasks = active_tasks[:len(active_tasks)-1]
 		}
 	}
 }

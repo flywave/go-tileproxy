@@ -46,12 +46,40 @@ func create_cached_tile(tile [3]int, data []byte, cache *LocalCache, timestamp *
 	}
 }
 
+type mockContext struct {
+	client.Context
+	c *mockClient
+}
+
+func (c *mockContext) GetHttpClient() client.HttpClient {
+	return c.c
+}
+
+func (c *mockContext) Run() error {
+	return nil
+}
+
+func (c *mockContext) Stop() {
+}
+
+func (c *mockContext) Empty() bool {
+	return false
+}
+
+func (c *mockContext) Size() int {
+	return 1
+}
+
+func (c *mockContext) Sync() {
+}
+
 func TestTileManager(t *testing.T) {
 	rgba := image.NewRGBA(image.Rect(0, 0, 256, 256))
 	imagedata := &bytes.Buffer{}
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -72,7 +100,7 @@ func TestTileManager(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
@@ -121,6 +149,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	png.Encode(imagedata, rgba)
 
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
+	ctx := &mockContext{c: mock}
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -141,7 +170,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, mock)
+	client := client.NewWMSClient(req, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 

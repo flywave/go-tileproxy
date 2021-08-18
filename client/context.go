@@ -7,7 +7,6 @@ import (
 )
 
 type Config struct {
-	URL               string
 	SkipSSL           bool
 	Threads           int
 	UserAgent         string

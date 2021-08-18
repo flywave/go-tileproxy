@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 	"os"
+	"time"
 
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -17,8 +18,10 @@ type Cache interface {
 	StoreTiles(tiles *TileCollection) error
 	RemoveTile(tile *Tile) error
 	RemoveTiles(tile *TileCollection) error
+	RemoveLevelTilesBefore(level int, timestamp time.Time) error
 	IsCached(tile *Tile) bool
 	LoadTileMetadata(tile *Tile) error
+	LevelLocation(level int) string
 }
 
 type LocalCache struct {
@@ -133,5 +136,9 @@ func (c *LocalCache) LoadTileMetadata(tile *Tile) error {
 	}
 	tile.Timestamp = stats.ModTime()
 	tile.Size = stats.Size()
+	return nil
+}
+
+func (c *LocalCache) RemoveLevelTilesBefore(level int, timestamp time.Time) error {
 	return nil
 }

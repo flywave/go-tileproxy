@@ -28,6 +28,7 @@ type Manager interface {
 	IsCached(tileCoord [3]int, dimensions utils.Dimensions) bool
 	IsStale(tileCoord [3]int, dimensions utils.Dimensions) bool
 	ExpireTimestamp(tile *Tile) *time.Time
+	SetExpireTimestamp(t *time.Time)
 	ApplyTileFilter(tile *Tile) *Tile
 	Creator(dimensions utils.Dimensions) *TileCreator
 	Lock(ctx context.Context, tile *Tile, run func() error) error

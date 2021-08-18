@@ -48,6 +48,10 @@ func NewDefaultProgressLogger(out LogWriter, silent bool, verbose bool, progress
 	return &DefaultProgressLogger{Out: out, Silent: silent, Verbose: verbose, ProgressStore: progress_store, LastStep: time.Now(), LastProgress: time.Time{}}
 }
 
+func (p *DefaultProgressLogger) GetStore() ProgressStore {
+	return p.ProgressStore
+}
+
 func (p *DefaultProgressLogger) SetCurrentTaskID(id string) {
 	p.CurrentTaskID = id
 }

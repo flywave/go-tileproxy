@@ -275,7 +275,7 @@ func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool) *TileI
 	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: t.grid, task: t.task}
 }
 
-func seedTask(task Task, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
+func seedTask(task *TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null!")
 	}
@@ -307,7 +307,7 @@ func reverse(slice interface{}) interface{} {
 	return slice
 }
 
-func Seed(tasks []Task, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
+func Seed(tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -328,7 +328,7 @@ func Seed(tasks []Task, concurrency int, skipGeomsForLastLevels int, progress_lo
 			seed_progress := &SeedProgress{oldLevelProgresses: start_progress}
 			return seedTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
-			active_tasks = append([]Task{task}, active_tasks[:len(active_tasks)-1]...)
+			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
 			active_tasks = active_tasks[:len(active_tasks)-1]
 		}

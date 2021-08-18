@@ -76,7 +76,7 @@ func (p *SeedProgress) CurrentProgressIdentifier() [][2]int {
 	return p.levelProgresses[:]
 }
 
-func iziplongest(fillvalue int, iterables ...[][2]int) [][]int {
+func iziplongest(fillvalue int, iterables ...[]int) [][]int {
 	if len(iterables) == 0 {
 		return nil
 	}
@@ -94,7 +94,7 @@ func iziplongest(fillvalue int, iterables ...[][2]int) [][]int {
 		newresult := make([]int, len(iterables))
 		for j, v := range iterables {
 			if i < len(v) {
-				newresult[j] = v[i][0]
+				newresult[j] = v[i]
 			} else {
 				newresult[j] = fillvalue
 			}
@@ -116,7 +116,16 @@ func (p *SeedProgress) canSkip(old_progress, current_progress [][2]int) bool {
 	if len(old_progress) == 0 {
 		return true
 	}
-	zips := iziplongest(-1, old_progress, current_progress)
+	old := make([]int, len(old_progress))
+	for i := range old_progress {
+		old[i] = old_progress[i][0]
+	}
+	current := make([]int, len(current_progress))
+	for i := range current_progress {
+		current[i] = current_progress[i][0]
+	}
+
+	zips := iziplongest(-1, old, current)
 	for i := range zips {
 		old := zips[i][0]
 		current := zips[i][1]

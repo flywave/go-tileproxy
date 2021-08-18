@@ -285,6 +285,10 @@ func (tm *TileManager) ExpireTimestamp(tile *Tile) *time.Time {
 	return tm.expireTimestamp
 }
 
+func (tm *TileManager) SetExpireTimestamp(t *time.Time) {
+	tm.expireTimestamp = t
+}
+
 func (tm *TileManager) ApplyTileFilter(tile *Tile) *Tile {
 	if tile.Stored {
 		return tile

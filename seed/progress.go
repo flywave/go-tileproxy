@@ -8,10 +8,10 @@ import (
 type SeedProgress struct {
 	progress                 float32
 	levelProgressPercentages []float32
-	levelProgresses          [][2]int
+	levelProgresses          []int
 	levelProgressesLevel     int
 	progressStrParts         []string
-	oldLevelProgresses       [][2]int
+	oldLevelProgresses       []int
 }
 
 func NewSeedProgress() *SeedProgress {
@@ -39,10 +39,10 @@ func statusSymbol(i, total int) string {
 
 func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 	if p.levelProgresses == nil {
-		p.levelProgresses = [][2]int{}
+		p.levelProgresses = []int{}
 	}
 	p.levelProgresses = p.levelProgresses[:p.levelProgressesLevel]
-	p.levelProgresses = append(p.levelProgresses, [2]int{i, subtiles})
+	p.levelProgresses = append(p.levelProgresses, i)
 	p.levelProgressesLevel += 1
 	p.progressStrParts = append(p.progressStrParts, statusSymbol(i, subtiles))
 	p.levelProgressPercentages = append(p.levelProgressPercentages, p.levelProgressPercentages[len(p.levelProgressPercentages)-1]/float32(subtiles))
@@ -56,7 +56,7 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 
 	p.levelProgressesLevel -= 1
 	if p.levelProgressesLevel == 0 {
-		p.levelProgresses = [][2]int{}
+		p.levelProgresses = []int{}
 	}
 	return true
 }
@@ -69,7 +69,7 @@ func (p *SeedProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }
 
-func (p *SeedProgress) CurrentProgressIdentifier() [][2]int {
+func (p *SeedProgress) CurrentProgressIdentifier() []int {
 	if p.AlreadyProcessed() || p.levelProgresses == nil {
 		return p.oldLevelProgresses
 	}
@@ -106,7 +106,7 @@ func iziplongest(fillvalue int, iterables ...[]int) [][]int {
 	return results
 }
 
-func (p *SeedProgress) canSkip(old_progress, current_progress [][2]int) bool {
+func (p *SeedProgress) canSkip(old_progress, current_progress []int) bool {
 	if current_progress == nil {
 		return false
 	}
@@ -116,16 +116,8 @@ func (p *SeedProgress) canSkip(old_progress, current_progress [][2]int) bool {
 	if len(old_progress) == 0 {
 		return true
 	}
-	old := make([]int, len(old_progress))
-	for i := range old_progress {
-		old[i] = old_progress[i][0]
-	}
-	current := make([]int, len(current_progress))
-	for i := range current_progress {
-		current[i] = current_progress[i][0]
-	}
 
-	zips := iziplongest(-1, old, current)
+	zips := iziplongest(-1, old_progress, current_progress)
 	for i := range zips {
 		old := zips[i][0]
 		current := zips[i][1]

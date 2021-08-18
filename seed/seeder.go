@@ -318,7 +318,7 @@ func Seed(tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, pr
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
 		if err := cache_locker.Lock(md["cache_name"], func() error {
-			var start_progress [][2]int
+			var start_progress []int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskID(task.GetID())
 				start_progress = progress_store.Get(task.GetID())

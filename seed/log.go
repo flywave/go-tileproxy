@@ -3,9 +3,9 @@ package seed
 import vec2d "github.com/flywave/go3d/float64/vec2"
 
 type ProgressStore interface {
-	Store(id string, progress [][2]int)
-	Get(id string) [][2]int
-	Load() map[string][][2]int
+	Store(id string, progress []int)
+	Get(id string) []int
+	Load() map[string][]int
 	Save() error
 	Remove() error
 }

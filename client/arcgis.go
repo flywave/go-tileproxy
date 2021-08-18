@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type ArcGISClient struct {

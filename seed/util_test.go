@@ -21,8 +21,8 @@ func TestProgressLogger(t *testing.T) {
 func TestLocalProgressStore(t *testing.T) {
 	store := NewLocalProgressStore("./test.task", false)
 
-	store.Store("1", [][2]int{{0, 1}, {1, 1}})
-	store.Store("2", [][2]int{{0, 1}, {1, 1}})
+	store.Store("1", []int{0, 1})
+	store.Store("2", []int{0, 1})
 
 	store.Save()
 

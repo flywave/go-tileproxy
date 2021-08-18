@@ -54,7 +54,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 
 	location := c.TileLocation(tile, false)
 
-	if ok, _ := utils.FileExists(location); ok {
+	if utils.FileExists(location) {
 		if withMetadata {
 			c.LoadTileMetadata(tile)
 		}
@@ -118,7 +118,7 @@ func (c *LocalCache) RemoveTiles(tiles *TileCollection) error {
 func (c *LocalCache) IsCached(tile *Tile) bool {
 	if tile.IsMissing() {
 		location := c.TileLocation(tile, false)
-		if ok, _ := utils.FileExists(location); ok {
+		if utils.FileExists(location) {
 			return true
 		} else {
 			return false

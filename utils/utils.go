@@ -6,13 +6,13 @@ import (
 	colorful "github.com/lucasb-eyer/go-colorful"
 )
 
-func FileExists(filename string) (bool, error) {
+func FileExists(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false, nil
+		return false
 	} else if err != nil {
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
 }
 
 func IsDir(path string) (bool, error) {

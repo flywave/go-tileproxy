@@ -149,7 +149,7 @@ func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat,
 	wr := &bytes.Buffer{}
 	tmpl.Execute(wr, data)
 
-	return string(wr.Bytes())
+	return wr.String()
 }
 
 func (t *TileURLTemplate) ToString() string {

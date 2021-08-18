@@ -114,7 +114,7 @@ func (p *DefaultProgressLogger) LogProgress(progress *SeedProgress, level int, b
 type LocalProgressStore struct {
 	ProgressStore
 	filename string
-	status   map[string][][2]int
+	status   map[string][]int
 }
 
 func NewLocalProgressStore(filename string, continue_seed bool) *LocalProgressStore {
@@ -122,7 +122,7 @@ func NewLocalProgressStore(filename string, continue_seed bool) *LocalProgressSt
 	if continue_seed {
 		ret.status = ret.Load()
 	} else {
-		ret.status = map[string][][2]int{}
+		ret.status = map[string][]int{}
 	}
 	return ret
 }
@@ -139,19 +139,19 @@ func (s *LocalProgressStore) unmarshal(data []byte) error {
 	return json.Unmarshal(data, &s.status)
 }
 
-func (s *LocalProgressStore) Store(id string, progress [][2]int) {
+func (s *LocalProgressStore) Store(id string, progress []int) {
 	s.status[id] = progress
 }
 
-func (s *LocalProgressStore) Get(id string) [][2]int {
+func (s *LocalProgressStore) Get(id string) []int {
 	if v, ok := s.status[id]; ok {
 		return v
 	}
 	return nil
 }
 
-func (s *LocalProgressStore) Load() map[string][][2]int {
-	if ok, err := utils.FileExists(s.filename); !ok || err != nil {
+func (s *LocalProgressStore) Load() map[string][]int {
+	if !utils.FileExists(s.filename) {
 		return nil
 	} else {
 		f, err := os.Open(s.filename)
@@ -177,8 +177,8 @@ func (s *LocalProgressStore) Save() error {
 }
 
 func (s *LocalProgressStore) Remove() error {
-	s.status = map[string][][2]int{}
-	if ok, err := utils.FileExists(s.filename); ok && err == nil {
+	s.status = map[string][]int{}
+	if utils.FileExists(s.filename) {
 		return os.Remove(s.filename)
 	}
 	return os.ErrNotExist

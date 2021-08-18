@@ -2,10 +2,15 @@ package seed
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/flywave/go-tileproxy/utils"
 )
 
 func Cleanup(tasks []*TileCleanupTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore) {
@@ -58,12 +63,37 @@ func simpleCleanup(task *TileCleanupTask, progress_logger ProgressLogger, cleanu
 				progress_logger.GetStore().Save()
 			}
 		}
-		cleanupDirectory(level_dir, task.RemoveTimestamp)
+		cleanupDirectory(level_dir, task.RemoveTimestamp, true)
 	}
 }
 
-func cleanupDirectory(dir string, removeTimestamp time.Time) {
+func cleanupDirectory(directory string, before_timestamp time.Time, remove_empty_dirs bool) {
+	if before_timestamp.IsZero() && remove_empty_dirs && utils.FileExists(directory) {
+		os.RemoveAll(directory)
+		return
+	}
 
+	if utils.FileExists(directory) {
+		dirs, _ := ioutil.ReadDir(directory)
+		for _, fi := range dirs {
+			if fi.IsDir() {
+				cleanupDirectory(path.Join(directory, fi.Name()), before_timestamp, remove_empty_dirs)
+				continue
+			} else {
+				filename := path.Join(directory, fi.Name())
+				if before_timestamp.IsZero() {
+					os.Remove(filename)
+				}
+				st, _ := os.Stat(filename)
+				if st.ModTime().Before(before_timestamp) {
+					os.Remove(filename)
+				}
+			}
+		}
+		if remove_empty_dirs {
+			os.Remove(directory)
+		}
+	}
 }
 
 func cacheCleanup(task *TileCleanupTask, progress_logger ProgressLogger) {
@@ -81,6 +111,10 @@ func normpath(path string) string {
 		return path
 	}
 
+	currentwd, _ := os.Getwd()
+
+	path, _ = filepath.Rel(path, currentwd)
+
 	if strings.HasPrefix(path, "../../") {
 		path, _ = filepath.Abs(path)
 	}
@@ -88,15 +122,15 @@ func normpath(path string) string {
 }
 
 type DirectoryCleanupProgress struct {
-	oldDir     [][2]int
-	currentDir [][2]int
+	oldDir     []int
+	currentDir []int
 }
 
 func (p *DirectoryCleanupProgress) stepDir(dir string) {
 	tiles := strings.Split(dir, "/")
-	p.currentDir = make([][2]int, len(tiles))
+	p.currentDir = make([]int, len(tiles))
 	for i := range tiles {
-		p.currentDir[i][0], _ = strconv.Atoi(tiles[i])
+		p.currentDir[i], _ = strconv.Atoi(tiles[i])
 	}
 }
 
@@ -104,7 +138,7 @@ func (p *DirectoryCleanupProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldDir, p.currentDir)
 }
 
-func (p *DirectoryCleanupProgress) CurrentProgressIdentifier() [][2]int {
+func (p *DirectoryCleanupProgress) CurrentProgressIdentifier() []int {
 	if p.AlreadyProcessed() || p.currentDir == nil {
 		return p.oldDir
 	}
@@ -115,23 +149,15 @@ func (p *DirectoryCleanupProgress) Running() bool {
 	return true
 }
 
-func (p *DirectoryCleanupProgress) canSkip(old_progress, current_progress [][2]int) bool {
+func (p *DirectoryCleanupProgress) canSkip(old_progress, current_progress []int) bool {
 	if old_progress == nil {
 		return false
 	}
 	if current_progress == nil {
 		return false
 	}
-	old := make([]int, len(old_progress))
-	for i := range old_progress {
-		old[i] = old_progress[i][0]
-	}
-	current := make([]int, len(current_progress))
-	for i := range current_progress {
-		current[i] = current_progress[i][0]
-	}
 
-	zips := iziplongest(-1, old, current)
+	zips := iziplongest(-1, old_progress, current_progress)
 
 	for i := range zips {
 		old := zips[i][0]
@@ -149,7 +175,6 @@ func (p *DirectoryCleanupProgress) canSkip(old_progress, current_progress [][2]i
 		if old > current {
 			return true
 		}
-		return false
 	}
 	return false
 }

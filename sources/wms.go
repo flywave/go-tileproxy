@@ -280,7 +280,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 	}
 
 	if !error_occured {
-		s.Cache.Store(legend)
+		s.Cache.Save(legend)
 	}
 	return legend.Source
 }

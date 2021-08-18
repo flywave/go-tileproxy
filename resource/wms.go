@@ -9,11 +9,19 @@ import (
 )
 
 type LegendCache struct {
-	LocalCache
+	store Store
+}
+
+func (c *LegendCache) Save(r Resource) error {
+	return c.store.Save(r)
+}
+
+func (c *LegendCache) Load(r Resource) error {
+	return c.Load(r)
 }
 
 func NewLegendCache(cache_dir string, file_ext string) *LegendCache {
-	return &LegendCache{LocalCache: LocalCache{CacheDir: cache_dir, FileExt: file_ext}}
+	return &LegendCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
 }
 
 type Legend struct {

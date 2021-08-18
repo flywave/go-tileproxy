@@ -84,7 +84,6 @@ func TestSRSConditional(t *testing.T) {
 	if layer.selectLayer(geo.NewSRSProj4("EPSG:25832")) != l25832 {
 		t.FailNow()
 	}
-
 	if layer.selectLayer(geo.NewSRSProj4("EPSG:31466")) != l3857 {
 		t.FailNow()
 	}
@@ -94,7 +93,6 @@ func TestSRSConditional(t *testing.T) {
 	if layer.selectLayer(geo.NewSRSProj4("EPSG:4258")) != l4326 {
 		t.FailNow()
 	}
-
 	if layer.selectLayer(geo.NewSRSProj4("EPSG:31467")) != l25832 {
 		t.FailNow()
 	}

@@ -12,8 +12,8 @@ type Marker struct {
 	Longitude float64
 }
 
-func NewMarker() *Marker {
-	return &Marker{}
+func NewMarker(name string, label string, color string) *Marker {
+	return &Marker{Name: name, Label: label, Color: color}
 }
 
 func (m *Marker) String() string {

@@ -11,27 +11,51 @@ import (
 )
 
 type StyleCache struct {
-	LocalCache
+	store Store
 }
 
 func NewStyleCache(cache_dir string, file_ext string) *StyleCache {
-	return &StyleCache{LocalCache: LocalCache{CacheDir: cache_dir, FileExt: file_ext}}
+	return &StyleCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+}
+
+func (c *StyleCache) Save(r Resource) error {
+	return c.store.Save(r)
+}
+
+func (c *StyleCache) Load(r Resource) error {
+	return c.Load(r)
 }
 
 type SpriteCache struct {
-	LocalCache
+	store Store
 }
 
 func NewSpriteCache(cache_dir string, file_ext string) *SpriteCache {
-	return &SpriteCache{LocalCache: LocalCache{CacheDir: cache_dir, FileExt: file_ext}}
+	return &SpriteCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+}
+
+func (c *SpriteCache) Save(r Resource) error {
+	return c.store.Save(r)
+}
+
+func (c *SpriteCache) Load(r Resource) error {
+	return c.Load(r)
 }
 
 type GlyphsCache struct {
-	LocalCache
+	store Store
+}
+
+func (c *GlyphsCache) Save(r Resource) error {
+	return c.store.Save(r)
+}
+
+func (c *GlyphsCache) Load(r Resource) error {
+	return c.Load(r)
 }
 
 func NewGlyphsCache(cache_dir string, file_ext string) *GlyphsCache {
-	return &GlyphsCache{LocalCache: LocalCache{CacheDir: cache_dir, FileExt: file_ext}}
+	return &GlyphsCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
 }
 
 type Style struct {

@@ -7,13 +7,13 @@ import (
 	"path"
 )
 
-type Cache interface {
-	Store(r Resource) error
+type Store interface {
+	Save(r Resource) error
 	Load(r Resource) error
 }
 
-type LocalCache struct {
-	Cache
+type LocalStore struct {
+	Store
 	CacheDir string
 	FileExt  string
 }
@@ -27,7 +27,7 @@ func fileExists(filename string) (bool, error) {
 	return true, nil
 }
 
-func (c *LocalCache) Store(r Resource) error {
+func (c *LocalStore) Save(r Resource) error {
 	if r.IsStored() {
 		return nil
 	}
@@ -48,7 +48,7 @@ func (c *LocalCache) Store(r Resource) error {
 	return nil
 }
 
-func (c *LocalCache) Load(r Resource) error {
+func (c *LocalStore) Load(r Resource) error {
 	hash := r.Hash()
 	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
 
@@ -68,8 +68,8 @@ func (c *LocalCache) Load(r Resource) error {
 	return errors.New("res not found!")
 }
 
-func NewLocalCache(cache_dir string, file_ext string) *LocalCache {
-	return &LocalCache{CacheDir: cache_dir, FileExt: file_ext}
+func NewLocalStore(cache_dir string, file_ext string) *LocalStore {
+	return &LocalStore{CacheDir: cache_dir, FileExt: file_ext}
 }
 
 type Resource interface {

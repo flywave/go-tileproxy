@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/flywave/go-tileproxy/crawler"
-	"github.com/flywave/go-tileproxy/queue"
+	"github.com/flywave/go-tileproxy/crawler/queue"
 )
 
 type Context interface {
@@ -29,7 +29,7 @@ func (c *CollectorContext) GetHttpClient() HttpClient {
 }
 
 func (c *CollectorContext) GetCollector() *crawler.Collector {
-	return c.GetCollector()
+	return c.Client.GetCollector()
 }
 
 func (c *CollectorContext) Run() error {

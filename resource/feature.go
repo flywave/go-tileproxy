@@ -208,7 +208,7 @@ func (d JSONFeatureInfoDoc) Combine(docs []FeatureInfoDoc) FeatureInfoDoc {
 }
 
 func CreateFeatureinfoDoc(content interface{}, info_format string) FeatureInfoDoc {
-	info_type := featureinfoType(info_format)
+	info_type := featureInfoType(info_format)
 	if info_type == "xml" {
 		return NewXMLFeatureInfoDoc(content)
 	}
@@ -228,7 +228,7 @@ var (
 	}
 )
 
-func featureinfoType(info_format string) string {
+func featureInfoType(info_format string) string {
 	formats := strings.Split(info_format, ";")
 	info_format = strings.Trim(formats[0], "")
 	if utils.ContainsString(xml_mime, info_format) {

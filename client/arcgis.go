@@ -26,7 +26,7 @@ func NewArcGISClient(req *request.ArcGISRequest, ctx Context) *ArcGISClient {
 
 func (c *ArcGISClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
 	url := c.queryURL(query, format)
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -90,7 +90,7 @@ func (c *ArcGISInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.In
 
 func (c *ArcGISInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}

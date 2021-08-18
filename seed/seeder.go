@@ -203,7 +203,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 		if handle_tiles != nil {
 			t.count += 1
-			t.pool.Process(handle_tiles, t.seedProgress)
+			t.pool.Process(&TileSeedWorker{task: t.task, manager: t.manager, tiles: handle_tiles}, t.seedProgress)
 		}
 
 		if levels == nil {
@@ -287,7 +287,7 @@ func seedTask(task Task, concurrency int, skipGeomsForLastLevels int, progress_l
 		work_on_metatiles = false
 	}
 
-	tile_worker_pool := NewTileWorkerPool(task, progress_logger)
+	tile_worker_pool := NewTileWorkerPool(concurrency, task, progress_logger)
 	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 

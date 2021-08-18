@@ -26,7 +26,7 @@ func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -46,7 +46,7 @@ func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.Sprite
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateSpriteJSON(resp)
 	}
@@ -58,7 +58,7 @@ func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateSprite(resp)
 	}
@@ -70,7 +70,7 @@ func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateStyle(resp)
 	}
@@ -90,7 +90,7 @@ func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resource.CreateGlyphs(resp)
 	}

@@ -49,7 +49,7 @@ func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []b
 		url = c.queryURL(query, format)
 		data = nil
 	}
-	status, resp := c.GetHttpClient().Open(url, data)
+	status, resp := c.httpClient().Open(url, data)
 	if status == 200 {
 		return resp
 	}
@@ -158,7 +158,7 @@ func (c *WMSInfoClient) GetTransformedQuery(query *layer.InfoQuery) *layer.InfoQ
 
 func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 	url := c.queryURL(query)
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}
@@ -214,7 +214,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 	url := c.queryURL(query)
-	states, resp := c.GetHttpClient().Open(url, nil)
+	states, resp := c.httpClient().Open(url, nil)
 	if states == 200 {
 		return resp
 	}

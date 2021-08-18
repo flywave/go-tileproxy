@@ -23,7 +23,7 @@ func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate, ctx Context) *TileC
 
 func (c *TileClient) GetTile(tile_coord [3]int, format *tile.TileFormat) []byte {
 	url := c.Template.substitute(tile_coord, format, c.Grid)
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}

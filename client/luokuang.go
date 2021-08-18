@@ -15,7 +15,7 @@ func (c *LuoKuangTileClient) GetTile(q *layer.LuoKuangTileQuery) []byte {
 	if err != nil {
 		return nil
 	}
-	status, resp := c.GetHttpClient().Open(url, nil)
+	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
 	}

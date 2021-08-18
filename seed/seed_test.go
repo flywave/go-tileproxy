@@ -68,23 +68,8 @@ type mockContext struct {
 	c *mockClient
 }
 
-func (c *mockContext) GetHttpClient() client.HttpClient {
+func (c *mockContext) Client() client.HttpClient {
 	return c.c
-}
-
-func (c *mockContext) Run() error {
-	return nil
-}
-
-func (c *mockContext) Stop() {
-}
-
-func (c *mockContext) Empty() bool {
-	return false
-}
-
-func (c *mockContext) Size() int {
-	return 1
 }
 
 func (c *mockContext) Sync() {
@@ -127,7 +112,7 @@ func TestSeeder(t *testing.T) {
 
 	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
 
-	tile_worker_pool := NewTileWorkerPool(seedTask, logger)
+	tile_worker_pool := NewTileWorkerPool(2, seedTask, logger)
 
 	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, nil, false, true)
 	seeder.Walk()

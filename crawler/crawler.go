@@ -590,6 +590,12 @@ func (c *Collector) OnResponseHeaders(f ResponseHeadersCallback) {
 	c.lock.Unlock()
 }
 
+func (c *Collector) ResetOnResponse() {
+	c.lock.Lock()
+	c.responseCallbacks = make([]ResponseCallback, 0, 4)
+	c.lock.Unlock()
+}
+
 func (c *Collector) OnResponse(f ResponseCallback) {
 	c.lock.Lock()
 	if c.responseCallbacks == nil {

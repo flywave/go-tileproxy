@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/flywave/go-geos"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
@@ -49,6 +50,13 @@ func makeBBoxTask(tile_mgr cache.Manager, bbox vec2d.Rect, srs geo.Proj, levels 
 	return NewTileSeedTask(md, tile_mgr, levels, nil, coverage)
 }
 
+func makeGeomTask(tile_mgr cache.Manager, geom *geos.Geometry, srs geo.Proj, levels []int) *TileSeedTask {
+	md := map[string]string{"name": "", "cache_name": "", "grid_name": ""}
+
+	coverage := geo.NewGeomCoverage(geom, srs, false)
+	return NewTileSeedTask(md, tile_mgr, levels, nil, coverage)
+}
+
 type MockLogWriter struct {
 	LogWriter
 	out []string
@@ -75,7 +83,7 @@ func (c *mockContext) Client() client.HttpClient {
 func (c *mockContext) Sync() {
 }
 
-func TestSeeder(t *testing.T) {
+func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testing.T) map[int][][2]int {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
 
@@ -106,7 +114,67 @@ func TestSeeder(t *testing.T) {
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
 
-	seedTask := makeBBoxTask(manager, vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, geo.NewSRSProj4("EPSG:4326"), []int{0, 1, 2})
+	seedTask := makeBBoxTask(manager, bbox, geo.NewSRSProj4("EPSG:4326"), levels)
+
+	local := NewLocalProgressStore("./test.task", false)
+
+	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
+
+	tile_worker_pool := NewTileWorkerPool(2, seedTask, logger)
+
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, seedProgress, false, true)
+	seeder.Walk()
+
+	ret := make(map[int][][2]int)
+
+	taskQueue := tile_worker_pool.Queue.storage
+
+	for i := 0; i < taskQueue.Len(); i++ {
+		work := taskQueue.At(i).(*TileSeedWorker)
+		tiles := work.tiles
+		for j := range tiles {
+			if _, ok := ret[tiles[j][2]]; !ok {
+				ret[tiles[j][2]] = [][2]int{}
+			}
+			ret[tiles[j][2]] = append(ret[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
+		}
+	}
+
+	return ret
+}
+
+func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]int {
+	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
+
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
+
+	opts := geo.DefaultTileGridOptions()
+	opts[geo.TILEGRID_SRS] = "EPSG:4326"
+	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
+	grid := geo.NewTileGrid(opts)
+
+	urlTemplate := client.NewURLTemplate("/{{ .tms_path }}.png", "")
+
+	client := client.NewTileClient(grid, urlTemplate, ctx)
+
+	creater := &dummyCreater{}
+
+	ccreater := func(location string) tile.Source {
+		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
+		source.SetSource("../data/3194.mvt")
+		return source
+	}
+
+	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: creater}
+
+	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+
+	locker := &cache.DummyTileLocker{}
+
+	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+
+	seedTask := makeGeomTask(manager, geom, geo.NewSRSProj4("EPSG:4326"), levels)
 
 	local := NewLocalProgressStore("./test.task", false)
 
@@ -117,7 +185,133 @@ func TestSeeder(t *testing.T) {
 	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, nil, false, true)
 	seeder.Walk()
 
-	if mock != nil {
+	ret := make(map[int][][2]int)
+
+	taskQueue := tile_worker_pool.Queue.storage
+
+	for i := 0; i < taskQueue.Len(); i++ {
+		work := taskQueue.At(i).(*TileSeedWorker)
+		tiles := work.tiles
+		for j := range tiles {
+			if _, ok := ret[tiles[j][2]]; !ok {
+				ret[tiles[j][2]] = [][2]int{}
+			}
+			ret[tiles[j][2]] = append(ret[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
+		}
+	}
+
+	return ret
+}
+
+func assertTileInTiles(aa [2]int, b [][2]int, t *testing.T) {
+	flag := false
+	for i := range b {
+		bb := b[i]
+
+		if aa[0] == bb[0] && aa[1] == bb[1] {
+			flag = true
+		}
+	}
+
+	if !flag {
 		t.FailNow()
+	}
+}
+
+func assertTiles(a [][2]int, b [][2]int, t *testing.T) {
+	if len(a) != len(b) {
+		t.FailNow()
+	}
+	for i := range a {
+		aa := a[i]
+		assertTileInTiles(aa, b, t)
+	}
+}
+
+func TestSeederBBox(t *testing.T) {
+	seederLevelsCounts := []int{3, 3, 2}
+	seederLevelsBBox := []vec2d.Rect{
+		{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}},
+		{Min: vec2d.T{-45, 0}, Max: vec2d.T{180, 90}},
+		{Min: vec2d.T{-45, 0}, Max: vec2d.T{180, 90}},
+	}
+	seederLevelsLevels := [][]int{
+		{0, 1, 2},
+		{0, 1, 2},
+		{0, 2},
+	}
+
+	seederLevelsResults := []map[int][][2]int{
+		{
+			0: [][2]int{{0, 0}},
+			1: [][2]int{{0, 0}, {1, 0}},
+			2: [][2]int{{0, 0}, {1, 0}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}},
+		},
+		{
+			0: [][2]int{{0, 0}},
+			1: [][2]int{{0, 0}, {1, 0}},
+			2: [][2]int{{1, 1}, {2, 1}, {3, 1}},
+		},
+		{
+			0: [][2]int{{0, 0}},
+			2: [][2]int{{1, 1}, {2, 1}, {3, 1}},
+		},
+	}
+
+	for i := range seederLevelsCounts {
+		seeded_tiles := seeder(seederLevelsBBox[i], seederLevelsLevels[i], nil, t)
+
+		if len(seeded_tiles) != seederLevelsCounts[i] {
+			t.FailNow()
+		}
+
+		for l := range seeded_tiles {
+			assertTiles(seeded_tiles[l], seederLevelsResults[i][l], t)
+		}
+	}
+}
+
+func TestSeederGeom(t *testing.T) {
+	geom := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
+	seeded_tiles := seederGeom(geom, []int{0, 1, 2, 3, 4}, t)
+
+	if len(seeded_tiles) != 5 {
+		t.FailNow()
+	}
+
+	seederLevelsResults := map[int][][2]int{
+		0: {{0, 0}},
+		1: {{0, 0}, {1, 0}},
+		2: {{1, 1}, {2, 1}},
+		3: {{4, 2}, {5, 2}, {4, 3}, {5, 3}, {3, 3}},
+	}
+
+	for l := range seeded_tiles {
+		if _, ok := seederLevelsResults[l]; ok {
+			assertTiles(seeded_tiles[l], seederLevelsResults[l], t)
+		} else {
+			if len(seeded_tiles[l]) != 4*4+2 {
+				t.FailNow()
+			}
+		}
+	}
+}
+
+func TestSeederFullBBoxContinue(t *testing.T) {
+	seedProgress := NewSeedProgress([]interface{}{[2]int{0, 1}, [2]int{1, 2}})
+	seeded_tiles := seeder(vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, []int{0, 1, 2}, seedProgress, t)
+
+	if len(seeded_tiles) != 3 {
+		t.FailNow()
+	}
+
+	seederLevelsResults := map[int][][2]int{
+		0: {{0, 0}},
+		1: {{0, 0}, {1, 0}},
+		2: {{2, 0}, {3, 0}, {2, 1}, {3, 1}},
+	}
+
+	for l := range seeded_tiles {
+		assertTiles(seeded_tiles[l], seederLevelsResults[l], t)
 	}
 }

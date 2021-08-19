@@ -281,7 +281,9 @@ func NewTileGrid(options TileGridOptions) *TileGrid {
 	}
 	var bbox *vec2d.Rect
 	if v, ok := options[TILEGRID_BBOX]; ok {
-		bbox = NewRect(v.(vec2d.Rect))
+		if bb, ok := v.(*vec2d.Rect); ok {
+			bbox = bb
+		}
 	}
 	var bbox_srs *SRSProj4
 	if v, ok := options[TILEGRID_BBOX_SRS]; ok {

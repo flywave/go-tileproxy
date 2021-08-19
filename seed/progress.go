@@ -8,14 +8,14 @@ import (
 type SeedProgress struct {
 	progress                 float32
 	levelProgressPercentages []float32
-	levelProgresses          []int
+	levelProgresses          []interface{}
 	levelProgressesLevel     int
 	progressStrParts         []string
-	oldLevelProgresses       []int
+	oldLevelProgresses       []interface{}
 }
 
-func NewSeedProgress() *SeedProgress {
-	return &SeedProgress{levelProgressPercentages: []float32{1.0}}
+func NewSeedProgress(oldLevelProgresses []interface{}) *SeedProgress {
+	return &SeedProgress{progress: 0.0, levelProgressPercentages: []float32{1.0}, levelProgressesLevel: 0, progressStrParts: []string{}, oldLevelProgresses: oldLevelProgresses}
 }
 
 func (p *SeedProgress) StepForward(subtiles int) {
@@ -39,10 +39,10 @@ func statusSymbol(i, total int) string {
 
 func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 	if p.levelProgresses == nil {
-		p.levelProgresses = []int{}
+		p.levelProgresses = []interface{}{}
 	}
 	p.levelProgresses = p.levelProgresses[:p.levelProgressesLevel]
-	p.levelProgresses = append(p.levelProgresses, i)
+	p.levelProgresses = append(p.levelProgresses, [2]int{i, subtiles})
 	p.levelProgressesLevel += 1
 	p.progressStrParts = append(p.progressStrParts, statusSymbol(i, subtiles))
 	p.levelProgressPercentages = append(p.levelProgressPercentages, p.levelProgressPercentages[len(p.levelProgressPercentages)-1]/float32(subtiles))
@@ -56,7 +56,7 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 
 	p.levelProgressesLevel -= 1
 	if p.levelProgressesLevel == 0 {
-		p.levelProgresses = []int{}
+		p.levelProgresses = []interface{}{}
 	}
 	return true
 }
@@ -69,44 +69,14 @@ func (p *SeedProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }
 
-func (p *SeedProgress) CurrentProgressIdentifier() []int {
+func (p *SeedProgress) CurrentProgressIdentifier() interface{} {
 	if p.AlreadyProcessed() || p.levelProgresses == nil {
 		return p.oldLevelProgresses
 	}
 	return p.levelProgresses[:]
 }
 
-func iziplongest(fillvalue int, iterables ...[]int) [][]int {
-	if len(iterables) == 0 {
-		return nil
-	}
-
-	size := len(iterables[0])
-	for _, v := range iterables[1:] {
-		if len(v) > size {
-			size = len(v)
-		}
-	}
-
-	results := [][]int{}
-
-	for i := 0; i < size; i += 1 {
-		newresult := make([]int, len(iterables))
-		for j, v := range iterables {
-			if i < len(v) {
-				newresult[j] = v[i]
-			} else {
-				newresult[j] = fillvalue
-			}
-		}
-
-		results = append(results, newresult)
-	}
-
-	return results
-}
-
-func (p *SeedProgress) canSkip(old_progress, current_progress []int) bool {
+func (p *SeedProgress) canSkip(old_progress, current_progress []interface{}) bool {
 	if current_progress == nil {
 		return false
 	}
@@ -117,21 +87,31 @@ func (p *SeedProgress) canSkip(old_progress, current_progress []int) bool {
 		return true
 	}
 
-	zips := iziplongest(-1, old_progress, current_progress)
+	zips := izip_longest(nil, old_progress, current_progress)
 	for i := range zips {
 		old := zips[i][0]
 		current := zips[i][1]
-		if old == -1 {
+		if old == nil {
 			return false
 		}
-		if current == -1 {
+		if current == nil {
 			return false
 		}
-		if old < current {
+		cold := old.([2]int)
+		ccurrent := current.([2]int)
+		if cold[0] < ccurrent[0] {
 			return false
+		} else if cold[0] == ccurrent[0] {
+			if cold[1] < ccurrent[1] {
+				return false
+			}
 		}
-		if old > current {
+		if cold[0] > ccurrent[0] {
 			return true
+		} else if cold[0] == ccurrent[0] {
+			if cold[1] > ccurrent[1] {
+				return true
+			}
 		}
 	}
 	return false

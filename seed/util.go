@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -114,7 +115,7 @@ func (p *DefaultProgressLogger) LogProgress(progress *SeedProgress, level int, b
 type LocalProgressStore struct {
 	ProgressStore
 	filename string
-	status   map[string][]int
+	status   map[string]interface{}
 }
 
 func NewLocalProgressStore(filename string, continue_seed bool) *LocalProgressStore {
@@ -122,7 +123,7 @@ func NewLocalProgressStore(filename string, continue_seed bool) *LocalProgressSt
 	if continue_seed {
 		ret.status = ret.Load()
 	} else {
-		ret.status = map[string][]int{}
+		ret.status = map[string]interface{}{}
 	}
 	return ret
 }
@@ -139,18 +140,18 @@ func (s *LocalProgressStore) unmarshal(data []byte) error {
 	return json.Unmarshal(data, &s.status)
 }
 
-func (s *LocalProgressStore) Store(id string, progress []int) {
+func (s *LocalProgressStore) Store(id string, progress interface{}) {
 	s.status[id] = progress
 }
 
-func (s *LocalProgressStore) Get(id string) []int {
+func (s *LocalProgressStore) Get(id string) interface{} {
 	if v, ok := s.status[id]; ok {
 		return v
 	}
 	return nil
 }
 
-func (s *LocalProgressStore) Load() map[string][]int {
+func (s *LocalProgressStore) Load() map[string]interface{} {
 	if !utils.FileExists(s.filename) {
 		return nil
 	} else {
@@ -177,9 +178,42 @@ func (s *LocalProgressStore) Save() error {
 }
 
 func (s *LocalProgressStore) Remove() error {
-	s.status = map[string][]int{}
+	s.status = map[string]interface{}{}
 	if utils.FileExists(s.filename) {
 		return os.Remove(s.filename)
 	}
 	return os.ErrNotExist
+}
+
+func izip_longest(fillvalue interface{}, iterables ...interface{}) [][]interface{} {
+	if len(iterables) == 0 {
+		return nil
+	}
+
+	s := reflect.ValueOf(iterables[0])
+	size := s.Len()
+	for _, v := range iterables[1:] {
+		s_ := reflect.ValueOf(v)
+		if s_.Len() > size {
+			size = s_.Len()
+		}
+	}
+
+	results := [][]interface{}{}
+
+	for i := 0; i < size; i += 1 {
+		newresult := make([]interface{}, len(iterables))
+		for j, v := range iterables {
+			s_ := reflect.ValueOf(v)
+			if i < s_.Len() {
+				newresult[j] = s_.Index(i).Interface()
+			} else {
+				newresult[j] = fillvalue
+			}
+		}
+
+		results = append(results, newresult)
+	}
+
+	return results
 }

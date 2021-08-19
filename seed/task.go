@@ -49,7 +49,7 @@ func (t *BaseTask) GetCoverage() geo.Coverage {
 }
 
 func (t *BaseTask) Intersects(bbox vec2d.Rect) IntersectionType {
-	if t.Coverage.Contains(bbox, t.Grid.Srs) {
+	if t.Coverage == nil || t.Coverage.Contains(bbox, t.Grid.Srs) {
 		return CONTAINS
 	}
 	if t.Coverage.Intersects(bbox, t.Grid.Srs) {

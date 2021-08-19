@@ -6,8 +6,8 @@ type LevelsList []int
 
 func (ll LevelsList) ForGrid(grid geo.TileGrid) []int {
 	ret := make([]int, 0)
-	for l := range ll {
-		if 0 <= l && l <= (int(grid.Levels)-1) {
+	for _, l := range ll {
+		if l >= 0 && l <= (int(grid.Levels)-1) {
 			ret = append(ret, l)
 		}
 	}
@@ -25,7 +25,7 @@ func (ll LevelsRange) ForGrid(grid geo.TileGrid) []int {
 		stop = 999
 	}
 
-	stop = geo.MaxInt(stop, int(grid.Levels)-1)
+	stop = geo.MinInt(stop, int(grid.Levels)-1)
 	ret := make([]int, 0)
 	for i := start; i < stop+1; i++ {
 		ret = append(ret, i)
@@ -61,7 +61,7 @@ type LevelsResolutionList []int
 
 func (ls LevelsResolutionList) ForGrid(grid geo.TileGrid) []int {
 	ret := make([]int, 0)
-	for res := range ls {
+	for _, res := range ls {
 		i := grid.ClosestLevel(float64(res))
 		ret = append(ret, i)
 	}

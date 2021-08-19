@@ -56,6 +56,7 @@ func NewTileWorkerQueue(threads int) *TileWorkerQueue {
 	return &TileWorkerQueue{
 		Threads: threads,
 		running: true,
+		storage: utils.NewDeque(20),
 	}
 }
 

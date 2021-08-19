@@ -2,6 +2,7 @@ package utils
 
 import (
 	"math/rand"
+	"strings"
 )
 
 func ShuffleStrings(slice []string) {
@@ -77,4 +78,12 @@ func EqualsStrings(stra, strb []string) bool {
 		}
 	}
 	return true
+}
+
+func TrimAfter(s string, sep byte) string {
+	i := strings.IndexByte(s, sep)
+	if i < 0 {
+		return s
+	}
+	return s[:i]
 }

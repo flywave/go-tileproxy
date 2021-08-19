@@ -53,7 +53,7 @@ func NewTileWalker(task Task, tileWorkerPool *TileWorkerPool,
 	if seedProgress != nil {
 		ret.seedProgress = seedProgress
 	} else {
-		ret.seedProgress = NewSeedProgress()
+		ret.seedProgress = NewSeedProgress(nil)
 	}
 
 	ret.seededTiles = make(map[int]*utils.Deque)
@@ -137,11 +137,11 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 		levels = levels[1:]
 		process = true
 	}
-	i := 0
-	for subtiles_it.HasNext() {
-		subtile, sub_bbox, intersection := subtiles_it.Next()
 
-		if subtile == nil {
+	for subtiles_it.HasNext() {
+		i, subtile, sub_bbox, intersection := subtiles_it.Next()
+
+		if len(subtile) == 0 {
 			t.seedProgress.StepForward(total_subtiles)
 			continue
 		}
@@ -209,8 +209,6 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 		if levels == nil {
 			t.seedProgress.StepForward(total_subtiles)
 		}
-
-		i++
 	}
 
 	if len(levels) >= 4 {
@@ -245,14 +243,14 @@ const (
 	INTERSECTS IntersectionType = 2
 )
 
-func (it *TileIterator) Next() (rsubtile []int, rsub_bbox *vec2d.Rect, intersection IntersectionType) {
+func (it *TileIterator) Next() (index int, rsubtile []int, rsub_bbox *vec2d.Rect, intersection IntersectionType) {
 	subtile := it.Subtiles[it.current]
 	defer func() {
 		it.current++
 	}()
 
 	if subtile[0] == -1 || subtile[1] == -1 || subtile[2] == -1 {
-		return nil, nil, NONE
+		return it.current, nil, nil, NONE
 	} else {
 		metatile := it.grid.GetMetaTile(subtile)
 		sub_bbox := metatile.GetBBox()
@@ -262,11 +260,12 @@ func (it *TileIterator) Next() (rsubtile []int, rsub_bbox *vec2d.Rect, intersect
 			intersection = it.task.Intersects(sub_bbox)
 		}
 		if intersection != NONE {
+			index = it.current
 			rsubtile = subtile[:]
 			rsub_bbox = &sub_bbox
 			return
 		} else {
-			return nil, nil, NONE
+			return it.current, nil, nil, NONE
 		}
 	}
 }
@@ -318,10 +317,10 @@ func Seed(tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, pr
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
 		if err := cache_locker.Lock(md["cache_name"], func() error {
-			var start_progress []int
+			var start_progress []interface{}
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskID(task.GetID())
-				start_progress = progress_store.Get(task.GetID())
+				start_progress = progress_store.Get(task.GetID()).([]interface{})
 			} else {
 				start_progress = nil
 			}

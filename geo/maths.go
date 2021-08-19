@@ -209,3 +209,26 @@ func round(number float64, digits int) float64 {
 	n10 := math.Pow10(digits)
 	return math.Trunc((number+0.5/n10)*n10) / n10
 }
+
+func MinNonZeroInt(a, b int) int {
+	switch {
+	case a == 0:
+		return b
+	case b == 0:
+		return a
+	}
+
+	return MinInt(a, b)
+}
+
+func RoundToInt(a float64) int {
+	return int(math.Round(a))
+}
+
+func ScaleInt(a int, scale float64) int {
+	if a == 0 {
+		return 0
+	}
+
+	return RoundToInt(float64(a) * scale)
+}

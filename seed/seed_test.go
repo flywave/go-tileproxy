@@ -83,6 +83,23 @@ func (c *mockContext) Client() client.HttpClient {
 func (c *mockContext) Sync() {
 }
 
+type mockWorkerPool struct {
+	seedTiles map[int][][2]int
+}
+
+func (p *mockWorkerPool) Process(work Work, progress *SeedProgress) {
+	if p.seedTiles == nil {
+		p.seedTiles = make(map[int][][2]int)
+	}
+	tiles := work.(*SeedWorker).tiles
+	for j := range tiles {
+		if _, ok := p.seedTiles[tiles[j][2]]; !ok {
+			p.seedTiles[tiles[j][2]] = [][2]int{}
+		}
+		p.seedTiles[tiles[j][2]] = append(p.seedTiles[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
+	}
+}
+
 func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testing.T) map[int][][2]int {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
@@ -120,27 +137,12 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 
 	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
 
-	tile_worker_pool := NewTileWorkerPool(2, seedTask, logger)
+	tile_worker_pool := &mockWorkerPool{}
 
 	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, seedProgress, false, true)
 	seeder.Walk()
 
-	ret := make(map[int][][2]int)
-
-	taskQueue := tile_worker_pool.Queue.storage
-
-	for i := 0; i < taskQueue.Len(); i++ {
-		work := taskQueue.At(i).(*TileSeedWorker)
-		tiles := work.tiles
-		for j := range tiles {
-			if _, ok := ret[tiles[j][2]]; !ok {
-				ret[tiles[j][2]] = [][2]int{}
-			}
-			ret[tiles[j][2]] = append(ret[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
-		}
-	}
-
-	return ret
+	return tile_worker_pool.seedTiles
 }
 
 func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]int {
@@ -180,27 +182,12 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
 
-	tile_worker_pool := NewTileWorkerPool(2, seedTask, logger)
+	tile_worker_pool := &mockWorkerPool{}
 
 	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, nil, false, true)
 	seeder.Walk()
 
-	ret := make(map[int][][2]int)
-
-	taskQueue := tile_worker_pool.Queue.storage
-
-	for i := 0; i < taskQueue.Len(); i++ {
-		work := taskQueue.At(i).(*TileSeedWorker)
-		tiles := work.tiles
-		for j := range tiles {
-			if _, ok := ret[tiles[j][2]]; !ok {
-				ret[tiles[j][2]] = [][2]int{}
-			}
-			ret[tiles[j][2]] = append(ret[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
-		}
-	}
-
-	return ret
+	return tile_worker_pool.seedTiles
 }
 
 func assertTileInTiles(aa [2]int, b [][2]int, t *testing.T) {

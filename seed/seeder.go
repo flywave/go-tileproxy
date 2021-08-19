@@ -26,10 +26,10 @@ type TileWalker struct {
 	progressLogger         ProgressLogger
 	handleStale            bool
 	handleUncached         bool
-	pool                   *TileWorkerPool
+	pool                   WorkerPool
 }
 
-func NewTileWalker(task Task, tileWorkerPool *TileWorkerPool,
+func NewTileWalker(task Task, tileWorkerPool WorkerPool,
 	workOnMetatiles bool, skipGeomsForLastLevels int, progressLogger ProgressLogger,
 	seedProgress *SeedProgress, handleStale, handleUNCached bool) *TileWalker {
 	ret := &TileWalker{pool: tileWorkerPool, task: task, manager: task.GetManager(), workOnMetatiles: workOnMetatiles,
@@ -203,7 +203,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, current_level int, 
 
 		if handle_tiles != nil {
 			t.count += 1
-			t.pool.Process(&TileSeedWorker{task: t.task, manager: t.manager, tiles: handle_tiles}, t.seedProgress)
+			t.pool.Process(&SeedWorker{task: t.task, manager: t.manager, tiles: handle_tiles}, t.seedProgress)
 		}
 
 		if levels == nil {

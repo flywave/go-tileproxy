@@ -12,7 +12,7 @@ type Work interface {
 	Run()
 }
 
-type TileSeedWorker struct {
+type SeedWorker struct {
 	Work
 	task    Task
 	manager cache.Manager
@@ -20,7 +20,7 @@ type TileSeedWorker struct {
 	err     error
 }
 
-func (w *TileSeedWorker) Run() {
+func (w *SeedWorker) Run() {
 	_, err := w.manager.LoadTileCoords(w.tiles, nil, false)
 
 	if err != nil {
@@ -28,7 +28,7 @@ func (w *TileSeedWorker) Run() {
 	}
 }
 
-type TileCleanupWorker struct {
+type CleanupWorker struct {
 	Work
 	task    Task
 	manager cache.Manager
@@ -36,7 +36,7 @@ type TileCleanupWorker struct {
 	err     error
 }
 
-func (w *TileCleanupWorker) Run() {
+func (w *CleanupWorker) Run() {
 	err := w.manager.RemoveTileCoords(w.tiles)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (w *TileCleanupWorker) Run() {
 	}
 }
 
-type TileWorkerQueue struct {
+type workerQueue struct {
 	Threads int
 	wake    chan struct{}
 	mut     sync.Mutex
@@ -52,19 +52,19 @@ type TileWorkerQueue struct {
 	storage *utils.Deque
 }
 
-func NewTileWorkerQueue(threads int) *TileWorkerQueue {
-	return &TileWorkerQueue{
+func newWorkerQueue(threads int) *workerQueue {
+	return &workerQueue{
 		Threads: threads,
 		running: true,
 		storage: utils.NewDeque(20),
 	}
 }
 
-func (q *TileWorkerQueue) IsEmpty() bool {
+func (q *workerQueue) IsEmpty() bool {
 	return q.Size() == 0
 }
 
-func (q *TileWorkerQueue) AddRequest(tiles Work) error {
+func (q *workerQueue) AddRequest(tiles Work) error {
 	q.mut.Lock()
 	waken := q.wake != nil
 	q.mut.Unlock()
@@ -79,22 +79,22 @@ func (q *TileWorkerQueue) AddRequest(tiles Work) error {
 	return nil
 }
 
-func (q *TileWorkerQueue) storeRequest(tiles Work) error {
+func (q *workerQueue) storeRequest(tiles Work) error {
 	q.storage.PushBack(tiles)
 	return nil
 }
 
-func (q *TileWorkerQueue) Size() int {
+func (q *workerQueue) Size() int {
 	return q.storage.Len()
 }
 
-func (q *TileWorkerQueue) IsRuning() bool {
+func (q *workerQueue) IsRuning() bool {
 	q.mut.Lock()
 	defer q.mut.Unlock()
 	return q.running
 }
 
-func (q *TileWorkerQueue) Run() error {
+func (q *workerQueue) Run() error {
 	q.mut.Lock()
 	if q.wake != nil && q.running == true {
 		q.mut.Unlock()
@@ -114,13 +114,13 @@ func (q *TileWorkerQueue) Run() error {
 	return <-errc
 }
 
-func (q *TileWorkerQueue) Stop() {
+func (q *workerQueue) Stop() {
 	q.mut.Lock()
 	q.running = false
 	q.mut.Unlock()
 }
 
-func (q *TileWorkerQueue) loop(requestc chan<- Work, complete <-chan struct{}, errc chan<- error) {
+func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}, errc chan<- error) {
 	var active int
 	for {
 		size := q.storage.Len()
@@ -166,7 +166,7 @@ func independentRunner(requestc <-chan Work, complete chan<- struct{}) {
 	}
 }
 
-func (q *TileWorkerQueue) loadRequest() (Work, error) {
+func (q *workerQueue) loadRequest() (Work, error) {
 	tiles, ok := q.storage.PopFront().(Work)
 	if !ok {
 		return nil, errors.New("storage error")
@@ -174,14 +174,21 @@ func (q *TileWorkerQueue) loadRequest() (Work, error) {
 	return tiles, nil
 }
 
+type WorkerPool interface {
+	Process(tiles Work, progress *SeedProgress)
+}
+
 type TileWorkerPool struct {
-	Queue  *TileWorkerQueue
+	WorkerPool
+	Queue  *workerQueue
 	Logger ProgressLogger
 	Task   Task
 }
 
 func NewTileWorkerPool(threads int, task Task, logger ProgressLogger) *TileWorkerPool {
-	return &TileWorkerPool{Queue: NewTileWorkerQueue(threads), Logger: logger, Task: task}
+	queue := newWorkerQueue(threads)
+	go queue.Run()
+	return &TileWorkerPool{Queue: queue, Logger: logger, Task: task}
 }
 
 func (p *TileWorkerPool) Process(tiles Work, progress *SeedProgress) {

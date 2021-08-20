@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/xml"
-	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -42,15 +42,28 @@ func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
 	if s.Origin != "" && tile_request.Origin == "" {
 		tile_request.Origin = s.Origin
 	}
-	layer, limit_to := s.getLayer(tile_request)
+	layer, limit_to, err := s.getLayer(tile_request)
+
+	if err != nil {
+		return err.Render()
+	}
 
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileProvider)
-		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
+		var bbox vec2d.Rect
+		err, bbox = layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
+		if err != nil {
+			return nil
+		}
+		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: bbox}
 		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
 	}
 
-	t := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorateTile)
+	err, t := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorateTile)
+	if err != nil {
+		return err.Render()
+	}
+
 	tile_format := tile.TileFormat(t.getFormat())
 	if tile_format == "" {
 		tile_format = tile.TileFormat(*tile_request.Format)
@@ -101,7 +114,7 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	return nil
 }
 
-func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo.Coverage) {
+func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo.Coverage, *RequestError) {
 	var internal_layer Provider
 	if s.UseDimensionLayers {
 		internal_layer = s.internalDimensionLayer(tile_request)
@@ -109,11 +122,11 @@ func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo
 		internal_layer = s.internalLayer(tile_request)
 	}
 	if internal_layer == nil {
-		return nil, nil
+		return nil, nil, NewRequestError(fmt.Sprintf("unknown layer: %s", tile_request.Layer), "", &TMSExceptionHandler{}, tile_request, false, nil)
 	}
 
 	limit_to := s.authorizeTileLayer(internal_layer, tile_request)
-	return internal_layer, limit_to
+	return internal_layer, limit_to, nil
 }
 
 func (s *TileService) authorizeTileLayer(tile_layer Provider, tile_request *request.TileRequest) geo.Coverage {
@@ -132,7 +145,12 @@ func (s *TileService) GetCapabilities(tms_request *request.TMSRequest) *Response
 	service := s.serviceMetadata(&tms_request.TileRequest)
 	var result []byte
 	if tms_request.Layer != "" {
-		layer, _ := s.getLayer(&tms_request.TileRequest)
+		layer, _, err := s.getLayer(&tms_request.TileRequest)
+
+		if err != nil {
+			return err.Render()
+		}
+
 		result = s.renderGetLayer(layer, service)
 	} else {
 		layer := s.authorizedTileLayers()
@@ -421,19 +439,20 @@ func (r *tileResponse) peekFormat() string {
 
 type TileProvider struct {
 	Provider
-	name        string
-	title       string
-	metadata    map[string]string
-	tileManager cache.Manager
-	infoSources []layer.Layer
-	dimensions  utils.Dimensions
-	grid        *TileServiceGrid
-	extent      *geo.MapExtent
-	emptyTile   []byte
+	name         string
+	title        string
+	metadata     map[string]string
+	tileManager  cache.Manager
+	infoSources  []layer.Layer
+	dimensions   utils.Dimensions
+	grid         *TileServiceGrid
+	extent       *geo.MapExtent
+	emptyTile    []byte
+	errorHandler ExceptionHandler
 }
 
-func NewTileProvider(name string, title string, md map[string]string, tileManager cache.Manager, infoSources []layer.Layer, dimensions utils.Dimensions) *TileProvider {
-	ret := &TileProvider{name: name, title: title, metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid())}
+func NewTileProvider(name string, title string, md map[string]string, tileManager cache.Manager, infoSources []layer.Layer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
+	ret := &TileProvider{name: name, title: title, metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid()), errorHandler: errorHandler}
 	return ret
 }
 
@@ -473,10 +492,10 @@ func (t *TileProvider) GetFormat() string {
 	return formats[1]
 }
 
-func (t *TileProvider) getInternalTileCoord(tileRequest *request.TileRequest, useProfiles bool) (error, []int) {
+func (t *TileProvider) getInternalTileCoord(tileRequest *request.TileRequest, useProfiles bool) (*RequestError, []int) {
 	tile_coord := t.grid.InternalTileCoord([3]int{tileRequest.Tile[0], tileRequest.Tile[1], tileRequest.Tile[2]}, useProfiles)
 	if tile_coord == nil {
-		return errors.New("The requested tile is outside the bounding box  of the tile map."), nil
+		return NewRequestError("The requested tile is outside the bounding box  of the tile map.", "TileOutOfRange", t.errorHandler, tileRequest, false, nil), nil
 	}
 	if tileRequest.Origin == "nw" && !utils.ContainsString([]string{"ul", "nw"}, t.grid.GetOrigin()) {
 		coords := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
@@ -498,10 +517,13 @@ func (t *TileProvider) emptyResponse() TileResponse {
 	return newImageResponse(t.emptyTile, format, time.Now())
 }
 
-func (tl *TileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) vec2d.Rect {
+func (tl *TileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
 	tileRequest := req.(*request.TileRequest)
-	_, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
-	return tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
+	err, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
+	if err != nil {
+		return err, vec2d.Rect{}
+	}
+	return nil, tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
 }
 
 func (tl *TileProvider) checkedDimensions(request *request.TileRequest) utils.Dimensions {
@@ -512,10 +534,10 @@ func (tl *TileProvider) checkedDimensions(request *request.TileRequest) utils.Di
 	return dimensions
 }
 
-func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse {
+func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tileRequest := req.(*request.TileRequest)
 	if string(*tileRequest.Format) != tl.GetFormat() {
-		return nil
+		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", string(*tileRequest.Format), tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, tileRequest, false, nil), nil
 	}
 	_, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
 	var tile_bbox vec2d.Rect
@@ -526,7 +548,7 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 		} else if coverage.Intersects(tile_bbox, tl.grid.srs) {
 			//
 		} else {
-			return tl.emptyResponse()
+			return nil, tl.emptyResponse()
 		}
 	}
 
@@ -534,7 +556,7 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 
 	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
 	if t.Source == nil {
-		return tl.emptyResponse()
+		return nil, tl.emptyResponse()
 	}
 
 	if decorateTile != nil {
@@ -542,7 +564,7 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 	}
 
 	format := tileRequest.Format
-	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
+	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 
 type TMSExceptionHandler struct {

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"errors"
+	"fmt"
 	"image/color"
 	"strconv"
 	"time"
@@ -104,7 +104,10 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	renderer := &LayerRenderer{layers: render_layers, query: query, params: mapreq}
 
 	merger := &imagery.LayerMerger{}
-	renderer.render(merger)
+	err := renderer.render(merger)
+	if err != nil {
+		return err.Render()
+	}
 
 	img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
 	img_opts.BgColor = mapreq.GetBGColor()
@@ -199,7 +202,8 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	for _, layer_name := range freq.GetLayers() {
 		layer := s.Layers[layer_name]
 		if !layer.Queryable() {
-			return NewResponse(nil, 400, DefaultContentType)
+			resp := NewRequestError(fmt.Sprintf("layer %s is not queryable", layer_name), "InvalidParameterValue", &WMS130ExceptionHandler{}, req, false, nil)
+			return resp.Render()
 		}
 		for layer_name, map_layers := range layer.infoLayersForQuery(query) {
 			actual_layers[layer_name] = map_layers
@@ -266,12 +270,12 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	return NewResponse(resp, 200, mimetype)
 }
 
-func (s *WMSService) checkMapRequest(req request.Request) error {
+func (s *WMSService) checkMapRequest(req request.Request) *RequestError {
 	mapreq := req.(*request.WMSMapRequest)
 	mapparams := request.NewWMSMapRequestParams(req.GetParams())
 	si := mapparams.GetSize()
 	if s.MaxOutputPixels != -1 && (si[0]*si[1]) > uint32(s.MaxOutputPixels) {
-		return errors.New("image size too large")
+		return NewRequestError("image size too large", "", &WMS130ExceptionHandler{}, req, false, nil)
 	}
 
 	s.validateLayers(req)
@@ -304,22 +308,22 @@ func (s *WMSService) checkFeatureinfoRequest(req request.Request) {
 	mapreq.ValidateSrs(srss)
 }
 
-func (s *WMSService) validateLayers(req request.Request) error {
+func (s *WMSService) validateLayers(req request.Request) *RequestError {
 	mapparams := request.NewWMSMapRequestParams(req.GetParams())
 	query_layers := mapparams.GetLayers()
 	for _, layer := range query_layers {
 		if _, ok := s.Layers[layer]; !ok {
-			return errors.New("unknown layer: " + layer)
+			return NewRequestError("unknown layer: "+layer, "", &WMS130ExceptionHandler{}, req, false, nil)
 		}
 	}
 	return nil
 }
 
-func (s *WMSService) checkLegendRequest(req request.Request) error {
+func (s *WMSService) checkLegendRequest(req request.Request) *RequestError {
 	mapparams := request.NewWMSLegendGraphicRequestParams(req.GetParams())
 	layer := mapparams.GetLayer()
 	if _, ok := s.Layers[layer]; !ok {
-		return errors.New("unknown layer: " + layer)
+		return NewRequestError("unknown layer: "+layer, "", &WMS130ExceptionHandler{}, req, false, nil)
 	}
 	return nil
 }
@@ -331,7 +335,8 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 
 	s.checkLegendRequest(req)
 	if !s.Layers[layer].HasLegend() {
-		return NewResponse(nil, 400, DefaultContentType)
+		resp := NewRequestError(fmt.Sprintf("layer %s has no legend graphic", layer), "", &WMS130ExceptionHandler{}, req, false, nil)
+		return resp.Render()
 	}
 	legends := s.Layers[layer].legend(req.(*request.WMSLegendGraphicRequest))
 
@@ -365,27 +370,36 @@ func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
 }
 
 type LayerRenderer struct {
-	layers []layer.Layer
-	query  *layer.MapQuery
-	params request.WMSMapRequestParams
+	layers  []layer.Layer
+	query   *layer.MapQuery
+	params  request.WMSMapRequestParams
+	request request.Request
 }
 
-func (l *LayerRenderer) render(layer_merger *imagery.LayerMerger) {
+func (l *LayerRenderer) render(layer_merger *imagery.LayerMerger) *RequestError {
 	render_layers := CombinedLayers(l.layers, l.query)
 	if render_layers == nil {
-		return
+		return nil
 	}
 	for i := range render_layers {
-		layer, layer_img := l.renderLayer(render_layers[i])
+		layer, layer_img, err := l.renderLayer(render_layers[i])
+		if err != nil {
+			return err
+		}
 		if layer_img != nil {
 			layer_merger.AddSource(layer_img, layer.GetCoverage())
 		}
 	}
+	return nil
 }
 
-func (l *LayerRenderer) renderLayer(layer layer.Layer) (layer.Layer, tile.Source) {
-	layer_img, _ := layer.GetMap(l.query)
-	return layer, layer_img
+func (l *LayerRenderer) renderLayer(layer layer.Layer) (layer.Layer, tile.Source, *RequestError) {
+	layer_img, err := layer.GetMap(l.query)
+	if err != nil {
+		resp := NewRequestError("Invalid request.", "", &WMS130ExceptionHandler{}, l.request, false, nil)
+		return nil, nil, resp
+	}
+	return layer, layer_img, nil
 }
 
 type wmsLayer interface {

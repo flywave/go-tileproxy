@@ -12,17 +12,17 @@ type RequestError struct {
 	Request  request.Request
 	Internal bool
 	Status   *int
+	Handler  ExceptionHandler
 }
 
-func NewRequestError(message string, code string, request request.Request, internal bool, status *int) *RequestError {
-	return &RequestError{Message: message, Code: code, Request: request, Internal: internal, Status: status}
+func NewRequestError(message string, code string, handler ExceptionHandler, request request.Request, internal bool, status *int) *RequestError {
+	return &RequestError{Message: message, Code: code, Handler: handler, Request: request, Internal: internal, Status: status}
 }
 
 func (e *RequestError) Render() *Response {
 	var resp *Response
 	if e.Request != nil {
-		handler := e.Request.GetExceptionHandler().(ExceptionHandler)
-		resp = handler.Render(e)
+		resp = e.Handler.Render(e)
 	} else if e.Status != nil {
 		resp = NewResponse([]byte(e.Message), *e.Status, "text/plain")
 	} else {

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -88,16 +87,27 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	tp := tile_layer.(*TileProvider)
 
-	s.checkRequestDimensions(tp, tile_request)
+	err := s.checkRequestDimensions(tp, tile_request)
+
+	if err != nil {
+		return err.Render()
+	}
 
 	limited_to := s.authorizeTileLayer(tp, tile_request, false)
 
 	decorateTile := func(image tile.Source) tile.Source {
-		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)}
+		err, bbox := tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
+		if err != nil {
+			return nil
+		}
+		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: bbox}
 		return s.DecorateTile(image, "wmts", []string{tile_layer.GetName()}, query_extent)
 	}
 
-	tile := tile_layer.Render(tile_request, false, limited_to, decorateTile)
+	err, tile := tile_layer.Render(tile_request, false, limited_to, decorateTile)
+	if err != nil {
+		return err.Render()
+	}
 
 	resp := NewResponse(tile.getBuffer(), -1, tile.GetFormatMime())
 	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())}, int(s.MaxTileAge.Seconds()))
@@ -113,7 +123,11 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 
 	infoformat := params.GetInfoformat()
 
-	s.checkRequest(&info_request.WMTSRequest, &infoformat)
+	err := s.checkRequest(&info_request.WMTSRequest, &infoformat)
+
+	if err != nil {
+		return err.Render()
+	}
 
 	tile_layer := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]
 	if params.GetFormat() == "" {
@@ -136,9 +150,18 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 
 	tp := tile_layer.(*TileProvider)
 
-	s.checkRequestDimensions(tp, req)
+	err = s.checkRequestDimensions(tp, req)
+
+	if err != nil {
+		return err.Render()
+	}
 
 	coverage := s.authorizeTileLayer(tp, req, true)
+
+	if tp.infoSources == nil {
+		resp := NewRequestError(fmt.Sprintf("layer %s not queryable", params.GetLayer()), "OperationNotSupported", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
 
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
 		infos = nil
@@ -175,21 +198,21 @@ func (s *WMTSService) authorizedTileLayers() []WMTSTileLayer {
 	return ret
 }
 
-func (s *WMTSService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) {
-	//
+func (s *WMTSService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) *RequestError {
+	return nil
 }
 
-func (s *WMTSService) checkRequest(req request.Request, infoformat *string) error {
+func (s *WMTSService) checkRequest(req request.Request, infoformat *string) *RequestError {
 	switch wreq := req.(type) {
 	case *request.WMTS100TileRequest:
 		{
 			params := request.NewWMTSTileRequestParams(wreq.Params)
 
 			if _, ok := s.Layers[params.GetLayer()]; !ok {
-				return errors.New("unknown layer: " + params.GetLayer())
+				return NewRequestError("unknown layer: "+params.GetLayer(), "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 			}
 			if _, ok := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]; !ok {
-				return errors.New("unknown tilematrixset: " + params.GetTileMatrixSet())
+				return NewRequestError("unknown tilematrixset: "+params.GetTileMatrixSet(), "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 			}
 		}
 	case *request.WMTS100CapabilitiesRequest:
@@ -203,11 +226,11 @@ func (s *WMTSService) checkRequest(req request.Request, infoformat *string) erro
 			if infoformat != "" {
 				if strings.Contains(infoformat, "/") {
 					if _, ok := s.InfoFormats[infoformat]; !ok {
-						return errors.New("unknown infoformat: " + infoformat)
+						return NewRequestError("unknown infoformat: "+infoformat, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 					}
 				} else {
 					if _, ok := s.InfoFormats[infoformat]; !ok {
-						return errors.New("unknown infoformat: " + infoformat)
+						return NewRequestError("unknown infoformat: "+infoformat, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 					}
 					params.SetInfoformat(s.InfoFormats[infoformat])
 				}
@@ -337,12 +360,12 @@ func (l WMTSTileLayer) GetMetadata() map[string]string {
 	return nil
 }
 
-func (l WMTSTileLayer) GetTileBBox(request request.Request, use_profiles bool, limit bool) vec2d.Rect {
+func (l WMTSTileLayer) GetTileBBox(request request.Request, use_profiles bool, limit bool) (*RequestError, vec2d.Rect) {
 	p := l.frist()
 	if p != nil {
 		return p.GetTileBBox(request, use_profiles, limit)
 	}
-	return vec2d.Rect{}
+	return nil, vec2d.Rect{}
 }
 
 const (
@@ -378,6 +401,7 @@ func (s *TileMatrixSet) GetTileMatrices() []map[string]string {
 		}
 		grid_size := s.grid.GridSizes[level]
 		scale_denom := res / (0.28 / 1000) * meterPerUnit(s.grid.Srs)
+
 		m["identifier"] = strconv.Itoa(level)
 		m["topleft"] = fmt.Sprintf("%f %f", topleft[0], topleft[1])
 		m["scale_denom"] = strconv.FormatFloat(scale_denom, 'f', -1, 64)

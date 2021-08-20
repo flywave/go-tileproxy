@@ -84,7 +84,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
-	tp := NewTileProvider("test", "test", layerMetadata, manager, info, dimensions)
+	tp := NewTileProvider("test", "test", layerMetadata, manager, info, dimensions, &WMTS100ExceptionHandler{})
 
 	if tp == nil {
 		t.FailNow()

@@ -97,7 +97,6 @@ type Request interface {
 	CompleteUrl() string
 	GetParams() RequestParams
 	GetRequestHandler() string
-	GetExceptionHandler() interface{}
 }
 
 type BaseRequest struct {
@@ -108,7 +107,6 @@ type BaseRequest struct {
 	Http        *http.Request
 	validate    bool
 	FixedParams map[string]string
-	Handler     interface{}
 }
 
 func (r *BaseRequest) init(param interface{}, url string, validate bool, ht *http.Request) error {
@@ -133,10 +131,6 @@ func (r *BaseRequest) init(param interface{}, url string, validate bool, ht *htt
 		return r.Validate()
 	}
 	return nil
-}
-
-func (r *BaseRequest) GetExceptionHandler() interface{} {
-	return r.Handler
 }
 
 func (r *BaseRequest) ToString() string {

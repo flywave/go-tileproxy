@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -32,7 +33,10 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if tile_request.Origin == "" {
 		tile_request.Origin = "nw"
 	}
-	layer := s.getLayer(tile_request)
+	err, layer := s.getLayer(tile_request)
+	if err != nil {
+		return err.Render()
+	}
 	var format tile.TileFormat
 	if tile_request.Format != nil {
 		format = *tile_request.Format
@@ -46,11 +50,18 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileProvider)
-		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, false, false)}
+		err, bbox := layer.GetTileBBox(tile_request, false, false)
+		if err != nil {
+			return nil
+		}
+		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: bbox}
 		return s.DecorateTile(image, "mapbox", []string{tilelayer.name}, query_extent)
 	}
 
-	t := layer.Render(tile_request, false, nil, decorateTile)
+	err, t := layer.Render(tile_request, false, nil, decorateTile)
+	if err != nil {
+		return err.Render()
+	}
 	tile_format := tile.TileFormat(t.getFormat())
 	if tile_format == "" {
 		tile_format = tile.TileFormat(*tile_request.Format)
@@ -66,12 +77,12 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	return resp
 }
 
-func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) Provider {
+func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) (*RequestError, Provider) {
 	id := tile_request.TilesetID
 	if l, ok := s.Tilesets[id]; ok {
-		return l
+		return nil, l
 	}
-	return nil
+	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 }
 
 func (s *MapboxService) GetStyle(req request.Request) *Response {
@@ -82,7 +93,8 @@ func (s *MapboxService) GetStyle(req request.Request) *Response {
 		return NewResponse(resp, 200, "application/json")
 	}
 
-	return NewResponse(nil, 404, "")
+	resp := NewRequestError("Style not found", "Style_Not_Found", &MapboxExceptionHandler{}, style_req, false, nil)
+	return resp.Render()
 }
 
 func (s *MapboxService) GetSprite(req request.Request) *Response {
@@ -98,7 +110,8 @@ func (s *MapboxService) GetSprite(req request.Request) *Response {
 		}
 	}
 
-	return NewResponse(nil, 404, "")
+	resp := NewRequestError("Style not found", "Style_Not_Found", &MapboxExceptionHandler{}, sprite_req, false, nil)
+	return resp.Render()
 }
 
 func (s *MapboxService) GetGlyphs(req request.Request) *Response {
@@ -109,7 +122,8 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 		return NewResponse(resp, 200, "application/x-protobuf")
 	}
 
-	return NewResponse(nil, 404, "")
+	resp := NewRequestError("Not found", "Not_Found", &MapboxExceptionHandler{}, glyphs_req, false, nil)
+	return resp.Render()
 }
 
 type GlyphProvider struct {
@@ -219,6 +233,12 @@ func (t *MapboxTileProvider) GetFormat() string {
 	return formats[1]
 }
 
+func (t *MapboxTileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
+	tileRequest := req.(*request.TileRequest)
+	tile_coord := tileRequest.Tile
+	return nil, t.GetGrid().TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
+}
+
 func (t *MapboxTileProvider) emptyResponse() TileResponse {
 	format := t.GetFormat()
 	if t.empty_tile == nil {
@@ -229,10 +249,10 @@ func (t *MapboxTileProvider) emptyResponse() TileResponse {
 	return newImageResponse(t.empty_tile, format, time.Now())
 }
 
-func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) TileResponse {
+func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.MapboxTileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
-		return tl.emptyResponse()
+		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 	}
 	tile_coord := tile_request.Tile
 	var tile_bbox vec2d.Rect
@@ -243,16 +263,16 @@ func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, cov
 		} else if coverage.Intersects(tile_bbox, tl.GetGrid().Srs) {
 			//
 		} else {
-			return tl.emptyResponse()
+			return nil, tl.emptyResponse()
 		}
 	}
 
 	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
 	if t.Source == nil {
-		return tl.emptyResponse()
+		return nil, tl.emptyResponse()
 	}
 	format := tile_request.Format
-	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
+	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 
 type mapboxException struct {

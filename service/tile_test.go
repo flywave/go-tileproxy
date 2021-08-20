@@ -102,7 +102,7 @@ func TestTileProvider(t *testing.T) {
 
 	dimensions := make(utils.Dimensions)
 
-	tp := NewTileProvider("test", "test", md, manager, info, dimensions)
+	tp := NewTileProvider("test", "test", md, manager, info, dimensions, &TMSExceptionHandler{})
 
 	if tp == nil {
 		t.FailNow()
@@ -113,9 +113,9 @@ func TestTileProvider(t *testing.T) {
 
 	tileReq := request.NewTileRequest(hreq)
 
-	resp := tp.Render(tileReq, false, nil, nil)
+	err, resp := tp.Render(tileReq, false, nil, nil)
 
-	if resp == nil {
+	if resp == nil || err != nil {
 		t.FailNow()
 	}
 
@@ -163,7 +163,7 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	dimensions := make(utils.Dimensions)
 
-	tp := NewTileProvider("test", "test", md, manager, info, dimensions)
+	tp := NewTileProvider("test", "test", md, manager, info, dimensions, &TMSExceptionHandler{})
 
 	if tp == nil {
 		t.FailNow()

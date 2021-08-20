@@ -33,7 +33,7 @@ func (s *DebugSource) GetMap(query *layer.MapQuery) tile.Source {
 	res_x := w / float64(query.Size[0])
 	res_y := h / float64(query.Size[1])
 	debug_info := fmt.Sprintf("bbox: {Min: {%.8f, %.8f}, Max: {%.8f, %.8f}} \nres: %.8f(%.8f)", bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1], res_x, res_y)
-	return imagery.GenMessageImage(debug_info, query.Size, &imagery.ImageOptions{Transparent: geo.NewBool(true)}, nil, true)
+	return imagery.GenMessageImage(debug_info, query.Size, &imagery.ImageOptions{Transparent: geo.NewBool(true)})
 }
 
 type DummySource struct {

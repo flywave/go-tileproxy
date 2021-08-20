@@ -3,7 +3,6 @@ package sources
 import (
 	"bytes"
 	"errors"
-	"strconv"
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
@@ -65,7 +64,7 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 	var retina *int
 	if query.Dimensions != nil {
 		if v, ok := query.Dimensions["retina"]; ok {
-			r, _ := strconv.Atoi(v.GetFirstValue())
+			r, _ := v.GetFirstValue().(int)
 			retina = geo.NewInt(r)
 		}
 	}

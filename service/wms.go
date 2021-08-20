@@ -7,6 +7,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/ogc-specifications/pkg/wms130"
 
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
@@ -689,4 +690,58 @@ func CombinedLayers(layers []layer.Layer, query *layer.MapQuery) []layer.Layer {
 		}
 	}
 	return combined_layers
+}
+
+var (
+	WMS130ExceptionCodes = map[string]string{
+		"InvalidFormat":         "Request contains a Format not offered by the server.",
+		"InvalidCRS":            "Request contains a CRS not offered by the server for one or more of the Layers in the request.",
+		"LayerNotDefined":       "GetMap request is for a Layer not offered by the server, or GetFeatureInfo request is for a Layer not shown on the map.",
+		"StyleNotDefined":       "Request is for a Layer in a Style not offered by the server.",
+		"LayerNotQueryable":     "GetFeatureInfo request is applied to a Layer which is not declared queryable.",
+		"InvalidPoint":          "GetFeatureInfo request contains invalid I or J value.",
+		"CurrentUpdateSequence": "Value of (optional) UpdateSequence parameter in GetCapabilities request is equal to current value of service metadata update sequence number.",
+		"InvalidUpdateSequence": "Value of (optional) UpdateSequence parameter in GetCapabilities request is greater than current value of service metadata update sequence number.",
+		"MissingDimensionValue": "Request does not include a sample dimension value, and the server did not declare a default value for that dimension.",
+		"InvalidDimensionValue": "Request contains an invalid sample dimension value. OperationNotSupported Request is for an optional operation that is not supported by the server.",
+	}
+)
+
+type WMS130ExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *WMS130ExceptionHandler) Render(err *RequestError) *Response {
+	exp := wms130.Exceptions(wms130.NewExceptions(err.Message, err.Code))
+	report := exp.ToReport()
+	return NewResponse(report.ToBytes(), 400, "text/xml")
+}
+
+type WMSImageExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *WMSImageExceptionHandler) Render(request_error *RequestError) *Response {
+	req := request_error.Request
+	params := req.GetParams()
+	mapreq := request.NewWMSMapRequestParams(params)
+	format := mapreq.GetFormat()
+	size := mapreq.GetSize()
+	if size == [2]uint32{0, 0} {
+		size = [2]uint32{256, 256}
+	}
+	transparent := mapreq.GetTransparent()
+	bgcolor := mapreq.GetBGColor()
+	image_opts := &imagery.ImageOptions{Format: format, BgColor: bgcolor, Transparent: &transparent}
+	result := imagery.GenMessageImage(request_error.Message, size, image_opts)
+	return NewResponse(result.GetBuffer(nil, nil), 200, format.MimeType())
+}
+
+type WMSBlankExceptionHandler struct {
+	WMSImageExceptionHandler
+}
+
+func (h *WMSBlankExceptionHandler) Render(request_error *RequestError) *Response {
+	request_error.Message = ""
+	return h.WMSImageExceptionHandler.Render(request_error)
 }

@@ -21,17 +21,16 @@ type MapboxService struct {
 	Fonts      map[string]*GlyphProvider
 	Metadata   map[string]string
 	MaxTileAge *time.Duration
-	Origin     string
 }
 
-func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, fonts map[string]*GlyphProvider, md map[string]string, max_tile_age *time.Duration, origin string) *MapboxService {
-	return &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age, Origin: origin}
+func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, fonts map[string]*GlyphProvider, md map[string]string, max_tile_age *time.Duration) *MapboxService {
+	return &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age}
 }
 
 func (s *MapboxService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.MapboxTileRequest)
-	if s.Origin != "" && tile_request.Origin == "" {
-		tile_request.Origin = s.Origin
+	if tile_request.Origin == "" {
+		tile_request.Origin = "nw"
 	}
 	layer := s.getLayer(tile_request)
 	var format tile.TileFormat
@@ -48,7 +47,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileProvider)
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: layer.GetTileBBox(tile_request, false, false)}
-		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
+		return s.DecorateTile(image, "mapbox", []string{tilelayer.name}, query_extent)
 	}
 
 	t := layer.Render(tile_request, false, nil, decorateTile)
@@ -254,4 +253,53 @@ func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, cov
 	}
 	format := tile_request.Format
 	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
+}
+
+type mapboxException struct {
+	Message string `json:"message"`
+}
+
+var (
+	MapboxExceptionMessages = map[string]string{
+		"Invalid_Range":          "Invalid Range",
+		"Too_Many_Font":          "Maximum of 10 font faces permitted",
+		"No_Token":               "Not Authorized - No Token",
+		"Invalid_Token":          "Not Authorized - Invalid Token",
+		"Forbidden":              "Forbidden",
+		"Requires_Token":         "This endpoint requires a token with %s scope",
+		"Tileset_Not_Exist":      "Tileset %s does not exist",
+		"Tile_Not_Found":         "Tile not found",
+		"Style_Not_Found":        "Style not found",
+		"Not_Found":              "Not Found",
+		"Invalid_Zoom_Level":     "Zoom level must be between 0-30.",
+		"Tileset_Not_Ref_Vector": "Tileset does not reference vector data",
+		"Invalid_Quality_Value":  "Invalid quality value %s for raster format %s",
+	}
+	MapboxExceptionCodes = map[string]int{
+		"Invalid_Range":          400,
+		"Too_Many_Font":          400,
+		"No_Token":               401,
+		"Invalid_Token":          401,
+		"Forbidden":              403,
+		"Requires_Token":         403,
+		"Tileset_Not_Exist":      404,
+		"Tile_Not_Found":         404,
+		"Style_Not_Found":        404,
+		"Not_Found":              404,
+		"Invalid_Zoom_Level":     422,
+		"Tileset_Not_Ref_Vector": 422,
+		"Invalid_Quality_Value":  422,
+	}
+)
+
+type MapboxExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *MapboxExceptionHandler) Render(request_error *RequestError) *Response {
+	status_code := 500
+	if sc, ok := MapboxExceptionCodes[request_error.Code]; ok {
+		status_code = sc
+	}
+	return NewResponse([]byte(request_error.Message), status_code, "application/json")
 }

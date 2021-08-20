@@ -8,6 +8,8 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/ogc-specifications/pkg/wmts100"
+	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
@@ -387,4 +389,29 @@ func (s *TileMatrixSet) GetTileMatrices() []map[string]string {
 		ret = append(ret, m)
 	}
 	return ret
+}
+
+var (
+	WMTSStatusCodes = map[string]int{
+		"TileOutOfRange":        400,
+		"MissingParameterValue": 400,
+		"InvalidParameterValue": 400,
+		"OperationNotSupported": 501,
+	}
+)
+
+type WMTS100ExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *WMTS100ExceptionHandler) Render(err *RequestError) *Response {
+	status_code := 500
+	if sc, ok := WMTSStatusCodes[err.Code]; ok {
+		status_code = sc
+	}
+
+	exp := wsc110.Exceptions(wmts100.NewExceptions(err.Message, err.Code))
+	report := exp.ToReport("1.0.0")
+
+	return NewResponse(report.ToBytes(), status_code, "text/xml")
 }

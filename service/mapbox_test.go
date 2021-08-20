@@ -78,7 +78,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 		t.FailNow()
 	}
 
-	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, map[string]*GlyphProvider{"font": glyphProvider}, md, nil, "ul")
+	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, map[string]*GlyphProvider{"font": glyphProvider}, md, nil)
 
 	hreq := &http.Request{}
 	hreq.URL, _ = url.Parse("https://127.0.0.1/v4/mapbox.mapbox-streets-v8/14/13515/6392.mvt")

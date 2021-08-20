@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/xml"
 	"errors"
 	"math"
 	"strconv"
@@ -542,4 +543,14 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 
 	format := tileRequest.Format
 	return newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
+}
+
+type TMSExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *TMSExceptionHandler) Render(err *RequestError) *Response {
+	te := tms100.Exception{Message: err.Message}
+	si, _ := xml.MarshalIndent(te, "", "")
+	return NewResponse(si, 400, "text/xml")
 }

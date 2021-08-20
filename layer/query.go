@@ -58,7 +58,7 @@ func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]stri
 	result := make(map[string]string)
 	for k, v := range q.Dimensions {
 		if utils.ContainsString(keys, k) {
-			result[k] = v.GetFirstValue()
+			result[k] = utils.ValueToString(v.GetFirstValue())
 		}
 	}
 	return result

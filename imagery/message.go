@@ -30,8 +30,7 @@ func SetFontPath(p string) {
 	font_paths = p
 }
 
-func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions, bgcolor color.Color,
-	transparent bool) tile.Source {
+func GenMessageImage(message string, size [2]uint32, image_opts *ImageOptions) tile.Source {
 	eimg := NewExceptionImage(message, image_opts)
 	src, err := eimg.Draw(nil, size[:], true)
 	if err != nil {

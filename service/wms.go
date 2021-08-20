@@ -41,7 +41,10 @@ func NewWMSService(rootLayer *WMSGroupLayer, metadata map[string]string, srs *ge
 }
 
 func (s *WMSService) GetMap(req request.Request) *Response {
-	s.checkMapRequest(req)
+	err := s.checkMapRequest(req)
+	if err != nil {
+		return err.Render()
+	}
 
 	params := req.GetParams()
 	map_request := req.(*request.WMSRequest)
@@ -104,7 +107,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	renderer := &LayerRenderer{layers: render_layers, query: query, params: mapreq}
 
 	merger := &imagery.LayerMerger{}
-	err := renderer.render(merger)
+	err = renderer.render(merger)
 	if err != nil {
 		return err.Render()
 	}
@@ -181,8 +184,10 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 
 func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	infos := []resource.FeatureInfoDoc{}
-	s.checkFeatureinfoRequest(req)
-
+	err := s.checkFeatureinfoRequest(req)
+	if err != nil {
+		return err.Render()
+	}
 	freq := request.NewWMSFeatureInfoRequestParams(req.GetParams())
 
 	var feature_count *int
@@ -278,34 +283,51 @@ func (s *WMSService) checkMapRequest(req request.Request) *RequestError {
 		return NewRequestError("image size too large", "", &WMS130ExceptionHandler{}, req, false, nil)
 	}
 
-	s.validateLayers(req)
+	errr := s.validateLayers(req)
+	if errr != nil {
+		return errr
+	}
 
 	formats := []string{}
 	for k := range s.ImageFormats {
 		formats = append(formats, k)
 	}
 
-	mapreq.ValidateFormat(formats)
+	err := mapreq.ValidateFormat(formats)
+	if err != nil {
+		return NewRequestError(err.Error(), "", &WMS130ExceptionHandler{}, req, false, nil)
+	}
 
 	srss := []string{}
 	for _, s := range s.Srs.Srs {
 		srss = append(srss, s.GetDef())
 	}
 
-	mapreq.ValidateSrs(srss)
+	err = mapreq.ValidateSrs(srss)
+	if err != nil {
+		return NewRequestError(err.Error(), "", &WMS130ExceptionHandler{}, req, false, nil)
+	}
+
 	return nil
 }
 
-func (s *WMSService) checkFeatureinfoRequest(req request.Request) {
+func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError {
 	mapreq := req.(*request.WMSMapRequest)
-	s.validateLayers(req)
+	errr := s.validateLayers(req)
+	if errr != nil {
+		return errr
+	}
 
 	srss := []string{}
 	for _, s := range s.Srs.Srs {
 		srss = append(srss, s.GetDef())
 	}
 
-	mapreq.ValidateSrs(srss)
+	err := mapreq.ValidateSrs(srss)
+	if err != nil {
+		return NewRequestError(err.Error(), "", &WMS130ExceptionHandler{}, req, false, nil)
+	}
+	return nil
 }
 
 func (s *WMSService) validateLayers(req request.Request) *RequestError {
@@ -333,7 +355,11 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 	layer := mapparams.GetLayer()
 	mapparams.GetFormatMimeType()
 
-	s.checkLegendRequest(req)
+	err := s.checkLegendRequest(req)
+	if err != nil {
+		return err.Render()
+	}
+
 	if !s.Layers[layer].HasLegend() {
 		resp := NewRequestError(fmt.Sprintf("layer %s has no legend graphic", layer), "", &WMS130ExceptionHandler{}, req, false, nil)
 		return resp.Render()

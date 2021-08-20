@@ -38,7 +38,6 @@ func TestCombinedLayers(t *testing.T) {
 }
 
 func TestWMSServiceGetCapabilities(t *testing.T) {
-
 	service := make(map[string]string)
 	service["url"] = "http://flywave.net"
 	service["title"] = "flywave"

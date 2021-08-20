@@ -28,7 +28,7 @@ func TestMergeSingleCoverage(t *testing.T) {
 
 	geom := geos.CreatePolygon([]geos.Coord{{X: 0, Y: 0}, {X: 0, Y: 10}, {X: 10, Y: 10}, {X: 10, Y: 0}, {X: 0, Y: 0}})
 
-	coverage1 := geo.NewGeomCoverage(geom, geo.NewSRSProj4("EPSG:3857"), true)
+	coverage1 := geo.NewGeosCoverage(geom, geo.NewSRSProj4("EPSG:3857"), true)
 
 	merger := &LayerMerger{}
 	merger.AddSource(img, coverage1)

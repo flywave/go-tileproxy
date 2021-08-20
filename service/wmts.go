@@ -7,6 +7,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/ogc-specifications/pkg/wmts100"
 	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
@@ -26,12 +27,12 @@ type WMTSService struct {
 	InfoFormats map[string]string
 }
 
-func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSRestService {
+func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSService {
 	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
 	lay, ms := ret.getMatrixSets(layers)
 	ret.Layers = lay
 	ret.MatrixSets = ms
-	return nil
+	return ret
 }
 
 func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMTSTileLayer, map[string]*TileMatrixSet) {
@@ -263,8 +264,8 @@ func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTil
 	return ret
 }
 
-func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) {
-	//
+func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) *RequestError {
+	return nil
 }
 
 type WMTSTileLayer map[string]Provider

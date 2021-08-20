@@ -65,3 +65,11 @@ func ScaleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, s
 	}
 	return nil
 }
+
+func MaskImageSourceFromCoverage(source tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, opts tile.TileOptions) tile.Source {
+	switch op := opts.(type) {
+	case *imagery.ImageOptions:
+		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, op)
+	}
+	return nil
+}

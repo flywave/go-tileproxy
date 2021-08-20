@@ -5,6 +5,7 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	"github.com/flywave/go-geom"
 	"github.com/flywave/go-geos"
 )
 
@@ -153,7 +154,12 @@ type GeomCoverage struct {
 	Clip bool
 }
 
-func NewGeomCoverage(geom *geos.Geometry, srs Proj, clip bool) *GeomCoverage {
+func NewGeomCoverage(geom geom.Geometry, srs Proj, clip bool) *GeomCoverage {
+	geo := geos.ConvertGeomToGeos(geom)
+	return NewGeosCoverage(geo, srs, clip)
+}
+
+func NewGeosCoverage(geom *geos.Geometry, srs Proj, clip bool) *GeomCoverage {
 	bounds := geosBoundsToRect(geom)
 	return &GeomCoverage{BBox: bounds, Srs: srs, Geom: geom, Clip: clip}
 }
@@ -342,7 +348,7 @@ func UnionCoverage(coverages []Coverage, clip bool) Coverage {
 		union = union.Union(g)
 	}
 
-	return NewGeomCoverage(union, srs, clip)
+	return NewGeosCoverage(union, srs, clip)
 }
 
 func DiffCoverage(coverages []Coverage, clip bool) Coverage {
@@ -373,7 +379,7 @@ func DiffCoverage(coverages []Coverage, clip bool) Coverage {
 		panic("diff did not return any geometry")
 	}
 
-	return NewGeomCoverage(diff, srs, clip)
+	return NewGeosCoverage(diff, srs, clip)
 }
 
 func IntersectionCoverage(coverages []Coverage, clip bool) Coverage {
@@ -402,5 +408,5 @@ func IntersectionCoverage(coverages []Coverage, clip bool) Coverage {
 		panic("intersection did not return any geometry")
 	}
 
-	return NewGeomCoverage(intersection, srs, clip)
+	return NewGeosCoverage(intersection, srs, clip)
 }

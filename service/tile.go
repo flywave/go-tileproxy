@@ -307,9 +307,7 @@ func (t *TileServiceGrid) GetOrigin() string {
 func (t *TileServiceGrid) GetBBox() vec2d.Rect {
 	first_level := t.internalLevel(0)
 	grid_size := t.grid.GridSizes[first_level]
-	return t.grid.TilesBBox([][3]int{{0, 0, first_level},
-		{int(grid_size[0]) - 1, int(grid_size[1]) - 1, first_level}})
-
+	return t.grid.TilesBBox([][3]int{{0, 0, first_level}, {int(grid_size[0]) - 1, int(grid_size[1]) - 1, first_level}})
 }
 
 func (t *TileServiceGrid) GetTileSets() []float64 {
@@ -541,12 +539,13 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 	}
 	_, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
 	var tile_bbox vec2d.Rect
+	coverage_intersects := false
 	if coverage != nil {
 		tile_bbox = tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, false)
 		if coverage.Contains(tile_bbox, tl.grid.srs) {
 			//
 		} else if coverage.Intersects(tile_bbox, tl.grid.srs) {
-			//
+			coverage_intersects = true
 		} else {
 			return nil, tl.emptyResponse()
 		}
@@ -561,6 +560,15 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 
 	if decorateTile != nil {
 		t.Source = decorateTile(t.Source)
+	}
+
+	if coverage_intersects {
+		format := tile.TileFormat(tl.GetFormat())
+		tile_opts := t.Source.GetTileOptions()
+		s := cache.MaskImageSourceFromCoverage(t.Source, tile_bbox, tl.grid.srs, coverage, tile_opts)
+		nt := cache.NewTile(t.Coord)
+		nt.Source = s
+		return nil, newTileResponse(nt, &format, nil, tl.tileManager.GetTileOptions())
 	}
 
 	format := tileRequest.Format

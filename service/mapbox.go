@@ -11,6 +11,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
+	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -28,12 +29,26 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 	return &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age}
 }
 
+func (s *MapboxService) GetTileJSON(req request.Request) *Response {
+	tilejson_request := req.(*request.MapboxTileJSONRequest)
+	err, layer := s.getLayer(tilejson_request.TilesetID, req)
+	if err != nil {
+		return err.Render()
+	}
+	tilelayer := layer.(*MapboxTileProvider)
+
+	data := tilelayer.RenderTileJson(tilejson_request)
+
+	resp := NewResponse(data, 200, "application/json")
+	return resp
+}
+
 func (s *MapboxService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.MapboxTileRequest)
 	if tile_request.Origin == "" {
 		tile_request.Origin = "nw"
 	}
-	err, layer := s.getLayer(tile_request)
+	err, layer := s.getLayer(tile_request.TilesetID, req)
 	if err != nil {
 		return err.Render()
 	}
@@ -49,12 +64,12 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	}
 
 	decorateTile := func(image tile.Source) tile.Source {
-		tilelayer := layer.(*TileProvider)
+		tilelayer := layer.(*MapboxTileProvider)
 		err, bbox := layer.GetTileBBox(tile_request, false, false)
 		if err != nil {
 			return nil
 		}
-		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: bbox}
+		query_extent := &geo.MapExtent{Srs: tilelayer.GetSrs(), BBox: bbox}
 		return s.DecorateTile(image, "mapbox", []string{tilelayer.name}, query_extent)
 	}
 
@@ -77,12 +92,11 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	return resp
 }
 
-func (s *MapboxService) getLayer(tile_request *request.MapboxTileRequest) (*RequestError, Provider) {
-	id := tile_request.TilesetID
+func (s *MapboxService) getLayer(id string, req request.Request) (*RequestError, Provider) {
 	if l, ok := s.Tilesets[id]; ok {
 		return nil, l
 	}
-	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &MapboxExceptionHandler{}, tile_request, false, nil), nil
+	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &MapboxExceptionHandler{}, req, false, nil), nil
 }
 
 func (s *MapboxService) GetStyle(req request.Request) *Response {
@@ -170,17 +184,27 @@ const (
 
 type MapboxTileProvider struct {
 	Provider
-	name        string
-	metadata    map[string]string
-	tileManager cache.Manager
-	extent      *geo.MapExtent
-	empty_tile  []byte
-	type_       MapboxTileType
+	name           string
+	metadata       map[string]string
+	tileManager    cache.Manager
+	extent         *geo.MapExtent
+	empty_tile     []byte
+	type_          MapboxTileType
+	zoomRange      [2]int
+	tilejsonSource *sources.MapboxTileJSONSource
 }
 
 func NewMapboxTileProvider(name string, md map[string]string, tileManager cache.Manager) *MapboxTileProvider {
 	ret := &MapboxTileProvider{name: name, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid())}
 	return ret
+}
+
+func (t *MapboxTileProvider) GetMaxZoom() int {
+	return t.zoomRange[1]
+}
+
+func (t *MapboxTileProvider) GetMinZoom() int {
+	return t.zoomRange[0]
 }
 
 func (t *MapboxTileProvider) GetExtent() *geo.MapExtent {
@@ -273,6 +297,49 @@ func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, cov
 	}
 	format := tile_request.Format
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
+}
+
+func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) []byte {
+	if c.tilejsonSource != nil {
+		query := &layer.TileJSONQuery{TilesetID: req.TilesetID}
+
+		styles := c.tilejsonSource.GetTileJSON(query)
+		return styles.GetData()
+	}
+
+	tilejson := &resource.TileJSON{}
+
+	bbox := c.GetBBox()
+
+	tilejson.Bounds[0], tilejson.Bounds[1], tilejson.Bounds[2], tilejson.Bounds[3] = float32(bbox.Min[0]), float32(bbox.Min[1]), float32(bbox.Max[0]), float32(bbox.Max[1])
+	tilejson.Center[0], tilejson.Center[1], tilejson.Center[2] = float32(bbox.Min[0]+(bbox.Max[0]-bbox.Min[0])/2), float32(bbox.Min[1]+(bbox.Max[1]-bbox.Min[1])/2), 0
+
+	tilejson.Format = c.GetFormat()
+	tilejson.Id = req.TilesetID
+
+	tilejson.Name = c.metadata["name"]
+
+	if attr, ok := c.metadata["attribution"]; ok {
+		tilejson.Attribution = attr
+	}
+	if desc, ok := c.metadata["description"]; ok {
+		tilejson.Description = desc
+	}
+	if legend, ok := c.metadata["legend"]; ok {
+		tilejson.Legend = &legend
+	}
+	if fillzoom, ok := c.metadata["fillzoom"]; ok {
+		z, _ := strconv.Atoi(fillzoom)
+		tilejson.FillZoom = uint32(z)
+	}
+	tilejson.Scheme = "xyz"
+	tilejson.Version = "1.0.0"
+	tilejson.TilejsonVersion = "3.0.0"
+
+	url := c.metadata["url"] + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+
+	tilejson.Tiles = append(tilejson.Tiles, url)
+	return tilejson.ToJson()
 }
 
 type mapboxException struct {

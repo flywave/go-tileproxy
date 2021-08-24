@@ -96,3 +96,23 @@ func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
 	}
 	return nil
 }
+
+type MapboxTileJSONClient struct {
+	MapboxClient
+}
+
+func NewMapboxTileJSONClient(url string, userName string, token string, ctx Context) *MapboxTileJSONClient {
+	return &MapboxTileJSONClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
+}
+
+func (c *MapboxTileJSONClient) GetTileJSON(q *layer.TileJSONQuery) *resource.TileJSON {
+	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	if err != nil {
+		return nil
+	}
+	status, resp := c.httpClient().Open(url, nil)
+	if status == 200 {
+		return resource.CreateTileJSON(resp)
+	}
+	return nil
+}

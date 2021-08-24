@@ -138,3 +138,22 @@ func (s *MapboxGlyphsSource) GetGlyphs(query *layer.GlyphsQuery) *resource.Glyph
 
 	return ret
 }
+
+type MapboxTileJSONSource struct {
+	Client *client.MapboxTileJSONClient
+	Cache  *resource.TileJSONCache
+}
+
+func NewMapboxTileJSONSource(c *client.MapboxTileJSONClient, cache *resource.TileJSONCache) *MapboxTileJSONSource {
+	return &MapboxTileJSONSource{Client: c, Cache: cache}
+}
+
+func (s *MapboxTileJSONSource) GetTileJSON(query *layer.TileJSONQuery) *resource.TileJSON {
+	ret := &resource.TileJSON{Id: query.TilesetID}
+
+	if s.Cache != nil && s.Cache.Load(ret) != nil {
+		ret = s.Client.GetTileJSON(query)
+	}
+
+	return ret
+}

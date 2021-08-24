@@ -311,6 +311,36 @@ func (req *GlyphsQuery) BuildURL(URL string, username string, accessToken string
 	return u.String(), nil
 }
 
+type TileJSONQuery struct {
+	Query
+	TilesetID string
+}
+
+func (req *TileJSONQuery) GetID() string {
+	return fmt.Sprintf("%s", req.TilesetID)
+}
+
+func (q *TileJSONQuery) EQ(o *TileJSONQuery) bool {
+	if q.TilesetID != o.TilesetID {
+		return false
+	}
+	return true
+}
+
+func (req *TileJSONQuery) BuildURL(URL string, username string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/v4/%s.json", URL, req.TilesetID)
+
+	u, err := url.Parse(urls)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("access_token", accessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
+}
+
 type LuoKuangTileQuery struct {
 	Query
 	Y      int

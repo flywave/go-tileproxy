@@ -20,6 +20,49 @@ type MapboxRequest struct {
 	Version            string
 }
 
+type MapboxTileJSONRequest struct {
+	MapboxRequest
+	TilesetID string
+	Secure    bool
+}
+
+func NewMapboxTileJSONRequest(hreq *http.Request) *MapboxTileJSONRequest {
+	req := &MapboxTileJSONRequest{}
+	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	return req
+}
+
+func (r *MapboxTileJSONRequest) init(param interface{}, url string, validate bool, http *http.Request) {
+	r.BaseRequest.init(param, url, validate, http)
+	r.RequestHandlerName = "tilejson"
+	r.Version = "v4"
+	r.AccessToken = r.Params.GetOne("access_token", "")
+	r.Secure = false
+	r.ReqRegex = regexp.MustCompile(`^/(?P<version>[^/]+)/(?P<tileset_id>[^/]+)`)
+	r.initRequest()
+}
+
+func (r *MapboxTileJSONRequest) initRequest() error {
+	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	groupNames := r.ReqRegex.SubexpNames()
+	result := make(map[string]string)
+	for i, name := range groupNames {
+		if name != "" && match[i] != "" {
+			result[name] = match[i]
+		}
+	}
+
+	if match == nil || len(match) == 0 || result["version"] != r.Version {
+		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
+	}
+
+	if v, ok := result["tileset_id"]; ok {
+		r.TilesetID = v
+	}
+
+	return nil
+}
+
 type MapboxTileRequest struct {
 	MapboxRequest
 	TilesetID string

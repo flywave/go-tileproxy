@@ -99,6 +99,15 @@ func (p *mockWorkerPool) Process(work Work, progress *SeedProgress) {
 	}
 }
 
+type mockMVTSourceCreater struct {
+}
+
+func (c *mockMVTSourceCreater) Creater(data []byte, location string) tile.Source {
+	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
+	source.SetSource("../data/3194.mvt")
+	return source
+}
+
 func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testing.T) map[int][][2]int {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
@@ -116,11 +125,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 
 	creater := &dummyCreater{}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
-		source.SetSource("../data/3194.mvt")
-		return source
-	}
+	ccreater := &mockMVTSourceCreater{}
 
 	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: creater}
 
@@ -161,11 +166,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	creater := &dummyCreater{}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
-		source.SetSource("../data/3194.mvt")
-		return source
-	}
+	ccreater := &mockMVTSourceCreater{}
 
 	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: creater}
 

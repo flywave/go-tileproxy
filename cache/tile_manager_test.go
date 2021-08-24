@@ -72,10 +72,7 @@ func TestTileManager(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -141,10 +138,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -199,10 +193,7 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -228,11 +219,7 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
-
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -258,11 +245,7 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
-
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 

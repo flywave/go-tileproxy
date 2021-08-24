@@ -34,6 +34,15 @@ func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interf
 	return nil
 }
 
+type mockMVTSourceCreater struct {
+}
+
+func (c *mockMVTSourceCreater) Creater(data []byte, location string) tile.Source {
+	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
+	source.SetSource("../data/3194.mvt")
+	return source
+}
+
 func TestMapboxServiceGetTile(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{}}
 	ctx := &mockContext{c: mock}
@@ -44,11 +53,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
-		source.SetSource("../data/3194.mvt")
-		return source
-	}
+	ccreater := &mockMVTSourceCreater{}
 
 	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 

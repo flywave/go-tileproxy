@@ -4,7 +4,9 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type SourceCreater func(data []byte, location string) tile.Source
+type TileCreater interface {
+	Creater(data []byte, location string) tile.Source
+}
 
 type Cache interface {
 	LoadTile(tile *Tile, withMetadata bool) error

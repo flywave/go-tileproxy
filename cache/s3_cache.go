@@ -32,7 +32,7 @@ type S3Cache struct {
 	fileExt       string
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
-	creater       SourceCreater
+	creater       TileCreater
 }
 
 func (b *S3Cache) s3New() (*s3.Client, error) {
@@ -169,7 +169,7 @@ func (b *S3Cache) LoadTile(tile *Tile, withMetadata bool) error {
 		}
 		reader, _ := b.reader(location)
 		data, _ := ioutil.ReadAll(reader)
-		tile.Source = b.creater(data, location)
+		tile.Source = b.creater.Creater(data, location)
 		return nil
 	}
 	return errors.New("not found")

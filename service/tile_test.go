@@ -61,6 +61,15 @@ func (c *mockContext) Client() client.HttpClient {
 func (c *mockContext) Sync() {
 }
 
+type mockImageSourceCreater struct {
+	imageopts *imagery.ImageOptions
+}
+
+func (c *mockImageSourceCreater) Creater(data []byte, location string) tile.Source {
+	s := imagery.CreateImageSourceFromBufer(data, c.imageopts)
+	return s
+}
+
 func TestTileProvider(t *testing.T) {
 	rgba := image.NewRGBA(image.Rect(0, 0, 256, 256))
 	imagedata := &bytes.Buffer{}
@@ -75,10 +84,7 @@ func TestTileProvider(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{}
 
 	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -135,10 +141,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{}
 
 	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 

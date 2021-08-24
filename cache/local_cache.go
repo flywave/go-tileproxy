@@ -13,10 +13,10 @@ type LocalCache struct {
 	fileExt       string
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
-	creater       SourceCreater
+	creater       TileCreater
 }
 
-func NewLocalCache(cache_dir string, file_ext string, directory_layout string, creater SourceCreater) *LocalCache {
+func NewLocalCache(cache_dir string, file_ext string, directory_layout string, creater TileCreater) *LocalCache {
 	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext, creater: creater}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
 	return c
@@ -42,7 +42,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 			c.LoadTileMetadata(tile)
 		}
 		data, _ := os.ReadFile(location)
-		tile.Source = c.creater(data, location)
+		tile.Source = c.creater.Creater(data, location)
 		return nil
 	}
 	return errors.New("not found")

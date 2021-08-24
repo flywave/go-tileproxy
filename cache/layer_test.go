@@ -19,6 +19,15 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type mockImageSourceCreater struct {
+	imageopts *imagery.ImageOptions
+}
+
+func (c *mockImageSourceCreater) Creater(data []byte, location string) tile.Source {
+	s := imagery.CreateImageSourceFromBufer(data, c.imageopts)
+	return s
+}
+
 func TestCacheMapLayer(t *testing.T) {
 	rgba := image.NewRGBA(image.Rect(0, 0, 256, 256))
 	imagedata := &bytes.Buffer{}
@@ -33,10 +42,7 @@ func TestCacheMapLayer(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -80,10 +86,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 
@@ -127,10 +130,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(data []byte, location string) tile.Source {
-		s := imagery.CreateImageSourceFromBufer(data, imageopts)
-		return s
-	}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
 

@@ -64,10 +64,15 @@ func (s *testSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
+type mockSourceCreater struct {
+}
+
+func (c *mockSourceCreater) Creater(data []byte, location string) tile.Source {
+	return newTestSource(string(data), location)
+}
+
 func TestLocalCache(t *testing.T) {
-	creater := func(data []byte, location string) tile.Source {
-		return newTestSource(string(data), location)
-	}
+	creater := &mockSourceCreater{}
 
 	c := NewLocalCache("./test_cache", "mvt", "quadkey", creater)
 

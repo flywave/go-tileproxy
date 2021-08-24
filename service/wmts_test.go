@@ -74,8 +74,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	source := sources.NewWMSSource(nil, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}

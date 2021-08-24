@@ -165,7 +165,7 @@ func NewGeosCoverage(geom *geos.Geometry, srs Proj, clip bool) *GeomCoverage {
 }
 
 func NewBBoxCoverage(rect vec2d.Rect, srs Proj, clip bool) *GeomCoverage {
-	geom := bboxPolygon(rect)
+	geom := BBoxPolygon(rect)
 	bounds := geosBoundsToRect(geom)
 	return &GeomCoverage{BBox: bounds, Srs: srs, Geom: geom, Clip: clip}
 }
@@ -211,7 +211,7 @@ func (c *GeomCoverage) geomInCoverageSrs(gin interface{}, srs Proj) *geos.Geomet
 		if !srs.Eq(c.Srs) {
 			g = srs.TransformRectTo(c.Srs, g, 16)
 		}
-		geom = bboxPolygon(g)
+		geom = BBoxPolygon(g)
 	}
 
 	return geom
@@ -265,7 +265,7 @@ func (c *GeomCoverage) Equals(cc Coverage) bool {
 	}
 }
 
-func bboxPolygon(bbox vec2d.Rect) *geos.Geometry {
+func BBoxPolygon(bbox vec2d.Rect) *geos.Geometry {
 	shell := []geos.Coord{
 		{X: bbox.Min[0], Y: bbox.Min[1]},
 		{X: bbox.Max[0], Y: bbox.Min[1]},
@@ -339,7 +339,7 @@ func UnionCoverage(coverages []Coverage, clip bool) Coverage {
 		if coverages[c].GetGeom() != nil {
 			geoms = append(geoms, coverages[c].GetGeom())
 		} else {
-			geoms = append(geoms, bboxPolygon(coverages[c].GetBBox()))
+			geoms = append(geoms, BBoxPolygon(coverages[c].GetBBox()))
 		}
 	}
 
@@ -364,7 +364,7 @@ func DiffCoverage(coverages []Coverage, clip bool) Coverage {
 		if coverages[c].GetGeom() != nil {
 			geoms = append(geoms, coverages[c].GetGeom())
 		} else {
-			geoms = append(geoms, bboxPolygon(coverages[c].GetBBox()))
+			geoms = append(geoms, BBoxPolygon(coverages[c].GetBBox()))
 		}
 	}
 
@@ -395,7 +395,7 @@ func IntersectionCoverage(coverages []Coverage, clip bool) Coverage {
 		if coverages[c].GetGeom() != nil {
 			geoms = append(geoms, coverages[c].GetGeom())
 		} else {
-			geoms = append(geoms, bboxPolygon(coverages[c].GetBBox()))
+			geoms = append(geoms, BBoxPolygon(coverages[c].GetBBox()))
 		}
 	}
 	intersection := geoms[0]

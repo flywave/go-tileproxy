@@ -75,8 +75,7 @@ func TestTileProvider(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -136,8 +135,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}

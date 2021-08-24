@@ -1,6 +1,37 @@
 package setting
 
-import "time"
+import (
+	"time"
+
+	"github.com/flywave/go-tileproxy/resource"
+)
+
+type Globals struct {
+	Image ImageSetting `json:"image,omitempty"`
+	Http  struct {
+		HttpOpts
+		AccessControlAllowOrigin string `json:"access_control_allow_origin,omitempty"`
+	} `json:"http,omitempty"`
+	Cache struct {
+		BaseDir                string `json:"base_dir,omitempty"`
+		LockDir                string `json:"lock_dir,omitempty"`
+		TileLockDir            string `json:"tile_lock_dir,omitempty"`
+		MetaSize               []int  `json:"meta_size,omitempty"`
+		MetaBuffer             int    `json:"meta_buffer,omitempty"`
+		BulkMetaTiles          bool   `json:"bulk_meta_tiles,omitempty"`
+		MaxTileLimit           int    `json:"max_tile_limit,omitempty"`
+		MinimizeMetaRequests   bool   `json:"minimize_meta_requests,omitempty"`
+		ConcurrentTileCreators int    `json:"concurrent_tile_creators,omitempty"`
+	} `json:"cache,omitempty"`
+	Grid struct {
+		TileSize []int `json:"tile_size,omitempty"`
+	} `json:"grid,omitempty"`
+	Srs   Srs   `json:"srs,omitempty"`
+	Geoid Geoid `json:"geoid,omitempty"`
+	Tiles struct {
+		ExpiresHours int `json:"expires_hours,omitempty"`
+	}
+}
 
 type Coverage struct {
 	Polygons     string      `json:"polygons,omitempty"`
@@ -16,6 +47,14 @@ type Coverage struct {
 	Clip         *bool       `json:"clip,omitempty"`
 }
 
+type RasterOpts struct {
+	Format       string  `json:"format,omitempty"`
+	Mode         string  `json:"mode,omitempty"`
+	MaxError     float64 `json:"max_error,omitempty"`
+	Nodata       float64 `json:"nodata,omitempty"`
+	Interpolator string  `json:"interpolator,omitempty"`
+}
+
 type ImageOpts struct {
 	Mode             string            `json:"mode,omitempty"`
 	Colors           *uint32           `json:"colors,omitempty"`
@@ -23,6 +62,15 @@ type ImageOpts struct {
 	ResamplingMethod string            `json:"resampling_method,omitempty"`
 	Format           string            `json:"format,omitempty"`
 	EncodingOptions  map[string]string `json:"encoding_options,omitempty"`
+}
+
+type VectorOpts struct {
+	Format      string  `json:"format,omitempty"`
+	Tolerance   float64 `json:"tolerance,omitempty"`
+	Extent      uint16  `json:"extent,omitempty"`
+	Buffer      uint16  `json:"buffer,omitempty"`
+	LineMetrics bool    `json:"line_metrics,omitempty"`
+	MaxZoom     uint8   `json:"max_zoom,omitempty"`
 }
 
 type GridOpts struct {
@@ -61,6 +109,10 @@ type ImageSetting struct {
 	Formats          map[string]ImageOpts `json:"formats,omitempty"`
 }
 
+type Geoid struct {
+	GeoidDataDir string `json:"geoid_data_dir,omitempty"`
+}
+
 type Srs struct {
 	AxisOrderNE      []string            `json:"axis_order_ne,omitempty"`
 	AxisOrderEN      []string            `json:"axis_order_en,omitempty"`
@@ -68,29 +120,51 @@ type Srs struct {
 	PreferredSrcProj map[string][]string `json:"preferred_src_proj,omitempty"`
 }
 
+type LocalCache struct {
+	DirectoryLayout string `json:"directory_layout,omitempty"`
+	UseGridNames    bool   `json:"use_grid_names,omitempty"`
+	Directory       string `json:"directory,omitempty"`
+	TileLockDir     string `json:"tile_lock_dir,omitempty"`
+}
+
+type S3Cache struct {
+	DirectoryLayout string `json:"directory_layout,omitempty"`
+	Directory       string `json:"directory,omitempty"`
+	Endpoint        string `json:"endpoint,omitempty"`
+	AccessKey       string `json:"access_key,omitempty"`
+	SecretKey       string `json:"secret_key,omitempty"`
+	Secure          bool   `json:"secure,omitempty"`
+	SignV2          bool   `json:"signv2,omitempty"`
+	Region          string `json:"region,omitempty"`
+	Bucket          string `json:"bucket,omitempty"`
+	Encrypt         bool   `json:"encrypt,omitempty"`
+	Trace           bool   `json:"trace,omitempty"`
+	TileLockDir     string `json:"tile_lock_dir,omitempty"`
+}
+
 type Caches struct {
-	Name                   string                 `json:"name,omitempty"`
-	Grids                  []string               `json:"grids,omitempty"`
-	LockDir                string                 `json:"lock_dir,omitempty"`
-	TileLockDir            string                 `json:"tile_lock_dir,omitempty"`
-	CacheDir               string                 `json:"cache_dir,omitempty"`
-	MetaSize               []int                  `json:"meta_size,omitempty"`
-	MetaBuffer             *int                   `json:"meta_buffer,omitempty"`
-	BulkMetaTiles          *bool                  `json:"bulk_meta_tiles,omitempty"`
-	TileOptions            interface{}            `json:"tile_options,omitempty"`
-	MaxTileLimit           *int                   `json:"max_tile_limit,omitempty"`
-	MinimizeMetaRequests   *bool                  `json:"minimize_meta_requests,omitempty"`
-	ConcurrentTileCreators *int                   `json:"concurrent_tile_creators,omitempty"`
-	UseDirectFromLevel     *int                   `json:"use_direct_from_level,omitempty"`
-	UseDirectFromRes       *float64               `json:"use_direct_from_res,omitempty"`
-	DisableStorage         *bool                  `json:"disable_storage,omitempty"`
-	Format                 string                 `json:"format,omitempty"`
-	RequestFormat          string                 `json:"request_format,omitempty"`
-	CacheRescaledTiles     *bool                  `json:"cache_rescaled_tiles,omitempty"`
-	UpscaleTiles           *int                   `json:"upscale_tiles,omitempty"`
-	DownscaleTiles         *int                   `json:"downscale_tiles,omitempty"`
-	WaterMark              *WaterMark             `json:"watermark,omitempty"`
-	CacheInfo              map[string]interface{} `json:"cache,omitempty"`
+	Name                   string      `json:"name,omitempty"`
+	Grids                  []string    `json:"grids,omitempty"`
+	LockDir                string      `json:"lock_dir,omitempty"`
+	TileLockDir            string      `json:"tile_lock_dir,omitempty"`
+	CacheDir               string      `json:"cache_dir,omitempty"`
+	MetaSize               []int       `json:"meta_size,omitempty"`
+	MetaBuffer             *int        `json:"meta_buffer,omitempty"`
+	BulkMetaTiles          *bool       `json:"bulk_meta_tiles,omitempty"`
+	TileOptions            interface{} `json:"tile_options,omitempty"`
+	MaxTileLimit           *int        `json:"max_tile_limit,omitempty"`
+	MinimizeMetaRequests   *bool       `json:"minimize_meta_requests,omitempty"`
+	ConcurrentTileCreators *int        `json:"concurrent_tile_creators,omitempty"`
+	UseDirectFromLevel     *int        `json:"use_direct_from_level,omitempty"`
+	UseDirectFromRes       *float64    `json:"use_direct_from_res,omitempty"`
+	DisableStorage         *bool       `json:"disable_storage,omitempty"`
+	Format                 string      `json:"format,omitempty"`
+	RequestFormat          string      `json:"request_format,omitempty"`
+	CacheRescaledTiles     *bool       `json:"cache_rescaled_tiles,omitempty"`
+	UpscaleTiles           *int        `json:"upscale_tiles,omitempty"`
+	DownscaleTiles         *int        `json:"downscale_tiles,omitempty"`
+	WaterMark              *WaterMark  `json:"watermark,omitempty"`
+	CacheInfo              interface{} `json:"cache,omitempty"`
 }
 
 type HttpOpts struct {
@@ -150,6 +224,32 @@ type TileSource struct {
 	Http          HttpOpts    `json:"http,omitempty"`
 }
 
+type MapboxTileSource struct {
+	SourceCommons
+	Url           string      `json:"url,omitempty"`
+	TilesetID     string      `json:"tilesetID,omitempty"`
+	UserName      string      `json:"userName,omitempty"`
+	AccessToken   string      `json:"accessToken,omitempty"`
+	Options       interface{} `json:"options,omitempty"`
+	Grid          string      `json:"grid,omitempty"`
+	RequestFormat string      `json:"request_format,omitempty"`
+	Origin        string      `json:"origin,omitempty"`
+	Http          HttpOpts    `json:"http,omitempty"`
+}
+
+type LuokuangTileSource struct {
+	SourceCommons
+	Url           string      `json:"url,omitempty"`
+	TilesetID     string      `json:"tilesetID,omitempty"`
+	UserName      string      `json:"userName,omitempty"`
+	AccessToken   string      `json:"accessToken,omitempty"`
+	Options       interface{} `json:"options,omitempty"`
+	Grid          string      `json:"grid,omitempty"`
+	RequestFormat string      `json:"request_format,omitempty"`
+	Origin        string      `json:"origin,omitempty"`
+	Http          HttpOpts    `json:"http,omitempty"`
+}
+
 type ArcgisSource struct {
 	SourceCommons
 	Request struct {
@@ -178,7 +278,9 @@ type WaterMark struct {
 
 type MapboxService struct {
 	Metadata map[string]string `json:"metadata,omitempty"`
-	Layers   []TileLayer       `json:"layers,omitempty"`
+	Layers   []MapboxTileLayer `json:"layers,omitempty"`
+	Styles   []string          `json:"styles,omitempty"`
+	Fonts    []string          `json:"fonts,omitempty"`
 }
 
 type TMSService struct {
@@ -219,6 +321,16 @@ type Dimension struct {
 	Values  []interface{} `json:"values"`
 }
 
+type MapboxTileLayer struct {
+	ScaleHints
+	Sources      []string                `json:"sources"`
+	Name         string                  `json:"name,omitempty"`
+	Title        string                  `json:"title"`
+	Metadata     map[string]string       `json:"metadata,omitempty"`
+	Dimensions   map[string]Dimension    `json:"dimensions,omitempty"`
+	VectorLayers []*resource.VectorLayer `json:"vectorLayers,omitempty"`
+}
+
 type TileLayer struct {
 	ScaleHints
 	Sources     []string             `json:"sources"`
@@ -241,4 +353,32 @@ type WMSLayer struct {
 	Metadata           map[string]string    `json:"metadata,omitempty"`
 	Layers             []WMSLayer           `json:"layers,omitempty"`
 	Dimensions         map[string]Dimension `json:"dimensions,omitempty"`
+}
+
+type TimeSpec struct {
+	Seconds int       `json:"seconds,omitempty"`
+	Minutes int       `json:"minutes,omitempty"`
+	Hours   int       `json:"hours,omitempty"`
+	Days    int       `json:"days,omitempty"`
+	Weeks   int       `json:"weeks,omitempty"`
+	Time    time.Time `json:"time,omitempty"`
+}
+
+type Seed struct {
+	Caches        []string  `json:"caches,omitempty"`
+	Grids         []string  `json:"grids,omitempty"`
+	Coverages     []string  `json:"coverages,omitempty"`
+	Levels        []int     `json:"levels,omitempty"`
+	Resolutions   []float64 `json:"resolutions,omitempty"`
+	RefreshBefore TimeSpec  `json:"refresh_before,omitempty"`
+}
+
+type Cleanup struct {
+	Caches       []string  `json:"caches,omitempty"`
+	Grids        []string  `json:"grids,omitempty"`
+	Coverages    []string  `json:"coverages,omitempty"`
+	Levels       []int     `json:"levels,omitempty"`
+	Resolutions  []float64 `json:"resolutions,omitempty"`
+	RemoveBefore TimeSpec  `json:"remove_before,omitempty"`
+	RemoveAll    bool      `json:"remove_all,omitempty"`
 }

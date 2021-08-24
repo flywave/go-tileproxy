@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-geos"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
@@ -14,7 +16,6 @@ import (
 	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/vector"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type mockClient struct {
@@ -115,7 +116,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 
 	creater := &dummyCreater{}
 
-	ccreater := func(location string) tile.Source {
+	ccreater := func(data []byte, location string) tile.Source {
 		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
 		source.SetSource("../data/3194.mvt")
 		return source
@@ -160,7 +161,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	creater := &dummyCreater{}
 
-	ccreater := func(location string) tile.Source {
+	ccreater := func(data []byte, location string) tile.Source {
 		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
 		source.SetSource("../data/3194.mvt")
 		return source

@@ -72,8 +72,7 @@ func TestTileManager(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -142,8 +141,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -201,8 +199,7 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -232,8 +229,7 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -263,8 +259,7 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}

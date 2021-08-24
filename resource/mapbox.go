@@ -26,22 +26,6 @@ func (c *StyleCache) Load(r Resource) error {
 	return c.Load(r)
 }
 
-type SpriteCache struct {
-	store Store
-}
-
-func NewSpriteCache(cache_dir string, file_ext string) *SpriteCache {
-	return &SpriteCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
-}
-
-func (c *SpriteCache) Save(r Resource) error {
-	return c.store.Save(r)
-}
-
-func (c *SpriteCache) Load(r Resource) error {
-	return c.Load(r)
-}
-
 type GlyphsCache struct {
 	store Store
 }

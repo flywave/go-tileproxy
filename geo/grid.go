@@ -221,7 +221,24 @@ func BBoxSize(bbox vec2d.Rect) (width, height float64) {
 	return BBoxWidth(bbox), BBoxHeight(bbox)
 }
 
+type Grid interface {
+	Resolution(level int) float64
+	ClosestLevel(res float64) int
+	Tile(x, y float64, level int) (cx, cy, clevel int)
+	FlipTileCoord(x, y, level int) [3]int
+	SupportsAccessWithOrigin(origin OriginType) bool
+	OriginTile(level int, origin OriginType) [3]int
+	GetAffectedTiles(bbox vec2d.Rect, size [2]uint32, req_srs Proj) (vec2d.Rect, [2]int, *TileIter, error)
+	GetAffectedBBoxAndLevel(bbox vec2d.Rect, size [2]uint32, req_srs Proj) (vec2d.Rect, int, error)
+	GetAffectedLevelTiles(bbox vec2d.Rect, level int) (vec2d.Rect, [2]int, *TileIter, error)
+	TilesBBox(tiles [][3]int) vec2d.Rect
+	TileBBox(tile_coord [3]int, limit bool) vec2d.Rect
+	LimitTile(tile_coord [3]int) []int
+	ToString() string
+}
+
 type TileGrid struct {
+	Grid
 	Name            string
 	IsGeodetic      bool
 	Srs             *SRSProj4

@@ -73,9 +73,8 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 }
 
 type MapboxStyleSource struct {
-	Client      *client.MapboxStyleClient
-	Cache       *resource.StyleCache
-	SpriteCache *resource.SpriteCache
+	Client *client.MapboxStyleClient
+	Cache  *resource.StyleCache
 }
 
 func NewMapboxStyleSource(c *client.MapboxStyleClient, cache *resource.StyleCache) *MapboxStyleSource {

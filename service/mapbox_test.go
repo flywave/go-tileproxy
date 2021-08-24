@@ -44,7 +44,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(location string) tile.Source {
+	ccreater := func(data []byte, location string) tile.Source {
 		source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
 		source.SetSource("../data/3194.mvt")
 		return source

@@ -65,8 +65,7 @@ func (s *testSource) GetTileOptions() tile.TileOptions {
 }
 
 func TestLocalCache(t *testing.T) {
-	creater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	creater := func(data []byte, location string) tile.Source {
 		return newTestSource(string(data), location)
 	}
 

@@ -33,8 +33,7 @@ func TestCacheMapLayer(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -81,8 +80,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}
@@ -129,8 +127,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := func(location string) tile.Source {
-		data, _ := os.ReadFile(location)
+	ccreater := func(data []byte, location string) tile.Source {
 		s := imagery.CreateImageSourceFromBufer(data, imageopts)
 		return s
 	}

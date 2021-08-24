@@ -192,6 +192,7 @@ type MapboxTileProvider struct {
 	type_          MapboxTileType
 	zoomRange      [2]int
 	tilejsonSource *sources.MapboxTileJSONSource
+	vectorLayers   []*resource.VectorLayer
 }
 
 func NewMapboxTileProvider(name string, md map[string]string, tileManager cache.Manager) *MapboxTileProvider {
@@ -337,6 +338,8 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.TilejsonVersion = "3.0.0"
 
 	url := c.metadata["url"] + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+
+	tilejson.VectorLayers = c.vectorLayers[:]
 
 	tilejson.Tiles = append(tilejson.Tiles, url)
 	return tilejson.ToJson()

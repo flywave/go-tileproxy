@@ -2,40 +2,40 @@ package geo
 
 import "fmt"
 
-type TileCoord struct {
+type Tile struct {
 	X, Y, Z int
 }
 
-func NewTileCoord(coords ...int) *TileCoord {
+func NewTile(coords ...int) *Tile {
 	if len(coords) < 3 {
 		return nil
 	}
-	return &TileCoord{X: coords[0], Y: coords[1], Z: coords[2]}
+	return &Tile{X: coords[0], Y: coords[1], Z: coords[2]}
 }
 
-func (t *TileCoord) Coords() [3]int {
+func (t *Tile) Coords() [3]int {
 	return [3]int{t.X, t.Y, t.Z}
 }
 
-func (t *TileCoord) TopLeftChild() *TileCoord {
-	return &TileCoord{Z: t.Z + 1, X: t.X << 1, Y: t.Y << 1}
+func (t *Tile) TopLeftChild() *Tile {
+	return &Tile{Z: t.Z + 1, X: t.X << 1, Y: t.Y << 1}
 }
 
-func (t *TileCoord) TopRightChild() *TileCoord {
-	return &TileCoord{Z: t.Z + 1, X: (t.X << 1) + 1, Y: t.Y << 1}
+func (t *Tile) TopRightChild() *Tile {
+	return &Tile{Z: t.Z + 1, X: (t.X << 1) + 1, Y: t.Y << 1}
 }
 
-func (t *TileCoord) BottomLeftChild() *TileCoord {
-	return &TileCoord{Z: t.Z + 1, X: t.X << 1, Y: (t.Y << 1) + 1}
+func (t *Tile) BottomLeftChild() *Tile {
+	return &Tile{Z: t.Z + 1, X: t.X << 1, Y: (t.Y << 1) + 1}
 }
 
-func (t *TileCoord) BottomRightChild() *TileCoord {
-	return &TileCoord{Z: t.Z + 1, X: (t.X << 1) + 1, Y: (t.Y << 1) + 1}
+func (t *Tile) BottomRightChild() *Tile {
+	return &Tile{Z: t.Z + 1, X: (t.X << 1) + 1, Y: (t.Y << 1) + 1}
 }
 
-func (t *TileCoord) Children() []TileCoord {
+func (t *Tile) Children() []Tile {
 	z, x, y := t.Z+1, t.X<<1, t.Y<<1
-	return []TileCoord{
+	return []Tile{
 		{Z: z, X: x, Y: y},
 		{Z: z, X: x + 1, Y: y},
 		{Z: z, X: x, Y: y + 1},
@@ -43,6 +43,6 @@ func (t *TileCoord) Children() []TileCoord {
 	}
 }
 
-func (t *TileCoord) String() string {
+func (t *Tile) String() string {
 	return fmt.Sprintf("%d/%d/%d", t.Z, t.X, t.Y)
 }

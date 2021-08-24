@@ -61,11 +61,11 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	locker := &cache.DummyTileLocker{}
 
 	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-	glyphsCache := resource.NewGlyphsCache("./test_glyphs_cache", "pbf")
+	glyphsCache := resource.NewGlyphsCache("./test_glyphs_cache")
 	glyphProvider := &GlyphProvider{sources.NewMapboxGlyphsSource(mockGlyphsClient, glyphsCache)}
 
 	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-	stylesCache := resource.NewStyleCache("./test_styles_cache", "json")
+	stylesCache := resource.NewStyleCache("./test_styles_cache")
 	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, stylesCache)}
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})

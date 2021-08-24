@@ -17,11 +17,11 @@ func (c *LegendCache) Save(r Resource) error {
 }
 
 func (c *LegendCache) Load(r Resource) error {
-	return c.Load(r)
+	return c.store.Load(r)
 }
 
-func NewLegendCache(cache_dir string, file_ext string) *LegendCache {
-	return &LegendCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+func NewLegendCache(cache_dir string) *LegendCache {
+	return &LegendCache{store: &LocalStore{CacheDir: cache_dir}}
 }
 
 type Legend struct {
@@ -29,6 +29,10 @@ type Legend struct {
 	Source  tile.Source
 	Scale   int
 	Options *imagery.ImageOptions
+}
+
+func (l *Legend) GetExtension() string {
+	return l.Options.Format.Extension()
 }
 
 func (l *Legend) GetData() []byte {

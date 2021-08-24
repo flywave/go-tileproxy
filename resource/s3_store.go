@@ -29,7 +29,6 @@ type S3Store struct {
 	encrypt   bool
 	trace     bool
 	CacheDir  string
-	FileExt   string
 }
 
 func (b *S3Store) s3New() (*s3.Client, error) {
@@ -152,7 +151,7 @@ func (c *S3Store) Save(r Resource) error {
 
 	if r.GetLocation() == "" {
 		hash := r.Hash()
-		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
 	}
 
 	data := r.GetData()
@@ -170,7 +169,7 @@ func (c *S3Store) Save(r Resource) error {
 
 func (c *S3Store) Load(r Resource) error {
 	hash := r.Hash()
-	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
 
 	if ok, _ := c.fileExists(r.GetLocation()); ok {
 		if reader, err := c.reader(r.GetLocation()); err == nil {
@@ -186,4 +185,8 @@ func (c *S3Store) Load(r Resource) error {
 	}
 
 	return errors.New("res not found!")
+}
+
+func NewS3Store(cache_dir string) *S3Store {
+	return &S3Store{CacheDir: cache_dir}
 }

@@ -60,7 +60,6 @@ func LoadCoverage(cov *Coverage) geo.Coverage {
 		return geo.NewBBoxCoverage(vec2.Rect{Min: vec2.T{cov.BBox[0], cov.BBox[1]}, Max: vec2.T{cov.BBox[2], cov.BBox[3]}}, geo.NewSRSProj4(cov.BBoxSrs), clip)
 	} else if cov.ExpireTiles != nil {
 		geoms := loadExpireTiles(cov.ExpireTiles, nil)
-
 		multipolygon := geos.CreateEmptyPolygon()
 		for _, g := range geoms {
 			multipolygon = multipolygon.Union(g)

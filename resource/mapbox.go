@@ -14,8 +14,8 @@ type StyleCache struct {
 	store Store
 }
 
-func NewStyleCache(cache_dir string, file_ext string) *StyleCache {
-	return &StyleCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+func NewStyleCache(cache_dir string) *StyleCache {
+	return &StyleCache{store: &LocalStore{CacheDir: cache_dir}}
 }
 
 func (c *StyleCache) Save(r Resource) error {
@@ -23,7 +23,7 @@ func (c *StyleCache) Save(r Resource) error {
 }
 
 func (c *StyleCache) Load(r Resource) error {
-	return c.Load(r)
+	return c.store.Load(r)
 }
 
 type GlyphsCache struct {
@@ -35,16 +35,20 @@ func (c *GlyphsCache) Save(r Resource) error {
 }
 
 func (c *GlyphsCache) Load(r Resource) error {
-	return c.Load(r)
+	return c.store.Load(r)
 }
 
-func NewGlyphsCache(cache_dir string, file_ext string) *GlyphsCache {
-	return &GlyphsCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+func NewGlyphsCache(cache_dir string) *GlyphsCache {
+	return &GlyphsCache{store: &LocalStore{CacheDir: cache_dir}}
 }
 
 type Style struct {
 	BaseResource
 	style style.Style
+}
+
+func (l *Style) GetExtension() string {
+	return "json"
 }
 
 func (l *Style) GetData() []byte {
@@ -81,6 +85,10 @@ type SpriteJSON struct {
 	Buffer []byte
 }
 
+func (l *SpriteJSON) GetExtension() string {
+	return "json"
+}
+
 func (l *SpriteJSON) GetData() []byte {
 	return l.Buffer
 }
@@ -104,6 +112,10 @@ type Sprite struct {
 	Source  *imagery.ImageSource
 	Scale   int
 	Options *imagery.ImageOptions
+}
+
+func (l *Sprite) GetExtension() string {
+	return "png"
 }
 
 func (l *Sprite) GetData() []byte {
@@ -133,6 +145,10 @@ func CreateSprite(content []byte) *Sprite {
 type Glyphs struct {
 	BaseResource
 	Buffer []byte
+}
+
+func (l *Glyphs) GetExtension() string {
+	return "pbf"
 }
 
 func (l *Glyphs) GetData() []byte {

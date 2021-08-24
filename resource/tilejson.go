@@ -54,6 +54,10 @@ type TileJSON struct {
 	Stored          bool           `json:"-"`
 }
 
+func (r *TileJSON) GetExtension() string {
+	return "json"
+}
+
 func (r *TileJSON) IsStored() bool {
 	return r.Stored
 }
@@ -111,9 +115,9 @@ func (c *TileJSONCache) Save(r Resource) error {
 }
 
 func (c *TileJSONCache) Load(r Resource) error {
-	return c.Load(r)
+	return c.store.Load(r)
 }
 
-func NewTileJSONCache(cache_dir string, file_ext string) *TileJSONCache {
-	return &TileJSONCache{store: &LocalStore{CacheDir: cache_dir, FileExt: file_ext}}
+func NewTileJSONCache(cache_dir string) *TileJSONCache {
+	return &TileJSONCache{store: &LocalStore{CacheDir: cache_dir}}
 }

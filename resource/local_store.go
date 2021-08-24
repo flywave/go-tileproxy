@@ -10,7 +10,6 @@ import (
 type LocalStore struct {
 	Store
 	CacheDir string
-	FileExt  string
 }
 
 func fileExists(filename string) (bool, error) {
@@ -29,7 +28,7 @@ func (c *LocalStore) Save(r Resource) error {
 
 	if r.GetLocation() == "" {
 		hash := r.Hash()
-		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
 	}
 
 	data := r.GetData()
@@ -45,7 +44,7 @@ func (c *LocalStore) Save(r Resource) error {
 
 func (c *LocalStore) Load(r Resource) error {
 	hash := r.Hash()
-	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + c.FileExt)
+	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
 
 	if ok, _ := fileExists(r.GetLocation()); ok {
 		if f, err := os.Open(r.GetLocation()); err == nil {
@@ -63,6 +62,6 @@ func (c *LocalStore) Load(r Resource) error {
 	return errors.New("res not found!")
 }
 
-func NewLocalStore(cache_dir string, file_ext string) *LocalStore {
-	return &LocalStore{CacheDir: cache_dir, FileExt: file_ext}
+func NewLocalStore(cache_dir string) *LocalStore {
+	return &LocalStore{CacheDir: cache_dir}
 }

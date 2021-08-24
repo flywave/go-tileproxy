@@ -328,6 +328,7 @@ type MapboxTileLayer struct {
 	Title        string                  `json:"title"`
 	Metadata     map[string]string       `json:"metadata,omitempty"`
 	Dimensions   map[string]Dimension    `json:"dimensions,omitempty"`
+	TileJSON     TileJSONSource          `json:"tilejson,omitempty"`
 	VectorLayers []*resource.VectorLayer `json:"vectorLayers,omitempty"`
 }
 
@@ -340,6 +341,7 @@ type TileLayer struct {
 	LegendURL   string               `json:"legendurl,omitempty"`
 	Metadata    map[string]string    `json:"metadata,omitempty"`
 	Dimensions  map[string]Dimension `json:"dimensions,omitempty"`
+	LegendStore interface{}          `json:"legendstore"`
 }
 
 type WMSLayer struct {
@@ -353,6 +355,7 @@ type WMSLayer struct {
 	Metadata           map[string]string    `json:"metadata,omitempty"`
 	Layers             []WMSLayer           `json:"layers,omitempty"`
 	Dimensions         map[string]Dimension `json:"dimensions,omitempty"`
+	LegendStore        interface{}          `json:"legendstore"`
 }
 
 type TimeSpec struct {
@@ -381,4 +384,45 @@ type Cleanup struct {
 	Resolutions  []float64 `json:"resolutions,omitempty"`
 	RemoveBefore TimeSpec  `json:"remove_before,omitempty"`
 	RemoveAll    bool      `json:"remove_all,omitempty"`
+}
+
+type LocalStore struct {
+	Directory string `json:"directory,omitempty"`
+}
+
+type S3Store struct {
+	Directory string `json:"directory,omitempty"`
+	Endpoint  string `json:"endpoint,omitempty"`
+	AccessKey string `json:"access_key,omitempty"`
+	SecretKey string `json:"secret_key,omitempty"`
+	Secure    bool   `json:"secure,omitempty"`
+	SignV2    bool   `json:"signv2,omitempty"`
+	Region    string `json:"region,omitempty"`
+	Bucket    string `json:"bucket,omitempty"`
+	Encrypt   bool   `json:"encrypt,omitempty"`
+	Trace     bool   `json:"trace,omitempty"`
+}
+
+type StyleSource struct {
+	Url         string      `json:"url,omitempty"`
+	UserName    string      `json:"user_name,omitempty"`
+	AccessToken string      `json:"access_token,omitempty"`
+	StyleID     string      `json:"style_id,omitempty"`
+	Store       interface{} `json:"store"`
+}
+
+type GlyphsSource struct {
+	Url         string      `json:"url,omitempty"`
+	UserName    string      `json:"user_name,omitempty"`
+	AccessToken string      `json:"access_token,omitempty"`
+	Font        string      `json:"font,omitempty"`
+	Store       interface{} `json:"store"`
+}
+
+type TileJSONSource struct {
+	Url         string      `json:"url,omitempty"`
+	UserName    string      `json:"user_name,omitempty"`
+	AccessToken string      `json:"access_token,omitempty"`
+	TilesetID   string      `json:"tileset_id,omitempty"`
+	Store       interface{} `json:"store"`
 }

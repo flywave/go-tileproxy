@@ -14,6 +14,7 @@ type Resource interface {
 	GetLocation() string
 	SetLocation(l string)
 	GetID() string
+	GetExtension() string
 }
 
 type BaseResource struct {

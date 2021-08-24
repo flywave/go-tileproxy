@@ -74,6 +74,18 @@ func LoadArcgisSource(s *ArcgisSource) *sources.ArcGISSource {
 	return nil
 }
 
+func LoadTileJSONSource(s *TileJSONSource) *sources.MapboxTileJSONSource {
+	return nil
+}
+
+func LoadStyleSource(s *StyleSource) *sources.MapboxStyleSource {
+	return nil
+}
+
+func LoadGlyphsSource(s *GlyphsSource) *sources.MapboxGlyphsSource {
+	return nil
+}
+
 func LoadMapboxService(s *MapboxService) *service.MapboxService {
 	return nil
 }

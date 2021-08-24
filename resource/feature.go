@@ -184,6 +184,7 @@ func merge_map(base map[string]interface{}, other map[string]interface{}) map[st
 				if l2, ok := v.([]interface{}); ok {
 					l = append(l, l2...)
 				}
+				base[k] = l
 			} else {
 				base[k] = v
 			}

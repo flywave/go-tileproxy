@@ -201,7 +201,6 @@ func (c *GeomCoverage) geomInCoverageSrs(gin interface{}, srs Proj) *geos.Geomet
 		if !srs.Eq(c.Srs) {
 			geom = transformGeometry(srs, c.Srs, geom)
 		}
-		break
 	case vec2d.T:
 		if !srs.Eq(c.Srs) {
 			g = srs.TransformTo(c.Srs, []vec2d.T{g})[0]

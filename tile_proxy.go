@@ -2,35 +2,38 @@ package tileproxy
 
 import (
 	"net/http"
+	"sync"
 
-	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/layer"
-	"github.com/flywave/go-tileproxy/service"
 	"github.com/flywave/go-tileproxy/setting"
-	"github.com/flywave/go-tileproxy/sources"
 )
-
-type ServiceType uint32
-
-const (
-	MapboxService   ServiceType = 0
-	WMSService      ServiceType = 1
-	WMTSService     ServiceType = 2
-	WMTSRestService ServiceType = 3
-	TileService     ServiceType = 4
-)
-
-type DatasetService struct {
-	Identifier string
-	Service    service.Service
-	Caches     map[string]layer.Layer
-	Grids      map[string]geo.Grid
-	Coverages  map[string]geo.Coverage
-	Sources    map[string]sources.Source
-}
 
 type TileProxy struct {
-	Datasets map[string]DatasetService
+	m        sync.RWMutex
+	Datasets map[string]Dataset
+}
+
+func (t *TileProxy) AddDataset(dataset string, d *setting.ProxyDataset) {
+
+}
+
+func (t *TileProxy) UpdateDataset(dataset string, d *setting.ProxyDataset) {
+
+}
+
+func (t *TileProxy) HasDataset(dataset string) bool {
+	return false
+}
+
+func (t *TileProxy) RemoveDataset(dataset string) {
+
+}
+
+func (t *TileProxy) CleanDataset(dataset string) {
+
+}
+
+func (t *TileProxy) UpdateAll(proxy []*setting.ProxyDataset) {
+
 }
 
 func NewTileProxy(proxy []*setting.ProxyDataset) *TileProxy {

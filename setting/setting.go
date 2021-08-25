@@ -1,19 +1,19 @@
 package setting
 
 type ProxyDataset struct {
-	Globals   Globals
-	Coverages map[string]Coverage
-	Services  map[string]interface{}
-	Layers    map[string]interface{}
-	Grids     map[string]interface{}
-	Caches    map[string]interface{}
-	Sources   map[string]interface{}
-	Seeds     map[string]Seed
-	Cleanups  map[string]Cleanup
+	Coverages    map[string]Coverage
+	Services     map[string]interface{}
+	Grids        map[string]interface{}
+	LegendLayers map[string]interface{}
+	InfoLayers   map[string]interface{}
+	MapLayers    map[string]interface{}
+	Sources      map[string]interface{}
+	Seeds        map[string]Seed
+	Cleanups     map[string]Cleanup
 }
 
-func NewProxyDataset(g Globals) *ProxyDataset {
-	return &ProxyDataset{Globals: g, Coverages: make(map[string]Coverage), Services: make(map[string]interface{}), Layers: make(map[string]interface{}), Grids: make(map[string]interface{}), Caches: make(map[string]interface{}), Sources: make(map[string]interface{})}
+func NewProxyDataset() *ProxyDataset {
+	return &ProxyDataset{Coverages: make(map[string]Coverage), Services: make(map[string]interface{}), MapLayers: make(map[string]interface{}), InfoLayers: make(map[string]interface{}), LegendLayers: make(map[string]interface{}), Grids: make(map[string]interface{}), Sources: make(map[string]interface{})}
 }
 
 func (l *ProxyDataset) AddCoverage(name string, cov Coverage) {
@@ -22,14 +22,6 @@ func (l *ProxyDataset) AddCoverage(name string, cov Coverage) {
 
 func (l *ProxyDataset) AddGrid(name string, g GridOpts) {
 	l.Grids[name] = g
-}
-
-func (l *ProxyDataset) AddLocalCache(name string, c LocalCache) {
-	l.Caches[name] = c
-}
-
-func (l *ProxyDataset) AddS3Cache(name string, c S3Cache) {
-	l.Caches[name] = c
 }
 
 func (l *ProxyDataset) AddTMSService(name string, ser TMSService) {
@@ -49,15 +41,15 @@ func (l *ProxyDataset) AddWMSService(name string, ser WMSService) {
 }
 
 func (l *ProxyDataset) AddTileLayer(name string, layer TileLayer) {
-	l.Layers[name] = layer
+	l.MapLayers[name] = layer
 }
 
 func (l *ProxyDataset) AddWMSLayer(name string, layer WMSLayer) {
-	l.Layers[name] = layer
+	l.MapLayers[name] = layer
 }
 
 func (l *ProxyDataset) AddMapboxTileLayer(name string, layer MapboxTileLayer) {
-	l.Layers[name] = layer
+	l.MapLayers[name] = layer
 }
 
 func (l *ProxyDataset) AddWMSSource(name string, src WMSSource) {

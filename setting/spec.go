@@ -6,7 +6,7 @@ import (
 	"github.com/flywave/go-tileproxy/resource"
 )
 
-type Globals struct {
+type GlobalsSetting struct {
 	Image ImageSetting `json:"image,omitempty"`
 	Http  struct {
 		HttpOpts

@@ -345,18 +345,18 @@ func LoadGlyphsSource(s *GlyphsSource) *sources.MapboxGlyphsSource {
 	return sources.NewMapboxGlyphsSource(c, cache)
 }
 
-func LoadMapboxService(s *MapboxService) *service.MapboxService {
+func LoadMapboxService(s *MapboxService, instance ProxyInstance) *service.MapboxService {
 	return nil
 }
 
-func LoadTMSService(s *TMSService) *service.TileService {
+func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {
 	return nil
 }
 
-func LoadWMTSService(s *WMTSService) *service.WMTSService {
+func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
 	return nil
 }
 
-func LoadWMSService(s *WMSService) *service.WMSService {
+func LoadWMSService(s *WMSService, instance ProxyInstance) *service.WMSService {
 	return nil
 }

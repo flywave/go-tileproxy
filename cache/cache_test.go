@@ -16,8 +16,8 @@ type testSource struct {
 	Options   tile.TileOptions
 }
 
-func newTestSource(data string, fileName string) *testSource {
-	return &testSource{data: data, fileName: fileName}
+func newTestSource(data string) *testSource {
+	return &testSource{data: data, fileName: ""}
 }
 
 func (s *testSource) GetType() tile.TileType {
@@ -67,16 +67,24 @@ func (s *testSource) GetTileOptions() tile.TileOptions {
 type mockSourceCreater struct {
 }
 
-func (c *mockSourceCreater) Creater(data []byte, location string) tile.Source {
-	return newTestSource(string(data), location)
+func (c *mockSourceCreater) GetExtension() string {
+	return "mvt"
+}
+
+func (c *mockSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *mockSourceCreater) Create(data []byte, tile [3]int) tile.Source {
+	return newTestSource(string(data))
 }
 
 func TestLocalCache(t *testing.T) {
 	creater := &mockSourceCreater{}
 
-	c := NewLocalCache("./test_cache", "mvt", "quadkey", creater)
+	c := NewLocalCache("./test_cache", "quadkey", creater)
 
-	ts := newTestSource("test", "test.mvt")
+	ts := newTestSource("test")
 
 	tile := NewTile([3]int{1, 1, 1})
 	tile.Source = ts
@@ -121,7 +129,7 @@ var (
 
 func TestPath(t *testing.T) {
 	for _, p := range paths {
-		cache := NewLocalCache("/tmp/foo", "png", p.key, nil)
+		cache := NewLocalCache("/tmp/foo", p.key, nil)
 
 		abs, _ := filepath.Abs(cache.TileLocation(NewTile(p.coord), false))
 
@@ -157,7 +165,7 @@ var (
 
 func TestLevelPath(t *testing.T) {
 	for _, p := range levelPaths {
-		cache := NewLocalCache("/tmp/foo", "png", p.key, nil)
+		cache := NewLocalCache("/tmp/foo", p.key, nil)
 
 		abs, _ := filepath.Abs(cache.LevelLocation(p.level))
 

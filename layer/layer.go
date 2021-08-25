@@ -11,10 +11,16 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type InfoLayer interface {
+	GetInfo(query *InfoQuery) resource.FeatureInfoDoc
+}
+
+type LegendLayer interface {
+	GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source
+}
+
 type Layer interface {
 	GetMap(query *MapQuery) (tile.Source, error)
-	GetInfo(query *InfoQuery) resource.FeatureInfoDoc
-	GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
 	GetExtent() *geo.MapExtent
@@ -110,19 +116,6 @@ func (l *LimitedLayer) GetCoverage() geo.Coverage {
 
 func (l *LimitedLayer) GetMap(query *MapQuery) (tile.Source, error) {
 	return l.layer.GetMap(query)
-}
-
-func (l *LimitedLayer) GetInfo(query *InfoQuery) resource.FeatureInfoDoc {
-	if l.GetCoverage() != nil {
-		if !l.GetCoverage().ContainsPoint(query.GetCoord(), query.Srs) {
-			return nil
-		}
-	}
-	return l.layer.GetInfo(query)
-}
-
-func (l *LimitedLayer) GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source {
-	return l.layer.GetLegend(query)
 }
 
 func (l *LimitedLayer) GetExtent() *geo.MapExtent {

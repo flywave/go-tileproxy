@@ -437,3 +437,19 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 	}
 	return result
 }
+
+type ImageSourceCreater struct {
+	Opt *ImageOptions
+}
+
+func (c *ImageSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return NewBlankImageSource(size, opts.(*ImageOptions), nil)
+}
+
+func (c *ImageSourceCreater) Create(data []byte, tile [3]int) tile.Source {
+	return CreateImageSourceFromBufer(data, c.Opt)
+}
+
+func (c *ImageSourceCreater) GetExtension() string {
+	return c.Opt.Format.Extension()
+}

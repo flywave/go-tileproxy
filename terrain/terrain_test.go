@@ -67,7 +67,7 @@ func TestGenTerrainSourceFromDem(t *testing.T) {
 	tiledata.Box = bbox
 	tiledata.Boxsrs = srs900913
 
-	opts := &TerrainOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
+	opts := &RasterOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
 
 	source, err := GenTerrainSource(tiledata, opts)
 
@@ -110,7 +110,7 @@ func TestGenTerrainSourceFromLerc(t *testing.T) {
 	tiledata.Box = bbox
 	tiledata.Boxsrs = srs900913
 
-	opts := &TerrainOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
+	opts := &RasterOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
 
 	source, err := GenTerrainSource(tiledata, opts)
 

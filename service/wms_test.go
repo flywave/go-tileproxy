@@ -80,7 +80,7 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 
 	source := sources.NewWMSSource(nil, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
-	testLayer := NewWMSLayer("test", "hhh", map[string]layer.Layer{"yy": source}, nil, nil, nil, layerMetadata)
+	testLayer := NewWMSNodeLayer("test", "hhh", map[string]layer.Layer{"yy": source}, nil, nil, nil, layerMetadata)
 
 	rootLayer := NewWMSGroupLayer("test", "hhh", testLayer, nil, layerMetadata)
 

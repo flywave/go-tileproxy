@@ -1,7 +1,6 @@
 package sources
 
 import (
-	"bytes"
 	"errors"
 
 	"github.com/flywave/go-tileproxy/client"
@@ -10,10 +9,6 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type SourceCreater interface {
-	Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source
-}
-
 type TileSource struct {
 	layer.MapLayer
 	Grid          *geo.TileGrid
@@ -21,11 +16,11 @@ type TileSource struct {
 	Options       tile.TileOptions
 	Coverage      geo.Coverage
 	ResRange      *geo.ResolutionRange
-	SourceCreater SourceCreater
+	SourceCreater tile.SourceCreater
 }
 
-func NewTileSource(grid *geo.TileGrid, c *client.TileClient, opts tile.TileOptions, creater SourceCreater) *TileSource {
-	return &TileSource{Grid: grid, Client: c, Options: opts, SourceCreater: creater}
+func NewTileSource(c *client.TileClient, opts tile.TileOptions, creater tile.SourceCreater) *TileSource {
+	return &TileSource{Grid: c.Grid, Client: c, Options: opts, SourceCreater: creater}
 }
 
 func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
@@ -38,11 +33,11 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
+		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
+		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -58,6 +53,6 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z}, &query.Format)
-	src := s.SourceCreater.Create(query.Size, s.Options, bytes.NewBuffer(resp))
+	src := s.SourceCreater.Create(resp, [3]int{x, y, z})
 	return src, nil
 }

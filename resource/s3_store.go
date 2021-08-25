@@ -17,6 +17,18 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type S3Options struct {
+	Endpoint  string
+	AccessKey string
+	SecretKey string
+	Secure    bool
+	SignV2    bool
+	Region    string
+	Bucket    string
+	Encrypt   bool
+	Trace     bool
+}
+
 type S3Store struct {
 	Store
 	endpoint  string
@@ -29,6 +41,20 @@ type S3Store struct {
 	encrypt   bool
 	trace     bool
 	CacheDir  string
+}
+
+func NewS3Store(cache_dir string, setting S3Options) *S3Store {
+	c := &S3Store{CacheDir: cache_dir}
+	c.endpoint = setting.Endpoint
+	c.accessKey = setting.AccessKey
+	c.secretKey = setting.SecretKey
+	c.secure = setting.Secure
+	c.signV2 = setting.SignV2
+	c.region = setting.Region
+	c.bucket = setting.Bucket
+	c.encrypt = setting.Encrypt
+	c.trace = setting.Trace
+	return c
 }
 
 func (b *S3Store) s3New() (*s3.Client, error) {
@@ -185,8 +211,4 @@ func (c *S3Store) Load(r Resource) error {
 	}
 
 	return errors.New("res not found!")
-}
-
-func NewS3Store(cache_dir string) *S3Store {
-	return &S3Store{CacheDir: cache_dir}
 }

@@ -145,3 +145,40 @@ func NewBlankVectorSource(size [2]uint32, opts tile.TileOptions, cacheable *tile
 	}
 	return nil
 }
+
+func CreateVectorSourceFromBufer(buf []byte, tile [3]int, opts *VectorOptions) tile.Source {
+	format := opts.GetFormat()
+	if format.Extension() == "mvt" {
+		mvt := NewMVTSource(tile, PBF_PTOTO_MAPBOX, opts)
+		reader := bytes.NewBuffer(buf)
+		mvt.SetSource(reader)
+		return mvt
+	} else if format.Extension() == "pbf" {
+		mvt := NewMVTSource(tile, PBF_PTOTO_LUOKUANG, opts)
+		reader := bytes.NewBuffer(buf)
+		mvt.SetSource(reader)
+		return mvt
+	} else if format.Extension() == "json" || format.Extension() == "geojson" {
+		geojson := NewGeoJSONVTSource(tile, opts)
+		reader := bytes.NewBuffer(buf)
+		geojson.SetSource(reader)
+		return geojson
+	}
+	return nil
+}
+
+type VectorSourceCreater struct {
+	Opt *VectorOptions
+}
+
+func (c *VectorSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return NewBlankVectorSource(size, opts, nil)
+}
+
+func (c *VectorSourceCreater) Create(data []byte, tile [3]int) tile.Source {
+	return CreateVectorSourceFromBufer(data, tile, c.Opt)
+}
+
+func (c *VectorSourceCreater) GetExtension() string {
+	return c.Opt.Format.Extension()
+}

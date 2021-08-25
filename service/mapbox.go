@@ -195,8 +195,22 @@ type MapboxTileProvider struct {
 	vectorLayers   []*resource.VectorLayer
 }
 
-func NewMapboxTileProvider(name string, md map[string]string, tileManager cache.Manager) *MapboxTileProvider {
-	ret := &MapboxTileProvider{name: name, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid())}
+func GetMapboxTileType(tp string) MapboxTileType {
+	if tp == "vector" {
+		return MapboxVector
+	} else if tp == "raster" {
+		return MapboxRaster
+	} else if tp == "rasterDem" {
+		return MapboxRasterDem
+	}
+	return MapboxVector
+}
+
+func NewMapboxTileProvider(name string, tp MapboxTileType, md map[string]string, tileManager cache.Manager, tilejsonSource *sources.MapboxTileJSONSource, vectorLayers []*resource.VectorLayer, zoomRange *[2]int) *MapboxTileProvider {
+	ret := &MapboxTileProvider{name: name, type_: tp, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid()), tilejsonSource: tilejsonSource, vectorLayers: vectorLayers}
+	if zoomRange != nil {
+		ret.zoomRange = *zoomRange
+	}
 	return ret
 }
 

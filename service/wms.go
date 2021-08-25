@@ -21,7 +21,7 @@ import (
 type WMSService struct {
 	BaseService
 	RootLayer           *WMSGroupLayer
-	Layers              map[string]wmsLayer
+	Layers              map[string]WMSLayer
 	Strict              bool
 	ImageFormats        map[string]*imagery.ImageOptions
 	TileLayers          []*TileProvider
@@ -202,7 +202,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewSRSProj4(freq.GetSrs()), Pos: freq.GetPos(),
 		InfoFormat: string(freq.GetFormat()), FeatureCount: feature_count}
 
-	actual_layers := make(map[string]layer.Layer)
+	actual_layers := make(map[string]layer.InfoLayer)
 
 	for _, layer_name := range freq.GetLayers() {
 		layer := s.Layers[layer_name]
@@ -221,7 +221,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	}
 
 	authorized_layers, coverage := s.authorizedLayers("featureinfo", keys, &geo.MapExtent{BBox: freq.GetBBox(), Srs: geo.NewSRSProj4(freq.GetSrs())})
-	s.filterActualLayers(actual_layers, freq.GetLayers(), authorized_layers)
+	s.filterActualInfoLayers(actual_layers, freq.GetLayers(), authorized_layers)
 
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
 		infos = nil
@@ -391,6 +391,10 @@ func (s *WMSService) filterActualLayers(actual_layers map[string]layer.Layer, la
 
 }
 
+func (s *WMSService) filterActualInfoLayers(actual_layers map[string]layer.InfoLayer, layers []string, authorized_layers []*TileProvider) {
+
+}
+
 func (s *WMSService) authorizedCapabilityLayers() *WMSGroupLayer {
 	return s.RootLayer
 }
@@ -428,11 +432,11 @@ func (l *LayerRenderer) renderLayer(layer layer.Layer) (layer.Layer, tile.Source
 	return layer, layer_img, nil
 }
 
-type wmsLayer interface {
+type WMSLayer interface {
 	layer.Layer
 	rendersQuery(query *layer.MapQuery) bool
 	mapLayersForQuery(query *layer.MapQuery) map[string]layer.Layer
-	infoLayersForQuery(query *layer.InfoQuery) map[string]layer.Layer
+	infoLayersForQuery(query *layer.InfoQuery) map[string]layer.InfoLayer
 	legend(query *request.WMSLegendGraphicRequest) []tile.Source
 	GetLegendSize() int
 	GetName() string
@@ -445,11 +449,11 @@ type wmsLayer interface {
 }
 
 type WMSLayerBase struct {
-	wmsLayer
+	WMSLayer
 	name       string
 	title      string
 	isActive   bool
-	layers     map[string]wmsLayer
+	layers     map[string]WMSLayer
 	metadata   map[string]string
 	queryable  bool
 	hasLegend  bool
@@ -487,14 +491,14 @@ func (l *WMSLayerBase) GetExtent() *geo.MapExtent {
 	return l.extent
 }
 
-type WMSLayer struct {
+type WMSNodeLayer struct {
 	WMSLayerBase
 	mapLayers    map[string]layer.Layer
-	infoLayers   map[string]layer.Layer
-	legendLayers []layer.Layer
+	infoLayers   map[string]layer.InfoLayer
+	legendLayers []layer.LegendLayer
 }
 
-func NewWMSLayer(name string, title string, map_layers map[string]layer.Layer, infos map[string]layer.Layer, legends []layer.Layer, res_range *geo.ResolutionRange, md map[string]string) *WMSLayer {
+func NewWMSNodeLayer(name string, title string, map_layers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer, res_range *geo.ResolutionRange, md map[string]string) *WMSNodeLayer {
 	queryable := false
 	if len(infos) > 0 {
 		queryable = true
@@ -505,7 +509,7 @@ func NewWMSLayer(name string, title string, map_layers map[string]layer.Layer, i
 		has_legend = true
 	}
 
-	ret := &WMSLayer{WMSLayerBase: WMSLayerBase{name: name, title: title, metadata: md, isActive: false, layers: nil, hasLegend: has_legend, queryable: queryable}, mapLayers: map_layers, infoLayers: infos, legendLayers: legends}
+	ret := &WMSNodeLayer{WMSLayerBase: WMSLayerBase{name: name, title: title, metadata: md, isActive: false, layers: nil, hasLegend: has_legend, queryable: queryable}, mapLayers: map_layers, infoLayers: infos, legendLayers: legends}
 
 	ret.extent = mergeLayerExtents(map_layers)
 	if res_range == nil {
@@ -517,7 +521,7 @@ func NewWMSLayer(name string, title string, map_layers map[string]layer.Layer, i
 	return ret
 }
 
-func (l *WMSLayer) IsOpaque(query *layer.MapQuery) bool {
+func (l *WMSNodeLayer) IsOpaque(query *layer.MapQuery) bool {
 	for i := range l.mapLayers {
 		if l.mapLayers[i].IsOpaque(query) {
 			return true
@@ -526,28 +530,28 @@ func (l *WMSLayer) IsOpaque(query *layer.MapQuery) bool {
 	return false
 }
 
-func (l *WMSLayer) rendersQuery(query *layer.MapQuery) bool {
+func (l *WMSNodeLayer) rendersQuery(query *layer.MapQuery) bool {
 	if l.resRange != nil && !l.resRange.Contains(query.BBox, query.Size, query.Srs) {
 		return false
 	}
 	return true
 }
 
-func (l *WMSLayer) mapLayersForQuery(query *layer.MapQuery) map[string]layer.Layer {
+func (l *WMSNodeLayer) mapLayersForQuery(query *layer.MapQuery) map[string]layer.Layer {
 	if l.mapLayers == nil {
 		return nil
 	}
 	return l.mapLayers
 }
 
-func (l *WMSLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]layer.Layer {
+func (l *WMSNodeLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]layer.InfoLayer {
 	if l.infoLayers == nil {
 		return nil
 	}
 	return l.infoLayers
 }
 
-func (l *WMSLayer) legend(query *request.WMSLegendGraphicRequest) []tile.Source {
+func (l *WMSNodeLayer) legend(query *request.WMSLegendGraphicRequest) []tile.Source {
 	legend := []tile.Source{}
 	for _, lyr := range l.legendLayers {
 		legend = append(legend, lyr.GetLegend(query)...)
@@ -557,7 +561,7 @@ func (l *WMSLayer) legend(query *request.WMSLegendGraphicRequest) []tile.Source 
 
 type WMSGroupLayer struct {
 	WMSLayerBase
-	this wmsLayer
+	this WMSLayer
 }
 
 func mergeLayerResRanges(layers map[string]layer.Layer) *geo.ResolutionRange {
@@ -591,7 +595,7 @@ func mergeLayerExtents(layers map[string]layer.Layer) *geo.MapExtent {
 	return extent
 }
 
-func cloneLayers(tags map[string]wmsLayer) map[string]layer.Layer {
+func cloneLayers(tags map[string]WMSLayer) map[string]layer.Layer {
 	cloneTags := make(map[string]layer.Layer)
 	for k, v := range tags {
 		cloneTags[k] = v
@@ -599,7 +603,7 @@ func cloneLayers(tags map[string]wmsLayer) map[string]layer.Layer {
 	return cloneTags
 }
 
-func NewWMSGroupLayer(name string, title string, this wmsLayer, layers map[string]wmsLayer, md map[string]string) *WMSGroupLayer {
+func NewWMSGroupLayer(name string, title string, this WMSLayer, layers map[string]WMSLayer, md map[string]string) *WMSGroupLayer {
 	is_active := false
 	if this != nil {
 		is_active = true
@@ -675,11 +679,11 @@ func (l *WMSGroupLayer) mapLayersForQuery(query *layer.MapQuery) map[string]laye
 	}
 }
 
-func (l *WMSGroupLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]layer.Layer {
+func (l *WMSGroupLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]layer.InfoLayer {
 	if l.this != nil {
 		return l.this.infoLayersForQuery(query)
 	} else {
-		layers := make(map[string]layer.Layer)
+		layers := make(map[string]layer.InfoLayer)
 		for _, layer := range l.layers {
 			ll := layer.infoLayersForQuery(query)
 			for name, l := range ll {
@@ -690,14 +694,14 @@ func (l *WMSGroupLayer) infoLayersForQuery(query *layer.InfoQuery) map[string]la
 	}
 }
 
-func (l *WMSGroupLayer) GetChildLayers() map[string]wmsLayer {
-	layers := make(map[string]wmsLayer)
+func (l *WMSGroupLayer) GetChildLayers() map[string]WMSLayer {
+	layers := make(map[string]WMSLayer)
 	if l.name != "" {
 		layers[l.name] = l
 	}
 	for _, lyr := range l.layers {
 		if iface, ok := lyr.(interface {
-			GetChildLayers() map[string]wmsLayer
+			GetChildLayers() map[string]WMSLayer
 		}); ok {
 			new := iface.GetChildLayers()
 			for k, v := range new {

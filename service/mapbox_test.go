@@ -1,8 +1,6 @@
 package service
 
 import (
-	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,22 +20,18 @@ import (
 	"github.com/flywave/go-tileproxy/vector"
 )
 
-type dummyCreater struct {
-}
-
-func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
-	if data != nil {
-		reader := data.(io.Reader)
-		buf, _ := ioutil.ReadAll(reader)
-		return &tile.DummyTileSource{Data: string(buf)}
-	}
-	return nil
-}
-
 type mockMVTSourceCreater struct {
 }
 
-func (c *mockMVTSourceCreater) Creater(data []byte, location string) tile.Source {
+func (c *mockMVTSourceCreater) GetExtension() string {
+	return "mvt"
+}
+
+func (c *mockMVTSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *mockMVTSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
 	source.SetSource("../data/3194.mvt")
 	return source
@@ -55,29 +49,27 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	ccreater := &mockMVTSourceCreater{}
 
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
-
-	creater := &dummyCreater{}
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	tileClient := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
-	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
+	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: ccreater}
 
 	locker := &cache.DummyTileLocker{}
 
 	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-	glyphsCache := resource.NewGlyphsCache("./test_glyphs_cache")
+	glyphsCache := resource.NewGlyphsCache(resource.NewLocalStore("./test_glyphs_cache"))
 	glyphProvider := &GlyphProvider{sources.NewMapboxGlyphsSource(mockGlyphsClient, glyphsCache)}
 
 	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-	stylesCache := resource.NewStyleCache("./test_styles_cache")
+	stylesCache := resource.NewStyleCache(resource.NewLocalStore("./test_styles_cache"))
 	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, stylesCache)}
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
 	md := make(map[string]string)
 
-	tp := NewMapboxTileProvider("test", md, manager)
+	tp := NewMapboxTileProvider("test", MapboxVector, md, manager, nil, nil, nil)
 
 	if tp == nil {
 		t.FailNow()

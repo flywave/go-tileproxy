@@ -14,8 +14,8 @@ type StyleCache struct {
 	store Store
 }
 
-func NewStyleCache(cache_dir string) *StyleCache {
-	return &StyleCache{store: &LocalStore{CacheDir: cache_dir}}
+func NewStyleCache(store Store) *StyleCache {
+	return &StyleCache{store: store}
 }
 
 func (c *StyleCache) Save(r Resource) error {
@@ -38,8 +38,8 @@ func (c *GlyphsCache) Load(r Resource) error {
 	return c.store.Load(r)
 }
 
-func NewGlyphsCache(cache_dir string) *GlyphsCache {
-	return &GlyphsCache{store: &LocalStore{CacheDir: cache_dir}}
+func NewGlyphsCache(store Store) *GlyphsCache {
+	return &GlyphsCache{store: store}
 }
 
 type Style struct {

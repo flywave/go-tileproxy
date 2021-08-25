@@ -16,17 +16,6 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-type TerrainOptions struct {
-	tile.TileOptions
-	Format   tile.TileFormat
-	MaxError float64
-	Mode     BorderMode
-}
-
-func (s *TerrainOptions) GetFormat() tile.TileFormat {
-	return s.Format
-}
-
 type TerrainSource struct {
 	tile.Source
 	data      *qmt.QuantizedMeshTile
@@ -153,7 +142,7 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
-func GenTerrainSource(data *TileData, options *TerrainOptions) (*TerrainSource, error) {
+func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, error) {
 	if !data.HasBorder() {
 		return nil, errors.New("error")
 	}

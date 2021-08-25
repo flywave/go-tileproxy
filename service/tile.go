@@ -441,7 +441,7 @@ type TileProvider struct {
 	title        string
 	metadata     map[string]string
 	tileManager  cache.Manager
-	infoSources  []layer.Layer
+	infoSources  []layer.InfoLayer
 	dimensions   utils.Dimensions
 	grid         *TileServiceGrid
 	extent       *geo.MapExtent
@@ -449,7 +449,7 @@ type TileProvider struct {
 	errorHandler ExceptionHandler
 }
 
-func NewTileProvider(name string, title string, md map[string]string, tileManager cache.Manager, infoSources []layer.Layer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
+func NewTileProvider(name string, title string, md map[string]string, tileManager cache.Manager, infoSources []layer.InfoLayer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
 	ret := &TileProvider{name: name, title: title, metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid()), errorHandler: errorHandler}
 	return ret
 }

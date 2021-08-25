@@ -224,8 +224,10 @@ func CreateFeatureinfoDoc(content interface{}, info_format string) FeatureInfoDo
 
 var (
 	xml_mime = []string{
-		"text/xml", "application/xml",
-		"application/gml+xml", "application/vnd.ogc.gml",
+		"text/xml",
+		"application/xml",
+		"application/gml+xml",
+		"application/vnd.ogc.gml",
 	}
 )
 
@@ -256,7 +258,7 @@ func NewXSLTransformer(xsltscript string, info_format *string) *XSLTransformer {
 	return &XSLTransformer{xsltscript: xsltscript, info_type: "text/xml"}
 }
 
-func (t *XSLTransformer) Transform(input_doc *XMLFeatureInfoDoc) FeatureInfoDoc {
+func (t *XSLTransformer) Transform(input_doc FeatureInfoDoc) FeatureInfoDoc {
 	xml := input_doc.ToString()
 	xslt_tree, _ := xslt.NewStylesheet([]byte(t.xsltscript))
 

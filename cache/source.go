@@ -16,8 +16,6 @@ func GetEmptyTile(size [2]uint32, opts tile.TileOptions) tile.Source {
 		return imagery.NewBlankImageSource(size, opt, nil)
 	case *terrain.RasterOptions:
 		return terrain.NewBlankRasterSource(size, opt, nil)
-	case *terrain.TerrainOptions:
-		return terrain.NewBlankRasterSource(size, opt, nil)
 	case *vector.VectorOptions:
 		return vector.NewBlankVectorSource(size, opt, nil)
 	}

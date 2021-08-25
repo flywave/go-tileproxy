@@ -1,7 +1,6 @@
 package sources
 
 import (
-	"bytes"
 	"errors"
 
 	"github.com/flywave/go-tileproxy/client"
@@ -17,10 +16,10 @@ type LuoKuangTileSource struct {
 	ResRange      *geo.ResolutionRange
 	Client        *client.LuoKuangTileClient
 	Options       tile.TileOptions
-	SourceCreater SourceCreater
+	SourceCreater tile.SourceCreater
 }
 
-func NewLuoKuangTileSource(grid *geo.TileGrid, c *client.LuoKuangTileClient, opts tile.TileOptions, creater SourceCreater) *LuoKuangTileSource {
+func NewLuoKuangTileSource(grid *geo.TileGrid, c *client.LuoKuangTileClient, opts tile.TileOptions, creater tile.SourceCreater) *LuoKuangTileSource {
 	return &LuoKuangTileSource{Grid: grid, Client: c, Options: opts, SourceCreater: creater}
 }
 
@@ -34,11 +33,11 @@ func (s *LuoKuangTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) 
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
+		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
 	if s.Coverage != nil && !s.Coverage.Intersects(query.BBox, query.Srs) {
-		return s.SourceCreater.Create(query.Size, s.Options, nil), nil
+		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
 	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
@@ -55,7 +54,7 @@ func (s *LuoKuangTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) 
 
 	tilequery := s.buildTileQuery(x, y, z, query)
 	resp := s.Client.GetTile(tilequery)
-	src := s.SourceCreater.Create(query.Size, s.Options, bytes.NewBuffer(resp))
+	src := s.SourceCreater.Create(resp, [3]int{x, y, z})
 	return src, nil
 }
 

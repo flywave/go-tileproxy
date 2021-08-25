@@ -95,3 +95,9 @@ func (s *DummyTileSource) GetTileOptions() TileOptions {
 func (s *DummyTileSource) GetGeoReference() *geo.GeoReference {
 	return s.Georef
 }
+
+type SourceCreater interface {
+	Create(data []byte, tile [3]int) Source
+	CreateEmpty(size [2]uint32, opts TileOptions) Source
+	GetExtension() string
+}

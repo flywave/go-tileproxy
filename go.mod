@@ -23,6 +23,7 @@ require (
 	github.com/flywave/ogc-specifications v0.2.7-0.20210820061954-ea81b364d6f3
 	github.com/fogleman/gg v1.3.0
 	github.com/gobwas/glob v0.2.3
+	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect

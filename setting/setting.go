@@ -1,6 +1,6 @@
 package setting
 
-type ProxySetting struct {
+type ProxyDataset struct {
 	Globals   Globals
 	Coverages map[string]Coverage
 	Services  map[string]interface{}
@@ -12,78 +12,78 @@ type ProxySetting struct {
 	Cleanups  map[string]Cleanup
 }
 
-func NewProxySetting(g Globals) *ProxySetting {
-	return &ProxySetting{Globals: g, Coverages: make(map[string]Coverage), Services: make(map[string]interface{}), Layers: make(map[string]interface{}), Grids: make(map[string]interface{}), Caches: make(map[string]interface{}), Sources: make(map[string]interface{})}
+func NewProxyDataset(g Globals) *ProxyDataset {
+	return &ProxyDataset{Globals: g, Coverages: make(map[string]Coverage), Services: make(map[string]interface{}), Layers: make(map[string]interface{}), Grids: make(map[string]interface{}), Caches: make(map[string]interface{}), Sources: make(map[string]interface{})}
 }
 
-func (l *ProxySetting) AddCoverage(name string, cov Coverage) {
+func (l *ProxyDataset) AddCoverage(name string, cov Coverage) {
 	l.Coverages[name] = cov
 }
 
-func (l *ProxySetting) AddGrid(name string, g GridOpts) {
+func (l *ProxyDataset) AddGrid(name string, g GridOpts) {
 	l.Grids[name] = g
 }
 
-func (l *ProxySetting) AddLocalCache(name string, c LocalCache) {
+func (l *ProxyDataset) AddLocalCache(name string, c LocalCache) {
 	l.Caches[name] = c
 }
 
-func (l *ProxySetting) AddS3Cache(name string, c S3Cache) {
+func (l *ProxyDataset) AddS3Cache(name string, c S3Cache) {
 	l.Caches[name] = c
 }
 
-func (l *ProxySetting) AddTMSService(name string, ser TMSService) {
+func (l *ProxyDataset) AddTMSService(name string, ser TMSService) {
 	l.Services[name] = ser
 }
 
-func (l *ProxySetting) AddMapboxService(name string, ser MapboxService) {
+func (l *ProxyDataset) AddMapboxService(name string, ser MapboxService) {
 	l.Services[name] = ser
 }
 
-func (l *ProxySetting) AddWMTSService(name string, ser WMTSService) {
+func (l *ProxyDataset) AddWMTSService(name string, ser WMTSService) {
 	l.Services[name] = ser
 }
 
-func (l *ProxySetting) AddWMSService(name string, ser WMSService) {
+func (l *ProxyDataset) AddWMSService(name string, ser WMSService) {
 	l.Services[name] = ser
 }
 
-func (l *ProxySetting) AddTileLayer(name string, layer TileLayer) {
+func (l *ProxyDataset) AddTileLayer(name string, layer TileLayer) {
 	l.Layers[name] = layer
 }
 
-func (l *ProxySetting) AddWMSLayer(name string, layer WMSLayer) {
+func (l *ProxyDataset) AddWMSLayer(name string, layer WMSLayer) {
 	l.Layers[name] = layer
 }
 
-func (l *ProxySetting) AddMapboxTileLayer(name string, layer MapboxTileLayer) {
+func (l *ProxyDataset) AddMapboxTileLayer(name string, layer MapboxTileLayer) {
 	l.Layers[name] = layer
 }
 
-func (l *ProxySetting) AddWMSSource(name string, src WMSSource) {
+func (l *ProxyDataset) AddWMSSource(name string, src WMSSource) {
 	l.Sources[name] = src
 }
 
-func (l *ProxySetting) AddTileSource(name string, src TileSource) {
+func (l *ProxyDataset) AddTileSource(name string, src TileSource) {
 	l.Sources[name] = src
 }
 
-func (l *ProxySetting) AddMapboxTileSource(name string, src MapboxTileSource) {
+func (l *ProxyDataset) AddMapboxTileSource(name string, src MapboxTileSource) {
 	l.Sources[name] = src
 }
 
-func (l *ProxySetting) AddLuokuangTileSource(name string, src LuokuangTileSource) {
+func (l *ProxyDataset) AddLuokuangTileSource(name string, src LuokuangTileSource) {
 	l.Sources[name] = src
 }
 
-func (l *ProxySetting) AddArcgisSource(name string, src ArcgisSource) {
+func (l *ProxyDataset) AddArcgisSource(name string, src ArcgisSource) {
 	l.Sources[name] = src
 }
 
-func (l *ProxySetting) AddSeed(name string, s Seed) {
+func (l *ProxyDataset) AddSeed(name string, s Seed) {
 	l.Sources[name] = s
 }
 
-func (l *ProxySetting) AddCleanup(name string, c Cleanup) {
+func (l *ProxyDataset) AddCleanup(name string, c Cleanup) {
 	l.Sources[name] = c
 }

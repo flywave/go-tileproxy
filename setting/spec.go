@@ -48,33 +48,33 @@ type Coverage struct {
 }
 
 type RasterOpts struct {
-	Format       string  `json:"format,omitempty"`
-	Mode         string  `json:"mode,omitempty"`
-	MaxError     float64 `json:"max_error,omitempty"`
-	Nodata       float64 `json:"nodata,omitempty"`
-	Interpolator string  `json:"interpolator,omitempty"`
+	Format       string   `json:"format,omitempty"`
+	Mode         *string  `json:"mode,omitempty"`
+	MaxError     float64  `json:"max_error,omitempty"`
+	Nodata       *float64 `json:"nodata,omitempty"`
+	Interpolator *string  `json:"interpolator,omitempty"`
+	DataType     *string  `json:"data_type,omitempty"`
 }
 
 type ImageOpts struct {
-	Mode             string            `json:"mode,omitempty"`
-	Colors           *uint32           `json:"colors,omitempty"`
-	Transparent      *bool             `json:"transparent,omitempty"`
-	ResamplingMethod string            `json:"resampling_method,omitempty"`
-	Format           string            `json:"format,omitempty"`
-	EncodingOptions  map[string]string `json:"encoding_options,omitempty"`
+	Mode             string                 `json:"mode,omitempty"`
+	Colors           *int                   `json:"colors,omitempty"`
+	Transparent      *bool                  `json:"transparent,omitempty"`
+	ResamplingMethod string                 `json:"resampling_method,omitempty"`
+	Format           string                 `json:"format,omitempty"`
+	EncodingOptions  map[string]interface{} `json:"encoding_options,omitempty"`
 }
 
 type VectorOpts struct {
-	Format      string  `json:"format,omitempty"`
-	Tolerance   float64 `json:"tolerance,omitempty"`
-	Extent      uint16  `json:"extent,omitempty"`
-	Buffer      uint16  `json:"buffer,omitempty"`
-	LineMetrics bool    `json:"line_metrics,omitempty"`
-	MaxZoom     uint8   `json:"max_zoom,omitempty"`
+	Format      string   `json:"format,omitempty"`
+	Tolerance   *float64 `json:"tolerance,omitempty"`
+	Extent      uint16   `json:"extent,omitempty"`
+	Buffer      *uint16  `json:"buffer,omitempty"`
+	LineMetrics *bool    `json:"line_metrics,omitempty"`
+	MaxZoom     *uint8   `json:"max_zoom,omitempty"`
 }
 
 type GridOpts struct {
-	Base                 string      `json:"base,omitempty"`
 	Name                 string      `json:"name,omitempty"`
 	Srs                  string      `json:"srs,omitempty"`
 	BBox                 *[4]float64 `json:"bbox,omitempty"`
@@ -84,8 +84,8 @@ type GridOpts struct {
 	ResFactor            interface{} `json:"res_factor,omitempty"`
 	MaxRes               *float64    `json:"max_res,omitempty"`
 	MinRes               *float64    `json:"min_res,omitempty"`
-	StretchFactor        *float64    `json:"stretch_factor,omitempty"`
-	MaxStretchFactor     *float64    `json:"max_shrink_factor,omitempty"`
+	MaxStretchFactor     *float64    `json:"max_stretch_factor,omitempty"`
+	MaxShrinkFactor      *float64    `json:"max_shrink_factor,omitempty"`
 	AlignResolutionsWith string      `json:"align_resolutions_with,omitempty"`
 	Origin               string      `json:"origin,omitempty"`
 	TileSize             *[2]uint32  `json:"tile_size,omitempty"`
@@ -102,8 +102,8 @@ type ScaleHints struct {
 type ImageSetting struct {
 	ResamplingMethod string               `json:"resampling_method,omitempty"`
 	Paletted         *bool                `json:"paletted,omitempty"`
-	StretchFactor    *float64             `json:"stretch_factor,omitempty"`
-	MaxStretchFactor *float64             `json:"max_shrink_factor,omitempty"`
+	MaxStretchFactor *float64             `json:"max_stretch_factor,omitempty"`
+	MaxShrinkFactor  *float64             `json:"max_shrink_factor,omitempty"`
 	JpegQuality      *float64             `json:"jpeg_quality,omitempty"`
 	FontDir          *string              `json:"font_dir,omitempty"`
 	Formats          map[string]ImageOpts `json:"formats,omitempty"`
@@ -181,6 +181,7 @@ type WMSSourceOpts struct {
 	FeatureInfo          *bool  `json:"featureinfo,omitempty"`
 	LegendGraphic        *bool  `json:"legendgraphic,omitempty"`
 	LegendURL            string `json:"legendurl,omitempty"`
+	LegendID             string `json:"legendid,omitempty"`
 	FeatureinfoFormat    string `json:"featureinfo_format,omitempty"`
 	FeatureinfoXslt      string `json:"featureinfo_xslt,omitempty"`
 	FeatureinfoOutFormat string `json:"featureinfo_out_format,omitempty"`
@@ -211,11 +212,12 @@ type WMSSource struct {
 		Layers      []string `json:"layers"`
 		Transparent *bool    `json:"transparent,omitempty"`
 	} `json:"req"`
+	Store interface{} `json:"store"`
 }
 
 type TileSource struct {
 	SourceCommons
-	Url           string      `json:"url,omitempty"`
+	URLTemplate   string      `json:"url_template,omitempty"`
 	Transparent   *bool       `json:"transparent,omitempty"`
 	Options       interface{} `json:"options,omitempty"`
 	Grid          string      `json:"grid,omitempty"`
@@ -316,46 +318,40 @@ type WMSService struct {
 	Layers           []WMSLayer        `json:"layers,omitempty"`
 }
 
-type Dimension struct {
-	Default interface{}   `json:"default,omitempty"`
-	Values  []interface{} `json:"values"`
-}
-
 type MapboxTileLayer struct {
-	ScaleHints
 	Sources      []string                `json:"sources"`
 	Name         string                  `json:"name,omitempty"`
-	Title        string                  `json:"title"`
 	Metadata     map[string]string       `json:"metadata,omitempty"`
-	Dimensions   map[string]Dimension    `json:"dimensions,omitempty"`
 	TileJSON     TileJSONSource          `json:"tilejson,omitempty"`
-	VectorLayers []*resource.VectorLayer `json:"vectorLayers,omitempty"`
+	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
+	TileType     string                  `json:"tile_type,omitempty"`
+	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`
 }
 
 type TileLayer struct {
 	ScaleHints
-	Sources     []string             `json:"sources"`
-	TileSources []string             `json:"tile_sources"`
-	Name        string               `json:"name,omitempty"`
-	Title       string               `json:"title"`
-	LegendURL   string               `json:"legendurl,omitempty"`
-	Metadata    map[string]string    `json:"metadata,omitempty"`
-	Dimensions  map[string]Dimension `json:"dimensions,omitempty"`
-	LegendStore interface{}          `json:"legendstore"`
+	Sources     []string                 `json:"sources"`
+	TileSources []string                 `json:"tile_sources"`
+	Name        string                   `json:"name,omitempty"`
+	Title       string                   `json:"title"`
+	LegendURL   string                   `json:"legendurl,omitempty"`
+	Metadata    map[string]string        `json:"metadata,omitempty"`
+	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
+	LegendStore interface{}              `json:"legendstore"`
 }
 
 type WMSLayer struct {
 	ScaleHints
-	MapSources         []string             `json:"map_sources"`
-	FeatureinfoSources []string             `json:"featureinfo_sources,omitempty"`
-	LegendSources      []string             `json:"legend_sources,omitempty"`
-	Name               string               `json:"name,omitempty"`
-	Title              string               `json:"title"`
-	LegendURL          string               `json:"legendurl,omitempty"`
-	Metadata           map[string]string    `json:"metadata,omitempty"`
-	Layers             []WMSLayer           `json:"layers,omitempty"`
-	Dimensions         map[string]Dimension `json:"dimensions,omitempty"`
-	LegendStore        interface{}          `json:"legendstore"`
+	MapSources         []string                 `json:"map_sources"`
+	FeatureinfoSources []string                 `json:"featureinfo_sources,omitempty"`
+	LegendSources      []string                 `json:"legend_sources,omitempty"`
+	Name               string                   `json:"name,omitempty"`
+	Title              string                   `json:"title"`
+	LegendURL          string                   `json:"legendurl,omitempty"`
+	Metadata           map[string]string        `json:"metadata,omitempty"`
+	Layers             []WMSLayer               `json:"layers,omitempty"`
+	Dimensions         map[string][]interface{} `json:"dimensions,omitempty"`
+	LegendStore        interface{}              `json:"legendstore"`
 }
 
 type TimeSpec struct {
@@ -409,6 +405,7 @@ type StyleSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	StyleID     string      `json:"style_id,omitempty"`
 	Store       interface{} `json:"store"`
+	Http        HttpOpts    `json:"http,omitempty"`
 }
 
 type GlyphsSource struct {
@@ -417,6 +414,7 @@ type GlyphsSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	Font        string      `json:"font,omitempty"`
 	Store       interface{} `json:"store"`
+	Http        HttpOpts    `json:"http,omitempty"`
 }
 
 type TileJSONSource struct {
@@ -425,4 +423,5 @@ type TileJSONSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	TilesetID   string      `json:"tileset_id,omitempty"`
 	Store       interface{} `json:"store"`
+	Http        HttpOpts    `json:"http,omitempty"`
 }

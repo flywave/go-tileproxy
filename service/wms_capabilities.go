@@ -32,7 +32,7 @@ func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, image
 	return &WMSCapabilities{service: service, root_layer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
 }
 
-func (c *WMSCapabilities) layerSrsBBox(layer wmsLayer, epsgAxisOrder bool) map[string]vec2d.Rect {
+func (c *WMSCapabilities) layerSrsBBox(layer WMSLayer, epsgAxisOrder bool) map[string]vec2d.Rect {
 	ret := make(map[string]vec2d.Rect)
 	for srs, extent := range c.srsExtents {
 		if !geo.SrcInProj(srs, c.srs.Srs) {
@@ -69,7 +69,7 @@ func (c *WMSCapabilities) layerSrsBBox(layer wmsLayer, epsgAxisOrder bool) map[s
 	return ret
 }
 
-func (c *WMSCapabilities) layerLLBBox(layer wmsLayer) vec2d.Rect {
+func (c *WMSCapabilities) layerLLBBox(layer WMSLayer) vec2d.Rect {
 	if srs, ok := c.srsExtents["EPSG:4326"]; ok {
 		llbbox := srs.Intersection(layer.GetExtent()).GetLLBBox()
 		return limitLLBBox(llbbox)

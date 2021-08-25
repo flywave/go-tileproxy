@@ -18,7 +18,7 @@ type TileProxy struct {
 	Services  map[string]service.Service
 }
 
-func NewTileProxy(proxy *setting.ProxySetting) *TileProxy {
+func NewTileProxy(proxy *setting.ProxyDataset) *TileProxy {
 	return nil
 }
 

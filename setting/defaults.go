@@ -49,4 +49,6 @@ var (
 	DefaultExpiresHours             = 72
 	DefaultRequestTimeout           = 60
 	DefaultAccessControlAllowOrigin = "*"
+	DefaultUserAgent                = "*"
+	DefaultRandomDelay              = 20
 )

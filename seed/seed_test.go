@@ -1,8 +1,6 @@
 package seed
 
 import (
-	"io"
-	"io/ioutil"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -30,18 +28,6 @@ func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte)
 	c.data = data
 	c.url = url
 	return c.code, c.body
-}
-
-type dummyCreater struct {
-}
-
-func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
-	if data != nil {
-		reader := data.(io.Reader)
-		buf, _ := ioutil.ReadAll(reader)
-		return &tile.DummyTileSource{Data: string(buf)}
-	}
-	return nil
 }
 
 func makeBBoxTask(tile_mgr cache.Manager, bbox vec2d.Rect, srs geo.Proj, levels []int) *TileSeedTask {
@@ -102,7 +88,15 @@ func (p *mockWorkerPool) Process(work Work, progress *SeedProgress) {
 type mockMVTSourceCreater struct {
 }
 
-func (c *mockMVTSourceCreater) Creater(data []byte, location string) tile.Source {
+func (c *mockMVTSourceCreater) GetExtension() string {
+	return "mvt"
+}
+
+func (c *mockMVTSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *mockMVTSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
 	source.SetSource("../data/3194.mvt")
 	return source
@@ -123,13 +117,11 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 
 	client := client.NewTileClient(grid, urlTemplate, ctx)
 
-	creater := &dummyCreater{}
-
 	ccreater := &mockMVTSourceCreater{}
 
-	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: creater}
+	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: ccreater}
 
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	locker := &cache.DummyTileLocker{}
 
@@ -164,13 +156,11 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	client := client.NewTileClient(grid, urlTemplate, ctx)
 
-	creater := &dummyCreater{}
-
 	ccreater := &mockMVTSourceCreater{}
 
-	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: creater}
+	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: ccreater}
 
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	locker := &cache.DummyTileLocker{}
 

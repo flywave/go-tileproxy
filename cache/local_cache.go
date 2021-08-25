@@ -4,26 +4,26 @@ import (
 	"errors"
 	"os"
 
+	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
 type LocalCache struct {
 	Cache
 	cacheDir      string
-	fileExt       string
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
-	creater       TileCreater
+	creater       tile.SourceCreater
 }
 
-func NewLocalCache(cache_dir string, file_ext string, directory_layout string, creater TileCreater) *LocalCache {
-	c := &LocalCache{cacheDir: cache_dir, fileExt: file_ext, creater: creater}
+func NewLocalCache(cache_dir string, directory_layout string, creater tile.SourceCreater) *LocalCache {
+	c := &LocalCache{cacheDir: cache_dir, creater: creater}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
 	return c
 }
 
 func (c *LocalCache) TileLocation(tile *Tile, create_dir bool) string {
-	return c.tileLocation(tile, c.cacheDir, c.fileExt, create_dir)
+	return c.tileLocation(tile, c.cacheDir, c.creater.GetExtension(), create_dir)
 }
 
 func (c *LocalCache) LevelLocation(level int) string {
@@ -42,7 +42,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 			c.LoadTileMetadata(tile)
 		}
 		data, _ := os.ReadFile(location)
-		tile.Source = c.creater.Creater(data, location)
+		tile.Source = c.creater.Create(data, tile.Coord)
 		return nil
 	}
 	return errors.New("not found")

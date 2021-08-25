@@ -67,7 +67,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	layerMetadata := map[string]string{"name_path": "test"}
 
-	info := []layer.Layer{}
+	info := []layer.InfoLayer{}
 
 	dimensions := make(utils.Dimensions)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
@@ -77,7 +77,7 @@ func TestWMTSCapabilities(t *testing.T) {
 	ccreater := &mockImageSourceCreater{}
 
 	locker := &cache.DummyTileLocker{}
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 

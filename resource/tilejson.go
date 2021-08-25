@@ -118,6 +118,6 @@ func (c *TileJSONCache) Load(r Resource) error {
 	return c.store.Load(r)
 }
 
-func NewTileJSONCache(cache_dir string) *TileJSONCache {
-	return &TileJSONCache{store: &LocalStore{CacheDir: cache_dir}}
+func NewTileJSONCache(store Store) *TileJSONCache {
+	return &TileJSONCache{store: store}
 }

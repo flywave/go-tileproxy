@@ -65,7 +65,15 @@ type mockImageSourceCreater struct {
 	imageopts *imagery.ImageOptions
 }
 
-func (c *mockImageSourceCreater) Creater(data []byte, location string) tile.Source {
+func (c *mockImageSourceCreater) GetExtension() string {
+	return "png"
+}
+
+func (c *mockImageSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *mockImageSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 	s := imagery.CreateImageSourceFromBufer(data, c.imageopts)
 	return s
 }
@@ -86,7 +94,7 @@ func TestTileProvider(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{}
 
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -103,7 +111,7 @@ func TestTileProvider(t *testing.T) {
 
 	md := make(map[string]string)
 
-	info := []layer.Layer{}
+	info := []layer.InfoLayer{}
 
 	dimensions := make(utils.Dimensions)
 
@@ -143,7 +151,7 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{}
 
-	c := cache.NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -160,7 +168,7 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	md := map[string]string{"name_path": "test"}
 
-	info := []layer.Layer{}
+	info := []layer.InfoLayer{}
 
 	dimensions := make(utils.Dimensions)
 

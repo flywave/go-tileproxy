@@ -74,7 +74,7 @@ func TestTileManager(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -140,7 +140,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -195,7 +195,7 @@ func TestTileManagerMultipleSources(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	locker := &DummyTileLocker{}
 
@@ -221,7 +221,7 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	locker := &DummyTileLocker{}
 
@@ -247,7 +247,7 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	locker := &DummyTileLocker{}
 

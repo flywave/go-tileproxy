@@ -23,7 +23,15 @@ type mockImageSourceCreater struct {
 	imageopts *imagery.ImageOptions
 }
 
-func (c *mockImageSourceCreater) Creater(data []byte, location string) tile.Source {
+func (c *mockImageSourceCreater) GetExtension() string {
+	return "png"
+}
+
+func (c *mockImageSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *mockImageSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 	s := imagery.CreateImageSourceFromBufer(data, c.imageopts)
 	return s
 }
@@ -44,7 +52,7 @@ func TestCacheMapLayer(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -88,7 +96,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -132,7 +140,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
-	c := NewLocalCache("./test_cache", "png", "quadkey", ccreater)
+	c := NewLocalCache("./test_cache", "quadkey", ccreater)
 
 	param := http.Header{
 		"layers": []string{"foo"},

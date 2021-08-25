@@ -17,6 +17,18 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
+type S3Options struct {
+	Endpoint  string
+	AccessKey string
+	SecretKey string
+	Secure    bool
+	SignV2    bool
+	Region    string
+	Bucket    string
+	Encrypt   bool
+	Trace     bool
+}
+
 type S3Cache struct {
 	Cache
 	endpoint      string
@@ -29,10 +41,24 @@ type S3Cache struct {
 	encrypt       bool
 	trace         bool
 	cacheDir      string
-	fileExt       string
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
-	creater       TileCreater
+	creater       tile.SourceCreater
+}
+
+func NewS3Cache(cache_dir string, directory_layout string, setting S3Options, creater tile.SourceCreater) *S3Cache {
+	c := &S3Cache{cacheDir: cache_dir, creater: creater}
+	c.endpoint = setting.Endpoint
+	c.accessKey = setting.AccessKey
+	c.secretKey = setting.SecretKey
+	c.secure = setting.Secure
+	c.signV2 = setting.SignV2
+	c.region = setting.Region
+	c.bucket = setting.Bucket
+	c.encrypt = setting.Encrypt
+	c.trace = setting.Trace
+	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
+	return c
 }
 
 func (b *S3Cache) s3New() (*s3.Client, error) {
@@ -130,7 +156,7 @@ func s3PutOptions(encrypted bool, contentType string) s3.PutObjectOptions {
 }
 
 func (b *S3Cache) TileLocation(tile *Tile, create_dir bool) string {
-	return b.tileLocation(tile, b.cacheDir, b.fileExt, create_dir)
+	return b.tileLocation(tile, b.cacheDir, b.creater.GetExtension(), create_dir)
 }
 
 func (b *S3Cache) LevelLocation(level int) string {
@@ -169,7 +195,7 @@ func (b *S3Cache) LoadTile(tile *Tile, withMetadata bool) error {
 		}
 		reader, _ := b.reader(location)
 		data, _ := ioutil.ReadAll(reader)
-		tile.Source = b.creater.Creater(data, location)
+		tile.Source = b.creater.Create(data, tile.Coord)
 		return nil
 	}
 	return errors.New("not found")

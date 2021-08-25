@@ -20,8 +20,8 @@ func (c *LegendCache) Load(r Resource) error {
 	return c.store.Load(r)
 }
 
-func NewLegendCache(cache_dir string) *LegendCache {
-	return &LegendCache{store: &LocalStore{CacheDir: cache_dir}}
+func NewLegendCache(store Store) *LegendCache {
+	return &LegendCache{store: store}
 }
 
 type Legend struct {

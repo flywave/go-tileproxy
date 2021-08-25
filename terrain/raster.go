@@ -326,16 +326,57 @@ func NewBlankRasterSource(size [2]uint32, opts tile.TileOptions, cacheable *tile
 			src := NewGeoTIFFRasterSource(opt.Mode, opt)
 			src.SetSource(td)
 			return src
-		}
-	case *TerrainOptions:
-		tiledata := NewTileData(size, opt.Mode)
-		tiledata.NoData = -9999
-		source, err := GenTerrainSource(tiledata, opt)
+		} else if opt.Format.Extension() == "terrain" {
+			tiledata := NewTileData(size, opt.Mode)
+			tiledata.NoData = -9999
+			source, err := GenTerrainSource(tiledata, opt)
 
-		if err != nil {
-			return nil
+			if err != nil {
+				return nil
+			}
+			return source
 		}
-		return source
 	}
 	return nil
+}
+
+func CreateRasterSourceFromBufer(buf []byte, opts *RasterOptions) tile.Source {
+	if opts.Format.Extension() == "webp" || opts.Format.Extension() == "png" {
+		src := NewDemRasterSource(ModeMapbox, opts)
+		reader := bytes.NewBuffer(buf)
+		src.SetSource(reader)
+		return src
+	} else if opts.Format.Extension() == "atm" {
+		src := NewLercRasterSource(opts.Mode, opts.MaxError, opts)
+		reader := bytes.NewBuffer(buf)
+		src.SetSource(reader)
+		return src
+	} else if opts.Format.Extension() == "tif" || opts.Format.Extension() == "tiff" {
+		src := NewGeoTIFFRasterSource(opts.Mode, opts)
+		reader := bytes.NewBuffer(buf)
+		src.SetSource(reader)
+		return src
+	} else if opts.Format.Extension() == "terrain" {
+		src := NewTerrainSource(opts)
+		reader := bytes.NewBuffer(buf)
+		src.SetSource(reader)
+		return src
+	}
+	return nil
+}
+
+type RasterSourceCreater struct {
+	Opt *RasterOptions
+}
+
+func (c *RasterSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return NewBlankRasterSource(size, opts, nil)
+}
+
+func (c *RasterSourceCreater) Create(data []byte, tile [3]int) tile.Source {
+	return CreateRasterSourceFromBufer(data, c.Opt)
+}
+
+func (c *RasterSourceCreater) GetExtension() string {
+	return c.Opt.Format.Extension()
 }

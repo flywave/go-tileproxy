@@ -21,6 +21,27 @@ const (
 	RT_DOUBLE RasterType = 7
 )
 
+func RasterTypeFromString(tp string) RasterType {
+	if tp == "char" {
+		return RT_CHAR
+	} else if tp == "uchar" {
+		return RT_UCHAR
+	} else if tp == "short" {
+		return RT_SHORT
+	} else if tp == "ushort" {
+		return RT_USHORT
+	} else if tp == "int" {
+		return RT_INT
+	} else if tp == "uint" {
+		return RT_UINT
+	} else if tp == "float" {
+		return RT_FLOAT
+	} else if tp == "double" {
+		return RT_DOUBLE
+	}
+	return RT_FLOAT
+}
+
 type BorderMode uint32
 
 const (
@@ -37,6 +58,15 @@ const (
 	BORDER_RIGHT  BorderType = 2
 	BORDER_BOTTOM BorderType = 3
 )
+
+func BorderModeFromString(border string) BorderMode {
+	if border == "unilateral" {
+		return BORDER_UNILATERAL
+	} else if border == "bilateral" {
+		return BORDER_BILATERAL
+	}
+	return BORDER_NONE
+}
 
 type TileData struct {
 	Size         [2]uint32

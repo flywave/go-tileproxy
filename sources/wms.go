@@ -9,7 +9,6 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
-	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -217,7 +216,11 @@ func (s *WMSSource) CombinedLayer(other layer.Layer, query *layer.MapQuery) laye
 type WMSInfoSource struct {
 	Client      *client.WMSInfoClient
 	Coverage    geo.Coverage
-	Transformer func(feature resource.FeatureInfoDoc) resource.FeatureInfoDoc
+	Transformer *resource.XSLTransformer
+}
+
+func NewWMSInfoSource(clients *client.WMSInfoClient, coverage geo.Coverage, transformer *resource.XSLTransformer) *WMSInfoSource {
+	return &WMSInfoSource{Client: clients, Coverage: coverage, Transformer: transformer}
 }
 
 func (s *WMSInfoSource) GetClient() *client.WMSInfoClient {
@@ -230,21 +233,21 @@ func (s *WMSInfoSource) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc 
 	}
 	doc := s.Client.GetInfo(query)
 	if s.Transformer != nil {
-		doc = s.Transformer(doc)
+		doc = s.Transformer.Transform(doc)
 	}
 	return doc
 }
 
 type WMSLegendSource struct {
-	Clients    []client.WMSLegendClient
-	Identifier string
+	Client     *client.WMSLegendClient
 	Cache      *resource.LegendCache
+	Identifier string
 	Size       []uint32
 	Static     bool
 }
 
-func NewWMSLegendSource(id string, clients []client.WMSLegendClient, cache *resource.LegendCache) *WMSLegendSource {
-	return &WMSLegendSource{Identifier: id, Clients: clients, Cache: cache}
+func NewWMSLegendSource(identifier string, clients *client.WMSLegendClient, cache *resource.LegendCache) *WMSLegendSource {
+	return &WMSLegendSource{Client: clients, Cache: cache, Identifier: identifier}
 }
 
 func (s *WMSLegendSource) GetSize() []uint32 {
@@ -265,17 +268,14 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 	}
 
 	var error_occured bool
-	legends := make([]tile.Source, 0)
+	var source tile.Source
 	if s.Cache.Load(legend) == nil {
 		error_occured = false
-		for _, client := range s.Clients {
-			legends = append(legends, client.GetLegend(query).Source)
-		}
+		source = s.Client.GetLegend(query).Source
 	}
 
-	format := request.SplitMimeType(query.Format)[0]
 	legend = &resource.Legend{
-		Source:       imagery.ConcatLegends(legends, imagery.RGBA, tile.TileFormat(format), nil, nil, false),
+		Source:       source,
 		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale,
 	}
 

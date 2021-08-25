@@ -24,7 +24,7 @@ func TestGetEmptyTile(t *testing.T) {
 		t.FailNow()
 	}
 
-	terrainOpt := &terrain.TerrainOptions{Format: "terrain", Mode: terrain.BORDER_BILATERAL}
+	terrainOpt := &terrain.RasterOptions{Format: "terrain", Mode: terrain.BORDER_BILATERAL}
 
 	empty = GetEmptyTile([2]uint32{256, 256}, terrainOpt)
 	buff = empty.GetBuffer(nil, nil)

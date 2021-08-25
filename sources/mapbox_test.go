@@ -1,8 +1,6 @@
 package sources
 
 import (
-	"io"
-	"io/ioutil"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -16,11 +14,17 @@ import (
 type dummyCreater struct {
 }
 
-func (c *dummyCreater) Create(size [2]uint32, opts tile.TileOptions, data interface{}) tile.Source {
+func (c *dummyCreater) GetExtension() string {
+	return "png"
+}
+
+func (c *dummyCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
+	return nil
+}
+
+func (c *dummyCreater) Create(data []byte, t [3]int) tile.Source {
 	if data != nil {
-		reader := data.(io.Reader)
-		buf, _ := ioutil.ReadAll(reader)
-		return &tile.DummyTileSource{Data: string(buf)}
+		return &tile.DummyTileSource{Data: string(data)}
 	}
 	return nil
 }

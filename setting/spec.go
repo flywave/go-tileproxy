@@ -281,8 +281,8 @@ type WaterMark struct {
 type MapboxService struct {
 	Metadata map[string]string `json:"metadata,omitempty"`
 	Layers   []MapboxTileLayer `json:"layers,omitempty"`
-	Styles   []string          `json:"styles,omitempty"`
-	Fonts    []string          `json:"fonts,omitempty"`
+	Styles   []StyleSource     `json:"styles,omitempty"`
+	Fonts    []GlyphsSource    `json:"fonts,omitempty"`
 }
 
 type TMSService struct {

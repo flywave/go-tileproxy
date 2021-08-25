@@ -189,16 +189,20 @@ func LoadWMSRootLayer(l *WMSLayer, mapLayers map[string]layer.Layer, infos map[s
 	return provider
 }
 
-func newSupportedSrs(supportedSrs []string) *geo.SupportedSRS {
-	return nil
+func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.SupportedSRS {
+	srs := []geo.Proj{}
+	for i := range supportedSrs {
+		srs = append(srs, geo.NewSRSProj4(supportedSrs[i]))
+	}
+	return &geo.SupportedSRS{Srs: srs, Preferred: preferred}
 }
 
 func newWMSFeatureInfoRequest(s *WMSSource) *request.WMSFeatureInfoRequest {
 	return nil
 }
 
-func LoadWMSInfoSource(s *WMSSource, coverage geo.Coverage, transformer *resource.XSLTransformer) *sources.WMSInfoSource {
-	c := client.NewWMSInfoClient(newWMSFeatureInfoRequest(s), newSupportedSrs(s.SupportedSrs), newCollectorContext(&s.Http))
+func LoadWMSInfoSource(s *WMSSource, coverage geo.Coverage, preferred geo.PreferredSrcSRS, transformer *resource.XSLTransformer) *sources.WMSInfoSource {
+	c := client.NewWMSInfoClient(newWMSFeatureInfoRequest(s), newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(&s.Http))
 	return sources.NewWMSInfoSource(c, coverage, transformer)
 }
 
@@ -298,6 +302,10 @@ func LoadLuokuangTileSource(s *LuokuangTileSource, grid *geo.TileGrid) *sources.
 }
 
 func LoadArcgisSource(s *ArcgisSource) *sources.ArcGISSource {
+	return nil
+}
+
+func LoadArcGISInfoSource(s *ArcgisSource) *sources.ArcGISInfoSource {
 	return nil
 }
 

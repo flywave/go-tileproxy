@@ -2,6 +2,7 @@ package tileproxy
 
 import (
 	"net/http"
+	"regexp"
 	"sync"
 
 	"github.com/flywave/go-tileproxy/geo"
@@ -9,11 +10,12 @@ import (
 )
 
 type TileProxy struct {
-	m         sync.RWMutex
-	Datasets  map[string]*Dataset
-	basePath  string
-	globals   *setting.GlobalsSetting
-	preferred geo.PreferredSrcSRS
+	m               sync.RWMutex
+	Datasets        map[string]*Dataset
+	basePath        string
+	globals         *setting.GlobalsSetting
+	preferred       geo.PreferredSrcSRS
+	datasetReqRegex *regexp.Regexp
 }
 
 func (t *TileProxy) UpdateDataset(dataset string, d *setting.ProxyDataset) {
@@ -33,7 +35,7 @@ func (t *TileProxy) RemoveDataset(dataset string) {
 	d.Clean()
 }
 
-func (t *TileProxy) UpdateAll(proxy []*setting.ProxyDataset) {
+func (t *TileProxy) Reload(proxy []*setting.ProxyDataset) {
 	t.m.Lock()
 	t.Datasets = make(map[string]*Dataset)
 	for i := range proxy {
@@ -43,7 +45,20 @@ func (t *TileProxy) UpdateAll(proxy []*setting.ProxyDataset) {
 }
 
 func (t *TileProxy) parseServiceId(r *http.Request) string {
-	return ""
+	match := t.datasetReqRegex.FindStringSubmatch(r.URL.Path)
+	groupNames := t.datasetReqRegex.SubexpNames()
+	result := make(map[string]string)
+	for i, name := range groupNames {
+		if name != "" && match[i] != "" {
+			result[name] = match[i]
+		}
+	}
+
+	if match == nil || len(match) == 0 {
+		return ""
+	}
+
+	return result["service"]
 }
 
 func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +78,7 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewTileProxy(basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS, proxys []*setting.ProxyDataset) *TileProxy {
-	proxy := &TileProxy{Datasets: make(map[string]*Dataset), basePath: basePath, globals: globals, preferred: preferred}
-	proxy.UpdateAll(proxys)
+	proxy := &TileProxy{basePath: basePath, globals: globals, preferred: preferred}
+	proxy.Reload(proxys)
 	return proxy
 }

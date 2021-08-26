@@ -17,15 +17,19 @@ func NewArcGISSource(client *client.ArcGISClient, image_opts *imagery.ImageOptio
 }
 
 type ArcGISInfoSource struct {
-	WMSInfoSource
+	Client *client.ArcGISInfoClient
 }
 
-func NewArcGISInfoSource(c *client.WMSInfoClient) *ArcGISInfoSource {
-	return &ArcGISInfoSource{WMSInfoSource: WMSInfoSource{Client: c}}
+func (s *ArcGISInfoSource) GetClient() *client.ArcGISInfoClient {
+	return s.Client
 }
 
 func (c *ArcGISInfoSource) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
 	agis := c.GetClient()
 	doc := agis.GetInfo(query)
 	return doc
+}
+
+func NewArcGISInfoSource(c *client.ArcGISInfoClient) *ArcGISInfoSource {
+	return &ArcGISInfoSource{Client: c}
 }

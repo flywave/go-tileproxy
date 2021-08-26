@@ -16,6 +16,17 @@ const (
 	GRAY ImageMode = 3
 )
 
+func ImageModeFromString(m string) ImageMode {
+	if m == "rgb" {
+		return RGB
+	} else if m == "rgba" {
+		return RGBA
+	} else if m == "gray" {
+		return GRAY
+	}
+	return AUTO
+}
+
 type ImageOptions struct {
 	Transparent     *bool
 	Opacity         *float64

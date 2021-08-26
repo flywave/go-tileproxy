@@ -51,7 +51,7 @@ func TestResolutionConditional(t *testing.T) {
 		_, map_query, low_requested := testQuery[i].key, testQuery[i].query, testQuery[i].low_requested
 		low := &mockSource{}
 		high := &mockSource{}
-		layer := NewResolutionConditional(low, high, 10, geo.NewSRSProj4("EPSG:3857"), GLOBAL_GEOGRAPHIC_EXTENT, nil)
+		layer := NewResolutionConditional(low, high, 10, geo.NewSRSProj4("EPSG:3857"), GLOBAL_GEOGRAPHIC_EXTENT)
 
 		layer.GetMap(map_query)
 		if low.requested != low_requested {
@@ -73,7 +73,7 @@ func TestSRSConditional(t *testing.T) {
 		"EPSG:4326":  l4326,
 		"EPSG:3857":  l3857,
 		"EPSG:25832": l25832,
-	}, GLOBAL_GEOGRAPHIC_EXTENT, nil, preferred)
+	}, GLOBAL_GEOGRAPHIC_EXTENT, preferred)
 
 	if layer.selectLayer(geo.NewSRSProj4("EPSG:4326")) != l4326 {
 		t.FailNow()

@@ -5,8 +5,6 @@ import (
 	"math"
 
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/imagery"
-	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -16,7 +14,7 @@ type InfoLayer interface {
 }
 
 type LegendLayer interface {
-	GetLegend(query *request.WMSLegendGraphicRequest) []tile.Source
+	GetLegend(query *LegendQuery) tile.Source
 }
 
 type Layer interface {
@@ -24,9 +22,9 @@ type Layer interface {
 	GetResolutionRange() *geo.ResolutionRange
 	IsSupportMetaTiles() bool
 	GetExtent() *geo.MapExtent
-	IsOpaque(query *MapQuery) bool
 	CombinedLayer(other Layer, query *MapQuery) Layer
 	GetCoverage() geo.Coverage
+	GetOptions() tile.TileOptions
 }
 
 type MapLayer struct {
@@ -35,10 +33,10 @@ type MapLayer struct {
 	ResRange         *geo.ResolutionRange
 	Coverage         geo.Coverage
 	Extent           *geo.MapExtent
-	Options          *imagery.ImageOptions
+	Options          tile.TileOptions
 }
 
-func NewMapLayer(opts *imagery.ImageOptions) *MapLayer {
+func NewMapLayer(opts tile.TileOptions) *MapLayer {
 	return &MapLayer{Options: opts}
 }
 
@@ -52,18 +50,6 @@ func (l *MapLayer) IsSupportMetaTiles() bool {
 
 func (l *MapLayer) GetCoverage() geo.Coverage {
 	return l.Coverage
-}
-
-func (l *MapLayer) GetOpacity() float64 {
-	return *l.Options.Opacity
-}
-
-func (l *MapLayer) SetOpacity(value float64) {
-	l.Options.Opacity = geo.NewFloat64(value)
-}
-
-func (l *MapLayer) IsOpaque(query *MapQuery) bool {
-	return false
 }
 
 func (l *MapLayer) CheckResRange(query *MapQuery) error {
@@ -82,13 +68,13 @@ func (l *MapLayer) GetExtent() *geo.MapExtent {
 	return l.Extent
 }
 
+func (l *MapLayer) GetOptions() tile.TileOptions {
+	return l.Options
+}
+
 type LimitedLayer struct {
 	layer    Layer
 	coverage geo.Coverage
-}
-
-func (l *LimitedLayer) IsOpaque(query *MapQuery) bool {
-	return l.layer.IsOpaque(query)
 }
 
 func (l *LimitedLayer) CombinedLayer(other Layer, query *MapQuery) Layer {
@@ -122,6 +108,10 @@ func (l *LimitedLayer) GetExtent() *geo.MapExtent {
 	return l.layer.GetExtent()
 }
 
+func (l *LimitedLayer) GetOptions() tile.TileOptions {
+	return l.layer.GetOptions()
+}
+
 type ResolutionConditional struct {
 	MapLayer
 	a          Layer
@@ -145,12 +135,9 @@ func MergeLayerResRanges(layers []Layer) *geo.ResolutionRange {
 	return ret
 }
 
-func NewResolutionConditional(a, b Layer, resolution float64, srs geo.Proj, ext *geo.MapExtent, opacity *float64) *ResolutionConditional {
+func NewResolutionConditional(a, b Layer, resolution float64, srs geo.Proj, ext *geo.MapExtent) *ResolutionConditional {
 	res_range := MergeLayerResRanges([]Layer{a, b})
 	ret := &ResolutionConditional{MapLayer: MapLayer{SupportMetaTiles: true, ResRange: res_range, Extent: ext}, a: a, b: b, resolution: resolution, srs: srs}
-	if opacity != nil {
-		ret.SetOpacity(*opacity)
-	}
 	return ret
 }
 
@@ -180,7 +167,7 @@ type SRSConditional struct {
 	srsMap       map[string]Layer
 }
 
-func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, opacity *float64, preferred_srs geo.PreferredSrcSRS) *SRSConditional {
+func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, preferred_srs geo.PreferredSrcSRS) *SRSConditional {
 	ret := &SRSConditional{MapLayer: MapLayer{SupportMetaTiles: true}}
 	layers := []Layer{}
 	for _, layer := range lmap {
@@ -196,9 +183,6 @@ func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, opacity *float
 	}
 	ret.supportedSRS = &geo.SupportedSRS{Srs: supported_srs, Preferred: preferred_srs}
 	ret.Extent = ext
-	if opacity != nil {
-		ret.SetOpacity(*opacity)
-	}
 	ret.ResRange = res_range
 	return ret
 }

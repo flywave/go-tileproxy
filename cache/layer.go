@@ -118,7 +118,7 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		if err != nil {
 			return GetEmptyTile(size, r.tileManager.GetTileOptions()), nil
 		}
-		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options, resp.GetCacheable())
+		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options.(*imagery.ImageOptions), resp.GetCacheable())
 	} else {
 		result, _ = r.getSource(query)
 	}

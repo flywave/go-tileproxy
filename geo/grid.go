@@ -1181,6 +1181,12 @@ type ResolutionRange struct {
 	Max *float64
 }
 
+func NewResolutionRangeScale(min_scale *float64, max_scale *float64) *ResolutionRange {
+	min_res := ogc_scale_to_res(*max_scale)
+	max_res := ogc_scale_to_res(*min_scale)
+	return &ResolutionRange{Min: &min_res, Max: &max_res}
+}
+
 func NewResolutionRange(min_res *float64, max_res *float64) *ResolutionRange {
 	return &ResolutionRange{Min: min_res, Max: max_res}
 }

@@ -144,6 +144,10 @@ type GlyphProvider struct {
 	source *sources.MapboxGlyphsSource
 }
 
+func NewGlyphProvider(source *sources.MapboxGlyphsSource) *GlyphProvider {
+	return &GlyphProvider{source: source}
+}
+
 func (c *GlyphProvider) fetch(req *request.MapboxGlyphsRequest) []byte {
 	query := &layer.GlyphsQuery{Font: req.Font, Start: req.Start, End: req.End}
 	glyphs := c.source.GetGlyphs(query)
@@ -152,6 +156,10 @@ func (c *GlyphProvider) fetch(req *request.MapboxGlyphsRequest) []byte {
 
 type StyleProvider struct {
 	source *sources.MapboxStyleSource
+}
+
+func NewStyleProvider(source *sources.MapboxStyleSource) *StyleProvider {
+	return &StyleProvider{source: source}
 }
 
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {

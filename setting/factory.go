@@ -1,6 +1,9 @@
 package setting
 
 import (
+	"image/color"
+	"path"
+	"strings"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -31,6 +34,9 @@ func NewImageOptions(opt *ImageOpts) *imagery.ImageOptions {
 	}
 	if opt.Colors != nil {
 		image_opt.Colors = *opt.Colors
+	}
+	if opt.Mode != "" {
+		image_opt.Mode = imagery.ImageModeFromString(opt.Mode)
 	}
 	image_opt.EncodingOptions = opt.EncodingOptions
 	return image_opt
@@ -121,9 +127,125 @@ func ConvertGridOpts(opt *GridOpts) *geo.TileGrid {
 	return geo.NewTileGrid(conf)
 }
 
+func newWaterMarkFilter(w *WaterMark) cache.Filter {
+	var c color.Color
+	if w.Color != nil {
+		c = color.NRGBA{R: w.Color[0], G: w.Color[1], B: w.Color[2], A: w.Color[3]}
+	}
+	return cache.NewWatermark(w.Text, w.Opacity, w.Spacing, w.FontSize, &c)
+}
+
+func LoadCacheManager(c *Caches, globals *GlobalsSetting, instance ProxyInstance) cache.Manager {
+	opts := make([]tile.TileOptions, len(c.Sources))
+	layers := make([]layer.Layer, len(c.Sources))
+
+	for i := range layers {
+		l := instance.GetSource(c.Sources[i])
+		layers = append(layers, l)
+		opts = append(opts, l.GetOptions())
+	}
+
+	grid := instance.GetGrid(c.Grid)
+	request_format := c.RequestFormat
+	var request_format_ext string
+	if strings.Contains(request_format, "/") {
+		request_format_ext = strings.Split(request_format, "/")[1]
+	} else {
+		request_format_ext = request_format
+	}
+
+	var meta_buffer int
+	if c.MetaBuffer != nil {
+		meta_buffer = *c.MetaBuffer
+	} else {
+		meta_buffer = globals.Cache.MetaBuffer
+	}
+
+	var meta_size [2]uint32
+	if c.MetaSize != nil {
+		meta_size = [2]uint32{c.MetaSize[0], c.MetaSize[1]}
+	} else {
+		meta_size = [2]uint32{globals.Cache.MetaSize[0], globals.Cache.MetaSize[1]}
+	}
+
+	var bulk_meta_tiles bool
+	if c.BulkMetaTiles != nil {
+		bulk_meta_tiles = *c.BulkMetaTiles
+	} else {
+		bulk_meta_tiles = globals.Cache.BulkMetaTiles
+	}
+
+	var minimize_meta_requests bool
+	if c.MinimizeMetaRequests != nil {
+		minimize_meta_requests = *c.MinimizeMetaRequests
+	} else {
+		minimize_meta_requests = globals.Cache.MinimizeMetaRequests
+	}
+
+	cache_rescaled_tiles := c.CacheRescaledTiles
+	upscale_tiles := c.UpscaleTiles
+	if upscale_tiles != nil && *upscale_tiles < 0 {
+		return nil
+	}
+
+	downscale_tiles := c.DownscaleTiles
+	if downscale_tiles != nil && *downscale_tiles < 0 {
+		return nil
+	}
+
+	if upscale_tiles != nil && downscale_tiles != nil {
+		return nil
+	}
+
+	rescale_tiles := 0
+	if upscale_tiles != nil {
+		rescale_tiles = -*upscale_tiles
+	}
+	if downscale_tiles != nil {
+		rescale_tiles = *downscale_tiles
+	}
+
+	name := c.Name
+	tile_opts := opts[0]
+
+	var cacheB cache.Cache
+
+	switch cinfo := c.CacheInfo.(type) {
+	case *LocalCache:
+		cacheB = ConvertLocalCache(cinfo, tile_opts)
+	case *S3Cache:
+		cacheB = ConvertS3Cache(cinfo, tile_opts)
+	}
+
+	var locker cache.TileLocker
+
+	if c.LockDir != "" {
+		locker = cache.NewFileTileLocker(c.LockDir, time.Duration(c.LockRetryDelay*int(time.Second)))
+	} else {
+		locker = &cache.DummyTileLocker{}
+	}
+
+	var pre_store_filter []cache.Filter
+
+	if c.WaterMark != nil {
+		pre_store_filter = append(pre_store_filter, newWaterMarkFilter(c.WaterMark))
+	}
+
+	return cache.NewTileManager(layers, grid.(*geo.TileGrid), cacheB, locker, name, request_format_ext, tile_opts, minimize_meta_requests, bulk_meta_tiles, pre_store_filter, rescale_tiles, *cache_rescaled_tiles, meta_buffer, meta_size)
+}
+
+func NewResolutionRange(conf *ScaleHints) *geo.ResolutionRange {
+	if conf.MinRes != nil || conf.MaxRes != nil {
+		return &geo.ResolutionRange{Min: conf.MinRes, Max: conf.MaxRes}
+	}
+	if conf.MinScale != nil || conf.MaxScale != nil {
+		return geo.NewResolutionRangeScale(conf.MinScale, conf.MaxScale)
+	}
+	return nil
+}
+
 func ConvertLocalCache(opt *LocalCache, opts tile.TileOptions) *cache.LocalCache {
-	ret := cache.NewLocalCache(opt.Directory, opt.DirectoryLayout, cache.GetSourceCreater(opts))
-	return ret
+	return cache.NewLocalCache(opt.Directory, opt.DirectoryLayout, cache.GetSourceCreater(opts))
 }
 
 func ConvertS3Cache(opt *S3Cache, opts tile.TileOptions) *cache.S3Cache {
@@ -137,13 +259,11 @@ func ConvertS3Cache(opt *S3Cache, opts tile.TileOptions) *cache.S3Cache {
 	setting.Bucket = opt.Bucket
 	setting.Encrypt = opt.Encrypt
 	setting.Trace = opt.Trace
-	ret := cache.NewS3Cache(opt.Directory, opt.DirectoryLayout, setting, cache.GetSourceCreater(opts))
-	return ret
+	return cache.NewS3Cache(opt.Directory, opt.DirectoryLayout, setting, cache.GetSourceCreater(opts))
 }
 
 func ConvertLocalStore(opt *LocalStore) *resource.LocalStore {
-	ret := resource.NewLocalStore(opt.Directory)
-	return ret
+	return resource.NewLocalStore(opt.Directory)
 }
 
 func ConvertS3Store(opt *S3Store) *resource.S3Store {
@@ -157,36 +277,60 @@ func ConvertS3Store(opt *S3Store) *resource.S3Store {
 	setting.Bucket = opt.Bucket
 	setting.Encrypt = opt.Encrypt
 	setting.Trace = opt.Trace
-	ret := resource.NewS3Store(opt.Directory, setting)
-	return ret
+	return resource.NewS3Store(opt.Directory, setting)
 }
 
-func ConvertMapboxTileLayer(l *MapboxTileLayer, tileManager cache.Manager) *service.MapboxTileProvider {
+func ConvertMapboxTileLayer(l *MapboxTileLayer, instance ProxyInstance) *service.MapboxTileProvider {
 	tp := service.MapboxVector
 	if l.TileType != "" {
 		tp = service.GetMapboxTileType(l.TileType)
 	}
+	tileManager := instance.GetCache(l.Source)
 	tilejsonSource := LoadTileJSONSource(&l.TileJSON)
-	provider := service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
-	return provider
+	return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
 }
 
-func ConvertTileLayer(l *TileLayer, infoSources []layer.InfoLayer, tileManager cache.Manager) *service.TileProvider {
+func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
 	dimensions := utils.NewDimensionsFromValues(l.Dimensions)
-	provider := service.NewTileProvider(l.Name, l.Title, l.Metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
-	return provider
+
+	tileManager := instance.GetCache(l.TileSource)
+
+	infoSources := []layer.InfoLayer{}
+	for _, info := range l.InfoSources {
+		infoSources = append(infoSources, instance.GetInfoSource(info))
+	}
+
+	return service.NewTileProvider(l.Name, l.Title, l.Metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
 }
 
-func ConvertWMSLayer(l *WMSLayer, mapLayers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer) service.WMSLayer {
+func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 	_range := &geo.ResolutionRange{Min: l.MinRes, Max: l.MaxRes}
-	provider := service.NewWMSNodeLayer(l.Name, l.Title, mapLayers, infos, legends, _range, l.Metadata)
-	return provider
+	mapLayers := make(map[string]layer.Layer)
+	infos := make(map[string]layer.InfoLayer)
+	legends := make([]layer.LegendLayer, 0)
+
+	for _, name := range l.MapSources {
+		mapLayers[name] = instance.GetSource(name)
+	}
+
+	for _, name := range l.FeatureinfoSources {
+		infos[name] = instance.GetInfoSource(name)
+	}
+
+	for _, name := range l.LegendSources {
+		legends = append(legends, instance.GetLegendSource(name))
+	}
+
+	return service.NewWMSNodeLayer(l.Name, l.Title, mapLayers, infos, legends, _range, l.Metadata)
 }
 
-func LoadWMSRootLayer(l *WMSLayer, mapLayers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer, layers map[string]service.WMSLayer) *service.WMSGroupLayer {
-	thisLayer := ConvertWMSLayer(l, mapLayers, infos, legends)
-	provider := service.NewWMSGroupLayer(l.Name, l.Title, thisLayer, layers, l.Metadata)
-	return provider
+func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLayer {
+	thisLayer := ConvertWMSLayer(l, instance)
+	layers := make(map[string]service.WMSLayer)
+	for i := range l.Layers {
+		layers[l.Layers[i].Name] = ConvertWMSLayer(&l.Layers[i], instance)
+	}
+	return service.NewWMSGroupLayer(l.Name, l.Title, thisLayer, layers, l.Metadata)
 }
 
 func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.SupportedSRS {
@@ -197,21 +341,62 @@ func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.
 	return &geo.SupportedSRS{Srs: srs, Preferred: preferred}
 }
 
-func newWMSFeatureInfoRequest(s *WMSSource) *request.WMSFeatureInfoRequest {
-	return nil
-}
+func LoadWMSInfoSource(s *WMSSource, basePath string, preferred geo.PreferredSrcSRS) *sources.WMSInfoSource {
+	if s.Opts.FeatureInfo == nil || !*s.Opts.FeatureInfo {
+		return nil
+	}
+	params := make(request.RequestParams)
 
-func LoadWMSInfoSource(s *WMSSource, coverage geo.Coverage, preferred geo.PreferredSrcSRS, transformer *resource.XSLTransformer) *sources.WMSInfoSource {
-	c := client.NewWMSInfoClient(newWMSFeatureInfoRequest(s), newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(&s.Http))
+	request_format := s.Request.Format
+	if request_format == "" {
+		params["format"] = []string{request_format}
+	}
+
+	if s.Opts.FeatureinfoFormat != "" {
+		params["info_format"] = []string{s.Opts.FeatureinfoFormat}
+	}
+
+	url := s.Request.Url
+	coverage := LoadCoverage(s.Coverage)
+
+	var transformer *resource.XSLTransformer
+
+	if s.Opts.FeatureinfoXslt != "" {
+		fi_format := s.Opts.FeatureinfoOutFormat
+		if fi_format == "" {
+			fi_format = s.Opts.FeatureinfoFormat
+		}
+
+		transformer = resource.NewXSLTransformer(path.Join(basePath, s.Opts.FeatureinfoXslt), &fi_format)
+	}
+
+	fi_request := request.NewWMSFeatureInfoRequest(params, url, false, nil, false)
+
+	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(&s.Http))
 	return sources.NewWMSInfoSource(c, coverage, transformer)
 }
 
-func newWMSLegendGraphicRequest(s *WMSSource) *request.WMSLegendGraphicRequest {
-	return nil
-}
-
 func LoadWMSLegendsSource(s *WMSSource) *sources.WMSLegendSource {
-	c := client.NewWMSLegendClient(newWMSLegendGraphicRequest(s), newCollectorContext(&s.Http))
+	if s.Opts.LegendGraphic == nil || !*s.Opts.LegendGraphic {
+		return nil
+	}
+	params := make(request.RequestParams)
+
+	request_format := s.Request.Format
+	if request_format == "" {
+		params["format"] = []string{request_format}
+	}
+	if s.Request.Transparent != nil && *s.Request.Transparent {
+		params["transparent"] = []string{"true"}
+	}
+	url := s.Request.Url
+	lg_clients := make([]*client.WMSLegendClient, 0)
+	for _, layer := range s.Request.Layers {
+		params["layer"] = []string{layer}
+		lg_request := request.NewWMSLegendGraphicRequest(params, url, false, nil, false)
+		lg_clients = append(lg_clients, client.NewWMSLegendClient(lg_request, newCollectorContext(&s.Http)))
+	}
+
 	var cache *resource.LegendCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -219,11 +404,42 @@ func LoadWMSLegendsSource(s *WMSSource) *sources.WMSLegendSource {
 	case *LocalStore:
 		cache = resource.NewLegendCache(ConvertLocalStore(s))
 	}
-	return sources.NewWMSLegendSource(s.Opts.LegendID, c, cache)
+	return sources.NewWMSLegendSource(s.Opts.LegendID, lg_clients, cache)
 }
 
-func LoadWMSMapSource(s *WMSSource, coverage geo.Coverage) *sources.WMSSource {
-	return nil
+func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, preferred geo.PreferredSrcSRS) *sources.WMSSource {
+	if s.Opts.Map == nil || !*s.Opts.Map {
+		return nil
+	}
+
+	params := make(request.RequestParams)
+
+	request_format := s.Request.Format
+	if request_format == "" {
+		params["format"] = []string{request_format}
+	}
+
+	image_opts := NewImageOptions(&s.Image.ImageOpts)
+	res_range := NewResolutionRange(&s.ScaleHints)
+	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
+	coverage := LoadCoverage(s.Coverage)
+
+	var transparent_color color.Color
+	transparent_color_tolerance := s.Image.TransparentColorTolerance
+
+	if s.Image.TransparentColor != nil {
+		c := s.Image.TransparentColor
+		transparent_color = color.RGBA{R: c[0], G: c[1], B: c[2], A: c[3]}
+	}
+
+	url := s.Request.Url
+
+	req := request.NewWMSMapRequest(params, url, false, nil, false)
+	c := client.NewWMSClient(req, newCollectorContext(&s.Http))
+	return sources.NewWMSSource(c, image_opts, coverage,
+		res_range, transparent_color,
+		transparent_color_tolerance, supported_srs, s.SupportedFormats,
+		s.ForwardReqParams)
 }
 
 func newCollectorContext(httpOpts *HttpOpts) *client.CollectorContext {
@@ -252,7 +468,7 @@ func newCollectorContext(httpOpts *HttpOpts) *client.CollectorContext {
 	return client.NewCollectorContext(&conf)
 }
 
-func LoadTileSource(s *TileSource, grid *geo.TileGrid) *sources.TileSource {
+func LoadTileSource(s *TileSource, instance ProxyInstance) *sources.TileSource {
 	var opts tile.TileOptions
 	switch o := s.Options.(type) {
 	case *ImageOpts:
@@ -262,14 +478,17 @@ func LoadTileSource(s *TileSource, grid *geo.TileGrid) *sources.TileSource {
 	case *VectorOpts:
 		opts = NewVectorOptions(o)
 	}
+	grid := instance.GetGrid(s.Grid)
+	coverage := LoadCoverage(s.Coverage)
+	res_range := NewResolutionRange(&s.ScaleHints)
 
 	creater := cache.GetSourceCreater(opts)
 	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat)
-	c := client.NewTileClient(grid, tpl, newCollectorContext(&s.Http))
-	return sources.NewTileSource(c, opts, creater)
+	c := client.NewTileClient(grid.(*geo.TileGrid), tpl, newCollectorContext(&s.Http))
+	return sources.NewTileSource(grid.(*geo.TileGrid), c, coverage, opts, res_range, creater)
 }
 
-func LoadMapboxTileSource(s *MapboxTileSource, grid *geo.TileGrid) *sources.MapboxTileSource {
+func LoadMapboxTileSource(s *MapboxTileSource, instance ProxyInstance) *sources.MapboxTileSource {
 	var opts tile.TileOptions
 	switch o := s.Options.(type) {
 	case *ImageOpts:
@@ -279,13 +498,15 @@ func LoadMapboxTileSource(s *MapboxTileSource, grid *geo.TileGrid) *sources.Mapb
 	case *VectorOpts:
 		opts = NewVectorOptions(o)
 	}
+
+	grid := instance.GetGrid(s.Grid)
 
 	creater := cache.GetSourceCreater(opts)
 	c := client.NewMapboxTileClient(s.Url, s.UserName, s.AccessToken, s.TilesetID, newCollectorContext(&s.Http))
-	return sources.NewMapboxTileSource(grid, c, opts, creater)
+	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater)
 }
 
-func LoadLuokuangTileSource(s *LuokuangTileSource, grid *geo.TileGrid) *sources.LuoKuangTileSource {
+func LoadLuokuangTileSource(s *LuokuangTileSource, instance ProxyInstance) *sources.LuoKuangTileSource {
 	var opts tile.TileOptions
 	switch o := s.Options.(type) {
 	case *ImageOpts:
@@ -296,17 +517,62 @@ func LoadLuokuangTileSource(s *LuokuangTileSource, grid *geo.TileGrid) *sources.
 		opts = NewVectorOptions(o)
 	}
 
+	grid := instance.GetGrid(s.Grid)
+
 	creater := cache.GetSourceCreater(opts)
 	c := client.NewLuoKuangTileClient(s.Url, s.AccessToken, s.TilesetID, newCollectorContext(&s.Http))
-	return sources.NewLuoKuangTileSource(grid, c, opts, creater)
+	return sources.NewLuoKuangTileSource(grid.(*geo.TileGrid), c, opts, creater)
 }
 
-func LoadArcgisSource(s *ArcgisSource) *sources.ArcGISSource {
-	return nil
+func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, preferred geo.PreferredSrcSRS) *sources.ArcGISSource {
+	params := make(request.RequestParams)
+
+	request_format := s.Request.Format
+	if request_format == "" {
+		params["format"] = []string{request_format}
+	}
+
+	image_opts := NewImageOptions(&s.Image.ImageOpts)
+	res_range := NewResolutionRange(&s.ScaleHints)
+	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
+
+	url := s.Request.Url
+
+	coverage := LoadCoverage(s.Coverage)
+
+	req := request.NewArcGISRequest(params, url, false, nil)
+	c := client.NewArcGISClient(req, newCollectorContext(&s.Http))
+	return sources.NewArcGISSource(c, image_opts, coverage, res_range, supported_srs, s.SupportedFormats)
 }
 
-func LoadArcGISInfoSource(s *ArcgisSource) *sources.ArcGISInfoSource {
-	return nil
+func LoadArcGISInfoSource(s *ArcGISSource, preferred geo.PreferredSrcSRS) *sources.ArcGISInfoSource {
+	params := make(request.RequestParams)
+
+	request_format := s.Request.Format
+	if request_format == "" {
+		params["format"] = []string{request_format}
+	}
+
+	var tolerance int
+	if s.Opts.FeatureinfoTolerance != nil {
+		tolerance = *s.Opts.FeatureinfoTolerance
+	} else {
+		tolerance = 5
+	}
+
+	var return_geometries bool
+	if s.Opts.FeatureinfoReturnGeometries != nil {
+		return_geometries = *s.Opts.FeatureinfoReturnGeometries
+	} else {
+		return_geometries = false
+	}
+
+	url := s.Request.Url
+
+	fi_request := request.NewArcGISIdentifyRequest(params, url, false, nil)
+
+	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(&s.Http), return_geometries, tolerance)
+	return sources.NewArcGISInfoSource(c)
 }
 
 func LoadTileJSONSource(s *TileJSONSource) *sources.MapboxTileJSONSource {
@@ -346,17 +612,154 @@ func LoadGlyphsSource(s *GlyphsSource) *sources.MapboxGlyphsSource {
 }
 
 func LoadMapboxService(s *MapboxService, instance ProxyInstance) *service.MapboxService {
-	return nil
+	layers := make(map[string]service.Provider)
+	styles := make(map[string]*service.StyleProvider)
+	fonts := make(map[string]*service.GlyphProvider)
+
+	for _, tl := range s.Layers {
+		layers[tl.Name] = ConvertMapboxTileLayer(&tl, instance)
+	}
+
+	for _, st := range s.Styles {
+		styles[st.StyleID] = service.NewStyleProvider(LoadStyleSource(&st))
+	}
+
+	for _, ft := range s.Fonts {
+		fonts[ft.Font] = service.NewGlyphProvider(LoadGlyphsSource(&ft))
+	}
+
+	var max_tile_age *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		max_tile_age = &d
+	}
+
+	return service.NewMapboxService(layers, styles, fonts, s.Metadata, max_tile_age)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {
-	return nil
+	layers := make(map[string]service.Provider)
+
+	for _, tl := range s.Layers {
+		layers[tl.Name] = ConvertTileLayer(&tl, instance)
+	}
+
+	var max_tile_age *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		max_tile_age = &d
+	}
+	origin := s.Origin
+
+	return service.NewTileService(layers, s.Metadata, max_tile_age, false, origin)
 }
 
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
-	return nil
+	if s.KVP == nil || !*s.KVP {
+		return nil
+	}
+
+	layers := make(map[string]service.Provider)
+
+	for _, tl := range s.Layers {
+		layers[tl.Name] = ConvertTileLayer(&tl, instance)
+	}
+
+	var max_tile_age *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		max_tile_age = &d
+	}
+
+	info_formats := make(map[string]string)
+	for _, info := range s.FeatureinfoFormats {
+		info_formats[info.Suffix] = info.MimeType
+	}
+
+	return service.NewWMTSService(layers, s.Metadata, max_tile_age, info_formats)
 }
 
-func LoadWMSService(s *WMSService, instance ProxyInstance) *service.WMSService {
-	return nil
+func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMTSRestService {
+	if s.Restful == nil || !*s.Restful {
+		return nil
+	}
+
+	layers := make(map[string]service.Provider)
+
+	for _, tl := range s.Layers {
+		layers[tl.Name] = ConvertTileLayer(&tl, instance)
+	}
+
+	var max_tile_age *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		max_tile_age = &d
+	}
+
+	info_formats := make(map[string]string)
+	for _, info := range s.FeatureinfoFormats {
+		info_formats[info.Suffix] = info.MimeType
+	}
+
+	return service.NewWMTSRestService(layers, s.Metadata, max_tile_age, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
+}
+
+func loadXSLTransformer(featureinfoXslt map[string]string, basePath string) map[string]*resource.XSLTransformer {
+	fi_transformers := make(map[string]*resource.XSLTransformer)
+	for info_type, fi_xslt := range featureinfoXslt {
+		fi_transformers[info_type] = resource.NewXSLTransformer(path.Join(basePath, fi_xslt), nil)
+	}
+	return fi_transformers
+}
+
+func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
+	extents := make(map[string]*geo.MapExtent)
+	for _, srs := range bbox_srs {
+		srs, bbox := srs.Srs, srs.BBox
+		e := &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}, Srs: geo.NewSRSProj4(srs)}
+		extents[srs] = e
+	}
+	return extents
+}
+
+func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, preferred geo.PreferredSrcSRS) *service.WMSService {
+	md := s.Metadata
+
+	rootLayer := loadWMSRootLayer(s.Layer, instance)
+	supported_srs := newSupportedSrs(s.Srs, preferred)
+
+	imageFormats := make(map[string]*imagery.ImageOptions)
+	for _, format := range s.ImageFormats {
+		imageFormats[format] = &imagery.ImageOptions{Format: tile.TileFormat(format)}
+	}
+
+	info_formats := make(map[string]string)
+	for _, info := range s.FeatureinfoFormats {
+		info_formats[info.Suffix] = info.MimeType
+	}
+	strict := false
+	if s.Strict != nil {
+		strict = *s.Strict
+	}
+	maxOutputPixels := DefaultMaxOutputPixels
+	if s.MaxOutputPixels != nil {
+		maxOutputPixels = *s.MaxOutputPixels
+	}
+
+	var max_tile_age *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		max_tile_age = &d
+	}
+
+	ftransformers := loadXSLTransformer(s.FeatureinfoXslt, basePath)
+
+	extents := extentsForSrs(s.BBoxSrs)
+
+	return service.NewWMSService(rootLayer, md, supported_srs, imageFormats, info_formats, extents, maxOutputPixels, max_tile_age, strict, ftransformers)
 }

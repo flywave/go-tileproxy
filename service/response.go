@@ -189,3 +189,14 @@ func (r *Response) GetContentType() string {
 	}
 	return ""
 }
+
+func (r *Response) Write(w http.ResponseWriter) {
+	theader := w.Header()
+	for k, v := range r.headers {
+		theader[k] = v
+	}
+	w.WriteHeader(r.status)
+	if r.response != nil {
+		w.Write(r.response)
+	}
+}

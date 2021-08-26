@@ -222,6 +222,7 @@ type TileSource struct {
 	Options       interface{} `json:"options,omitempty"`
 	Grid          string      `json:"grid,omitempty"`
 	RequestFormat string      `json:"request_format,omitempty"`
+	Subdomains    []string    `json:"subdomains,omitempty"`
 	Origin        string      `json:"origin,omitempty"`
 	Http          HttpOpts    `json:"http,omitempty"`
 }

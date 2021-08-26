@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -80,10 +82,20 @@ type TileURLTemplate struct {
 	WithTMSPath         bool
 	WithArcgisCachePath bool
 	WithBBox            bool
+	HasSubdomains       bool
+	Subdomains          []string
+	r                   *rand.Rand
 }
 
-func NewURLTemplate(template string, format string) *TileURLTemplate {
-	rt := &TileURLTemplate{Template: template, Format: format}
+func NewURLTemplate(template string, format string, subdomains []string) *TileURLTemplate {
+	rt := &TileURLTemplate{Template: template, Format: format, Subdomains: subdomains}
+
+	if strings.Contains(template, "{{ .subdomains }}") && len(subdomains) > 0 {
+		rt.HasSubdomains = true
+		rt.r = rand.New(rand.NewSource(time.Now().UnixNano()))
+	} else {
+		rt.HasSubdomains = false
+	}
 
 	if strings.Contains(template, "{{ .quadkey }}") {
 		rt.WithQuadkey = true
@@ -140,6 +152,11 @@ func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat,
 	}
 	if t.WithBBox {
 		data["bbox"] = bbox(tile_coord, grid)
+	}
+
+	if t.HasSubdomains && t.Subdomains != nil {
+		i := t.r.Intn(len(t.Subdomains))
+		data["subdomains"] = t.Subdomains[i]
 	}
 
 	tmpl, err := template.New("test").Parse(t.Template)

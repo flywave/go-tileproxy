@@ -483,7 +483,7 @@ func LoadTileSource(s *TileSource, instance ProxyInstance) *sources.TileSource {
 	res_range := NewResolutionRange(&s.ScaleHints)
 
 	creater := cache.GetSourceCreater(opts)
-	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat)
+	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat, s.Subdomains)
 	c := client.NewTileClient(grid.(*geo.TileGrid), tpl, newCollectorContext(&s.Http))
 	return sources.NewTileSource(grid.(*geo.TileGrid), c, coverage, opts, res_range, creater)
 }

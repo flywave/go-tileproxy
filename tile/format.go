@@ -13,6 +13,7 @@ var (
 		"atm":     "image/lerc",
 		"mvt":     "application/vnd.mapbox-vector-tile",
 		"pbf":     "application/x-protobuf",
+		"omv":     "application/x-protobuf",
 		"json":    "application/json",
 		"geojson": "application/json",
 		"terrain": "application/vnd.quantized-mesh,application/octet-stream;q=0.9",

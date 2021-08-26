@@ -23,7 +23,7 @@ type GlobalsSetting struct {
 		MinimizeMetaRequests bool     `json:"minimize_meta_requests,omitempty"`
 	} `json:"cache,omitempty"`
 	Grid struct {
-		TileSize []int `json:"tile_size,omitempty"`
+		TileSize []uint32 `json:"tile_size,omitempty"`
 	} `json:"grid,omitempty"`
 	Srs   Srs   `json:"srs,omitempty"`
 	Geoid Geoid `json:"geoid,omitempty"`
@@ -103,7 +103,6 @@ type ImageSetting struct {
 	Paletted         *bool                `json:"paletted,omitempty"`
 	MaxStretchFactor *float64             `json:"max_stretch_factor,omitempty"`
 	MaxShrinkFactor  *float64             `json:"max_shrink_factor,omitempty"`
-	JpegQuality      *float64             `json:"jpeg_quality,omitempty"`
 	FontDir          *string              `json:"font_dir,omitempty"`
 	Formats          map[string]ImageOpts `json:"formats,omitempty"`
 }

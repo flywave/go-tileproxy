@@ -51,7 +51,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
-	tileClient := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
+	tileClient := client.NewMapboxTileClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
 	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: ccreater}
 

@@ -11,18 +11,19 @@ type MapboxClient struct {
 	UserName    string
 	AccessToken string
 	TilesetID   string
+	Version     string
 }
 
 type MapboxTileClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileClient(url string, userName string, token string, tilesetID string, ctx Context) *MapboxTileClient {
-	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token, TilesetID: tilesetID}}
+func NewMapboxTileClient(url string, version string, userName string, token string, tilesetID string, ctx Context) *MapboxTileClient {
+	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token, TilesetID: tilesetID}}
 }
 
 func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
-	url, err := q.BuildURL(c.BaseURL, c.AccessToken, c.TilesetID)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.AccessToken, c.TilesetID)
 	if err != nil {
 		return nil
 	}

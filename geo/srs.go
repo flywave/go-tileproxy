@@ -96,6 +96,14 @@ func (p *SRSProj4) TransformTo(o Proj, points []vec2d.T) []vec2d.T {
 		w84 := NewSRSProj4("EPSG:4326")
 		points = p.TransformTo(w84, points)
 		return prj.transformFromWGS84(points)
+	case *BD09MCProj:
+		w84 := NewSRSProj4("EPSG:4326")
+		points = p.TransformTo(w84, points)
+		return prj.transformFromWGS84(points)
+	case *GCJ02MCProj:
+		w84 := NewSRSProj4("EPSG:4326")
+		points = p.TransformTo(w84, points)
+		return prj.transformFromWGS84(points)
 	case *SRSProj4:
 		if p.Eq(prj) {
 			return points

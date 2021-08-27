@@ -13,15 +13,12 @@ import (
 type MapboxTileSource struct {
 	layer.MapLayer
 	Grid          *geo.TileGrid
-	Coverage      geo.Coverage
-	ResRange      *geo.ResolutionRange
 	Client        *client.MapboxTileClient
-	Options       tile.TileOptions
 	SourceCreater tile.SourceCreater
 }
 
 func NewMapboxTileSource(grid *geo.TileGrid, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater) *MapboxTileSource {
-	return &MapboxTileSource{Grid: grid, Client: c, Options: opts, SourceCreater: creater}
+	return &MapboxTileSource{Grid: grid, Client: c, MapLayer: layer.MapLayer{Options: opts}, SourceCreater: creater}
 }
 
 func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {

@@ -204,7 +204,7 @@ type WMSSource struct {
 	ForwardReqParams map[string]string `json:"forward_req_params,omitempty"`
 	SupportedFormats []string          `json:"supported_formats,omitempty"`
 	SupportedSrs     []string          `json:"supported_srs,omitempty"`
-	Http             HttpOpts          `json:"http,omitempty"`
+	Http             *HttpOpts         `json:"http,omitempty"`
 	Request          struct {
 		Url         string   `json:"url,omitempty"`
 		Layers      []string `json:"layers"`
@@ -223,33 +223,30 @@ type TileSource struct {
 	RequestFormat string      `json:"request_format,omitempty"`
 	Subdomains    []string    `json:"subdomains,omitempty"`
 	Origin        string      `json:"origin,omitempty"`
-	Http          HttpOpts    `json:"http,omitempty"`
+	Http          *HttpOpts   `json:"http,omitempty"`
 }
 
 type MapboxTileSource struct {
 	SourceCommons
-	Url           string      `json:"url,omitempty"`
-	TilesetID     string      `json:"tileset_id,omitempty"`
-	UserName      string      `json:"user_name,omitempty"`
-	AccessToken   string      `json:"access_token,omitempty"`
-	Options       interface{} `json:"options,omitempty"`
-	Grid          string      `json:"grid,omitempty"`
-	RequestFormat string      `json:"request_format,omitempty"`
-	Origin        string      `json:"origin,omitempty"`
-	Http          HttpOpts    `json:"http,omitempty"`
+	Url         string      `json:"url,omitempty"`
+	Version     string      `json:"version,omitempty"`
+	TilesetID   string      `json:"tileset_id,omitempty"`
+	UserName    string      `json:"user_name,omitempty"`
+	AccessToken string      `json:"access_token,omitempty"`
+	Options     interface{} `json:"options,omitempty"`
+	Grid        string      `json:"grid,omitempty"`
+	Http        *HttpOpts   `json:"http,omitempty"`
 }
 
 type LuokuangTileSource struct {
 	SourceCommons
-	Url           string      `json:"url,omitempty"`
-	TilesetID     string      `json:"tileset_id,omitempty"`
-	UserName      string      `json:"user_name,omitempty"`
-	AccessToken   string      `json:"access_token,omitempty"`
-	Options       interface{} `json:"options,omitempty"`
-	Grid          string      `json:"grid,omitempty"`
-	RequestFormat string      `json:"request_format,omitempty"`
-	Origin        string      `json:"origin,omitempty"`
-	Http          HttpOpts    `json:"http,omitempty"`
+	Url         string      `json:"url,omitempty"`
+	TilesetID   string      `json:"tileset_id,omitempty"`
+	UserName    string      `json:"user_name,omitempty"`
+	AccessToken string      `json:"access_token,omitempty"`
+	Options     interface{} `json:"options,omitempty"`
+	Grid        string      `json:"grid,omitempty"`
+	Http        *HttpOpts   `json:"http,omitempty"`
 }
 
 type ArcGISSource struct {
@@ -273,9 +270,9 @@ type ArcGISSource struct {
 		FeatureinfoTolerance        *int  `json:"featureinfo_tolerance,omitempty"`
 		FeatureinfoReturnGeometries *bool `json:"featureinfo_return_geometries,omitempty"`
 	} `json:"opts"`
-	SupportedFormats []string `json:"supported_formats,omitempty"`
-	SupportedSrs     []string `json:"supported_srs,omitempty"`
-	Http             HttpOpts `json:"http,omitempty"`
+	SupportedFormats []string  `json:"supported_formats,omitempty"`
+	SupportedSrs     []string  `json:"supported_srs,omitempty"`
+	Http             *HttpOpts `json:"http,omitempty"`
 }
 
 type WaterMark struct {
@@ -425,7 +422,7 @@ type StyleSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	StyleID     string      `json:"style_id,omitempty"`
 	Store       interface{} `json:"store"`
-	Http        HttpOpts    `json:"http,omitempty"`
+	Http        *HttpOpts   `json:"http,omitempty"`
 }
 
 type GlyphsSource struct {
@@ -434,7 +431,7 @@ type GlyphsSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	Font        string      `json:"font,omitempty"`
 	Store       interface{} `json:"store"`
-	Http        HttpOpts    `json:"http,omitempty"`
+	Http        *HttpOpts   `json:"http,omitempty"`
 }
 
 type TileJSONSource struct {
@@ -443,5 +440,5 @@ type TileJSONSource struct {
 	AccessToken string      `json:"access_token,omitempty"`
 	TilesetID   string      `json:"tileset_id,omitempty"`
 	Store       interface{} `json:"store"`
-	Http        HttpOpts    `json:"http,omitempty"`
+	Http        *HttpOpts   `json:"http,omitempty"`
 }

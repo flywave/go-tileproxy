@@ -40,7 +40,7 @@ func TestMapboxTileSource(t *testing.T) {
 
 	creater := &dummyCreater{}
 
-	client := client.NewMapboxTileClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
+	client := client.NewMapboxTileClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
 	source := &MapboxTileSource{Grid: grid, Client: client, SourceCreater: creater}
 

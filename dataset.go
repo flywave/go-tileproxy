@@ -63,23 +63,23 @@ func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, gl
 		switch source := src.(type) {
 		case *setting.WMSSource:
 			if source.Opts.FeatureInfo != nil && *source.Opts.FeatureInfo {
-				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, preferred)
+				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, globals, preferred)
 			} else if source.Opts.LegendGraphic != nil && *source.Opts.LegendGraphic {
-				s.LegendSources[k] = setting.LoadWMSLegendsSource(source)
+				s.LegendSources[k] = setting.LoadWMSLegendsSource(source, globals)
 			} else {
-				s.Sources[k] = setting.LoadWMSMapSource(source, s, preferred)
+				s.Sources[k] = setting.LoadWMSMapSource(source, s, globals, preferred)
 			}
 		case *setting.TileSource:
-			s.Sources[k] = setting.LoadTileSource(source, s)
+			s.Sources[k] = setting.LoadTileSource(source, globals, s)
 		case *setting.MapboxTileSource:
-			s.Sources[k] = setting.LoadMapboxTileSource(source, s)
+			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s)
 		case *setting.LuokuangTileSource:
-			s.Sources[k] = setting.LoadLuokuangTileSource(source, s)
+			s.Sources[k] = setting.LoadLuokuangTileSource(source, globals, s)
 		case *setting.ArcGISSource:
 			if source.Opts.Featureinfo != nil && *source.Opts.Featureinfo {
-				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, preferred)
+				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals, preferred)
 			} else {
-				s.Sources[k] = setting.LoadArcGISSource(source, s, preferred)
+				s.Sources[k] = setting.LoadArcGISSource(source, s, globals, preferred)
 			}
 		}
 	}
@@ -101,7 +101,7 @@ func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, gl
 	case *setting.WMSService:
 		s.Service = setting.LoadWMSService(srv, s, basePath, preferred)
 	case *setting.MapboxService:
-		s.Service = setting.LoadMapboxService(srv, s)
+		s.Service = setting.LoadMapboxService(srv, globals, s)
 	case *setting.WMTSService:
 		if srv.KVP != nil && *srv.KVP {
 			s.Service = setting.LoadWMTSService(srv, s)

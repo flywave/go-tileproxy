@@ -62,6 +62,19 @@ const (
 	ORIGIN_SW OriginType = 3
 )
 
+func OriginFromString(o string) OriginType {
+	if o == "ul" {
+		return ORIGIN_UL
+	} else if o == "ll" {
+		return ORIGIN_LL
+	} else if o == "nw" {
+		return ORIGIN_NW
+	} else if o == "sw" {
+		return ORIGIN_SW
+	}
+	return ORIGIN_UL
+}
+
 func OriginToString(ot OriginType) string {
 	if ot == ORIGIN_UL {
 		return "ul"

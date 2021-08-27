@@ -203,8 +203,8 @@ func (q *TileQuery) EQ(o *TileQuery) bool {
 	return true
 }
 
-func (req *TileQuery) BuildURL(URL string, accessToken string, mapid string) (string, error) {
-	urls := fmt.Sprintf("%s/v4/%s", URL, url.QueryEscape(mapid))
+func (req *TileQuery) BuildURL(URL string, version string, accessToken string, mapid string) (string, error) {
+	urls := fmt.Sprintf("%s/%s/%s", URL, version, url.QueryEscape(mapid))
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {

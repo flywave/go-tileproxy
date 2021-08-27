@@ -10,8 +10,8 @@ import (
 )
 
 func TestSrs4326(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
-	//dst := NewSRSProj4("EPSG:900913")
+	srs := newSRSProj4("EPSG:4326")
+	//dst := newSRSProj4("EPSG:900913")
 
 	if !srs.IsLatLong() {
 		t.FailNow()
@@ -42,7 +42,7 @@ func TestSrs4326(t *testing.T) {
 }
 
 func TestSrs(t *testing.T) {
-	srs := NewSRSProj4("EPSG:900913")
+	srs := newSRSProj4("EPSG:900913")
 
 	if srs.IsLatLong() {
 		t.FailNow()
@@ -58,7 +58,7 @@ func TestSrs(t *testing.T) {
 }
 
 func TestSrs26592(t *testing.T) {
-	srs := NewSRSProj4("EPSG:26592")
+	srs := newSRSProj4("EPSG:26592")
 
 	if srs.IsLatLong() {
 		t.FailNow()
@@ -74,8 +74,8 @@ func TestSrs26592(t *testing.T) {
 }
 
 func TestSrsTranRect(t *testing.T) {
-	src := NewSRSProj4("EPSG:4326")
-	dest := NewSRSProj4("EPSG:3857")
+	src := newSRSProj4("EPSG:4326")
+	dest := newSRSProj4("EPSG:3857")
 
 	rect := src.TransformRectTo(dest, vec2d.Rect{Min: vec2d.T{-180.0, -90.0}, Max: vec2d.T{180.0, 90.0}}, 16)
 	t.Log(fmt.Sprintf("%v--%v--%v--%v/n", rect.Min[0], rect.Min[1], rect.Max[0], rect.Max[1]))

@@ -7,8 +7,8 @@ import (
 )
 
 func TestVectorTransformer(t *testing.T) {
-	srs4326 := geo.NewSRSProj4("EPSG:4326")
-	pgcj02 := geo.NewGCJ02Proj(true)
+	srs4326 := geo.NewProj(4326)
+	pgcj02 := geo.NewProj("EPSG:GCJ02")
 
 	tran := NewVectorTransformer(pgcj02, srs4326)
 

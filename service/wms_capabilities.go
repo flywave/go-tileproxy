@@ -40,13 +40,13 @@ func (c *WMSCapabilities) layerSrsBBox(layer WMSLayer, epsgAxisOrder bool) map[s
 		}
 		var bbox vec2d.Rect
 		if extent.IsDefault() {
-			bbox = layer.GetExtent().BBoxFor(geo.NewSRSProj4(srs))
+			bbox = layer.GetExtent().BBoxFor(geo.NewProj(srs))
 		} else if layer.GetExtent().IsDefault() {
-			bbox = extent.BBoxFor(geo.NewSRSProj4(srs))
+			bbox = extent.BBoxFor(geo.NewProj(srs))
 		} else {
-			a := extent.Transform(geo.NewSRSProj4("EPSG:4326"))
-			b := layer.GetExtent().Transform(geo.NewSRSProj4("EPSG:4326"))
-			bbox = a.Intersection(b).BBoxFor(geo.NewSRSProj4(srs))
+			a := extent.Transform(geo.NewProj(4326))
+			b := layer.GetExtent().Transform(geo.NewProj(4326))
+			bbox = a.Intersection(b).BBoxFor(geo.NewProj(srs))
 		}
 
 		if epsgAxisOrder {

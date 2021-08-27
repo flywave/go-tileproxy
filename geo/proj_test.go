@@ -43,8 +43,8 @@ func TestGCJ02(t *testing.T) {
 }
 
 func TestGCJ02Proj(t *testing.T) {
-	srs4326 := NewSRSProj4("EPSG:4326")
-	pgcj02 := NewGCJ02Proj(true)
+	srs4326 := newSRSProj4("EPSG:4326")
+	pgcj02 := newGCJ02Proj(true)
 	for i, test := range tests {
 		pts := srs4326.TransformTo(pgcj02, []vec2d.T{{test.wgsLng, test.wgsLat}})
 
@@ -55,9 +55,9 @@ func TestGCJ02Proj(t *testing.T) {
 }
 
 func TestGCJ02To900913Proj(t *testing.T) {
-	srs900913 := NewSRSProj4("EPSG:900913")
-	srs4326 := NewSRSProj4("EPSG:4326")
-	pgcj02 := NewGCJ02Proj(true)
+	srs900913 := newSRSProj4("EPSG:900913")
+	srs4326 := NewProj(4326)
+	pgcj02 := newGCJ02Proj(true)
 	for i, test := range tests {
 		p900913 := srs4326.TransformTo(srs900913, []vec2d.T{{test.wgsLng, test.wgsLat}})
 		pts := srs900913.TransformTo(pgcj02, p900913)

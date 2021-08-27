@@ -10,8 +10,8 @@ import (
 
 func TestGeomCoverage(t *testing.T) {
 	geom := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
-	srs := NewSRSProj4("EPSG:4326")
-	srs900913 := NewSRSProj4("EPSG:900913")
+	srs := newSRSProj4("EPSG:4326")
+	srs900913 := newSRSProj4("EPSG:900913")
 
 	coverage := NewGeosCoverage(geom, srs, false)
 
@@ -61,8 +61,8 @@ func TestGeomCoverage(t *testing.T) {
 }
 
 func TestGeomCoverageEq(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
-	srs2 := NewSRSProj4("EPSG:31467")
+	srs := newSRSProj4("EPSG:4326")
+	srs2 := newSRSProj4("EPSG:31467")
 
 	g1 := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
 	g2 := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
@@ -95,7 +95,7 @@ func TestGeomCoverageEq(t *testing.T) {
 }
 
 func TestBBOXCoverage(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 	coverage := NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{-10, 10}, Max: vec2d.T{80, 80}}, srs, false)
 
 	if !BBoxEquals(coverage.BBox, vec2d.Rect{Min: vec2d.T{-10, 10}, Max: vec2d.T{80, 80}}, 0.0001, 0.0001) {
@@ -104,8 +104,8 @@ func TestBBOXCoverage(t *testing.T) {
 }
 
 func TestUnionCoverage(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
-	srs2 := NewSRSProj4("EPSG:3857")
+	srs := newSRSProj4("EPSG:4326")
+	srs2 := newSRSProj4("EPSG:3857")
 	coverage1 := NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, srs, false)
 
 	g2 := geos.CreateFromWKT("POLYGON((10 0, 20 0, 20 10, 10 10, 10 0))")
@@ -126,8 +126,8 @@ func TestUnionCoverage(t *testing.T) {
 }
 
 func TestDiffCoverage(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
-	srs2 := NewSRSProj4("EPSG:3857")
+	srs := newSRSProj4("EPSG:4326")
+	srs2 := newSRSProj4("EPSG:3857")
 	g1 := geos.CreateFromWKT("POLYGON((-10 0, 20 0, 20 10, -10 10, -10 0))")
 	coverage1 := NewGeosCoverage(g1, srs, false)
 
@@ -144,7 +144,7 @@ func TestDiffCoverage(t *testing.T) {
 }
 
 func TestIntersectionCoverage(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 	g1 := geos.CreateFromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")
 	coverage1 := NewGeosCoverage(g1, srs, false)
 
@@ -158,7 +158,7 @@ func TestIntersectionCoverage(t *testing.T) {
 }
 
 func TestMultiCoverage(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 	g1 := geos.CreateFromWKT("POLYGON((10 10, 10 50, -10 60, 10 80, 80 80, 80 10, 10 10))")
 
 	coverage1 := NewGeosCoverage(g1, srs, false)

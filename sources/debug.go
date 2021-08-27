@@ -47,7 +47,7 @@ func NewDummySource(cov geo.Coverage) *DummySource {
 	ds := &DummySource{Coverage: cov, SupportMetaTiles: true}
 	ds.Extent = &geo.MapExtent{
 		BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}},
-		Srs:  geo.NewSRSProj4("EPSG:4326"),
+		Srs:  geo.NewProj(4326),
 	}
 	if cov != nil {
 		ds.Extent = &geo.MapExtent{BBox: cov.GetBBox(), Srs: cov.GetSrs()}

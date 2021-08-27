@@ -75,7 +75,7 @@ func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
 	tiledata := NewTileData([2]uint32{uint32(col - off), uint32(row - off)}, d.Mode)
 
 	tiledata.Box.Min[0], tiledata.Box.Min[1], tiledata.Box.Max[0], tiledata.Box.Max[1] = raster.West(), raster.South(), raster.East(), raster.North()
-	tiledata.Boxsrs = geo.NewSRSProj4(fmt.Sprintf("EPSG:%d", raster.GetRasterConfig().EPSGCode))
+	tiledata.Boxsrs = geo.NewProj(fmt.Sprintf("EPSG:%d", raster.GetRasterConfig().EPSGCode))
 
 	if d.Mode == BORDER_UNILATERAL {
 		for x := 0; x < col; x++ {

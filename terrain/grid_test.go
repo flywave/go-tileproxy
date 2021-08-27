@@ -7,8 +7,8 @@ import (
 )
 
 func TestGrid(t *testing.T) {
-	srs900913 := geo.NewSRSProj4("EPSG:900913")
-	srs4326 := geo.NewSRSProj4("EPSG:4326")
+	srs900913 := geo.NewProj(900913)
+	srs4326 := geo.NewProj(4326)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
@@ -25,7 +25,7 @@ func TestGrid(t *testing.T) {
 
 	Grid := CaclulateGrid(512, 512, BORDER_BILATERAL, georef)
 
-	if Grid != nil {
+	if Grid == nil {
 		t.FailNow()
 	}
 }

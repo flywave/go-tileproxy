@@ -30,7 +30,7 @@ func (s *mockSource) GetMap(query *MapQuery) (tile.Source, error) {
 }
 
 var (
-	GLOBAL_GEOGRAPHIC_EXTENT = &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Srs: geo.NewSRSProj4("EPSG:4326")}
+	GLOBAL_GEOGRAPHIC_EXTENT = &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Srs: geo.NewProj(4326)}
 )
 
 func TestResolutionConditional(t *testing.T) {
@@ -40,18 +40,18 @@ func TestResolutionConditional(t *testing.T) {
 		low_requested bool
 	}
 	testQuery := []QueryInfo{
-		{"low", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10000, 10000}}, Size: [2]uint32{100, 100}, Srs: geo.NewSRSProj4("EPSG:3857")}, true},
-		{"high", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100, 100}}, Size: [2]uint32{100, 100}, Srs: geo.NewSRSProj4("EPSG:3857")}, false},
-		{"match", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, Size: [2]uint32{100, 100}, Srs: geo.NewSRSProj4("EPSG:3857")}, false},
-		{"low_transform", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{0.1, 0.1}}, Size: [2]uint32{100, 100}, Srs: geo.NewSRSProj4("EPSG:4326")}, true},
-		{"high_transform", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{0.005, 0.005}}, Size: [2]uint32{100, 100}, Srs: geo.NewSRSProj4("EPSG:4326")}, false},
+		{"low", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10000, 10000}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(3857)}, true},
+		{"high", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100, 100}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(3857)}, false},
+		{"match", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(3857)}, false},
+		{"low_transform", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{0.1, 0.1}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(4326)}, true},
+		{"high_transform", &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{0.005, 0.005}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(4326)}, false},
 	}
 
 	for i := range testQuery {
 		_, map_query, low_requested := testQuery[i].key, testQuery[i].query, testQuery[i].low_requested
 		low := &mockSource{}
 		high := &mockSource{}
-		layer := NewResolutionConditional(low, high, 10, geo.NewSRSProj4("EPSG:3857"), GLOBAL_GEOGRAPHIC_EXTENT)
+		layer := NewResolutionConditional(low, high, 10, geo.NewProj(3857), GLOBAL_GEOGRAPHIC_EXTENT)
 
 		layer.GetMap(map_query)
 		if low.requested != low_requested {
@@ -68,32 +68,32 @@ func TestSRSConditional(t *testing.T) {
 	l3857 := &mockSource{}
 	l25832 := &mockSource{}
 	preferred := geo.PreferredSrcSRS{}
-	preferred.Add("EPSG:31467", []geo.Proj{geo.NewSRSProj4("EPSG:25832"), geo.NewSRSProj4("EPSG:3857")})
+	preferred.Add("EPSG:31467", []geo.Proj{geo.NewProj("EPSG:25832"), geo.NewProj(3857)})
 	layer := NewSRSConditional(map[string]Layer{
 		"EPSG:4326":  l4326,
 		"EPSG:3857":  l3857,
 		"EPSG:25832": l25832,
 	}, GLOBAL_GEOGRAPHIC_EXTENT, preferred)
 
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:4326")) != l4326 {
+	if layer.selectLayer(geo.NewProj(4326)) != l4326 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:3857")) != l3857 {
+	if layer.selectLayer(geo.NewProj(3857)) != l3857 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:25832")) != l25832 {
+	if layer.selectLayer(geo.NewProj("EPSG:25832")) != l25832 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:31466")) != l3857 {
+	if layer.selectLayer(geo.NewProj("EPSG:31466")) != l3857 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:32633")) != l3857 {
+	if layer.selectLayer(geo.NewProj("EPSG:32633")) != l3857 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:4258")) != l4326 {
+	if layer.selectLayer(geo.NewProj("EPSG:4258")) != l4326 {
 		t.FailNow()
 	}
-	if layer.selectLayer(geo.NewSRSProj4("EPSG:31467")) != l25832 {
+	if layer.selectLayer(geo.NewProj(31467)) != l25832 {
 		t.FailNow()
 	}
 }
@@ -124,7 +124,7 @@ func TestDirectMapLayer(t *testing.T) {
 	source := &mockRequestSource{}
 	cl := NewDirectMapLayer(source, GLOBAL_GEOGRAPHIC_EXTENT)
 
-	query := &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewSRSProj4("EPSG:4326"), Format: tile.TileFormat("png")}
+	query := &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}
 
 	resp, err := cl.GetMap(query)
 

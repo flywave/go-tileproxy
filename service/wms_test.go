@@ -84,11 +84,11 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 
 	rootLayer := NewWMSGroupLayer("test", "hhh", testLayer, nil, layerMetadata)
 
-	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewSRSProj4("EPSG:4326")}}
+	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(4326)}}
 
 	srsExtents := make(map[string]*geo.MapExtent)
 
-	srsExtents["EPSG:4326"] = &geo.MapExtent{Srs: geo.NewSRSProj4("EPSG:4326"), BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}}
+	srsExtents["EPSG:4326"] = &geo.MapExtent{Srs: geo.NewProj(4326), BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}}
 
 	capabilities := newCapabilities(service, rootLayer, []string{"image/png"}, []string{"image/png"}, srs, srsExtents, 2)
 

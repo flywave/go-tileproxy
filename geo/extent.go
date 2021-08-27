@@ -43,7 +43,7 @@ func (m *MapExtent) IsDefault() bool {
 
 func (m *MapExtent) GetLLBBox() vec2d.Rect {
 	if m.llbbox == nil {
-		lb := m.Srs.TransformRectTo(NewSRSProj4("EPSG:4326"), m.BBox, 16)
+		lb := m.Srs.TransformRectTo(newSRSProj4("EPSG:4326"), m.BBox, 16)
 		m.llbbox = &lb
 	}
 	return *m.llbbox
@@ -56,7 +56,7 @@ func (m *MapExtent) Add(o *MapExtent) *MapExtent {
 	if m.IsDefault() {
 		return o
 	}
-	return &MapExtent{BBox: MergeBBox(m.GetLLBBox(), o.GetLLBBox()), Srs: NewSRSProj4("EPSG:4326")}
+	return &MapExtent{BBox: MergeBBox(m.GetLLBBox(), o.GetLLBBox()), Srs: newSRSProj4("EPSG:4326")}
 }
 
 func (m *MapExtent) Contains(other *MapExtent) bool {
@@ -97,5 +97,5 @@ func (m *DefaultMapExtent) IsDefault() bool {
 }
 
 func MapExtentFromDefault() *MapExtent {
-	return &MapExtent{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Srs: NewSRSProj4("EPSG:4326")}
+	return &MapExtent{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Srs: newSRSProj4("EPSG:4326")}
 }

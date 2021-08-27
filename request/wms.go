@@ -21,7 +21,7 @@ import (
 func SwitchBBoxEpsgAxisOrder(rect vec2d.Rect, srs string) vec2d.Rect {
 	bbox := *rect.Array()
 	if bbox != [4]float64{0, 0, 0, 0} && srs != "" {
-		prj := geo.NewSRSProj4(srs)
+		prj := geo.NewProj(srs)
 		if prj.IsAxisOrderNE() {
 			return vec2d.Rect{Min: vec2d.T{bbox[1], bbox[0]}, Max: vec2d.T{bbox[3], bbox[2]}}
 		}

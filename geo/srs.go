@@ -33,6 +33,7 @@ var (
 		"EPSG:4326": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +over",
 		"CRS:84":    "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +over",
 	}
+	_private_4326 Proj = nil
 )
 
 func getCurrentDir() string {
@@ -54,9 +55,9 @@ type SRSProj4 struct {
 	proj    *proj.Proj
 }
 
-func GetEpsgNum(SrsCode string) int {
-	if strings.ContainsRune(SrsCode, ':') {
-		epscode, err := strconv.Atoi(strings.Split(SrsCode, ":")[1])
+func GetEpsgNum(srsCode string) int {
+	if strings.ContainsRune(srsCode, ':') {
+		epscode, err := strconv.Atoi(strings.Split(srsCode, ":")[1])
 		if err == nil {
 			return epscode
 		}
@@ -64,16 +65,16 @@ func GetEpsgNum(SrsCode string) int {
 	return -1
 }
 
-func NewSRSProj4(SrsCode string) *SRSProj4 {
-	p := &SRSProj4{SrsCode: SrsCode}
+func newSRSProj4(srsCode string) *SRSProj4 {
+	p := &SRSProj4{SrsCode: srsCode}
 	var err error
-	if srs, ok := ProjInit[SrsCode]; ok {
+	if srs, ok := ProjInit[srsCode]; ok {
 		p.proj, err = proj.NewProj(string(srs))
 		if err != nil {
 			return nil
 		}
 	} else {
-		epsg_num := GetEpsgNum(SrsCode)
+		epsg_num := GetEpsgNum(srsCode)
 		if epsg_num < 0 {
 			return nil
 		}
@@ -87,22 +88,22 @@ func NewSRSProj4(SrsCode string) *SRSProj4 {
 }
 
 func (p *SRSProj4) TransformTo(o Proj, points []vec2d.T) []vec2d.T {
+	if _private_4326 == nil {
+		_private_4326 = newSRSProj4("EPSG:4326")
+	}
+
 	switch prj := o.(type) {
 	case *GCJ02Proj:
-		w84 := NewSRSProj4("EPSG:4326")
-		points = p.TransformTo(w84, points)
+		points = p.TransformTo(_private_4326, points)
 		return prj.transformFromWGS84(points)
 	case *BD09Proj:
-		w84 := NewSRSProj4("EPSG:4326")
-		points = p.TransformTo(w84, points)
+		points = p.TransformTo(_private_4326, points)
 		return prj.transformFromWGS84(points)
 	case *BD09MCProj:
-		w84 := NewSRSProj4("EPSG:4326")
-		points = p.TransformTo(w84, points)
+		points = p.TransformTo(_private_4326, points)
 		return prj.transformFromWGS84(points)
 	case *GCJ02MCProj:
-		w84 := NewSRSProj4("EPSG:4326")
-		points = p.TransformTo(w84, points)
+		points = p.TransformTo(_private_4326, points)
 		return prj.transformFromWGS84(points)
 	case *SRSProj4:
 		if p.Eq(prj) {

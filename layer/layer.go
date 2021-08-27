@@ -178,7 +178,7 @@ func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, preferred_srs 
 
 	supported_srs := []geo.Proj{}
 	for srs, layer := range lmap {
-		supported_srs = append(supported_srs, geo.NewSRSProj4(srs))
+		supported_srs = append(supported_srs, geo.NewProj(srs))
 		ret.srsMap[srs] = layer
 	}
 	ret.supportedSRS = &geo.SupportedSRS{Srs: supported_srs, Preferred: preferred_srs}

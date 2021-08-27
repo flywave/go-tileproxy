@@ -51,20 +51,20 @@ func LoadCoverage(cov *Coverage) geo.Coverage {
 		return geo.DiffCoverage(parts, clip)
 	} else if cov.Polygons != "" {
 		geom := geos.CreateFromWKT(cov.Polygons)
-		return geo.NewGeosCoverage(geom, geo.NewSRSProj4(cov.PolygonsSrs), clip)
+		return geo.NewGeosCoverage(geom, geo.NewProj(cov.PolygonsSrs), clip)
 	} else if cov.Geometry != "" {
 		geomdata, _ := geom.UnmarshalGeometry([]byte(cov.Geometry))
 		geom := general.GeometryDataAsGeometry(geomdata)
-		return geo.NewGeomCoverage(geom, geo.NewSRSProj4(cov.PolygonsSrs), clip)
+		return geo.NewGeomCoverage(geom, geo.NewProj(cov.PolygonsSrs), clip)
 	} else if cov.BBox != nil {
-		return geo.NewBBoxCoverage(vec2.Rect{Min: vec2.T{cov.BBox[0], cov.BBox[1]}, Max: vec2.T{cov.BBox[2], cov.BBox[3]}}, geo.NewSRSProj4(cov.BBoxSrs), clip)
+		return geo.NewBBoxCoverage(vec2.Rect{Min: vec2.T{cov.BBox[0], cov.BBox[1]}, Max: vec2.T{cov.BBox[2], cov.BBox[3]}}, geo.NewProj(cov.BBoxSrs), clip)
 	} else if cov.ExpireTiles != nil {
 		geoms := loadExpireTiles(cov.ExpireTiles, nil)
 		multipolygon := geos.CreateEmptyPolygon()
 		for _, g := range geoms {
 			multipolygon = multipolygon.Union(g)
 		}
-		return geo.NewGeosCoverage(multipolygon, geo.NewSRSProj4("EPSG:3857"), clip)
+		return geo.NewGeosCoverage(multipolygon, geo.NewProj(3857), clip)
 	}
 	return nil
 }

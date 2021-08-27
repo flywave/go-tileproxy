@@ -43,7 +43,7 @@ func TestArcGISSource(t *testing.T) {
 
 	box := grid.TileBBox([3]int{0, 0, 1}, false)
 
-	query := &layer.MapQuery{BBox: box, Size: [2]uint32{256, 256}, Srs: geo.NewSRSProj4("EPSG:4326"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: box, Size: [2]uint32{256, 256}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}
 
 	resp, err := source.GetMap(query)
 

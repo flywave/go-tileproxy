@@ -69,7 +69,7 @@ func TestCacheMapLayer(t *testing.T) {
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
 
-	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewSRSProj4("EPSG:4326"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}
 
 	resp, err := cachelayer.GetMap(query)
 
@@ -113,7 +113,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
 
-	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-20037508.34, -20037508.34}, Max: vec2d.T{20037508.34, 20037508.34}}, Size: [2]uint32{500, 500}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-20037508.34, -20037508.34}, Max: vec2d.T{20037508.34, 20037508.34}}, Size: [2]uint32{500, 500}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
 	resp, err := cachelayer.GetMap(query)
 
@@ -156,9 +156,9 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
-	cov := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{90, 45}}, geo.NewSRSProj4("EPSG:4326"), false)
+	cov := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{90, 45}}, geo.NewProj(4326), false)
 	cachelayer.Extent = cov.GetExtent()
-	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewSRSProj4("EPSG:4326"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}
 
 	resp, err := cachelayer.GetMap(query)
 

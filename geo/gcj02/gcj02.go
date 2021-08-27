@@ -183,11 +183,11 @@ func WGS84toEPSG3857(lat, lng float64) (mercartorY, mercartorX float64) {
 }
 
 func GCJ02MCtoGCJ02(mercartorY, mercartorX float64) (wgsLat float64, wgsLng float64) {
-	return BDMCtoBD09(mercartorY, mercartorX)
+	return convertMC2LL(mercartorY, mercartorX)
 }
 
 func GCJ02toGCJ02MC(lat, lng float64) (mercartorY, mercartorX float64) {
-	return BD09toBDMC(lat, lng)
+	return convertLL2MC(lat, lng)
 }
 
 func GCJ02MCtoWGS84(mercartorY, mercartorX float64) (wgsLat float64, wgsLng float64) {
@@ -250,7 +250,15 @@ var ll2mc = [][]float64{
 	{-0.0003218135878613132, 111320.7020701615, 0.00369383431289, 823725.6402795718, 0.46104986909093, 2351.343141331292, 1.58060784298199, 8.77738589078284, 0.37238884252424, 7.45},
 }
 
-func BDMCtoBD09(mercartorY, mercartorX float64) (gLat float64, gLng float64) {
+func BDMCtoBD09(mercartorY, mercartorX float64) (wgsLat float64, wgsLng float64) {
+	return convertMC2LL(mercartorY, mercartorX)
+}
+
+func BD09toBDMC(lat, lng float64) (mercartorY, mercartorX float64) {
+	return convertLL2MC(lat, lng)
+}
+
+func convertMC2LL(mercartorY, mercartorX float64) (gLat float64, gLng float64) {
 	mercartorX, mercartorY = math.Abs(mercartorX), math.Abs(mercartorY)
 	var f []float64
 	for i := 0; i < len(mcband); i++ {
@@ -290,7 +298,7 @@ func convert(lat, lng float64, f []float64) (tlat float64, tlng float64) {
 	return
 }
 
-func BD09toBDMC(lat, lng float64) (mercartorY float64, mercartorX float64) {
+func convertLL2MC(lat, lng float64) (mercartorY float64, mercartorX float64) {
 	lng = getLoop(lng, -180, 180)
 	lat = getRange(lat, -74, 74)
 	var f []float64

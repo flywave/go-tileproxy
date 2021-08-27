@@ -21,9 +21,9 @@ func TestImageTransform(t *testing.T) {
 	img_opts.Transparent = geo.NewBool(false)
 
 	src_img := CreateImageSourceFromImage(img, &img_opts)
-	src_srs := geo.NewSRSProj4("EPSG:31467")
+	src_srs := geo.NewProj(31467)
 	dst_size := [2]uint32{100, 150}
-	dst_srs := geo.NewSRSProj4("EPSG:4326")
+	dst_srs := geo.NewProj(4326)
 	dst_bbox := vec2d.Rect{Min: vec2d.T{0.2, 45.1}, Max: vec2d.T{8.3, 53.2}}
 	src_bbox := dst_srs.TransformRectTo(src_srs, dst_bbox, 16)
 
@@ -49,9 +49,9 @@ func TestImageTransform(t *testing.T) {
 }
 
 func TestMergeTransform(t *testing.T) {
-	pgcj02 := geo.NewGCJ02Proj(true)
-	srs900913 := geo.NewSRSProj4("EPSG:900913")
-	srs4326 := geo.NewSRSProj4("EPSG:4326")
+	pgcj02 := geo.NewProj("EPSG:GCJ02")
+	srs900913 := geo.NewProj(900913)
+	srs4326 := geo.NewProj(4326)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913

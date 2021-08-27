@@ -20,7 +20,7 @@ func TestArcGISClient(t *testing.T) {
 		"layers": []string{"foo"},
 	}
 	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
-	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
 	client := NewArcGISClient(req, ctx)
 	format := tile.TileFormat("png")
@@ -40,9 +40,9 @@ func TestArcGISInfoClient(t *testing.T) {
 		"layers": []string{"foo"},
 	}
 	req := request.NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo", false, nil)
-	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{8, 50}, Max: vec2d.T{9, 51}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:4326"), Pos: [2]float64{128, 64}, Format: "text/plain"}
+	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{8, 50}, Max: vec2d.T{9, 51}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(4326), Pos: [2]float64{128, 64}, Format: "text/plain"}
 
-	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewSRSProj4("EPSG:4326")}}
+	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(4326)}}
 
 	client := NewArcGISInfoClient(req, srs, ctx, false, 5)
 

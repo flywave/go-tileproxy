@@ -101,7 +101,7 @@ func TestBBoxContains(t *testing.T) {
 
 func TestTileGrid(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:900913")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:900913")
 
 	grid := NewTileGrid(conf)
 
@@ -130,7 +130,7 @@ func TestTileGrid(t *testing.T) {
 
 func TestTileGridClosestLevel(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:900913")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:900913")
 
 	grid := NewTileGrid(conf)
 	grid.StretchFactor = 1.1
@@ -150,7 +150,7 @@ func TestTileGridClosestLevel(t *testing.T) {
 
 func TestTileGridFlipTileCoord(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:900913")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:900913")
 
 	grid := NewTileGrid(conf)
 	tile := grid.FlipTileCoord(0, 1, 1)
@@ -168,7 +168,7 @@ func TestTileGridFlipTileCoord(t *testing.T) {
 
 func TestTileGridBasic(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:4326")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:4326")
 	conf[TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	conf[TILEGRID_ORIGIN] = ORIGIN_LL
 
@@ -185,7 +185,7 @@ func TestTileGridBasic(t *testing.T) {
 
 func TestEpsg4326BBox(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:4326")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:4326")
 
 	base := NewTileGrid(conf)
 	bbox := vec2d.Rect{Min: vec2d.T{10.0, -20.0}, Max: vec2d.T{40.0, 10.0}}
@@ -227,7 +227,7 @@ func TestEpsg4326BBox(t *testing.T) {
 
 func TestEpsg4326BBoxFromSqrt2(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:4326")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:4326")
 	conf[TILEGRID_RES_FACTOR] = "sqrt2"
 
 	base := NewTileGrid(conf)
@@ -254,7 +254,7 @@ func TestEpsg4326BBoxFromSqrt2(t *testing.T) {
 
 func TestEpsg4326BBoxToSqrt2(t *testing.T) {
 	conf := DefaultTileGridOptions()
-	conf[TILEGRID_SRS] = NewSRSProj4("EPSG:4326")
+	conf[TILEGRID_SRS] = newSRSProj4("EPSG:4326")
 	conf[TILEGRID_RES_FACTOR] = 2.0
 
 	base := NewTileGrid(conf)
@@ -372,7 +372,7 @@ func TestMetagridTiles(t *testing.T) {
 
 func TestResolutionRangeMeter(t *testing.T) {
 	res_range := NewResolutionRange(NewFloat64(1000), NewFloat64(10))
-	srs := NewSRSProj4("EPSG:900913")
+	srs := newSRSProj4("EPSG:900913")
 	if res_range.Contains(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100000, 100000}}, [2]uint32{10, 10}, srs) {
 		t.FailNow()
 	}
@@ -395,7 +395,7 @@ func TestResolutionRangeMeter(t *testing.T) {
 
 func TestResolutionRangeDeg(t *testing.T) {
 	res_range := NewResolutionRange(NewFloat64(100000), NewFloat64(1000))
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 	if res_range.Contains(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, [2]uint32{10, 10}, srs) {
 		t.FailNow()
 	}
@@ -430,9 +430,9 @@ func TestFromScale(t *testing.T) {
 }
 
 func TestDifferentSRS(t *testing.T) {
-	srs1 := NewSRSProj4("EPSG:4326")
-	srs2 := NewSRSProj4("EPSG:3857")
-	srs3 := NewSRSProj4("EPSG:900913")
+	srs1 := newSRSProj4("EPSG:4326")
+	srs2 := newSRSProj4("EPSG:3857")
+	srs3 := newSRSProj4("EPSG:900913")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs1
@@ -457,7 +457,7 @@ func TestDifferentSRS(t *testing.T) {
 }
 
 func TestLessLevels(t *testing.T) {
-	srs := NewSRSProj4("EPSG:3857")
+	srs := newSRSProj4("EPSG:3857")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -479,7 +479,7 @@ func TestLessLevels(t *testing.T) {
 }
 
 func TestResSubset(t *testing.T) {
-	srs := NewSRSProj4("EPSG:3857")
+	srs := newSRSProj4("EPSG:3857")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -501,7 +501,7 @@ func TestResSubset(t *testing.T) {
 }
 
 func TestSubbbox(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -522,7 +522,7 @@ func TestSubbbox(t *testing.T) {
 }
 
 func TestIncompatibleSubbbox(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -542,7 +542,7 @@ func TestIncompatibleSubbbox(t *testing.T) {
 }
 
 func TestTileSize(t *testing.T) {
-	srs := NewSRSProj4("EPSG:4326")
+	srs := newSRSProj4("EPSG:4326")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -560,7 +560,7 @@ func TestTileSize(t *testing.T) {
 }
 
 func TestNOTileErrors(t *testing.T) {
-	srs := NewSRSProj4("EPSG:3857")
+	srs := newSRSProj4("EPSG:3857")
 
 	conf1 := DefaultTileGridOptions()
 	conf1[TILEGRID_SRS] = srs
@@ -614,8 +614,8 @@ func TestMergeResolutions(t *testing.T) {
 }
 
 func TestGCJ02Tile(t *testing.T) {
-	pgcj02 := NewGCJ02Proj(true)
-	srs900913 := NewSRSProj4("EPSG:900913")
+	pgcj02 := newGCJ02Proj(true)
+	srs900913 := newSRSProj4("EPSG:900913")
 
 	conf := DefaultTileGridOptions()
 	conf[TILEGRID_SRS] = srs900913
@@ -633,7 +633,32 @@ func TestGCJ02Tile(t *testing.T) {
 
 	_, rect, tiles, err := grid.GetAffectedTiles(bbox, [2]uint32{4096, 4096}, pgcj02)
 
-	if tiles != nil || err != nil || rect != [2]int{0, 0} || bounds.E != 0 {
+	if tiles == nil || err != nil || rect == [2]int{0, 0} || bounds.E == 0 {
+		t.FailNow()
+	}
+}
+
+func TestGCJ02MCTile(t *testing.T) {
+	proj4326 := newSRSProj4("EPSG:4326")
+	gcj02mc := newGCJ02MCProj()
+
+	conf := DefaultTileGridOptions()
+	conf[TILEGRID_SRS] = gcj02mc
+	conf[TILEGRID_RES_FACTOR] = 2.0
+	conf[TILEGRID_TILE_SIZE] = []uint32{4096, 4096}
+	conf[TILEGRID_ORIGIN] = ORIGIN_UL
+
+	grid := NewTileGrid(conf)
+
+	bbox := grid.TileBBox([3]int{1686, 776, 11}, false)
+	tileid2 := m.TileID{X: 1686, Y: 776, Z: 11}
+	bounds := m.Bounds(tileid2)
+
+	bbox = gcj02mc.TransformRectTo(proj4326, bbox, 16)
+
+	_, rect, tiles, err := grid.GetAffectedTiles(bbox, [2]uint32{4096, 4096}, proj4326)
+
+	if tiles == nil || err != nil || rect == [2]int{0, 0} || bounds.E == 0 {
 		t.FailNow()
 	}
 }

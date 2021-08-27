@@ -48,7 +48,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	params := req.GetParams()
 	map_request := req.(*request.WMSRequest)
 	mapreq := request.NewWMSMapRequestParams(params)
-	query := &layer.MapQuery{BBox: mapreq.GetBBox(), Size: mapreq.GetSize(), Srs: geo.NewSRSProj4(mapreq.GetSrs()), Format: mapreq.GetFormat()}
+	query := &layer.MapQuery{BBox: mapreq.GetBBox(), Size: mapreq.GetSize(), Srs: geo.NewProj(mapreq.GetSrs()), Format: mapreq.GetFormat()}
 
 	if params.GetOne("tiled", "false") == "true" {
 		query.TiledOnly = true
@@ -60,7 +60,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	var sub_bbox vec2d.Rect
 
 	if _, ok := s.SrsExtents[mapreq.GetSrs()]; s.SrsExtents != nil && ok {
-		query_extent := &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewSRSProj4(mapreq.GetSrs())}
+		query_extent := &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewProj(mapreq.GetSrs())}
 		if !s.SrsExtents[mapreq.GetSrs()].Contains(query_extent) {
 			limited_extent := s.SrsExtents[mapreq.GetSrs()].Intersection(query_extent)
 			if limited_extent == nil {
@@ -72,7 +72,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 				return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 			}
 			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
-			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewSRSProj4(mapreq.GetSrs()), Format: mapreq.GetFormat()}
+			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewProj(mapreq.GetSrs()), Format: mapreq.GetFormat()}
 		}
 	}
 
@@ -91,7 +91,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		keys = append(keys, k)
 	}
 
-	authorized_layers, coverage := s.authorizedLayers("map", keys, &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewSRSProj4(mapreq.GetSrs())})
+	authorized_layers, coverage := s.authorizedLayers("map", keys, &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewProj(mapreq.GetSrs())})
 
 	s.filterActualLayers(actual_layers, mapreq.GetLayers(), authorized_layers)
 
@@ -112,17 +112,17 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	img_opts.BgColor = mapreq.GetBGColor()
 	img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
 	si := mapreq.GetSize()
-	result := merger.Merge(img_opts, si[:], mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs()), coverage)
+	result := merger.Merge(img_opts, si[:], mapreq.GetBBox(), geo.NewProj(mapreq.GetSrs()), coverage)
 
 	if !query.EQ(orig_query) {
 		imageSrc := result.(*imagery.ImageSource)
 		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
 	}
 
-	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewSRSProj4(mapreq.GetSrs()), BBox: mapreq.GetBBox()})
+	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewProj(mapreq.GetSrs()), BBox: mapreq.GetBBox()})
 	imagesource := result.(*imagery.ImageSource)
 
-	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewSRSProj4(mapreq.GetSrs())))
+	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewProj(mapreq.GetSrs())))
 	result_buf := result.GetBuffer(nil, img_opts)
 	f := img_opts.GetFormat()
 	resp := NewResponse(result_buf, 200, f.MimeType())
@@ -195,7 +195,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 		}
 	}
 
-	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewSRSProj4(freq.GetSrs()), Pos: freq.GetPos(),
+	query := &layer.InfoQuery{BBox: freq.GetBBox(), Size: [2]uint32{freq.GetSize()[0], freq.GetSize()[1]}, Srs: geo.NewProj(freq.GetSrs()), Pos: freq.GetPos(),
 		InfoFormat: string(freq.GetFormat()), FeatureCount: feature_count}
 
 	actual_layers := make(map[string]layer.InfoLayer)
@@ -216,7 +216,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 		keys = append(keys, k)
 	}
 
-	authorized_layers, coverage := s.authorizedLayers("featureinfo", keys, &geo.MapExtent{BBox: freq.GetBBox(), Srs: geo.NewSRSProj4(freq.GetSrs())})
+	authorized_layers, coverage := s.authorizedLayers("featureinfo", keys, &geo.MapExtent{BBox: freq.GetBBox(), Srs: geo.NewProj(freq.GetSrs())})
 	s.filterActualInfoLayers(actual_layers, freq.GetLayers(), authorized_layers)
 
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {

@@ -3,7 +3,7 @@ package setting
 var (
 	DefaultServer       = []string{"wms", "tms", "wmts", "mapbox"}
 	DefaultImageFormats = []string{"image/png", "image/jpeg", "image/gif", "image/GeoTIFF", "image/tiff"}
-	DefaultSRS          = []string{"EPSG:4326", "EPSG:4258", "CRS:84", "EPSG:900913", "EPSG:3857"}
+	DefaultSRS          = []string{"EPSG:4326", "EPSG:4258", "CRS:84", "EPSG:900913", "EPSG:3857", "EPSG:GCJ02", "EPSG:BD09", "EPSG:GCJ02MC", "EPSG:BDMC"}
 )
 
 const (
@@ -42,6 +42,8 @@ var (
 		{Srs: "EPSG:4326", Origin: "sw", Name: "GLOBAL_GEODETIC"},
 		{Srs: "EPSG:900913", Origin: "sw", Name: "GLOBAL_MERCATOR"},
 		{Srs: "EPSG:3857", Origin: "nw", Name: "GLOBAL_WEBMERCATOR"},
+		{Srs: "EPSG:GCJ02MC", Origin: "nw", Name: "GCJ02_GLOBAL_WEBMERCATOR"},
+		{Srs: "EPSG:BDMC", Origin: "nw", Name: "BD_GLOBAL_WEBMERCATOR"},
 	}
 )
 

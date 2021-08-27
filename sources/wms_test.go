@@ -43,7 +43,7 @@ func TestWMSSource(t *testing.T) {
 
 	box := grid.TileBBox([3]int{0, 0, 1}, false)
 
-	query := &layer.MapQuery{BBox: box, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: box, Size: [2]uint32{512, 512}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
 	resp, err := source.GetMap(query)
 

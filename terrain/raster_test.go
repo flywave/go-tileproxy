@@ -19,8 +19,8 @@ func TestRaster(t *testing.T) {
 		t.FailNow()
 	}
 
-	srs900913 := geo.NewSRSProj4("EPSG:900913")
-	srs4326 := geo.NewSRSProj4("EPSG:4326")
+	srs900913 := geo.NewProj(900913)
+	srs4326 := geo.NewProj(4326)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913

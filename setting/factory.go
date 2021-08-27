@@ -345,7 +345,7 @@ func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLaye
 func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.SupportedSRS {
 	srs := []geo.Proj{}
 	for i := range supportedSrs {
-		srs = append(srs, geo.NewSRSProj4(supportedSrs[i]))
+		srs = append(srs, geo.NewProj(supportedSrs[i]))
 	}
 	return &geo.SupportedSRS{Srs: srs, Preferred: preferred}
 }
@@ -799,7 +799,7 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 	extents := make(map[string]*geo.MapExtent)
 	for _, srs := range bbox_srs {
 		srs, bbox := srs.Srs, srs.BBox
-		e := &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}, Srs: geo.NewSRSProj4(srs)}
+		e := &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}, Srs: geo.NewProj(srs)}
 		extents[srs] = e
 	}
 	return extents

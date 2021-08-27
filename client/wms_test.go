@@ -50,7 +50,7 @@ func TestWMSClient(t *testing.T) {
 		"transparent": []string{"true"},
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
-	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:900913"), Format: tile.TileFormat("png")}
+	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
 	client := NewWMSClient(req, ctx)
 	format := tile.TileFormat("png")
@@ -71,11 +71,11 @@ func TestWMSInfoClient(t *testing.T) {
 	}
 	req := request.NewWMSFeatureInfoRequest(param, "/service?map=foo", false, nil, false)
 
-	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewSRSProj4("EPSG:25832")}}
+	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(25832)}}
 
 	client := NewWMSInfoClient(req, srs, ctx)
 
-	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewSRSProj4("EPSG:4326"), Pos: [2]float64{128, 64}, Format: "text/plain"}
+	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(4326), Pos: [2]float64{128, 64}, Format: "text/plain"}
 
 	feature := client.GetInfo(query)
 

@@ -127,7 +127,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
 
-	seedTask := makeBBoxTask(manager, bbox, geo.NewSRSProj4("EPSG:4326"), levels)
+	seedTask := makeBBoxTask(manager, bbox, geo.NewProj(4326), levels)
 
 	local := NewLocalProgressStore("./test.task", false)
 
@@ -166,7 +166,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
 
-	seedTask := makeGeomTask(manager, geom, geo.NewSRSProj4("EPSG:4326"), levels)
+	seedTask := makeGeomTask(manager, geom, geo.NewProj(4326), levels)
 
 	local := NewLocalProgressStore("./test.task", false)
 

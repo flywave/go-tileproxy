@@ -52,7 +52,7 @@ func TestGenTerrainSourceFromDem(t *testing.T) {
 		}
 	}
 
-	srs900913 := geo.NewSRSProj4("EPSG:900913")
+	srs900913 := geo.NewProj(900913)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
@@ -95,7 +95,7 @@ func TestGenTerrainSourceFromLerc(t *testing.T) {
 		t.FailNow()
 	}
 
-	srs900913 := geo.NewSRSProj4("EPSG:900913")
+	srs900913 := geo.NewProj(900913)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913

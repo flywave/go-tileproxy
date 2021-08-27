@@ -359,7 +359,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := c.metadata["url"] + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := c.metadata["url"] + "/" + req.Version + "/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

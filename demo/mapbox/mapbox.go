@@ -40,7 +40,6 @@ var (
 		Options:     &setting.ImageOpts{Format: "webp"},
 		Grid:        "global_webmercator",
 	}
-
 	MapboxMVTCache = setting.Caches{
 		Sources: []string{"mvt"},
 		Name:    "mvt_cache",
@@ -71,7 +70,6 @@ var (
 			UseGridNames:    false,
 		},
 	}
-
 	MapboxService = setting.MapboxService{
 		Layers: []setting.MapboxTileLayer{
 			{

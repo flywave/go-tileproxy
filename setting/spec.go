@@ -241,6 +241,7 @@ type MapboxTileSource struct {
 type LuokuangTileSource struct {
 	SourceCommons
 	Url         string      `json:"url,omitempty"`
+	Version     string      `json:"version,omitempty"`
 	TilesetID   string      `json:"tileset_id,omitempty"`
 	UserName    string      `json:"user_name,omitempty"`
 	AccessToken string      `json:"access_token,omitempty"`
@@ -300,7 +301,6 @@ type TMSService struct {
 }
 
 type WMTSService struct {
-	KVP                        *bool             `json:"kvp,omitempty"`
 	Restful                    *bool             `json:"restful,omitempty"`
 	RestfulTemplate            string            `json:"restful_template,omitempty"`
 	RestfulFeatureinfoTemplate string            `json:"restful_featureinfo_template,omitempty"`
@@ -418,6 +418,7 @@ type S3Store struct {
 
 type StyleSource struct {
 	Url         string      `json:"url,omitempty"`
+	Version     string      `json:"version,omitempty"`
 	UserName    string      `json:"user_name,omitempty"`
 	AccessToken string      `json:"access_token,omitempty"`
 	StyleID     string      `json:"style_id,omitempty"`
@@ -427,6 +428,7 @@ type StyleSource struct {
 
 type GlyphsSource struct {
 	Url         string      `json:"url,omitempty"`
+	Version     string      `json:"version,omitempty"`
 	UserName    string      `json:"user_name,omitempty"`
 	AccessToken string      `json:"access_token,omitempty"`
 	Font        string      `json:"font,omitempty"`
@@ -436,6 +438,7 @@ type GlyphsSource struct {
 
 type TileJSONSource struct {
 	Url         string      `json:"url,omitempty"`
+	Version     string      `json:"version,omitempty"`
 	UserName    string      `json:"user_name,omitempty"`
 	AccessToken string      `json:"access_token,omitempty"`
 	TilesetID   string      `json:"tileset_id,omitempty"`

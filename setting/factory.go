@@ -569,7 +569,7 @@ func LoadLuokuangTileSource(s *LuokuangTileSource, globals *GlobalsSetting, inst
 		http = &globals.Http.HttpOpts
 	}
 	creater := cache.GetSourceCreater(opts)
-	c := client.NewLuoKuangTileClient(s.Url, s.AccessToken, s.TilesetID, newCollectorContext(http))
+	c := client.NewLuoKuangTileClient(s.Url, s.Version, s.AccessToken, s.TilesetID, newCollectorContext(http))
 	return sources.NewLuoKuangTileSource(grid.(*geo.TileGrid), c, opts, creater)
 }
 
@@ -643,7 +643,7 @@ func LoadTileJSONSource(s *TileJSONSource, globals *GlobalsSetting) *sources.Map
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	c := client.NewMapboxTileJSONClient(s.Url, s.UserName, s.AccessToken, newCollectorContext(http))
+	c := client.NewMapboxTileJSONClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
 	var cache *resource.TileJSONCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -661,7 +661,7 @@ func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) *sources.MapboxSty
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	c := client.NewMapboxStyleClient(s.Url, s.UserName, s.AccessToken, newCollectorContext(http))
+	c := client.NewMapboxStyleClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
 	var cache *resource.StyleCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -679,7 +679,7 @@ func LoadGlyphsSource(s *GlyphsSource, globals *GlobalsSetting) *sources.MapboxG
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	c := client.NewMapboxGlyphsClient(s.Url, s.UserName, s.AccessToken, newCollectorContext(http))
+	c := client.NewMapboxGlyphsClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
 	var cache *resource.GlyphsCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -736,10 +736,6 @@ func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService 
 }
 
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
-	if s.KVP == nil || !*s.KVP {
-		return nil
-	}
-
 	layers := make(map[string]service.Provider)
 
 	for _, tl := range s.Layers {

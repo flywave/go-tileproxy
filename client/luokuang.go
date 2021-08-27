@@ -6,12 +6,12 @@ type LuoKuangTileClient struct {
 	MapboxClient
 }
 
-func NewLuoKuangTileClient(url string, token string, tilesetID string, ctx Context) *LuoKuangTileClient {
-	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, AccessToken: token, TilesetID: tilesetID}}
+func NewLuoKuangTileClient(url string, version string, token string, tilesetID string, ctx Context) *LuoKuangTileClient {
+	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, AccessToken: token, TilesetID: tilesetID}}
 }
 
 func (c *LuoKuangTileClient) GetTile(q *layer.LuoKuangTileQuery) []byte {
-	url, err := q.BuildURL(c.BaseURL, c.AccessToken, c.TilesetID)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.AccessToken, c.TilesetID)
 	if err != nil {
 		return nil
 	}

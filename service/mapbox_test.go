@@ -57,11 +57,11 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	locker := &cache.DummyTileLocker{}
 
-	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 	glyphsCache := resource.NewGlyphsCache(resource.NewLocalStore("./test_glyphs_cache"))
 	glyphProvider := &GlyphProvider{sources.NewMapboxGlyphsSource(mockGlyphsClient, glyphsCache)}
 
-	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 	stylesCache := resource.NewStyleCache(resource.NewLocalStore("./test_styles_cache"))
 	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, stylesCache)}
 

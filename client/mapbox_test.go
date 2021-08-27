@@ -35,7 +35,7 @@ func TestMapboxSpriteClient(t *testing.T) {
 
 	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: geo.NewInt(2)}
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	client := NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	src := client.GetSprite(query)
 
@@ -50,7 +50,7 @@ func TestMapboxStyleClient(t *testing.T) {
 
 	query := &layer.StyleQuery{StyleID: "testStylteId"}
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	client := NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	client.GetStyle(query)
 
@@ -65,7 +65,7 @@ func TestMapboxGlyphsClient(t *testing.T) {
 
 	query := &layer.GlyphsQuery{Font: "Arial Unicode MS", Start: 0, End: 255}
 
-	client := NewMapboxGlyphsClient("https://api.mapbox.com", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	client := NewMapboxGlyphsClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
 
 	f := client.GetGlyphs(query)
 

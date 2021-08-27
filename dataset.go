@@ -103,10 +103,10 @@ func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, gl
 	case *setting.MapboxService:
 		s.Service = setting.LoadMapboxService(srv, globals, s)
 	case *setting.WMTSService:
-		if srv.KVP != nil && *srv.KVP {
-			s.Service = setting.LoadWMTSService(srv, s)
-		} else if srv.Restful != nil && *srv.Restful {
+		if srv.Restful != nil && *srv.Restful {
 			s.Service = setting.LoadWMTSRestfulService(srv, s)
+		} else {
+			s.Service = setting.LoadWMTSService(srv, s)
 		}
 	}
 }

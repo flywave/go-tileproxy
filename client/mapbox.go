@@ -38,12 +38,12 @@ type MapboxStyleClient struct {
 	MapboxClient
 }
 
-func NewMapboxStyleClient(url string, userName string, token string, ctx Context) *MapboxStyleClient {
-	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxStyleClient(url string, version string, userName string, token string, ctx Context) *MapboxStyleClient {
+	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.SpriteJSON {
-	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -55,7 +55,7 @@ func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.Sprite
 }
 
 func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
-	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -67,7 +67,7 @@ func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 }
 
 func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
-	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -82,12 +82,12 @@ type MapboxGlyphsClient struct {
 	MapboxClient
 }
 
-func NewMapboxGlyphsClient(url string, userName string, token string, ctx Context) *MapboxGlyphsClient {
-	return &MapboxGlyphsClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxGlyphsClient(url string, version string, userName string, token string, ctx Context) *MapboxGlyphsClient {
+	return &MapboxGlyphsClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
-	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -102,12 +102,12 @@ type MapboxTileJSONClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileJSONClient(url string, userName string, token string, ctx Context) *MapboxTileJSONClient {
-	return &MapboxTileJSONClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, UserName: userName, AccessToken: token}}
+func NewMapboxTileJSONClient(url string, version string, userName string, token string, ctx Context) *MapboxTileJSONClient {
+	return &MapboxTileJSONClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
 }
 
 func (c *MapboxTileJSONClient) GetTileJSON(q *layer.TileJSONQuery) *resource.TileJSON {
-	url, err := q.BuildURL(c.BaseURL, c.UserName, c.AccessToken)
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
 	if err != nil {
 		return nil
 	}

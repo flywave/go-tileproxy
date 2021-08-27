@@ -79,6 +79,7 @@ var (
 				Name:   "mvt_layer",
 				TileJSON: setting.TileJSONSource{
 					Url:         MAPBOX_API_URL,
+					Version:     "v4",
 					UserName:    MAPBOX_USERNAME,
 					AccessToken: MAPBOX_ACCESSTOKEN,
 					TilesetID:   "mapbox.mapbox-streets-v8",
@@ -90,6 +91,7 @@ var (
 				Name:   "raster_layer",
 				TileJSON: setting.TileJSONSource{
 					Url:         MAPBOX_API_URL,
+					Version:     "v4",
 					UserName:    MAPBOX_USERNAME,
 					AccessToken: MAPBOX_ACCESSTOKEN,
 					TilesetID:   "mapbox.satellite",
@@ -101,6 +103,7 @@ var (
 				Name:   "rasterdem_layer",
 				TileJSON: setting.TileJSONSource{
 					Url:         MAPBOX_API_URL,
+					Version:     "v4",
 					UserName:    MAPBOX_USERNAME,
 					AccessToken: MAPBOX_ACCESSTOKEN,
 					TilesetID:   "mapbox.mapbox-terrain-dem-v1",

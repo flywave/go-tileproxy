@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -35,10 +36,32 @@ type TileService struct {
 }
 
 func NewTileService(layers map[string]Provider, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
-	return &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
+	s := &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
+	s.router = map[string]func(r request.Request) *Response{
+		"map": func(r request.Request) *Response {
+			return s.GetMap(r)
+		},
+		"tms_capabilities": func(r request.Request) *Response {
+			return s.GetCapabilities(r)
+		},
+		"tms_root_resource": func(r request.Request) *Response {
+			return s.RootResource(r)
+		},
+	}
+	s.requestParser = func(r *http.Request) request.Request {
+		return request.MakeTileRequest(r, true)
+	}
+	return s
 }
 
-func (s *TileService) GetMap(tile_request *request.TileRequest) *Response {
+func (s *TileService) GetMap(req request.Request) *Response {
+	var tile_request *request.TileRequest
+	switch r := req.(type) {
+	case *request.TileRequest:
+		tile_request = r
+	case *request.TMSRequest:
+		tile_request = &r.TileRequest
+	}
 	if s.Origin != "" && tile_request.Origin == "" {
 		tile_request.Origin = s.Origin
 	}
@@ -141,11 +164,18 @@ func (s *TileService) authorizedTileLayers() []Provider {
 	return ret
 }
 
-func (s *TileService) GetCapabilities(tms_request *request.TMSRequest) *Response {
-	service := s.serviceMetadata(&tms_request.TileRequest)
+func (s *TileService) GetCapabilities(req request.Request) *Response {
+	var tile_request *request.TileRequest
+	switch r := req.(type) {
+	case *request.TileRequest:
+		tile_request = r
+	case *request.TMSRequest:
+		tile_request = &r.TileRequest
+	}
+	service := s.serviceMetadata(tile_request)
 	var result []byte
-	if tms_request.Layer != "" {
-		layer, _, err := s.getLayer(&tms_request.TileRequest)
+	if tile_request.Layer != "" {
+		layer, _, err := s.getLayer(tile_request)
 
 		if err != nil {
 			return err.Render()
@@ -244,8 +274,15 @@ func (s *TileService) renderRootResource(service map[string]string) []byte {
 	return ser.ToXML()
 }
 
-func (s *TileService) RootResource(tms_request *request.TMSRequest) *Response {
-	service := s.serviceMetadata(&tms_request.TileRequest)
+func (s *TileService) RootResource(req request.Request) *Response {
+	var tile_request *request.TileRequest
+	switch r := req.(type) {
+	case *request.TileRequest:
+		tile_request = r
+	case *request.TMSRequest:
+		tile_request = &r.TileRequest
+	}
+	service := s.serviceMetadata(tile_request)
 	result := s.renderRootResource(service)
 	return NewResponse(result, 200, "text/xml")
 }

@@ -15,7 +15,7 @@ type Service interface {
 
 type BaseService struct {
 	Service
-	router        map[string]func(r *request.Request) *Response
+	router        map[string]func(r request.Request) *Response
 	requestParser func(r *http.Request) request.Request
 }
 
@@ -23,7 +23,7 @@ func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req := s.RequestParser(r)
 	handler := req.GetRequestHandler()
 	if h, ok := s.router[handler]; ok {
-		resp := h(&req)
+		resp := h(req)
 		if resp != nil {
 			resp.Write(w)
 		} else {

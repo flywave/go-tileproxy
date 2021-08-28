@@ -3,6 +3,7 @@ package setting
 import (
 	"image/color"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -581,6 +582,26 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 		params["format"] = []string{request_format}
 	}
 
+	if s.Request.Layers != nil {
+		params["layers"] = s.Request.Layers
+	}
+
+	if s.Request.Transparent != nil {
+		if *s.Request.Transparent {
+			params["transparent"] = []string{"true"}
+		} else {
+			params["transparent"] = []string{"false"}
+		}
+	}
+
+	if s.Request.Dpi != nil {
+		params["dpi"] = []string{strconv.Itoa(*s.Request.Dpi)}
+	}
+
+	if s.Request.Time != nil {
+		params["time"] = []string{strconv.FormatInt(*s.Request.Time, 10)}
+	}
+
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
 	res_range := NewResolutionRange(&s.ScaleHints)
 	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
@@ -595,7 +616,7 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 
 	coverage := LoadCoverage(s.Coverage)
 
-	req := request.NewArcGISRequest(params, url, false, nil)
+	req := request.NewArcGISRequest(params, url)
 	c := client.NewArcGISClient(req, newCollectorContext(http))
 	return sources.NewArcGISSource(c, image_opts, coverage, res_range, supported_srs, s.SupportedFormats)
 }
@@ -604,8 +625,28 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 	params := make(request.RequestParams)
 
 	request_format := s.Request.Format
-	if request_format == "" {
+	if request_format != "" {
 		params["format"] = []string{request_format}
+	}
+
+	if s.Request.Layers != nil {
+		params["layers"] = s.Request.Layers
+	}
+
+	if s.Request.Transparent != nil {
+		if *s.Request.Transparent {
+			params["transparent"] = []string{"true"}
+		} else {
+			params["transparent"] = []string{"false"}
+		}
+	}
+
+	if s.Request.Dpi != nil {
+		params["dpi"] = []string{strconv.Itoa(*s.Request.Dpi)}
+	}
+
+	if s.Request.Time != nil {
+		params["time"] = []string{strconv.FormatInt(*s.Request.Time, 10)}
 	}
 
 	var tolerance int
@@ -630,7 +671,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 	}
 	url := s.Request.Url
 
-	fi_request := request.NewArcGISIdentifyRequest(params, url, false, nil)
+	fi_request := request.NewArcGISIdentifyRequest(params, url)
 
 	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(http), return_geometries, tolerance)
 	return sources.NewArcGISInfoSource(c)

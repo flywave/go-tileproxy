@@ -310,15 +310,15 @@ func MakeWMTSRequest(req *http.Request, validate bool) Request {
 	switch req_type {
 	case "featureinfo":
 		r := &WMTS100FeatureInfoRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	case "tile":
 		r := &WMTS100TileRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	case "capabilities":
 		r := &WMTS100CapabilitiesRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	}
 	return nil

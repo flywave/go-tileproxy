@@ -19,7 +19,7 @@ func TestArcGISClient(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
-	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
+	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo")
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
 	client := NewArcGISClient(req, ctx)
@@ -39,7 +39,7 @@ func TestArcGISInfoClient(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
-	req := request.NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo", false, nil)
+	req := request.NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo")
 	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{8, 50}, Max: vec2d.T{9, 51}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(4326), Pos: [2]float64{128, 64}, Format: "text/plain"}
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(4326)}}

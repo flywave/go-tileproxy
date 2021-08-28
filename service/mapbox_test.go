@@ -80,7 +80,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	hreq := &http.Request{}
 	hreq.URL, _ = url.Parse("https://127.0.0.1/v4/mapbox.mapbox-streets-v8/14/13515/6392.mvt")
 
-	tileReq := request.NewMapboxTileRequest(hreq)
+	tileReq := request.NewMapboxTileRequest(hreq, false)
 
 	resp := service.GetTile(tileReq)
 
@@ -91,7 +91,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	hreq = &http.Request{}
 	hreq.URL, _ = url.Parse("https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7")
 
-	styleReq := request.NewMapboxStyleRequest(hreq)
+	styleReq := request.NewMapboxStyleRequest(hreq, false)
 
 	resp = service.GetStyle(styleReq)
 

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"image/color"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -36,6 +37,23 @@ type WMSService struct {
 func NewWMSService(rootLayer *WMSGroupLayer, metadata map[string]string, srs *geo.SupportedSRS, imageFormats map[string]*imagery.ImageOptions, infoFormats map[string]string, srsExtents map[string]*geo.MapExtent, maxOutputPixels int, maxTileAge *time.Duration, strict bool, ftransformers map[string]*resource.XSLTransformer) *WMSService {
 	ret := &WMSService{RootLayer: rootLayer, Strict: strict, ImageFormats: imageFormats, Metadata: metadata, InfoFormats: infoFormats, Srs: srs, SrsExtents: srsExtents, MaxOutputPixels: maxOutputPixels, MaxTileAge: maxTileAge, FeatureTransformers: ftransformers}
 	ret.Layers = ret.RootLayer.layers
+	ret.router = map[string]func(r request.Request) *Response{
+		"map": func(r request.Request) *Response {
+			return ret.GetMap(r)
+		},
+		"featureinfo": func(r request.Request) *Response {
+			return ret.GetFeatureInfo(r)
+		},
+		"capabilities": func(r request.Request) *Response {
+			return ret.GetCapabilities(r)
+		},
+		"legendgraphic": func(r request.Request) *Response {
+			return ret.Legendgraphic(r)
+		},
+	}
+	ret.requestParser = func(r *http.Request) request.Request {
+		return request.MakeWMSRequest(r, true)
+	}
 	return ret
 }
 

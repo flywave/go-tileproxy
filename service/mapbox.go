@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -26,7 +27,28 @@ type MapboxService struct {
 }
 
 func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, fonts map[string]*GlyphProvider, md map[string]string, max_tile_age *time.Duration) *MapboxService {
-	return &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age}
+	s := &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age}
+	s.router = map[string]func(r request.Request) *Response{
+		"tilejson": func(r request.Request) *Response {
+			return s.GetTileJSON(r)
+		},
+		"tile": func(r request.Request) *Response {
+			return s.GetTile(r)
+		},
+		"style": func(r request.Request) *Response {
+			return s.GetStyle(r)
+		},
+		"sprite": func(r request.Request) *Response {
+			return s.GetSprite(r)
+		},
+		"glyphs": func(r request.Request) *Response {
+			return s.GetGlyphs(r)
+		},
+	}
+	s.requestParser = func(r *http.Request) request.Request {
+		return request.MakeMapboxRequest(r, true)
+	}
+	return s
 }
 
 func (s *MapboxService) GetTileJSON(req request.Request) *Response {

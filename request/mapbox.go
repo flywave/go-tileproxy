@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -26,9 +27,9 @@ type MapboxTileJSONRequest struct {
 	Secure    bool
 }
 
-func NewMapboxTileJSONRequest(hreq *http.Request) *MapboxTileJSONRequest {
+func NewMapboxTileJSONRequest(hreq *http.Request, validate bool) *MapboxTileJSONRequest {
 	req := &MapboxTileJSONRequest{}
-	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
@@ -72,9 +73,9 @@ type MapboxTileRequest struct {
 	Origin    string
 }
 
-func NewMapboxTileRequest(hreq *http.Request) *MapboxTileRequest {
+func NewMapboxTileRequest(hreq *http.Request, validate bool) *MapboxTileRequest {
 	req := &MapboxTileRequest{}
-	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
@@ -128,9 +129,9 @@ type MapboxStyleRequest struct {
 	StyleID  string
 }
 
-func NewMapboxStyleRequest(hreq *http.Request) *MapboxStyleRequest {
+func NewMapboxStyleRequest(hreq *http.Request, validate bool) *MapboxStyleRequest {
 	req := &MapboxStyleRequest{}
-	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
@@ -174,9 +175,9 @@ type MapboxSpriteRequest struct {
 	Retina   *int
 }
 
-func NewMapboxSpriteRequest(hreq *http.Request) *MapboxSpriteRequest {
+func NewMapboxSpriteRequest(hreq *http.Request, validate bool) *MapboxSpriteRequest {
 	req := &MapboxSpriteRequest{}
-	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
@@ -225,9 +226,9 @@ type MapboxGlyphsRequest struct {
 	End      int
 }
 
-func NewMapboxGlyphsRequest(hreq *http.Request) *MapboxGlyphsRequest {
+func NewMapboxGlyphsRequest(hreq *http.Request, validate bool) *MapboxGlyphsRequest {
 	req := &MapboxGlyphsRequest{}
-	req.init(hreq.Header, hreq.URL.Path, false, hreq)
+	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
@@ -275,4 +276,23 @@ func (r *MapboxGlyphsRequest) initRequest() error {
 	}
 
 	return nil
+}
+
+func MakeMapboxRequest(req *http.Request, validate bool) Request {
+	url := req.URL.String()
+	if strings.Contains(url, "/styles/") {
+		if strings.Contains(url, "/sprite") {
+			return NewMapboxSpriteRequest(req, validate)
+		} else {
+			return NewMapboxStyleRequest(req, validate)
+		}
+	} else if strings.Contains(url, "/fonts/") {
+		return NewMapboxGlyphsRequest(req, validate)
+	} else {
+		if strings.Contains(url, ".json") {
+			return NewMapboxTileJSONRequest(req, validate)
+		} else {
+			return NewMapboxTileRequest(req, validate)
+		}
+	}
 }

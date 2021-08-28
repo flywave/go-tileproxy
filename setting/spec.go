@@ -259,12 +259,12 @@ type ArcGISSource struct {
 		TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
 	} `json:"image"`
 	Request struct {
-		Url         string         `json:"url,omitempty"`
-		Dpi         *int           `json:"dpi,omitempty"`
-		Layers      []string       `json:"layers"`
-		Transparent *bool          `json:"transparent,omitempty"`
-		Time        *time.Duration `json:"time,omitempty"`
-		Format      string         `json:"format,omitempty"`
+		Url         string   `json:"url,omitempty"`
+		Dpi         *int     `json:"dpi,omitempty"`
+		Layers      []string `json:"layers"`
+		Transparent *bool    `json:"transparent,omitempty"`
+		Time        *int64   `json:"time,omitempty"`
+		Format      string   `json:"format,omitempty"`
 	} `json:"req"`
 	Opts struct {
 		Featureinfo                 *bool `json:"featureinfo,omitempty"`

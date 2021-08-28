@@ -532,19 +532,19 @@ func MakeWMSRequest(req *http.Request, validate bool) Request {
 	switch req_type {
 	case "featureinfo":
 		r := &WMSFeatureInfoRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	case "map":
 		r := &WMSMapRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	case "capabilities":
 		r := &WMSCapabilitiesRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	case "legendgraphic":
 		r := &WMSLegendGraphicRequest{}
-		r.init(req.Header, req.URL.String(), true, req)
+		r.init(req.Header, req.URL.String(), validate, req)
 		return r
 	}
 	return nil

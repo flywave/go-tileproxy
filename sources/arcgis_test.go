@@ -33,7 +33,7 @@ func TestArcGISSource(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
-	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
+	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo")
 
 	client := client.NewArcGISClient(req, ctx)
 

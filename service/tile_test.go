@@ -196,7 +196,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	hreq = &http.Request{}
 	hreq.URL, _ = url.Parse("http://tms.osgeo.org/tiles/1.0.0/landsat2000")
 
-	tmsReq := request.NewTMSRequest(hreq)
+	tmsReq := request.NewTileRequest(hreq)
 
 	resp = service.GetCapabilities(tmsReq)
 
@@ -207,7 +207,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	hreq = &http.Request{}
 	hreq.URL, _ = url.Parse("http://tms.osgeo.org/tiles/1.0.0")
 
-	tmsReq = request.NewTMSRequest(hreq)
+	tmsReq = request.NewTileRequest(hreq)
 
 	resp = service.GetCapabilities(tmsReq)
 
@@ -218,7 +218,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	hreq = &http.Request{}
 	hreq.URL, _ = url.Parse("http://tms.osgeo.org/tms/")
 
-	tmsReq = request.NewTMSRequest(hreq)
+	tmsReq = request.NewTileRequest(hreq)
 
 	resp = service.RootResource(tmsReq)
 

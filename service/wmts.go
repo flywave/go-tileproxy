@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +33,20 @@ func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge
 	lay, ms := ret.getMatrixSets(layers)
 	ret.Layers = lay
 	ret.MatrixSets = ms
+	ret.router = map[string]func(r request.Request) *Response{
+		"tile": func(r request.Request) *Response {
+			return ret.GetTile(r)
+		},
+		"featureinfo": func(r request.Request) *Response {
+			return ret.GetFeatureInfo(r)
+		},
+		"capabilities": func(r request.Request) *Response {
+			return ret.GetCapabilities(r)
+		},
+	}
+	ret.requestParser = func(r *http.Request) request.Request {
+		return request.MakeWMTSRequest(r, true)
+	}
 	return ret
 }
 

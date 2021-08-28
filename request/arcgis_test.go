@@ -11,7 +11,7 @@ func TestArcGISRequest(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
-	req := NewArcGISRequest(param, "/MapServer/export?map=foo", false, nil)
+	req := NewArcGISRequest(param, "/MapServer/export?map=foo")
 
 	rp := req.GetRequestParams()
 
@@ -70,7 +70,7 @@ func TestArcGISIdentifyRequest(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
-	req := NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo", false, nil)
+	req := NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo")
 
 	rp := req.GetRequestParams()
 

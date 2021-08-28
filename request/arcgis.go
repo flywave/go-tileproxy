@@ -164,6 +164,16 @@ func (r *ArcGISExportRequestParams) SetTransparent(b bool) {
 	}
 }
 
+func (r *ArcGISExportRequestParams) GetDpi() int {
+	str := r.params.GetOne("dpi", "-1")
+	dpi, _ := strconv.Atoi(str)
+	return dpi
+}
+
+func (r *ArcGISExportRequestParams) SetDpi(dpi int) {
+	r.params.Set("dpi", []string{strconv.Itoa(dpi)})
+}
+
 type ArcGISIdentifyRequestParams struct {
 	params RequestParams
 }
@@ -354,9 +364,9 @@ type ArcGISRequest struct {
 	Uri *url.URL
 }
 
-func NewArcGISRequest(param interface{}, url string, validate bool, ht *http.Request) *ArcGISRequest {
+func NewArcGISRequest(param interface{}, url string) *ArcGISRequest {
 	req := &ArcGISRequest{}
-	req.init(param, url, validate, ht)
+	req.init(param, url, false, nil)
 	return req
 }
 
@@ -383,9 +393,9 @@ type ArcGISIdentifyRequest struct {
 	Uri *url.URL
 }
 
-func NewArcGISIdentifyRequest(param interface{}, url string, validate bool, ht *http.Request) *ArcGISIdentifyRequest {
+func NewArcGISIdentifyRequest(param interface{}, url string) *ArcGISIdentifyRequest {
 	req := &ArcGISIdentifyRequest{}
-	req.init(param, url, validate, ht)
+	req.init(param, url, false, nil)
 	return req
 }
 

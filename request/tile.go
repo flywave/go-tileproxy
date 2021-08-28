@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -122,5 +123,13 @@ func (r *TMSRequest) init() {
 	} else {
 		r.RequestHandlerName = "map"
 		r.initRequest()
+	}
+}
+
+func MakeTileRequest(req *http.Request, validate bool) Request {
+	if strings.Contains(req.URL.String(), "/tms") {
+		return NewTMSRequest(req)
+	} else {
+		return NewTileRequest(req)
 	}
 }

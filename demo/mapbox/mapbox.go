@@ -173,7 +173,9 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 
 //http://127.0.0.1:8000/v4/mvt_layer.json
 //http://127.0.0.1:8000/v4/mvt_layer/1/0/0.mvt
+//http://127.0.0.1:8000/v4/raster_layer.json
 //http://127.0.0.1:8000/v4/raster_layer/1/0/0.png
+//http://127.0.0.1:8000/v4/rasterdem_layer.json
 //http://127.0.0.1:8000/v4/rasterdem_layer/14/13733/6366.webp
 //http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7
 //http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite@3x

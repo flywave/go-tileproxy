@@ -21,7 +21,7 @@ type BaseResource struct {
 	Resource
 	Stored   bool
 	Location string
-	ID       string
+	StoreID  string
 }
 
 func (r *BaseResource) IsStored() bool {
@@ -41,9 +41,9 @@ func (r *BaseResource) SetLocation(l string) {
 }
 
 func (r *BaseResource) GetID() string {
-	return r.ID
+	return r.StoreID
 }
 
 func (r *BaseResource) SetID(id string) {
-	r.ID = id
+	r.StoreID = id
 }

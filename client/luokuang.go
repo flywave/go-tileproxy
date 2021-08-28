@@ -4,10 +4,11 @@ import "github.com/flywave/go-tileproxy/layer"
 
 type LuoKuangTileClient struct {
 	MapboxClient
+	TilesetID string
 }
 
 func NewLuoKuangTileClient(url string, version string, token string, tilesetID string, ctx Context) *LuoKuangTileClient {
-	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, AccessToken: token, TilesetID: tilesetID}}
+	return &LuoKuangTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, AccessToken: token}, TilesetID: tilesetID}
 }
 
 func (c *LuoKuangTileClient) GetTile(q *layer.LuoKuangTileQuery) []byte {

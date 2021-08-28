@@ -13,6 +13,15 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+var (
+	ArgGISFormats = []string{
+		"jpgpng", "png", "png8", "png24", "jpg", "bmp", "gif", "tiff", "png32", "bip", "bsq", "lerc",
+	}
+	ArgGISPixelType = []string{
+		"C128", "C64", "F32", "F64", "S16", "S32", "S8", "U1", "U16", "U2", "U32", "U4", "U8", "UNKNOWN",
+	}
+)
+
 type ArcGISExportRequestParams struct {
 	params RequestParams
 }
@@ -172,6 +181,16 @@ func (r *ArcGISExportRequestParams) GetDpi() int {
 
 func (r *ArcGISExportRequestParams) SetDpi(dpi int) {
 	r.params.Set("dpi", []string{strconv.Itoa(dpi)})
+}
+
+func (r *ArcGISExportRequestParams) GetLercVersion() int {
+	str := r.params.GetOne("lercVersion", "-1")
+	dpi, _ := strconv.Atoi(str)
+	return dpi
+}
+
+func (r *ArcGISExportRequestParams) SetLercVersion(dpi int) {
+	r.params.Set("lercVersion", []string{strconv.Itoa(dpi)})
 }
 
 type ArcGISIdentifyRequestParams struct {

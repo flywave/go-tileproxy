@@ -209,7 +209,7 @@ func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
 
 	id := c.RequestTemplate.Url
 
-	return &resource.Legend{BaseResource: resource.BaseResource{ID: id}, Source: src, Scale: query.Scale}
+	return &resource.Legend{BaseResource: resource.BaseResource{StoreID: id}, Source: src, Scale: query.Scale}
 }
 
 func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {

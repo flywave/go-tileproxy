@@ -144,7 +144,10 @@ func (s *ImageSource) SetSource(src interface{}) {
 	s.buf = nil
 	switch ss := src.(type) {
 	case io.Reader:
-		s.image, _ = imaging.Decode(ss)
+		img, err := imaging.Decode(ss)
+		if err == nil {
+			s.image = img
+		}
 	case image.Image:
 		s.image = ss
 	case string:

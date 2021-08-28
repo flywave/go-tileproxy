@@ -2,6 +2,7 @@ package resource
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 )
 
@@ -26,7 +27,7 @@ func NewVectorLayer() *VectorLayer {
 }
 
 type TileJSON struct {
-	Resource
+	Resource        `json:"-"`
 	Attribution     string         `json:"attribution"`
 	Description     string         `json:"description"`
 	Bounds          [4]float32     `json:"bounds"`
@@ -52,6 +53,7 @@ type TileJSON struct {
 	Webpage         string         `json:"webpage,omitempty"`
 	Location        string         `json:"-"`
 	Stored          bool           `json:"-"`
+	StoreID         string         `json:"-"`
 }
 
 func (r *TileJSON) GetExtension() string {
@@ -75,15 +77,33 @@ func (r *TileJSON) SetLocation(l string) {
 }
 
 func (r *TileJSON) GetID() string {
-	return r.Id
+	return r.StoreID
 }
 
 func (r *TileJSON) SetID(id string) {
-	r.Id = id
+	r.StoreID = id
+}
+
+func (r *TileJSON) Hash() []byte {
+	m := md5.New()
+	m.Write([]byte(r.StoreID))
+	return m.Sum(nil)
+}
+
+func (r *TileJSON) GetData() []byte {
+	return r.ToJson()
+}
+
+func (r *TileJSON) SetData(content []byte) {
+	reader := bytes.NewBuffer(content)
+	dec := json.NewDecoder(reader)
+	if err := dec.Decode(r); err != nil {
+		return
+	}
 }
 
 func NewTileJSON(id, name string) *TileJSON {
-	att := &TileJSON{Id: id, Name: name, Bounds: [4]float32{-180, -85, 180, 85}, Center: [3]float32{0, 0, 0}, Scheme: "xyz"}
+	att := &TileJSON{StoreID: id, Name: name, Bounds: [4]float32{-180, -85, 180, 85}, Center: [3]float32{0, 0, 0}, Scheme: "xyz"}
 	return att
 }
 

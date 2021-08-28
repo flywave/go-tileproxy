@@ -243,13 +243,14 @@ type WMSMapRequest struct {
 
 func NewWMSMapRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSMapRequest {
 	v := NewVersion("1.3.0")
-	req := &WMSMapRequest{WMSRequest{RequestHandlerName: "map", NonStrict: nonStrict, v: v}}
+	req := &WMSMapRequest{WMSRequest{NonStrict: nonStrict, v: v}}
 	req.init(param, url, validate, ht)
 	return req
 }
 
 func (r *WMSMapRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
+	r.RequestHandlerName = "map"
 	r.FixedParams = make(map[string]string)
 	r.FixedParams["request"] = "GetMap"
 	r.FixedParams["version"] = "1.3.0"
@@ -422,6 +423,7 @@ func (r *WMSLegendGraphicRequest) GetRequestParams() *WMSLegendGraphicRequestPar
 func NewWMSLegendGraphicRequest(param interface{}, url string, validate bool, ht *http.Request, nonStrict bool) *WMSLegendGraphicRequest {
 	v := NewVersion("1.3.0")
 	req := &WMSLegendGraphicRequest{WMSRequest{RequestHandlerName: "legendgraphic", NonStrict: nonStrict, v: v}}
+	req.RequestHandlerName = "legendgraphic"
 	req.FixedParams = make(map[string]string)
 	req.FixedParams["request"] = "GetLegendGraphic"
 	req.FixedParams["sld_version"] = "1.3.0"
@@ -498,8 +500,9 @@ func (r *WMSCapabilitiesRequest) GetRequestParams() *WMSCapabilitiesRequestParam
 
 func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht *http.Request) *WMSCapabilitiesRequest {
 	v := NewVersion("1.3.0")
-	req := &WMSCapabilitiesRequest{WMSRequest: WMSRequest{RequestHandlerName: "capabilities", NonStrict: false, v: v}, MimeType: "text/xml"}
+	req := &WMSCapabilitiesRequest{WMSRequest: WMSRequest{NonStrict: false, v: v}, MimeType: "text/xml"}
 	req.FixedParams = make(map[string]string)
+	req.RequestHandlerName = "capabilities"
 	req.FixedParams["request"] = "GetCapabilities"
 	req.FixedParams["version"] = "1.3.0"
 	req.FixedParams["service"] = "WMS"

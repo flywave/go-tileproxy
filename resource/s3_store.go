@@ -2,6 +2,7 @@ package resource
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -177,7 +178,7 @@ func (c *S3Store) Save(r Resource) error {
 
 	if r.GetLocation() == "" {
 		hash := r.Hash()
-		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
+		r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
 	}
 
 	data := r.GetData()
@@ -195,7 +196,7 @@ func (c *S3Store) Save(r Resource) error {
 
 func (c *S3Store) Load(r Resource) error {
 	hash := r.Hash()
-	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
+	r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
 
 	if ok, _ := c.fileExists(r.GetLocation()); ok {
 		if reader, err := c.reader(r.GetLocation()); err == nil {

@@ -35,31 +35,6 @@ func (r *Response) FileName() string {
 	return SanitizeFileName(strings.TrimPrefix(r.Request.URL.Path, "/"))
 }
 
-func (r *Response) fixCharset(detectCharset bool, defaultEncoding string) error {
-	if len(r.Body) == 0 {
-		return nil
-	}
-	if defaultEncoding != "" {
-		tmpBody, err := encodeBytes(r.Body, "text/plain; charset="+defaultEncoding)
-		if err != nil {
-			return err
-		}
-		r.Body = tmpBody
-		return nil
-	}
-	contentType := strings.ToLower(r.Headers.Get("Content-Type"))
-
-	if strings.Contains(contentType, "utf-8") || strings.Contains(contentType, "utf8") {
-		return nil
-	}
-	tmpBody, err := encodeBytes(r.Body, contentType)
-	if err != nil {
-		return err
-	}
-	r.Body = tmpBody
-	return nil
-}
-
 func encodeBytes(b []byte, contentType string) ([]byte, error) {
 	r, err := charset.NewReader(bytes.NewReader(b), contentType)
 	if err != nil {

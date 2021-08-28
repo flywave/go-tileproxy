@@ -13,12 +13,20 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+var (
+	MapbpxFormats = []string{"mvt", "vector.pbf", "grid.json", "png", "png32", "png64", "png128", "png256", "jpg70", "jpg80", "jpg90"}
+)
+
 type MapboxRequest struct {
 	BaseRequest
 	RequestHandlerName string
 	AccessToken        string
 	ReqRegex           *regexp.Regexp
 	Version            string
+}
+
+func (r *MapboxRequest) GetRequestHandler() string {
+	return r.RequestHandlerName
 }
 
 type MapboxTileJSONRequest struct {
@@ -39,7 +47,7 @@ func (r *MapboxTileJSONRequest) init(param interface{}, url string, validate boo
 	r.Version = "v4"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Secure = false
-	r.ReqRegex = regexp.MustCompile(`^/(?P<version>[^/]+)/(?P<tileset_id>[^/]+)`)
+	r.ReqRegex = regexp.MustCompile(`^/(?P<version>[^/]+)/(?P<tileset_id>[^/]+).json`)
 	r.initRequest()
 }
 
@@ -93,6 +101,9 @@ func (r *MapboxTileRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
+	if len(match) == 0 {
+		return errors.New("error")
+	}
 	for i, name := range groupNames {
 		if name != "" && match[i] != "" {
 			result[name] = match[i]
@@ -116,7 +127,7 @@ func (r *MapboxTileRequest) initRequest() error {
 		z, _ := strconv.ParseInt(result["zoom"], 10, 64)
 		r.Tile = []int{int(x), int(y), int(z)}
 	}
-	if v, ok := result["format"]; ok && r.Format == nil {
+	if v, ok := result["format"]; ok {
 		tf := tile.TileFormat(v)
 		r.Format = &tf
 	}
@@ -209,11 +220,16 @@ func (r *MapboxSpriteRequest) initRequest() error {
 		r.StyleID = v
 	}
 	if v, ok := result["retina"]; ok {
-		rt, _ := strconv.ParseInt(v, 10, 64)
-		r.Retina = geo.NewInt(int(rt))
+		if v != "" {
+			rt, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				r.Retina = geo.NewInt(int(rt))
+			}
+		}
 	}
-	if r.Format != nil {
-		*r.Format = tile.TileFormat(result["format"])
+	if v, ok := result["format"]; ok {
+		f := tile.TileFormat(v)
+		r.Format = &f
 	}
 	return nil
 }

@@ -152,8 +152,8 @@ func (q *StyleQuery) EQ(o *StyleQuery) bool {
 	return true
 }
 
-func (req *StyleQuery) BuildURL(URL string, version string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/%s/%s/%s", URL, version, username, req.StyleID)
+func (req *StyleQuery) BuildURL(URL string, version string, username string, styleid string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/%s/%s/%s", URL, version, username, styleid)
 
 	u, err := url.Parse(urls)
 	if err != nil {
@@ -168,14 +168,16 @@ func (req *StyleQuery) BuildURL(URL string, version string, username string, acc
 
 type TileQuery struct {
 	Query
-	Y       int
-	X       int
-	Zoom    int
-	Width   int
-	Height  int
-	Format  string
-	Retina  *int
-	Markers []*Marker
+	Y         int
+	X         int
+	Zoom      int
+	Width     int
+	Height    int
+	Format    string
+	Retina    *int
+	Markers   []*Marker
+	TilesetID string
+	Layer     *string
 }
 
 func (q *TileQuery) EQ(o *TileQuery) bool {
@@ -200,11 +202,19 @@ func (q *TileQuery) EQ(o *TileQuery) bool {
 	if q.Retina != o.Retina {
 		return false
 	}
+	if q.TilesetID != o.TilesetID {
+		return false
+	}
 	return true
 }
 
-func (req *TileQuery) BuildURL(URL string, version string, accessToken string, mapid string) (string, error) {
-	urls := fmt.Sprintf("%s/%s/%s", URL, version, url.QueryEscape(mapid))
+func (req *TileQuery) BuildURL(URL string, version string, accessToken string, tilesetid string) (string, error) {
+	var urls string
+	if req.Layer != nil {
+		urls = fmt.Sprintf("%s/%s/%s/%s", URL, *req.Layer, version, url.QueryEscape(tilesetid))
+	} else {
+		urls = fmt.Sprintf("%s/%s/%s", URL, version, url.QueryEscape(tilesetid))
+	}
 	if len(req.Markers) > 0 {
 		s := ""
 		for i, marker := range req.Markers {
@@ -254,8 +264,8 @@ func (req *SpriteQuery) GetID() string {
 	return req.StyleID
 }
 
-func (req *SpriteQuery) BuildURL(URL string, version string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/styles/%s/%s/%s/sprite", URL, version, username, req.StyleID)
+func (req *SpriteQuery) BuildURL(URL string, version string, username string, styleid string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/styles/%s/%s/%s/sprite", URL, version, username, styleid)
 	if req.Retina != nil {
 		urls += fmt.Sprintf("@%dx", *req.Retina)
 	}
@@ -297,8 +307,8 @@ func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
 	return true
 }
 
-func (req *GlyphsQuery) BuildURL(URL string, version string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/fonts/%s/%s/%s/%d-%d.pbf", URL, version, username, req.Font, req.Start, req.End)
+func (req *GlyphsQuery) BuildURL(URL string, version string, username string, font string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/fonts/%s/%s/%s/%d-%d.pbf", URL, version, username, font, req.Start, req.End)
 
 	u, err := url.Parse(urls)
 	if err != nil {
@@ -327,8 +337,8 @@ func (q *TileJSONQuery) EQ(o *TileJSONQuery) bool {
 	return true
 }
 
-func (req *TileJSONQuery) BuildURL(URL string, version string, username string, accessToken string) (string, error) {
-	urls := fmt.Sprintf("%s/%s/%s.json", URL, version, req.TilesetID)
+func (req *TileJSONQuery) BuildURL(URL string, version string, username string, tilesetid string, accessToken string) (string, error) {
+	urls := fmt.Sprintf("%s/%s/%s.json", URL, version, tilesetid)
 
 	u, err := url.Parse(urls)
 	if err != nil {
@@ -377,8 +387,8 @@ func (q *LuoKuangTileQuery) EQ(o *LuoKuangTileQuery) bool {
 	return true
 }
 
-func (req *LuoKuangTileQuery) BuildURL(URL string, version string, accessToken string, mapid string) (string, error) {
-	urls := fmt.Sprintf("%s/emg/%s/%s/tile", URL, version, mapid)
+func (req *LuoKuangTileQuery) BuildURL(URL string, version string, accessToken string, styleid string) (string, error) {
+	urls := fmt.Sprintf("%s/emg/%s/%s/tile", URL, version, styleid)
 
 	u, err := url.Parse(urls)
 	if err != nil {

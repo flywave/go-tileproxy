@@ -229,6 +229,7 @@ type TileSource struct {
 type MapboxTileSource struct {
 	SourceCommons
 	Url         string      `json:"url,omitempty"`
+	Layer       *string     `json:"layer,omitempty"`
 	Version     string      `json:"version,omitempty"`
 	TilesetID   string      `json:"tileset_id,omitempty"`
 	UserName    string      `json:"user_name,omitempty"`
@@ -259,12 +260,15 @@ type ArcGISSource struct {
 		TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
 	} `json:"image"`
 	Request struct {
-		Url         string   `json:"url,omitempty"`
-		Dpi         *int     `json:"dpi,omitempty"`
-		Layers      []string `json:"layers"`
-		Transparent *bool    `json:"transparent,omitempty"`
-		Time        *int64   `json:"time,omitempty"`
-		Format      string   `json:"format,omitempty"`
+		Url                string   `json:"url,omitempty"`
+		Dpi                *int     `json:"dpi,omitempty"`
+		Layers             []string `json:"layers"`
+		Transparent        *bool    `json:"transparent,omitempty"`
+		Time               *int64   `json:"time,omitempty"`
+		Format             string   `json:"format,omitempty"`
+		LercVersion        *int     `json:"lerc_version,omitempty"`
+		PixelType          *string  `json:"pixel_type,omitempty"`
+		CompressionQuality *int     `json:"compression_quality,omitempty"`
 	} `json:"req"`
 	Opts struct {
 		Featureinfo                 *bool `json:"featureinfo,omitempty"`

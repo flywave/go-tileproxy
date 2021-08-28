@@ -24,3 +24,4 @@ package-lock.json
 .history
 .umi
 .umi-production
+cache_data

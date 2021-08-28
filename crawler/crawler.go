@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hash/fnv"
 	"io"
 	"io/ioutil"
 	"log"
@@ -36,7 +35,6 @@ type Collector struct {
 	DisallowedDomains        []string
 	DisallowedURLFilters     []*regexp.Regexp
 	URLFilters               []*regexp.Regexp
-	AllowURLRevisit          bool
 	MaxBodySize              int
 	CacheDir                 string
 	IgnoreRobotsTxt          bool
@@ -48,7 +46,6 @@ type Collector struct {
 	CheckHead                bool
 	TraceHTTP                bool
 	Context                  context.Context
-	store                    Storage
 	debugger                 debug.Debugger
 	requestCallbacks         []RequestCallback
 	responseCallbacks        []ResponseCallback
@@ -191,12 +188,6 @@ func URLFilters(filters ...*regexp.Regexp) CollectorOption {
 	}
 }
 
-func AllowURLRevisit() CollectorOption {
-	return func(c *Collector) {
-		c.AllowURLRevisit = true
-	}
-}
-
 func MaxBodySize(sizeInBytes int) CollectorOption {
 	return func(c *Collector) {
 		c.MaxBodySize = sizeInBytes
@@ -260,8 +251,6 @@ func CheckHead() CollectorOption {
 
 func (c *Collector) Init() {
 	c.UserAgent = "crawler"
-	c.store = &InMemoryStorage{}
-	c.store.Init()
 	c.MaxBodySize = 10 * 1024 * 1024
 	c.backend = &httpBackend{}
 	jar, _ := cookiejar.New(nil)
@@ -277,31 +266,23 @@ func (c *Collector) Init() {
 
 func (c *Collector) Visit(URL string) error {
 	if c.CheckHead {
-		if check := c.scrape(URL, "HEAD", 1, nil, nil, nil, true); check != nil {
+		if check := c.scrape(URL, "HEAD", 1, nil, nil, nil); check != nil {
 			return check
 		}
 	}
-	return c.scrape(URL, "GET", 1, nil, nil, nil, true)
-}
-
-func (c *Collector) HasVisited(URL string) (bool, error) {
-	return c.checkHasVisited(URL, nil)
-}
-
-func (c *Collector) HasPosted(URL string, requestData map[string]string) (bool, error) {
-	return c.checkHasVisited(URL, requestData)
+	return c.scrape(URL, "GET", 1, nil, nil, nil)
 }
 
 func (c *Collector) Head(URL string) error {
-	return c.scrape(URL, "HEAD", 1, nil, nil, nil, false)
+	return c.scrape(URL, "HEAD", 1, nil, nil, nil)
 }
 
 func (c *Collector) Post(URL string, requestData map[string]string) error {
-	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, nil, true)
+	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, nil)
 }
 
 func (c *Collector) PostRaw(URL string, requestData []byte) error {
-	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, nil, true)
+	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, nil)
 }
 
 func (c *Collector) PostMultipart(URL string, requestData map[string][]byte) error {
@@ -309,11 +290,11 @@ func (c *Collector) PostMultipart(URL string, requestData map[string][]byte) err
 	hdr := http.Header{}
 	hdr.Set("Content-Type", "multipart/form-data; boundary="+boundary)
 	hdr.Set("User-Agent", c.UserAgent)
-	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, hdr, true)
+	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, hdr)
 }
 
 func (c *Collector) Request(method, URL string, requestData io.Reader, ctx *Context, hdr http.Header) error {
-	return c.scrape(URL, method, 1, requestData, ctx, hdr, true)
+	return c.scrape(URL, method, 1, requestData, ctx, hdr)
 }
 
 func (c *Collector) SetDebugger(d debug.Debugger) {
@@ -350,12 +331,12 @@ func (c *Collector) UnmarshalRequest(r []byte) (*Request, error) {
 	}, nil
 }
 
-func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, ctx *Context, hdr http.Header, checkRevisit bool) error {
+func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, ctx *Context, hdr http.Header) error {
 	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
 	}
-	if err := c.requestCheck(u, parsedURL, method, requestData, depth, checkRevisit); err != nil {
+	if err := c.requestCheck(u, parsedURL, method, requestData, depth); err != nil {
 		return err
 	}
 
@@ -484,11 +465,6 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 	response.Request = request
 	response.Trace = hTrace
 
-	err = response.fixCharset(c.DetectCharset, request.ResponseCharacterEncoding)
-	if err != nil {
-		return err
-	}
-
 	c.handleOnResponse(response)
 
 	if err != nil {
@@ -500,7 +476,7 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 	return err
 }
 
-func (c *Collector) requestCheck(u string, parsedURL *url.URL, method string, requestData io.Reader, depth int, checkRevisit bool) error {
+func (c *Collector) requestCheck(u string, parsedURL *url.URL, method string, requestData io.Reader, depth int) error {
 	if u == "" {
 		return ErrMissingURL
 	}
@@ -516,29 +492,6 @@ func (c *Collector) requestCheck(u string, parsedURL *url.URL, method string, re
 	}
 	if !c.isDomainAllowed(parsedURL.Hostname()) {
 		return ErrForbiddenDomain
-	}
-	if checkRevisit && !c.AllowURLRevisit {
-		h := fnv.New64a()
-		h.Write([]byte(u))
-
-		var uHash uint64
-		if method == "GET" {
-			uHash = h.Sum64()
-		} else if requestData != nil {
-			h.Write(streamToByte(requestData))
-			uHash = h.Sum64()
-		} else {
-			return nil
-		}
-
-		visited, err := c.store.IsVisited(uHash)
-		if err != nil {
-			return err
-		}
-		if visited {
-			return ErrAlreadyVisited
-		}
-		return c.store.Visited(uHash)
 	}
 	return nil
 }
@@ -647,7 +600,6 @@ func (c *Collector) SetStorage(s Storage) error {
 	if err := s.Init(); err != nil {
 		return err
 	}
-	c.store = s
 	c.backend.Client.Jar = createJar(s)
 	return nil
 }
@@ -801,7 +753,6 @@ func (c *Collector) Cookies(URL string) []*http.Cookie {
 func (c *Collector) Clone() *Collector {
 	return &Collector{
 		AllowedDomains:         c.AllowedDomains,
-		AllowURLRevisit:        c.AllowURLRevisit,
 		CacheDir:               c.CacheDir,
 		DetectCharset:          c.DetectCharset,
 		DisallowedDomains:      c.DisallowedDomains,
@@ -815,7 +766,6 @@ func (c *Collector) Clone() *Collector {
 		UserAgent:              c.UserAgent,
 		TraceHTTP:              c.TraceHTTP,
 		Context:                c.Context,
-		store:                  c.store,
 		backend:                c.backend,
 		debugger:               c.debugger,
 		Async:                  c.Async,
@@ -865,17 +815,6 @@ func (c *Collector) parseSettingsFromEnv() {
 			log.Println("Unknown environment variable:", pair[0])
 		}
 	}
-}
-
-func (c *Collector) checkHasVisited(URL string, requestData map[string]string) (bool, error) {
-	h := fnv.New64a()
-	h.Write([]byte(URL))
-
-	if requestData != nil {
-		h.Write(streamToByte(createFormReader(requestData)))
-	}
-
-	return c.store.IsVisited(h.Sum64())
 }
 
 func SanitizeFileName(fileName string) string {

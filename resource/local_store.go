@@ -1,24 +1,18 @@
 package resource
 
 import (
+	"encoding/base64"
 	"errors"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/flywave/go-tileproxy/utils"
 )
 
 type LocalStore struct {
 	Store
 	CacheDir string
-}
-
-func fileExists(filename string) (bool, error) {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func (c *LocalStore) Save(r Resource) error {
@@ -28,12 +22,12 @@ func (c *LocalStore) Save(r Resource) error {
 
 	if r.GetLocation() == "" {
 		hash := r.Hash()
-		r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
+		r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
 	}
 
 	data := r.GetData()
 
-	if err := ioutil.WriteFile(r.GetLocation(), data, 0644); err != nil {
+	if err := ioutil.WriteFile(r.GetLocation(), data, 0777); err != nil {
 		return err
 	}
 
@@ -44,9 +38,9 @@ func (c *LocalStore) Save(r Resource) error {
 
 func (c *LocalStore) Load(r Resource) error {
 	hash := r.Hash()
-	r.SetLocation(path.Join(c.CacheDir, string(hash)) + "." + r.GetExtension())
+	r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
 
-	if ok, _ := fileExists(r.GetLocation()); ok {
+	if ok := utils.FileExists(r.GetLocation()); ok {
 		if f, err := os.Open(r.GetLocation()); err == nil {
 			bufs, e := ioutil.ReadAll(f)
 			if e != nil {
@@ -63,5 +57,8 @@ func (c *LocalStore) Load(r Resource) error {
 }
 
 func NewLocalStore(cache_dir string) *LocalStore {
+	if !utils.FileExists(cache_dir) {
+		os.MkdirAll(cache_dir, 0777)
+	}
 	return &LocalStore{CacheDir: cache_dir}
 }

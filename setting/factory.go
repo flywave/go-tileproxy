@@ -547,6 +547,9 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	}
 	creater := cache.GetSourceCreater(opts)
 	c := client.NewMapboxTileClient(s.Url, s.Version, s.UserName, s.AccessToken, s.TilesetID, newCollectorContext(http))
+	if s.Layer != nil {
+		c.Layer = s.Layer
+	}
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater)
 }
 
@@ -594,12 +597,26 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 		}
 	}
 
+	if s.Request.PixelType != nil {
+		params["pixelType"] = []string{*s.Request.PixelType}
+	} else {
+		params["pixelType"] = []string{"UNKNOWN"}
+	}
+
 	if s.Request.Dpi != nil {
 		params["dpi"] = []string{strconv.Itoa(*s.Request.Dpi)}
 	}
 
 	if s.Request.Time != nil {
 		params["time"] = []string{strconv.FormatInt(*s.Request.Time, 10)}
+	}
+
+	if s.Request.LercVersion != nil {
+		params["lercVersion"] = []string{strconv.Itoa(*s.Request.LercVersion)}
+	}
+
+	if s.Request.CompressionQuality != nil {
+		params["compressionQuality"] = []string{strconv.Itoa(*s.Request.CompressionQuality)}
 	}
 
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
@@ -692,6 +709,9 @@ func LoadTileJSONSource(s *TileJSONSource, globals *GlobalsSetting) *sources.Map
 	case *LocalStore:
 		cache = resource.NewTileJSONCache(ConvertLocalStore(s))
 	}
+	if s.TilesetID != "" {
+		c.TilesetID = s.TilesetID
+	}
 	return sources.NewMapboxTileJSONSource(c, cache)
 }
 
@@ -703,6 +723,9 @@ func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) *sources.MapboxSty
 		http = &globals.Http.HttpOpts
 	}
 	c := client.NewMapboxStyleClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
+	if s.StyleID != "" {
+		c.StyleID = s.StyleID
+	}
 	var cache *resource.StyleCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -721,6 +744,9 @@ func LoadGlyphsSource(s *GlyphsSource, globals *GlobalsSetting) *sources.MapboxG
 		http = &globals.Http.HttpOpts
 	}
 	c := client.NewMapboxGlyphsClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
+	if s.Font != "" {
+		c.Font = s.Font
+	}
 	var cache *resource.GlyphsCache
 	switch s := s.Store.(type) {
 	case *S3Store:

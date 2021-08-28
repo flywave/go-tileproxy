@@ -2,6 +2,7 @@ package sources
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/geo"
@@ -50,13 +51,13 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 
 	x, y, z, _ := tiles.Next()
 
-	tilequery := s.buildTileQuery(x, y, z, query)
+	tilequery := s.buildTileQuery(x, y, z, s.Client.Layer, query)
 	resp := s.Client.GetTile(tilequery)
 	src := s.SourceCreater.Create(resp, [3]int{x, y, z})
 	return src, nil
 }
 
-func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *layer.TileQuery {
+func (s *MapboxTileSource) buildTileQuery(x, y, z int, layer_ *string, query *layer.MapQuery) *layer.TileQuery {
 	var retina *int
 	if query.Dimensions != nil {
 		if v, ok := query.Dimensions["retina"]; ok {
@@ -64,7 +65,7 @@ func (s *MapboxTileSource) buildTileQuery(x, y, z int, query *layer.MapQuery) *l
 			retina = geo.NewInt(r)
 		}
 	}
-	tile := &layer.TileQuery{X: x, Y: y, Zoom: z, Width: int(query.Size[0]), Height: int(query.Size[1]), Format: query.Format.Extension(), Retina: retina}
+	tile := &layer.TileQuery{X: x, Y: y, Zoom: z, Width: int(query.Size[0]), Height: int(query.Size[1]), Format: query.Format.Extension(), Retina: retina, Layer: layer_}
 	return tile
 }
 
@@ -80,10 +81,14 @@ func NewMapboxStyleSource(c *client.MapboxStyleClient, cache *resource.StyleCach
 func (s *MapboxStyleSource) GetSpriteJSON(query *layer.SpriteQuery) *resource.SpriteJSON {
 	id := query.GetID()
 
-	ret := &resource.SpriteJSON{BaseResource: resource.BaseResource{ID: id}}
+	ret := &resource.SpriteJSON{BaseResource: resource.BaseResource{StoreID: id}}
 
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetSpriteJSON(query)
+		if ret != nil {
+			ret.StoreID = id
+			s.Cache.Save(ret)
+		}
 	}
 
 	return ret
@@ -92,10 +97,14 @@ func (s *MapboxStyleSource) GetSpriteJSON(query *layer.SpriteQuery) *resource.Sp
 func (s *MapboxStyleSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite {
 	id := query.GetID()
 
-	ret := &resource.Sprite{BaseResource: resource.BaseResource{ID: id}}
+	ret := &resource.Sprite{BaseResource: resource.BaseResource{StoreID: id}}
 
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetSprite(query)
+		if ret != nil {
+			ret.StoreID = id
+			s.Cache.Save(ret)
+		}
 	}
 
 	return ret
@@ -104,10 +113,14 @@ func (s *MapboxStyleSource) GetSprite(query *layer.SpriteQuery) *resource.Sprite
 func (s *MapboxStyleSource) GetStyle(query *layer.StyleQuery) *resource.Style {
 	id := query.GetID()
 
-	ret := &resource.Style{BaseResource: resource.BaseResource{ID: id}}
+	ret := &resource.Style{BaseResource: resource.BaseResource{StoreID: id}}
 
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetStyle(query)
+		if ret != nil {
+			ret.StoreID = id
+			s.Cache.Save(ret)
+		}
 	}
 
 	return ret
@@ -123,12 +136,16 @@ func NewMapboxGlyphsSource(c *client.MapboxGlyphsClient, cache *resource.GlyphsC
 }
 
 func (s *MapboxGlyphsSource) GetGlyphs(query *layer.GlyphsQuery) *resource.Glyphs {
-	id := query.GetID()
+	id := fmt.Sprintf("%s-%d-%d", query.GetID(), query.Start, query.End)
 
-	ret := &resource.Glyphs{BaseResource: resource.BaseResource{ID: id}}
+	ret := &resource.Glyphs{BaseResource: resource.BaseResource{StoreID: id}}
 
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetGlyphs(query)
+		if ret != nil {
+			ret.StoreID = id
+			s.Cache.Save(ret)
+		}
 	}
 
 	return ret
@@ -148,6 +165,10 @@ func (s *MapboxTileJSONSource) GetTileJSON(query *layer.TileJSONQuery) *resource
 
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
 		ret = s.Client.GetTileJSON(query)
+		if ret != nil {
+			ret.StoreID = query.TilesetID
+			s.Cache.Save(ret)
+		}
 	}
 
 	return ret

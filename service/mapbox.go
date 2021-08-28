@@ -46,7 +46,7 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 		},
 	}
 	s.requestParser = func(r *http.Request) request.Request {
-		return request.MakeMapboxRequest(r, true)
+		return request.MakeMapboxRequest(r, false)
 	}
 	return s
 }
@@ -103,7 +103,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if tile_format == "" {
 		tile_format = tile.TileFormat(*tile_request.Format)
 	}
-	resp := NewResponse(t.getBuffer(), -1, tile_format.MimeType())
+	resp := NewResponse(t.getBuffer(), 200, tile_format.MimeType())
 	if t.getCacheable() {
 		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, int(s.MaxTileAge.Seconds()))
 	} else {
@@ -285,21 +285,12 @@ func (t *MapboxTileProvider) IsRasterDem() bool {
 }
 
 func (t *MapboxTileProvider) GetFormatMimeType() string {
-	if f, ok := t.metadata["format"]; ok {
-		return f
-	}
-	if t.type_ == MapboxVector {
-		return "application/vnd.mapbox-vector-tile"
-	}
-	return "image/webp"
+	format := tile.TileFormat(t.tileManager.GetRequestFormat())
+	return format.MimeType()
 }
 
 func (t *MapboxTileProvider) GetFormat() string {
-	formats := request.SplitMimeType(t.GetFormatMimeType())
-	if formats[1] == "vnd.mapbox-vector-tile" {
-		return "mvt"
-	}
-	return formats[1]
+	return t.tileManager.GetRequestFormat()
 }
 
 func (t *MapboxTileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {

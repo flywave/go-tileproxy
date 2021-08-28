@@ -70,7 +70,7 @@ func (l *Style) SetData(buf []byte) {
 
 func (l *Style) Hash() []byte {
 	m := md5.New()
-	m.Write([]byte(l.ID))
+	m.Write([]byte(l.StoreID))
 	return m.Sum(nil)
 }
 
@@ -86,7 +86,7 @@ type SpriteJSON struct {
 }
 
 func (l *SpriteJSON) GetExtension() string {
-	return "json"
+	return "sprite.json"
 }
 
 func (l *SpriteJSON) GetData() []byte {
@@ -99,7 +99,7 @@ func (l *SpriteJSON) SetData(data []byte) {
 
 func (l *SpriteJSON) Hash() []byte {
 	m := md5.New()
-	m.Write([]byte(l.ID))
+	m.Write([]byte(l.StoreID))
 	return m.Sum(nil)
 }
 
@@ -126,12 +126,15 @@ func (l *Sprite) GetData() []byte {
 }
 
 func (l *Sprite) SetData(data []byte) {
+	if l.Options == nil {
+		l.Options = &imagery.ImageOptions{Format: "png"}
+	}
 	l.Source = imagery.CreateImageSourceFromBufer(data, l.Options)
 }
 
 func (l *Sprite) Hash() []byte {
 	m := md5.New()
-	m.Write([]byte(l.ID))
+	m.Write([]byte(l.StoreID))
 	m.Write([]byte(fmt.Sprintf("%d", l.Scale)))
 	return m.Sum(nil)
 }
@@ -161,7 +164,7 @@ func (l *Glyphs) SetData(data []byte) {
 
 func (l *Glyphs) Hash() []byte {
 	m := md5.New()
-	m.Write([]byte(l.ID))
+	m.Write([]byte(l.StoreID))
 	return m.Sum(nil)
 }
 

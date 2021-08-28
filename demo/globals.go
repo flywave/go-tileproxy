@@ -7,8 +7,8 @@ var (
 )
 
 func init() {
-	Globals.Srs.ProjDataDir = "../proj_data"
-	Globals.Geoid.GeoidDataDir = "../geoid_data"
+	Globals.Srs.ProjDataDir = "../../proj_data"
+	Globals.Geoid.GeoidDataDir = "../../geoid_data"
 
 	Globals.Cache.BaseDir = "./cache_data"
 	Globals.Cache.LockDir = "./cache_data/locks"
@@ -22,7 +22,7 @@ func init() {
 	Globals.Image.MaxStretchFactor = setting.NewFloat64(1.15)
 	Globals.Image.MaxShrinkFactor = setting.NewFloat64(4.0)
 	Globals.Image.Paletted = setting.NewBool(false)
-	Globals.Image.FontDir = setting.NewString("../imagery/fonts/")
+	Globals.Image.FontDir = setting.NewString("../../imagery/fonts/")
 	Globals.Image.Formats = map[string]setting.ImageOpts{
 		"custom_format": {Format: "image/png", Mode: "rgba", Colors: setting.NewInt(32), Transparent: setting.NewBool(true)},
 		"image/jpeg":    {Format: "image/jpeg", Mode: "rgb", Transparent: setting.NewBool(false), EncodingOptions: map[string]interface{}{"jpeg_quality": 90}},

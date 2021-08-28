@@ -10,20 +10,25 @@ type MapboxClient struct {
 	BaseURL     string
 	UserName    string
 	AccessToken string
-	TilesetID   string
 	Version     string
 }
 
 type MapboxTileClient struct {
 	MapboxClient
+	Layer     *string
+	TilesetID string
 }
 
 func NewMapboxTileClient(url string, version string, userName string, token string, tilesetID string, ctx Context) *MapboxTileClient {
-	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token, TilesetID: tilesetID}}
+	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}, TilesetID: tilesetID}
 }
 
 func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.AccessToken, c.TilesetID)
+	tilesetid := q.TilesetID
+	if c.TilesetID != "" {
+		tilesetid = c.TilesetID
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.AccessToken, tilesetid)
 	if err != nil {
 		return nil
 	}
@@ -36,6 +41,7 @@ func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
 
 type MapboxStyleClient struct {
 	MapboxClient
+	StyleID string
 }
 
 func NewMapboxStyleClient(url string, version string, userName string, token string, ctx Context) *MapboxStyleClient {
@@ -43,7 +49,11 @@ func NewMapboxStyleClient(url string, version string, userName string, token str
 }
 
 func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.SpriteJSON {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
+	styleid := q.StyleID
+	if c.StyleID != "" {
+		styleid = c.StyleID
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -55,7 +65,11 @@ func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.Sprite
 }
 
 func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
+	styleid := q.StyleID
+	if c.StyleID != "" {
+		styleid = c.StyleID
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -67,7 +81,11 @@ func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 }
 
 func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
+	styleid := q.StyleID
+	if c.StyleID != "" {
+		styleid = c.StyleID
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -80,6 +98,7 @@ func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
 
 type MapboxGlyphsClient struct {
 	MapboxClient
+	Font string
 }
 
 func NewMapboxGlyphsClient(url string, version string, userName string, token string, ctx Context) *MapboxGlyphsClient {
@@ -87,7 +106,11 @@ func NewMapboxGlyphsClient(url string, version string, userName string, token st
 }
 
 func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
+	font := q.Font
+	if c.Font != "" {
+		font = c.Font
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, font, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -100,6 +123,7 @@ func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
 
 type MapboxTileJSONClient struct {
 	MapboxClient
+	TilesetID string
 }
 
 func NewMapboxTileJSONClient(url string, version string, userName string, token string, ctx Context) *MapboxTileJSONClient {
@@ -107,7 +131,11 @@ func NewMapboxTileJSONClient(url string, version string, userName string, token 
 }
 
 func (c *MapboxTileJSONClient) GetTileJSON(q *layer.TileJSONQuery) *resource.TileJSON {
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, c.AccessToken)
+	tilesetid := q.TilesetID
+	if c.TilesetID != "" {
+		tilesetid = c.TilesetID
+	}
+	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, tilesetid, c.AccessToken)
 	if err != nil {
 		return nil
 	}

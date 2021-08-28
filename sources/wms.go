@@ -275,9 +275,9 @@ func (s *WMSLegendSource) GetSize() []uint32 {
 func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 	var legend *resource.Legend
 	if s.Static {
-		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: -1}
+		legend = &resource.Legend{BaseResource: resource.BaseResource{StoreID: s.Identifier}, Scale: -1}
 	} else {
-		legend = &resource.Legend{BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale}
+		legend = &resource.Legend{BaseResource: resource.BaseResource{StoreID: s.Identifier}, Scale: query.Scale}
 	}
 
 	var error_occured bool
@@ -292,7 +292,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 	format := request.SplitMimeType(query.Format)[0]
 	legend = &resource.Legend{
 		Source:       imagery.ConcatLegends(legends, imagery.RGBA, tile.TileFormat(format), nil, nil, false),
-		BaseResource: resource.BaseResource{ID: s.Identifier}, Scale: query.Scale,
+		BaseResource: resource.BaseResource{StoreID: s.Identifier}, Scale: query.Scale,
 	}
 
 	if !error_occured {

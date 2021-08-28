@@ -48,7 +48,7 @@ func (l *Legend) SetData(data []byte) {
 
 func (l *Legend) Hash() []byte {
 	m := md5.New()
-	m.Write([]byte(l.ID))
+	m.Write([]byte(l.StoreID))
 	m.Write([]byte(fmt.Sprintf("%d", l.Scale)))
 	return m.Sum(nil)
 }

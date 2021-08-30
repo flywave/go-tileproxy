@@ -81,9 +81,7 @@ func (p RequestParams) copy() RequestParams {
 	map_copy := make(RequestParams)
 	for index, element := range p {
 		newElement := make([]string, len(element))
-		for i := range element {
-			newElement[i] = element[i]
-		}
+		copy(newElement, element)
 		map_copy[index] = newElement
 	}
 	return map_copy

@@ -61,7 +61,7 @@ func (r *MapboxTileJSONRequest) initRequest() error {
 		}
 	}
 
-	if match == nil || len(match) == 0 || result["version"] != r.Version {
+	if len(match) == 0 || result["version"] != r.Version {
 		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
 	}
 
@@ -126,7 +126,7 @@ func (r *MapboxTileRequest) initRequest() error {
 		}
 	}
 
-	if match == nil || len(match) == 0 || result["version"] != r.Version {
+	if len(match) == 0 || result["version"] != r.Version {
 		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
 	}
 
@@ -181,7 +181,7 @@ func (r *MapboxStyleRequest) initRequest() error {
 		}
 	}
 
-	if match == nil || len(match) == 0 || result["version"] != r.Version {
+	if len(match) == 0 || result["version"] != r.Version {
 		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
 	}
 
@@ -225,7 +225,7 @@ func (r *MapboxSpriteRequest) initRequest() error {
 		result[name] = match[i]
 	}
 
-	if match == nil || len(match) == 0 || result["version"] != r.Version {
+	if len(match) == 0 || result["version"] != r.Version {
 		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
 	}
 
@@ -283,7 +283,7 @@ func (r *MapboxGlyphsRequest) initRequest() error {
 		}
 	}
 
-	if match == nil || len(match) == 0 || result["version"] != r.Version {
+	if len(match) == 0 || result["version"] != r.Version {
 		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
 	}
 

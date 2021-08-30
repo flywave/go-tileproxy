@@ -169,10 +169,7 @@ func (r *WMSMapRequestParams) GetFormatMimeType() string {
 
 func (r *WMSMapRequestParams) GetTransparent() bool {
 	str := r.params.GetOne("transparent", "false")
-	if strings.ToLower(str) == "true" {
-		return true
-	}
-	return false
+	return strings.ToLower(str) == "true"
 }
 
 func (r *WMSMapRequestParams) SetTransparent(transparent bool) {

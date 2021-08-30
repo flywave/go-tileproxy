@@ -292,7 +292,6 @@ type MapboxService struct {
 	Metadata   map[string]string `json:"metadata,omitempty"`
 	Layers     []MapboxTileLayer `json:"layers,omitempty"`
 	Styles     []StyleSource     `json:"styles,omitempty"`
-	Fonts      []GlyphsSource    `json:"fonts,omitempty"`
 	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
@@ -421,13 +420,15 @@ type S3Store struct {
 }
 
 type StyleSource struct {
-	Url         string      `json:"url,omitempty"`
-	Version     string      `json:"version,omitempty"`
-	UserName    string      `json:"user_name,omitempty"`
-	AccessToken string      `json:"access_token,omitempty"`
-	StyleID     string      `json:"style_id,omitempty"`
-	Store       interface{} `json:"store"`
-	Http        *HttpOpts   `json:"http,omitempty"`
+	Url         string       `json:"url,omitempty"`
+	Version     string       `json:"version,omitempty"`
+	UserName    string       `json:"user_name,omitempty"`
+	AccessToken string       `json:"access_token,omitempty"`
+	StyleID     string       `json:"style_id,omitempty"`
+	Store       interface{}  `json:"store"`
+	Http        *HttpOpts    `json:"http,omitempty"`
+	Fonts       GlyphsSource `json:"fonts,omitempty"`
+	IsLKMode    bool         `json:"islkmode,omitempty"`
 }
 
 type GlyphsSource struct {
@@ -438,6 +439,7 @@ type GlyphsSource struct {
 	Font        string      `json:"font,omitempty"`
 	Store       interface{} `json:"store"`
 	Http        *HttpOpts   `json:"http,omitempty"`
+	IsLKMode    bool        `json:"islkmode,omitempty"`
 }
 
 type TileJSONSource struct {
@@ -448,4 +450,5 @@ type TileJSONSource struct {
 	TilesetID   string      `json:"tileset_id,omitempty"`
 	Store       interface{} `json:"store"`
 	Http        *HttpOpts   `json:"http,omitempty"`
+	IsLKMode    bool        `json:"islkmode,omitempty"`
 }

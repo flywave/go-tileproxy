@@ -760,18 +760,14 @@ func LoadGlyphsSource(s *GlyphsSource, globals *GlobalsSetting) *sources.MapboxG
 func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance) *service.MapboxService {
 	layers := make(map[string]service.Provider)
 	styles := make(map[string]*service.StyleProvider)
-	fonts := make(map[string]*service.GlyphProvider)
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertMapboxTileLayer(&tl, globals, instance)
 	}
 
 	for _, st := range s.Styles {
-		styles[st.StyleID] = service.NewStyleProvider(LoadStyleSource(&st, globals))
-	}
-
-	for _, ft := range s.Fonts {
-		fonts[ft.Font] = service.NewGlyphProvider(LoadGlyphsSource(&ft, globals))
+		font := st.Fonts.Font
+		styles[st.StyleID] = service.NewStyleProvider(LoadStyleSource(&st, globals), font, LoadGlyphsSource(&st.Fonts, globals))
 	}
 
 	var max_tile_age *time.Duration
@@ -781,7 +777,7 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 		max_tile_age = &d
 	}
 
-	return service.NewMapboxService(layers, styles, fonts, s.Metadata, max_tile_age)
+	return service.NewMapboxService(layers, styles, s.Metadata, max_tile_age)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {

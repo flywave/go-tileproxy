@@ -21,13 +21,13 @@ type MapboxService struct {
 	BaseService
 	Tilesets   map[string]Provider
 	Styles     map[string]*StyleProvider
-	Fonts      map[string]*GlyphProvider
+	Fonts      map[string]*StyleProvider
 	Metadata   map[string]string
 	MaxTileAge *time.Duration
 }
 
-func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, fonts map[string]*GlyphProvider, md map[string]string, max_tile_age *time.Duration) *MapboxService {
-	s := &MapboxService{Tilesets: layers, Styles: styles, Fonts: fonts, Metadata: md, MaxTileAge: max_tile_age}
+func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, md map[string]string, max_tile_age *time.Duration) *MapboxService {
+	s := &MapboxService{Tilesets: layers, Styles: styles, Fonts: make(map[string]*StyleProvider), Metadata: md, MaxTileAge: max_tile_age}
 	s.router = map[string]func(r request.Request) *Response{
 		"tilejson": func(r request.Request) *Response {
 			return s.GetTileJSON(r)
@@ -44,6 +44,9 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 		"glyphs": func(r request.Request) *Response {
 			return s.GetGlyphs(r)
 		},
+	}
+	for _, sty := range styles {
+		s.Fonts[sty.fontId] = sty
 	}
 	s.requestParser = func(r *http.Request) request.Request {
 		return request.MakeMapboxRequest(r, false)
@@ -154,7 +157,7 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 	glyphs_req := req.(*request.MapboxGlyphsRequest)
 
 	if st, ok := s.Fonts[glyphs_req.Font]; ok {
-		resp := st.fetch(glyphs_req)
+		resp := st.fetchGlyph(glyphs_req)
 		return NewResponse(resp, 200, "application/x-protobuf")
 	}
 
@@ -162,31 +165,19 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 	return resp.Render()
 }
 
-type GlyphProvider struct {
-	source *sources.MapboxGlyphsSource
-}
-
-func NewGlyphProvider(source *sources.MapboxGlyphsSource) *GlyphProvider {
-	return &GlyphProvider{source: source}
-}
-
-func (c *GlyphProvider) fetch(req *request.MapboxGlyphsRequest) []byte {
-	query := &layer.GlyphsQuery{Font: req.Font, Start: req.Start, End: req.End}
-	glyphs := c.source.GetGlyphs(query)
-	return glyphs.GetData()
-}
-
 type StyleProvider struct {
-	source *sources.MapboxStyleSource
+	styleSource  *sources.MapboxStyleSource
+	fontId       string
+	glyphsSource *sources.MapboxGlyphsSource
 }
 
-func NewStyleProvider(source *sources.MapboxStyleSource) *StyleProvider {
-	return &StyleProvider{source: source}
+func NewStyleProvider(style *sources.MapboxStyleSource, fontId string, glyphs *sources.MapboxGlyphsSource) *StyleProvider {
+	return &StyleProvider{styleSource: style, fontId: fontId, glyphsSource: glyphs}
 }
 
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
 	query := &layer.StyleQuery{StyleID: req.StyleID}
-	styles := c.source.GetStyle(query)
+	styles := c.styleSource.GetStyle(query)
 	return styles.GetData()
 }
 
@@ -197,11 +188,17 @@ func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
 	}
 	if req.Format != nil {
 		query.Format = req.Format
-		styles := c.source.GetSprite(query)
+		styles := c.styleSource.GetSprite(query)
 		return styles.GetData()
 	}
-	styles := c.source.GetSpriteJSON(query)
+	styles := c.styleSource.GetSpriteJSON(query)
 	return styles.GetData()
+}
+
+func (c *StyleProvider) fetchGlyph(req *request.MapboxGlyphsRequest) []byte {
+	query := &layer.GlyphsQuery{Font: req.Font, Start: req.Start, End: req.End}
+	glyphs := c.glyphsSource.GetGlyphs(query)
+	return glyphs.GetData()
 }
 
 type MapboxTileType uint32

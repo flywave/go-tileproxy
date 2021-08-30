@@ -41,30 +41,28 @@ var (
 				Source: "mvt_cache",
 				Name:   "mvt_layer",
 				TileJSON: setting.TileJSONSource{
-					Url:         LK_API_URL,
-					Version:     "v4",
+					Url:         LK_API_URL + "/view/map/",
 					AccessToken: LK_ACCESSTOKEN,
-					TilesetID:   "mapbox.mapbox-streets-v8",
+					TilesetID:   "lkstreetv2",
 					Store:       &setting.LocalStore{Directory: "./cache_data/mvt/tilejson/"},
+					IsLKMode:    true,
 				},
 			},
 		},
 		Styles: []setting.StyleSource{
 			{
-				Url:         LK_API_URL,
-				Version:     "v1",
-				StyleID:     "cjikt35x83t1z2rnxpdmjs7y7",
+				Url:         LK_API_URL + "/openplatform/v1/mapStyle/getStyle",
+				StyleID:     "standard",
 				AccessToken: LK_ACCESSTOKEN,
 				Store:       &setting.LocalStore{Directory: "./cache_data/style/"},
-			},
-		},
-		Fonts: []setting.GlyphsSource{
-			{
-				Url:         LK_API_URL,
-				Version:     "v1",
-				AccessToken: LK_ACCESSTOKEN,
-				Font:        "Arial Unicode MS Regular",
-				Store:       &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				IsLKMode:    true,
+				Fonts: setting.GlyphsSource{
+					Url:         LK_API_URL,
+					AccessToken: LK_ACCESSTOKEN,
+					Font:        "Arial Unicode MS Regular",
+					Store:       &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+					IsLKMode:    true,
+				},
 			},
 		},
 	}

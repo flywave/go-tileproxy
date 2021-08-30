@@ -127,16 +127,14 @@ var (
 				StyleID:     "cjikt35x83t1z2rnxpdmjs7y7",
 				AccessToken: MAPBOX_ACCESSTOKEN,
 				Store:       &setting.LocalStore{Directory: "./cache_data/style/"},
-			},
-		},
-		Fonts: []setting.GlyphsSource{
-			{
-				Url:         MAPBOX_API_URL,
-				UserName:    MAPBOX_USERNAME,
-				Version:     "v1",
-				AccessToken: MAPBOX_ACCESSTOKEN,
-				Font:        "Arial Unicode MS Regular",
-				Store:       &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				Fonts: setting.GlyphsSource{
+					Url:         MAPBOX_API_URL,
+					UserName:    MAPBOX_USERNAME,
+					Version:     "v1",
+					AccessToken: MAPBOX_ACCESSTOKEN,
+					Font:        "Arial Unicode MS Regular",
+					Store:       &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				},
 			},
 		},
 	}

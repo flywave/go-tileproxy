@@ -13,7 +13,7 @@ type RequestParams http.Header
 func NewRequestParams(dict map[string][]string) RequestParams {
 	ret := make(RequestParams)
 	for k, v := range dict {
-		upkey := strings.ToLower(k)
+		upkey := strings.ToUpper(k)
 		ret[upkey] = v
 	}
 	return ret
@@ -23,7 +23,7 @@ func (p RequestParams) genDict(params []ParamPair) map[string][]string {
 	dict := make(map[string][]string)
 	for _, pa := range params {
 		if len(pa) > 1 {
-			upkey := strings.ToLower(pa[0])
+			upkey := strings.ToUpper(pa[0])
 			dict[upkey] = pa[1:]
 		}
 	}
@@ -49,13 +49,13 @@ func (p RequestParams) Update(params []ParamPair) {
 }
 
 func (p RequestParams) Get(key string) (val []string, ok bool) {
-	upkey := strings.ToLower(key)
+	upkey := strings.ToUpper(key)
 	val, ok = p[upkey]
 	return
 }
 
 func (p RequestParams) GetOne(key string, defaults string) string {
-	upkey := strings.ToLower(key)
+	upkey := strings.ToUpper(key)
 	val, ok := p[upkey]
 	if ok {
 		return val[0]
@@ -64,7 +64,7 @@ func (p RequestParams) GetOne(key string, defaults string) string {
 }
 
 func (p RequestParams) Set(key string, val []string) {
-	upkey := strings.ToLower(key)
+	upkey := strings.ToUpper(key)
 	p[upkey] = val
 }
 

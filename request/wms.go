@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -511,43 +512,44 @@ func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht 
 	return req
 }
 
-func parseWMSRequestType(req *http.Request) string {
-	if _, ok := req.Header["request"]; ok {
-		request_type := strings.ToLower(req.Header["request"][0])
+func parseWMSRequestType(req *http.Request) (string, RequestParams) {
+	values, _ := url.ParseQuery(req.URL.RawQuery)
+	if _, ok := values["request"]; ok {
+		request_type := strings.ToLower(values["request"][0])
 		if utils.ContainsString([]string{"getmap", "map"}, request_type) {
-			return "map"
+			return "map", NewRequestParams(values)
 		} else if utils.ContainsString([]string{"getfeatureinfo", "feature_info"}, request_type) {
-			return "featureinfo"
+			return "featureinfo", NewRequestParams(values)
 		} else if utils.ContainsString([]string{"getcapabilities", "capabilities"}, request_type) {
-			return "capabilities"
+			return "capabilities", NewRequestParams(values)
 		} else if request_type == "getlegendgraphic" {
-			return "legendgraphic"
+			return "legendgraphic", NewRequestParams(values)
 		} else {
-			return request_type
+			return request_type, NewRequestParams(values)
 		}
 	} else {
-		return ""
+		return "", nil
 	}
 }
 
 func MakeWMSRequest(req *http.Request, validate bool) Request {
-	req_type := parseWMSRequestType(req)
+	req_type, values := parseWMSRequestType(req)
 	switch req_type {
 	case "featureinfo":
 		r := &WMSFeatureInfoRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	case "map":
 		r := &WMSMapRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	case "capabilities":
 		r := &WMSCapabilitiesRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	case "legendgraphic":
 		r := &WMSLegendGraphicRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	}
 	return nil

@@ -86,7 +86,7 @@ func (r *WMTSTileRequestParams) GetDimensions() map[string][]string {
 	dimensions := make(map[string][]string)
 	for key, value := range r.params {
 		if !expected_param.Contains(key) {
-			dimensions[strings.ToLower(key)] = value
+			dimensions[strings.ToUpper(key)] = value
 		}
 	}
 	return dimensions
@@ -390,11 +390,11 @@ func (t *URLTemplateConverter) substitute_var(match string) string {
 		var_type_re = var_
 	} else {
 		t.dimensions = append(t.dimensions, var_)
-		var_ = strings.ToLower(var_)
 		var_type_re = `[\w_.,:-]+`
 	}
+
 	t.found = append(t.found, match)
-	return fmt.Sprintf("(?P<%s>%s)", match, var_type_re)
+	return fmt.Sprintf("(?P<%s>%s)", strings.ToLower(match), var_type_re)
 }
 
 func (t *URLTemplateConverter) regexp() *regexp.Regexp {

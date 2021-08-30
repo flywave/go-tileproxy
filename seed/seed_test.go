@@ -113,7 +113,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testin
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 
-	urlTemplate := client.NewURLTemplate("/{{ .tms_path }}.png", "", nil)
+	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
 	client := client.NewTileClient(grid, urlTemplate, ctx)
 
@@ -152,7 +152,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 	grid := geo.NewTileGrid(opts)
 
-	urlTemplate := client.NewURLTemplate("/{{ .tms_path }}.png", "", nil)
+	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
 	client := client.NewTileClient(grid, urlTemplate, ctx)
 

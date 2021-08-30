@@ -257,16 +257,18 @@ func (s *WMTSService) checkRequest(req request.Request, infoformat *string) *Req
 }
 
 const (
-	DEFAULT_WMTS_TEMPLATE      = "/{{ .Layer }}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}.{{ .Format }}"
-	DEFAULT_WMTS_INFO_TEMPLATE = "/{{ .Layer }}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}/{I}/{J}.{{ .InfoFormat }}"
+	DEFAULT_WMTS_TEMPLATE      = "/{Layer}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}.{Format}"
+	DEFAULT_WMTS_INFO_TEMPLATE = "/{Layer}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}/{I}/{J}.{InfoFormat}"
 )
 
 type WMTSRestService struct {
 	WMTSService
-	names          []string
-	requestMethods []string
-	template       string
-	infoTemplate   string
+	names            []string
+	requestMethods   []string
+	template         string
+	infoTemplate     string
+	urlConverter     *request.URLTemplateConverter
+	infoUrlConverter *request.URLTemplateConverter
 }
 
 func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
@@ -276,6 +278,8 @@ func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTil
 	ret.MatrixSets = ms
 	ret.template = DEFAULT_WMTS_TEMPLATE
 	ret.infoTemplate = DEFAULT_WMTS_INFO_TEMPLATE
+	ret.urlConverter = request.NewURLTemplateConverter(ret.template)
+	ret.infoUrlConverter = request.NewFeatureInfoURLTemplateConverter(ret.infoTemplate)
 	return ret
 }
 

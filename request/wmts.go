@@ -2,7 +2,9 @@ package request
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -322,4 +324,93 @@ func MakeWMTSRequest(req *http.Request, validate bool) Request {
 		return r
 	}
 	return nil
+}
+
+type URLTemplateConverter struct {
+	Template   string
+	varregexp  *regexp.Regexp
+	variables  map[string]string
+	required   []string
+	found      []string
+	dimensions []string
+	_regexp    *regexp.Regexp
+}
+
+func NewURLTemplateConverter(template string) *URLTemplateConverter {
+	tpl := &URLTemplateConverter{Template: template, _regexp: nil}
+	tpl.varregexp = regexp.MustCompile(`(?:\\{)?\\{(\w+)\\}(?:\\})?`)
+	tpl.variables = map[string]string{
+		"TileMatrixSet": `[\w_.:-]+`,
+		"TileMatrix":    `\d+`,
+		"TileRow":       `-?\d+`,
+		"TileCol":       `-?\d+`,
+		"I":             `\d+`,
+		"J":             `\d+`,
+		"Style":         `[\w_.:-]+`,
+		"Layer":         `[\w_.:-]+`,
+		"Format":        `\w+`,
+		"InfoFormat":    `\w+`,
+	}
+	tpl.required = []string{
+		"TileCol", "TileRow", "TileMatrix", "TileMatrixSet", "Layer",
+	}
+	tpl.regexp()
+	return tpl
+}
+
+func (t *URLTemplateConverter) GetDimensions() []string {
+	return t.dimensions
+}
+
+func (t *URLTemplateConverter) substitute_var(match string) string {
+	var var_type_re string
+	if var_, ok := t.variables[match]; ok {
+		var_type_re = var_
+	} else {
+		t.dimensions = append(t.dimensions, var_)
+		var_ = strings.ToLower(var_)
+		var_type_re = `[\w_.,:-]+`
+	}
+	t.found = append(t.found, match)
+	return fmt.Sprintf("(?P<%s>%s)", match, var_type_re)
+}
+
+func (t *URLTemplateConverter) regexp() *regexp.Regexp {
+	if t._regexp != nil {
+		return t._regexp
+	}
+	converted_re := []string{}
+	match := t.varregexp.FindStringSubmatch(t.Template)
+	for i := range match {
+		if match[i] != "" {
+			converted_re = append(converted_re, t.substitute_var(match[i]))
+		}
+	}
+
+	wmts_re := regexp.MustCompile("/wmts" + strings.Join(converted_re, ""))
+
+	t._regexp = wmts_re
+	return wmts_re
+}
+
+func NewFeatureInfoURLTemplateConverter(template string) *URLTemplateConverter {
+	tpl := &URLTemplateConverter{Template: template, _regexp: nil}
+	tpl.varregexp = regexp.MustCompile(`(?:\\{)?\\{(\w+)\\}(?:\\})?`)
+	tpl.variables = map[string]string{
+		"TileMatrixSet": `[\w_.:-]+`,
+		"TileMatrix":    `\d+`,
+		"TileRow":       `-?\d+`,
+		"TileCol":       `-?\d+`,
+		"I":             `\d+`,
+		"J":             `\d+`,
+		"Style":         `[\w_.:-]+`,
+		"Layer":         `[\w_.:-]+`,
+		"Format":        `\w+`,
+		"InfoFormat":    `\w+`,
+	}
+	tpl.required = []string{
+		"TileCol", "TileRow", "TileMatrix", "TileMatrixSet", "Layer", "I", "J",
+	}
+	tpl.regexp()
+	return tpl
 }

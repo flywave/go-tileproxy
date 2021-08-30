@@ -16,5 +16,4 @@ func TestFileTileLocker(t *testing.T) {
 		cancel()
 		return nil
 	})
-
 }

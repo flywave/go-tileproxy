@@ -90,38 +90,60 @@ type TileURLTemplate struct {
 func NewURLTemplate(template string, format string, subdomains []string) *TileURLTemplate {
 	rt := &TileURLTemplate{Template: template, Format: format, Subdomains: subdomains}
 
-	if strings.Contains(template, "{{ .subdomains }}") && len(subdomains) > 0 {
+	if strings.Contains(template, "{subdomains}") && len(subdomains) > 0 {
+		template = strings.Replace(template, "{subdomains}", "{{ .subdomains }}", 1)
 		rt.HasSubdomains = true
 		rt.r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	} else {
 		rt.HasSubdomains = false
 	}
 
-	if strings.Contains(template, "{{ .quadkey }}") {
+	if strings.Contains(template, "{format}") {
+		template = strings.Replace(template, "{format}", "{{ .format }}", 1)
+	}
+
+	if strings.Contains(template, "{x}") {
+		template = strings.Replace(template, "{x}", "{{ .x }}", 1)
+	}
+
+	if strings.Contains(template, "{y}") {
+		template = strings.Replace(template, "{y}", "{{ .y }}", 1)
+	}
+
+	if strings.Contains(template, "{z}") {
+		template = strings.Replace(template, "{z}", "{{ .z }}", 1)
+	}
+
+	if strings.Contains(template, "{quadkey}") {
+		template = strings.Replace(template, "{quadkey}", "{{ .quadkey }}", 1)
 		rt.WithQuadkey = true
 	} else {
 		rt.WithQuadkey = false
 	}
 
-	if strings.Contains(template, "{{ .tc_path }}") {
+	if strings.Contains(template, "{tc_path}") {
+		template = strings.Replace(template, "{tc_path}", "{{ .tc_path }}", 1)
 		rt.WithTCPath = true
 	} else {
 		rt.WithTCPath = false
 	}
 
-	if strings.Contains(template, "{{ .tms_path }}") {
+	if strings.Contains(template, "{tms_path}") {
+		template = strings.Replace(template, "{tms_path}", "{{ .tms_path }}", 1)
 		rt.WithTMSPath = true
 	} else {
 		rt.WithTMSPath = false
 	}
 
-	if strings.Contains(template, "{{ .arcgiscache_path }}") {
+	if strings.Contains(template, "{arcgiscache_path}") {
+		template = strings.Replace(template, "{arcgiscache_path}", "{{ .arcgiscache_path }}", 1)
 		rt.WithArcgisCachePath = true
 	} else {
 		rt.WithArcgisCachePath = false
 	}
 
-	if strings.Contains(template, "{{ .bbox }}") {
+	if strings.Contains(template, "{bbox}") {
+		template = strings.Replace(template, "{bbox}", "{{ .bbox }}", 1)
 		rt.WithBBox = true
 	} else {
 		rt.WithBBox = false

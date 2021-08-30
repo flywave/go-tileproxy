@@ -136,6 +136,14 @@ func newWaterMarkFilter(w *WaterMark) cache.Filter {
 	return cache.NewWatermark(w.Text, w.Opacity, w.Spacing, w.FontSize, &c)
 }
 
+func LoadFilter(f interface{}) cache.Filter {
+	switch filter := f.(type) {
+	case *WaterMark:
+		return newWaterMarkFilter(filter)
+	}
+	return nil
+}
+
 func LoadCacheManager(c *Caches, globals *GlobalsSetting, instance ProxyInstance) cache.Manager {
 	opts := []tile.TileOptions{}
 	layers := []layer.Layer{}
@@ -235,8 +243,10 @@ func LoadCacheManager(c *Caches, globals *GlobalsSetting, instance ProxyInstance
 
 	var pre_store_filter []cache.Filter
 
-	if c.WaterMark != nil {
-		pre_store_filter = append(pre_store_filter, newWaterMarkFilter(c.WaterMark))
+	if c.Filters != nil {
+		for i := range c.Filters {
+			pre_store_filter = append(pre_store_filter, LoadFilter(c.Filters[i]))
+		}
 	}
 
 	tilegrid := grid.(*geo.TileGrid)

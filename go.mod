@@ -20,7 +20,7 @@ require (
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
 	github.com/flywave/imaging v1.6.5
-	github.com/flywave/ogc-specifications v0.2.7-0.20210820061954-ea81b364d6f3
+	github.com/flywave/ogc-specifications v0.2.7-0.20210830075946-1de050f4de14
 	github.com/fogleman/gg v1.3.0
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.0.0+incompatible

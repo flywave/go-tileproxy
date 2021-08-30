@@ -141,28 +141,28 @@ type S3Cache struct {
 }
 
 type Caches struct {
-	Sources              []string    `json:"sources,omitempty"`
-	Name                 string      `json:"name,omitempty"`
-	Grid                 string      `json:"grid,omitempty"`
-	LockDir              string      `json:"lock_dir,omitempty"`
-	LockRetryDelay       int         `json:"lock_retry_delay,omitempty"`
-	CacheDir             string      `json:"cache_dir,omitempty"`
-	MetaSize             []uint32    `json:"meta_size,omitempty"`
-	MetaBuffer           *int        `json:"meta_buffer,omitempty"`
-	BulkMetaTiles        *bool       `json:"bulk_meta_tiles,omitempty"`
-	TileOptions          interface{} `json:"tile_options,omitempty"`
-	MaxTileLimit         *int        `json:"max_tile_limit,omitempty"`
-	MinimizeMetaRequests *bool       `json:"minimize_meta_requests,omitempty"`
-	UseDirectFromLevel   *int        `json:"use_direct_from_level,omitempty"`
-	UseDirectFromRes     *float64    `json:"use_direct_from_res,omitempty"`
-	DisableStorage       *bool       `json:"disable_storage,omitempty"`
-	Format               string      `json:"format,omitempty"`
-	RequestFormat        string      `json:"request_format,omitempty"`
-	CacheRescaledTiles   *bool       `json:"cache_rescaled_tiles,omitempty"`
-	UpscaleTiles         *int        `json:"upscale_tiles,omitempty"`
-	DownscaleTiles       *int        `json:"downscale_tiles,omitempty"`
-	WaterMark            *WaterMark  `json:"watermark,omitempty"`
-	CacheInfo            interface{} `json:"cache,omitempty"`
+	Sources              []string      `json:"sources,omitempty"`
+	Name                 string        `json:"name,omitempty"`
+	Grid                 string        `json:"grid,omitempty"`
+	LockDir              string        `json:"lock_dir,omitempty"`
+	LockRetryDelay       int           `json:"lock_retry_delay,omitempty"`
+	CacheDir             string        `json:"cache_dir,omitempty"`
+	MetaSize             []uint32      `json:"meta_size,omitempty"`
+	MetaBuffer           *int          `json:"meta_buffer,omitempty"`
+	BulkMetaTiles        *bool         `json:"bulk_meta_tiles,omitempty"`
+	TileOptions          interface{}   `json:"tile_options,omitempty"`
+	MaxTileLimit         *int          `json:"max_tile_limit,omitempty"`
+	MinimizeMetaRequests *bool         `json:"minimize_meta_requests,omitempty"`
+	UseDirectFromLevel   *int          `json:"use_direct_from_level,omitempty"`
+	UseDirectFromRes     *float64      `json:"use_direct_from_res,omitempty"`
+	DisableStorage       *bool         `json:"disable_storage,omitempty"`
+	Format               string        `json:"format,omitempty"`
+	RequestFormat        string        `json:"request_format,omitempty"`
+	CacheRescaledTiles   *bool         `json:"cache_rescaled_tiles,omitempty"`
+	UpscaleTiles         *int          `json:"upscale_tiles,omitempty"`
+	DownscaleTiles       *int          `json:"downscale_tiles,omitempty"`
+	Filters              []interface{} `json:"filters,omitempty"`
+	CacheInfo            interface{}   `json:"cache,omitempty"`
 }
 
 type HttpOpts struct {

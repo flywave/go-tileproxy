@@ -11,7 +11,7 @@ import (
 
 const (
 	LK_API_URL     = "https://api.luokuang.com"
-	LK_ACCESSTOKEN = "DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8"
+	LK_ACCESSTOKEN = "{token}"
 )
 
 var (
@@ -86,16 +86,16 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 }
 
 //https://api.luokuang.com/view/map/lkstreetv2.json
-//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=nightblue&type=1&AK=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=standard&type=1&AK=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/static/sprites/sprite.json?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/static/sprites/sprite.png?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.png?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.json?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight/0-255.pbf?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight,Arial%20Unicode%20MS%20Regular/0-255.pbf?ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/v1/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
-//https://api.luokuang.com/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak=DB1589338764061116C2A51A2CF1B144F2BFA1D29334859EE996VY8OQZR7MGD8
+//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=nightblue&type=1&AK={token}
+//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=standard&type=1&AK={token}
+//https://api.luokuang.com/emg/static/sprites/sprite.json?ak={token}
+//https://api.luokuang.com/emg/static/sprites/sprite.png?ak={token}
+//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.png?ak={token}
+//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.json?ak={token}
+//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight/0-255.pbf?ak={token}
+//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight,Arial%20Unicode%20MS%20Regular/0-255.pbf?ak={token}
+//https://api.luokuang.com/emg/v1/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak={token}
+//https://api.luokuang.com/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak={token}
 
 //http://127.0.0.1:8000/v4/mvt_layer.json
 //http://127.0.0.1:8000/v4/mvt_layer/11/1687/775.mvt

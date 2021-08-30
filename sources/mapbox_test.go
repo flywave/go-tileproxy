@@ -40,7 +40,7 @@ func TestMapboxTileSource(t *testing.T) {
 
 	creater := &dummyCreater{}
 
-	client := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
+	client := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "{token}", "access_token", ctx)
 
 	source := &MapboxTileSource{Grid: grid, Client: client, SourceCreater: creater}
 

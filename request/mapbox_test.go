@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	TEST_TILEJSON         = "https://api.mapbox.com/v4/examples.civir98a801cq2oo6w6mk1aor-9msik.json?access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ"
+	TEST_TILEJSON         = "https://api.mapbox.com/v4/examples.civir98a801cq2oo6w6mk1aor-9msik.json?access_token={token}"
 	TEST_VECTOR_TILE      = "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
 	TEST_RASTER_TILE      = "https://api.mapbox.com/v4/mapbox.satellite/1/0/0@2x.jpg90"
 	TEST_STYLE_URL        = "https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7"

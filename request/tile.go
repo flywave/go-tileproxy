@@ -45,7 +45,8 @@ func (r *TileRequest) init() {
 }
 
 func (r *TileRequest) initRequest() error {
-	match := r.TileReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	url := r.Http.URL.Path
+	match := r.TileReqRegex.FindStringSubmatch(url)
 	groupNames := r.TileReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
@@ -55,7 +56,7 @@ func (r *TileRequest) initRequest() error {
 	}
 
 	if match == nil || len(match) == 0 || result["begin"] != r.RequestPrefix {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
+		return errors.New(fmt.Sprintf("invalid request (%s)", url))
 	}
 
 	r.Layer = result["layer"]
@@ -89,6 +90,7 @@ func NewTMSRequest(req *http.Request) *TMSRequest {
 }
 
 func (r *TMSRequest) init() {
+	r.TileRequest.init()
 	r.CapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
 	r.RootRequestRegex = regexp.MustCompile(`/tms/?$`)
 	r.UseProfiles = true

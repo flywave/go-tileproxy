@@ -13,8 +13,6 @@ type TileSource struct {
 	layer.MapLayer
 	Grid          *geo.TileGrid
 	Client        *client.TileClient
-	Options       tile.TileOptions
-	Coverage      geo.Coverage
 	SourceCreater tile.SourceCreater
 }
 
@@ -23,7 +21,7 @@ func NewTileSource(grid *geo.TileGrid, c *client.TileClient, coverage geo.Covera
 	if coverage != nil && coverage.GetExtent() != nil {
 		extent = geo.MapExtentFromGrid(grid)
 	}
-	return &TileSource{MapLayer: layer.MapLayer{Extent: extent, ResRange: res_range}, Grid: c.Grid, Client: c, Coverage: coverage, Options: opts, SourceCreater: creater}
+	return &TileSource{MapLayer: layer.MapLayer{Extent: extent, ResRange: res_range, Options: opts, Coverage: coverage}, Grid: c.Grid, Client: c, SourceCreater: creater}
 }
 
 func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {

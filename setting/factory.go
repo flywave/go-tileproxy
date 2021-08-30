@@ -529,7 +529,10 @@ func LoadTileSource(s *TileSource, globals *GlobalsSetting, instance ProxyInstan
 		opts = NewVectorOptions(o)
 	}
 	grid := instance.GetGrid(s.Grid)
-	coverage := LoadCoverage(s.Coverage)
+	var coverage geo.Coverage
+	if s.Coverage != nil {
+		coverage = LoadCoverage(s.Coverage)
+	}
 	res_range := NewResolutionRange(&s.ScaleHints)
 
 	var http *HttpOpts

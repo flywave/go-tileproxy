@@ -149,6 +149,8 @@ func NewURLTemplate(template string, format string, subdomains []string) *TileUR
 		rt.WithBBox = false
 	}
 
+	rt.Template = template
+
 	return rt
 }
 

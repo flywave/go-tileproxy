@@ -1,37 +1,45 @@
 package client
 
 import (
+	"errors"
+	"net/url"
+	"strconv"
+	"strings"
+
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
 )
 
 type MapboxClient struct {
 	BaseClient
-	BaseURL     string
-	UserName    string
-	AccessToken string
-	Version     string
+	BaseURL         string
+	TilejsonURL     string
+	AccessToken     string
+	AccessTokenName string
+}
+
+func (c *MapboxClient) buildQuery(url_ string) (string, error) {
+	u, err := url.Parse(url_)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set(c.AccessTokenName, c.AccessToken)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }
 
 type MapboxTileClient struct {
 	MapboxClient
-	Layer     *string
-	TilesetID string
 }
 
-func NewMapboxTileClient(url string, version string, userName string, token string, tilesetID string, ctx Context) *MapboxTileClient {
-	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}, TilesetID: tilesetID}
+func NewMapboxTileClient(urlTemplate string, tilejsonUrl string, token string, tokenName string, ctx Context) *MapboxTileClient {
+	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: urlTemplate, TilejsonURL: tilejsonUrl, AccessToken: token, AccessTokenName: tokenName}}
 }
 
-func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
-	tilesetid := q.TilesetID
-	if c.TilesetID != "" {
-		tilesetid = c.TilesetID
-	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.AccessToken, tilesetid)
-	if err != nil {
-		return nil
-	}
+func (c *MapboxTileClient) GetTile(tile_coord [3]int) []byte {
+	url := c.buildTileQuery(tile_coord)
 	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
@@ -39,21 +47,45 @@ func (c *MapboxTileClient) GetTile(q *layer.TileQuery) []byte {
 	return nil
 }
 
+func (c *MapboxTileClient) GetTileJSON() *resource.TileJSON {
+	url, err := c.buildQuery(c.TilejsonURL)
+	if err != nil {
+		return nil
+	}
+	status, resp := c.httpClient().Open(url, nil)
+	if status == 200 {
+		return resource.CreateTileJSON(resp)
+	}
+	return nil
+}
+
+func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
+	if strings.Contains(c.BaseURL, "{z}") && strings.Contains(c.BaseURL, "{x}") && strings.Contains(c.BaseURL, "{y}") {
+		url := c.BaseURL
+
+		zstr := strconv.Itoa(tile_coord[2])
+		xstr := strconv.Itoa(tile_coord[0])
+		ystr := strconv.Itoa(tile_coord[1])
+
+		url = strings.Replace(url, "{z}", zstr, 1)
+		url = strings.Replace(url, "{x}", xstr, 1)
+		url = strings.Replace(url, "{y}", ystr, 1)
+		return url
+	}
+	return ""
+}
+
 type MapboxStyleClient struct {
 	MapboxClient
-	StyleID string
+	StyleContentAttr *string
 }
 
-func NewMapboxStyleClient(url string, version string, userName string, token string, ctx Context) *MapboxStyleClient {
-	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
+func NewMapboxStyleClient(url string, token string, tokenName string, ctx Context) *MapboxStyleClient {
+	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, AccessToken: token, AccessTokenName: tokenName}}
 }
 
-func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.SpriteJSON {
-	styleid := q.StyleID
-	if c.StyleID != "" {
-		styleid = c.StyleID
-	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
+func (c *MapboxStyleClient) GetSpriteJSON() *resource.SpriteJSON {
+	url, err := c.buildQuery(c.BaseURL)
 	if err != nil {
 		return nil
 	}
@@ -64,12 +96,8 @@ func (c *MapboxStyleClient) GetSpriteJSON(q *layer.SpriteQuery) *resource.Sprite
 	return nil
 }
 
-func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
-	styleid := q.StyleID
-	if c.StyleID != "" {
-		styleid = c.StyleID
-	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
+func (c *MapboxStyleClient) GetSprite() *resource.Sprite {
+	url, err := c.buildQuery(c.BaseURL)
 	if err != nil {
 		return nil
 	}
@@ -80,37 +108,25 @@ func (c *MapboxStyleClient) GetSprite(q *layer.SpriteQuery) *resource.Sprite {
 	return nil
 }
 
-func (c *MapboxStyleClient) GetStyle(q *layer.StyleQuery) *resource.Style {
-	styleid := q.StyleID
-	if c.StyleID != "" {
-		styleid = c.StyleID
-	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, styleid, c.AccessToken)
+func (c *MapboxStyleClient) GetStyle() *resource.Style {
+	url, err := c.buildQuery(c.BaseURL)
 	if err != nil {
 		return nil
 	}
 	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
-		return resource.CreateStyle(resp)
+		if c.StyleContentAttr != nil {
+			return resource.ExtractStyle(resp, *c.StyleContentAttr)
+		} else {
+			return resource.CreateStyle(resp)
+		}
 	}
 	return nil
 }
 
-type MapboxGlyphsClient struct {
-	MapboxClient
-	Font string
-}
+func (c *MapboxStyleClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
+	url, err := c.buildGlyphsURL(q.Font, q.Start, q.End)
 
-func NewMapboxGlyphsClient(url string, version string, userName string, token string, ctx Context) *MapboxGlyphsClient {
-	return &MapboxGlyphsClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
-}
-
-func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
-	font := q.Font
-	if c.Font != "" {
-		font = c.Font
-	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, font, c.AccessToken)
 	if err != nil {
 		return nil
 	}
@@ -121,27 +137,23 @@ func (c *MapboxGlyphsClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
 	return nil
 }
 
-type MapboxTileJSONClient struct {
-	MapboxClient
-	TilesetID string
-}
+func (c *MapboxStyleClient) buildGlyphsURL(font string, start, end int) (string, error) {
+	furl := c.BaseURL
+	if strings.Contains(furl, "{fontstack}") && strings.Contains(furl, "{range}") {
+		rangestr := strconv.Itoa(start) + "-" + strconv.Itoa(end)
 
-func NewMapboxTileJSONClient(url string, version string, userName string, token string, ctx Context) *MapboxTileJSONClient {
-	return &MapboxTileJSONClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, Version: version, UserName: userName, AccessToken: token}}
-}
+		furl = strings.Replace(furl, "{fontstack}", font, 1)
+		furl = strings.Replace(furl, "{range}", rangestr, 1)
 
-func (c *MapboxTileJSONClient) GetTileJSON(q *layer.TileJSONQuery) *resource.TileJSON {
-	tilesetid := q.TilesetID
-	if c.TilesetID != "" {
-		tilesetid = c.TilesetID
+		u, err := url.Parse(furl)
+		if err != nil {
+			return "", err
+		}
+
+		q := u.Query()
+		q.Set(c.AccessTokenName, c.AccessToken)
+		u.RawQuery = q.Encode()
+		return u.String(), nil
 	}
-	url, err := q.BuildURL(c.BaseURL, c.Version, c.UserName, tilesetid, c.AccessToken)
-	if err != nil {
-		return nil
-	}
-	status, resp := c.httpClient().Open(url, nil)
-	if status == 200 {
-		return resource.CreateTileJSON(resp)
-	}
-	return nil
+	return "", errors.New("error")
 }

@@ -228,27 +228,14 @@ type TileSource struct {
 
 type MapboxTileSource struct {
 	SourceCommons
-	Url         string      `json:"url,omitempty"`
-	Layer       *string     `json:"layer,omitempty"`
-	Version     string      `json:"version,omitempty"`
-	TilesetID   string      `json:"tileset_id,omitempty"`
-	UserName    string      `json:"user_name,omitempty"`
-	AccessToken string      `json:"access_token,omitempty"`
-	Options     interface{} `json:"options,omitempty"`
-	Grid        string      `json:"grid,omitempty"`
-	Http        *HttpOpts   `json:"http,omitempty"`
-}
-
-type LuokuangTileSource struct {
-	SourceCommons
-	Url         string      `json:"url,omitempty"`
-	Version     string      `json:"version,omitempty"`
-	TilesetID   string      `json:"tileset_id,omitempty"`
-	UserName    string      `json:"user_name,omitempty"`
-	AccessToken string      `json:"access_token,omitempty"`
-	Options     interface{} `json:"options,omitempty"`
-	Grid        string      `json:"grid,omitempty"`
-	Http        *HttpOpts   `json:"http,omitempty"`
+	Url             string      `json:"url,omitempty"`
+	AccessToken     string      `json:"access_token,omitempty"`
+	AccessTokenName string      `json:"access_token_name,omitempty"`
+	Options         interface{} `json:"options,omitempty"`
+	Grid            string      `json:"grid,omitempty"`
+	Http            *HttpOpts   `json:"http,omitempty"`
+	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
+	TilejsonStore   interface{} `json:"tilejson_store"`
 }
 
 type ArcGISSource struct {
@@ -342,10 +329,10 @@ type MapboxTileLayer struct {
 	Source       string                  `json:"source"`
 	Name         string                  `json:"name,omitempty"`
 	Metadata     map[string]string       `json:"metadata,omitempty"`
-	TileJSON     TileJSONSource          `json:"tilejson,omitempty"`
 	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
 	TileType     string                  `json:"tile_type,omitempty"`
 	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`
+	TileJSON     string                  `json:"tilejson,omitempty"`
 }
 
 type TileLayer struct {
@@ -420,35 +407,15 @@ type S3Store struct {
 }
 
 type StyleSource struct {
-	Url         string       `json:"url,omitempty"`
-	Version     string       `json:"version,omitempty"`
-	UserName    string       `json:"user_name,omitempty"`
-	AccessToken string       `json:"access_token,omitempty"`
-	StyleID     string       `json:"style_id,omitempty"`
-	Store       interface{}  `json:"store"`
-	Http        *HttpOpts    `json:"http,omitempty"`
-	Fonts       GlyphsSource `json:"fonts,omitempty"`
-	IsLKMode    bool         `json:"islkmode,omitempty"`
-}
-
-type GlyphsSource struct {
-	Url         string      `json:"url,omitempty"`
-	Version     string      `json:"version,omitempty"`
-	UserName    string      `json:"user_name,omitempty"`
-	AccessToken string      `json:"access_token,omitempty"`
-	Font        string      `json:"font,omitempty"`
-	Store       interface{} `json:"store"`
-	Http        *HttpOpts   `json:"http,omitempty"`
-	IsLKMode    bool        `json:"islkmode,omitempty"`
-}
-
-type TileJSONSource struct {
-	Url         string      `json:"url,omitempty"`
-	Version     string      `json:"version,omitempty"`
-	UserName    string      `json:"user_name,omitempty"`
-	AccessToken string      `json:"access_token,omitempty"`
-	TilesetID   string      `json:"tileset_id,omitempty"`
-	Store       interface{} `json:"store"`
-	Http        *HttpOpts   `json:"http,omitempty"`
-	IsLKMode    bool        `json:"islkmode,omitempty"`
+	Url              string      `json:"url,omitempty"`
+	AccessToken      string      `json:"access_token,omitempty"`
+	AccessTokenName  string      `json:"access_token_name,omitempty"`
+	StyleID          string      `json:"style_id,omitempty"`
+	Store            interface{} `json:"store"`
+	Http             *HttpOpts   `json:"http,omitempty"`
+	Sprite           string      `json:"sprite"`
+	Glyphs           string      `json:"glyphs"`
+	GlyphsStore      interface{} `json:"glyphs_store"`
+	Fonts            []string    `json:"fonts,omitempty"`
+	StyleContentAttr *string     `json:"style_content,omitempty"`
 }

@@ -51,18 +51,18 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
-	tileClient := client.NewMapboxTileClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
+	tileClient := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 
 	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: ccreater}
 
 	locker := &cache.DummyTileLocker{}
 
-	mockGlyphsClient := client.NewMapboxGlyphsClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	mockGlyphsClient := client.NewMapboxStyleClient("http://api.mapbox.com/fonts/v1/examples", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 	glyphsCache := resource.NewGlyphsCache(resource.NewLocalStore("./test_glyphs_cache"))
 
-	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 	stylesCache := resource.NewStyleCache(resource.NewLocalStore("./test_styles_cache"))
-	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, stylesCache), "moke", sources.NewMapboxGlyphsSource(mockGlyphsClient, glyphsCache)}
+	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, nil, stylesCache), sources.NewMapboxGlyphsSource(mockGlyphsClient, []string{"mock"}, glyphsCache)}
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 

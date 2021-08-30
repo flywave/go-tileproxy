@@ -46,7 +46,9 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 		},
 	}
 	for _, sty := range styles {
-		s.Fonts[sty.fontId] = sty
+		for _, fontId := range sty.getFonts() {
+			s.Fonts[fontId] = sty
+		}
 	}
 	s.requestParser = func(r *http.Request) request.Request {
 		return request.MakeMapboxRequest(r, false)
@@ -167,36 +169,29 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 
 type StyleProvider struct {
 	styleSource  *sources.MapboxStyleSource
-	fontId       string
 	glyphsSource *sources.MapboxGlyphsSource
 }
 
-func NewStyleProvider(style *sources.MapboxStyleSource, fontId string, glyphs *sources.MapboxGlyphsSource) *StyleProvider {
-	return &StyleProvider{styleSource: style, fontId: fontId, glyphsSource: glyphs}
+func NewStyleProvider(style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) *StyleProvider {
+	return &StyleProvider{styleSource: style, glyphsSource: glyphs}
+}
+
+func (c *StyleProvider) getFonts() []string {
+	return c.glyphsSource.Fonts
 }
 
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
-	query := &layer.StyleQuery{StyleID: req.StyleID}
-	styles := c.styleSource.GetStyle(query)
+	styles := c.styleSource.GetStyle(req.StyleID)
 	return styles.GetData()
 }
 
 func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
-	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: req.StyleID}}
-	if req.Retina != nil {
-		query.Retina = req.Retina
-	}
-	if req.Format != nil {
-		query.Format = req.Format
-		styles := c.styleSource.GetSprite(query)
-		return styles.GetData()
-	}
-	styles := c.styleSource.GetSpriteJSON(query)
+	styles := c.styleSource.GetSpriteJSON(req.StyleID)
 	return styles.GetData()
 }
 
 func (c *StyleProvider) fetchGlyph(req *request.MapboxGlyphsRequest) []byte {
-	query := &layer.GlyphsQuery{Font: req.Font, Start: req.Start, End: req.End}
+	query := &layer.GlyphsQuery{Start: req.Start, End: req.End, Font: req.Font}
 	glyphs := c.glyphsSource.GetGlyphs(query)
 	return glyphs.GetData()
 }
@@ -218,7 +213,7 @@ type MapboxTileProvider struct {
 	empty_tile     []byte
 	type_          MapboxTileType
 	zoomRange      [2]int
-	tilejsonSource *sources.MapboxTileJSONSource
+	tilejsonSource layer.MapboxTileJSONLayer
 	vectorLayers   []*resource.VectorLayer
 }
 
@@ -233,7 +228,7 @@ func GetMapboxTileType(tp string) MapboxTileType {
 	return MapboxVector
 }
 
-func NewMapboxTileProvider(name string, tp MapboxTileType, md map[string]string, tileManager cache.Manager, tilejsonSource *sources.MapboxTileJSONSource, vectorLayers []*resource.VectorLayer, zoomRange *[2]int) *MapboxTileProvider {
+func NewMapboxTileProvider(name string, tp MapboxTileType, md map[string]string, tileManager cache.Manager, tilejsonSource layer.MapboxTileJSONLayer, vectorLayers []*resource.VectorLayer, zoomRange *[2]int) *MapboxTileProvider {
 	ret := &MapboxTileProvider{name: name, type_: tp, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid()), tilejsonSource: tilejsonSource, vectorLayers: vectorLayers}
 	if zoomRange != nil {
 		ret.zoomRange = *zoomRange
@@ -334,9 +329,7 @@ func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, cov
 
 func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) []byte {
 	if c.tilejsonSource != nil {
-		query := &layer.TileJSONQuery{TilesetID: req.TilesetID}
-
-		styles := c.tilejsonSource.GetTileJSON(query)
+		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
 		return styles.GetData()
 	}
 

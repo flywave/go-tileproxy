@@ -6,7 +6,6 @@ import (
 	"image/png"
 	"testing"
 
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 )
 
@@ -14,11 +13,9 @@ func TestMapboxTileClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
 
-	query := &layer.TileQuery{X: 1171, Y: 1566, Zoom: 12, Width: 256, Height: 256, Format: "application/vnd.mapbox-vector-tile", Retina: geo.NewInt(2)}
+	client := NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
 
-	client := NewMapboxTileClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "mapbox.mapbox-streets-v8", ctx)
-
-	client.GetTile(query)
+	client.GetTile([3]int{1171, 1566, 12})
 
 	if mock.url == "" {
 		t.FailNow()
@@ -33,11 +30,9 @@ func TestMapboxSpriteClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: imagedata.Bytes()}
 	ctx := &mockContext{c: mock}
 
-	query := &layer.SpriteQuery{StyleQuery: layer.StyleQuery{StyleID: "testStylteId"}, Retina: geo.NewInt(2)}
+	client := NewMapboxStyleClient("http://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-
-	src := client.GetSprite(query)
+	src := client.GetSprite()
 
 	if mock.url == "" && src != nil {
 		t.FailNow()
@@ -48,11 +43,9 @@ func TestMapboxStyleClient(t *testing.T) {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
 
-	query := &layer.StyleQuery{StyleID: "testStylteId"}
+	client := NewMapboxStyleClient("http://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 
-	client := NewMapboxStyleClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
-
-	client.GetStyle(query)
+	client.GetStyle()
 
 	if mock.url == "" {
 		t.FailNow()
@@ -65,7 +58,7 @@ func TestMapboxGlyphsClient(t *testing.T) {
 
 	query := &layer.GlyphsQuery{Font: "Arial Unicode MS", Start: 0, End: 255}
 
-	client := NewMapboxGlyphsClient("https://api.mapbox.com", "v1", "flywave", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", ctx)
+	client := NewMapboxStyleClient("http://api.mapbox.com/fonts/v1/examples", "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", "access_token", ctx)
 
 	f := client.GetGlyphs(query)
 

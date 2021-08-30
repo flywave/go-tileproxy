@@ -296,8 +296,16 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 		tp = service.GetMapboxTileType(l.TileType)
 	}
 	tileManager := instance.GetCache(l.Source)
-	tilejsonSource := LoadTileJSONSource(&l.TileJSON, globals)
-	return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
+
+	var tilesource interface{}
+	tilesource = instance.GetSource(l.TileJSON)
+
+	tilejsonSource, ok := tilesource.(layer.MapboxTileJSONLayer)
+	if ok {
+		return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
+	}
+
+	return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, nil, l.VectorLayers, l.ZoomRange)
 }
 
 func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
@@ -545,36 +553,22 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	} else {
 		http = &globals.Http.HttpOpts
 	}
+
+	var tcache *resource.TileJSONCache
+	switch s := s.TilejsonStore.(type) {
+	case *S3Store:
+		tcache = resource.NewTileJSONCache(ConvertS3Store(s))
+	case *LocalStore:
+		tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
+	}
+
 	creater := cache.GetSourceCreater(opts)
-	c := client.NewMapboxTileClient(s.Url, s.Version, s.UserName, s.AccessToken, s.TilesetID, newCollectorContext(http))
-	if s.Layer != nil {
-		c.Layer = s.Layer
+	accessTokenName := "access_token"
+	if s.AccessTokenName != "" {
+		accessTokenName = s.AccessTokenName
 	}
-	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater)
-}
-
-func LoadLuokuangTileSource(s *LuokuangTileSource, globals *GlobalsSetting, instance ProxyInstance) *sources.LuoKuangTileSource {
-	var opts tile.TileOptions
-	switch o := s.Options.(type) {
-	case *ImageOpts:
-		opts = NewImageOptions(o)
-	case *RasterOpts:
-		opts = NewRasterOptions(o)
-	case *VectorOpts:
-		opts = NewVectorOptions(o)
-	}
-
-	grid := instance.GetGrid(s.Grid)
-
-	var http *HttpOpts
-	if s.Http != nil {
-		http = s.Http
-	} else {
-		http = &globals.Http.HttpOpts
-	}
-	creater := cache.GetSourceCreater(opts)
-	c := client.NewLuoKuangTileClient(s.Url, s.Version, s.AccessToken, s.TilesetID, newCollectorContext(http))
-	return sources.NewLuoKuangTileSource(grid.(*geo.TileGrid), c, opts, creater)
+	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.AccessToken, accessTokenName, newCollectorContext(http))
+	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }
 
 func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.ArcGISSource {
@@ -694,38 +688,26 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 	return sources.NewArcGISInfoSource(c)
 }
 
-func LoadTileJSONSource(s *TileJSONSource, globals *GlobalsSetting) *sources.MapboxTileJSONSource {
+func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
 	var http *HttpOpts
 	if s.Http != nil {
 		http = s.Http
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	c := client.NewMapboxTileJSONClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
-	var cache *resource.TileJSONCache
-	switch s := s.Store.(type) {
-	case *S3Store:
-		cache = resource.NewTileJSONCache(ConvertS3Store(s))
-	case *LocalStore:
-		cache = resource.NewTileJSONCache(ConvertLocalStore(s))
+	accessTokenName := "access_token"
+	if s.AccessTokenName != "" {
+		accessTokenName = s.AccessTokenName
 	}
-	if s.TilesetID != "" {
-		c.TilesetID = s.TilesetID
-	}
-	return sources.NewMapboxTileJSONSource(c, cache)
-}
+	c := client.NewMapboxStyleClient(s.Url, s.AccessToken, accessTokenName, newCollectorContext(http))
 
-func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) *sources.MapboxStyleSource {
-	var http *HttpOpts
-	if s.Http != nil {
-		http = s.Http
-	} else {
-		http = &globals.Http.HttpOpts
+	if s.StyleContentAttr != nil {
+		c.StyleContentAttr = s.StyleContentAttr
 	}
-	c := client.NewMapboxStyleClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
-	if s.StyleID != "" {
-		c.StyleID = s.StyleID
-	}
+
+	csprite := client.NewMapboxStyleClient(s.Sprite, s.AccessToken, accessTokenName, newCollectorContext(http))
+	cglyphs := client.NewMapboxStyleClient(s.Glyphs, s.AccessToken, accessTokenName, newCollectorContext(http))
+
 	var cache *resource.StyleCache
 	switch s := s.Store.(type) {
 	case *S3Store:
@@ -733,28 +715,15 @@ func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) *sources.MapboxSty
 	case *LocalStore:
 		cache = resource.NewStyleCache(ConvertLocalStore(s))
 	}
-	return sources.NewMapboxStyleSource(c, cache)
-}
 
-func LoadGlyphsSource(s *GlyphsSource, globals *GlobalsSetting) *sources.MapboxGlyphsSource {
-	var http *HttpOpts
-	if s.Http != nil {
-		http = s.Http
-	} else {
-		http = &globals.Http.HttpOpts
-	}
-	c := client.NewMapboxGlyphsClient(s.Url, s.Version, s.UserName, s.AccessToken, newCollectorContext(http))
-	if s.Font != "" {
-		c.Font = s.Font
-	}
-	var cache *resource.GlyphsCache
-	switch s := s.Store.(type) {
+	var gcache *resource.GlyphsCache
+	switch s := s.GlyphsStore.(type) {
 	case *S3Store:
-		cache = resource.NewGlyphsCache(ConvertS3Store(s))
+		gcache = resource.NewGlyphsCache(ConvertS3Store(s))
 	case *LocalStore:
-		cache = resource.NewGlyphsCache(ConvertLocalStore(s))
+		gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
 	}
-	return sources.NewMapboxGlyphsSource(c, cache)
+	return sources.NewMapboxStyleSource(c, csprite, cache), sources.NewMapboxGlyphsSource(cglyphs, s.Fonts, gcache)
 }
 
 func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance) *service.MapboxService {
@@ -766,8 +735,8 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 	}
 
 	for _, st := range s.Styles {
-		font := st.Fonts.Font
-		styles[st.StyleID] = service.NewStyleProvider(LoadStyleSource(&st, globals), font, LoadGlyphsSource(&st.Fonts, globals))
+		sts, glys := LoadStyleSource(&st, globals)
+		styles[st.StyleID] = service.NewStyleProvider(sts, glys)
 	}
 
 	var max_tile_age *time.Duration

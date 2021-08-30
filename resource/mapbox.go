@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/flywave/go-mapbox/style"
 	"github.com/flywave/go-tileproxy/imagery"
@@ -74,10 +75,61 @@ func (l *Style) Hash() []byte {
 	return m.Sum(nil)
 }
 
+func (l *Style) GetSprite() string {
+	return *l.style.Sprite
+}
+
+func (l *Style) GetGlyphs() string {
+	return *l.style.Glyphs
+}
+
+func (l *Style) GetSources() map[string]style.Source {
+	ret := make(map[string]style.Source)
+	for k, data := range l.style.Sources {
+		var src style.Source
+		dec := json.NewDecoder(bytes.NewBuffer(data))
+		if err := dec.Decode(&src); err != nil {
+			return nil
+		}
+		ret[k] = src
+	}
+	return ret
+}
+
 func CreateStyle(content []byte) *Style {
 	s := &Style{}
 	s.SetData(content)
 	return s
+}
+
+func ExtractStyle(content []byte, StyleContentAttr string) *Style {
+	attrs := strings.Split(StyleContentAttr, ".")
+	if len(attrs) > 0 {
+		result := make(map[string]interface{})
+		dec := json.NewDecoder(bytes.NewBuffer(content))
+		if err := dec.Decode(&result); err != nil {
+			return nil
+		}
+		current := result
+		var json string
+		for i := range attrs {
+			if c, ok := current[attrs[i]]; ok {
+				if i < len(attrs)-1 {
+					current = c.(map[string]interface{})
+				} else {
+					json = c.(string)
+				}
+			} else {
+				return nil
+			}
+		}
+		if current != nil {
+			return CreateStyle([]byte(json))
+		} else {
+			return nil
+		}
+	}
+	return nil
 }
 
 type SpriteJSON struct {

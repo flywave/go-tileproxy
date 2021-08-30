@@ -11,9 +11,9 @@ var (
 	TEST_VECTOR_TILE      = "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt"
 	TEST_RASTER_TILE      = "https://api.mapbox.com/v4/mapbox.satellite/1/0/0@2x.jpg90"
 	TEST_STYLE_URL        = "https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7"
-	TEST_SPRITE_JSON_URL  = "https://api.mapbox.com/styles/v1/aninggo/cjikt35x83t1z2rnxpdmjs7y7/sprite@3x"
-	TEST_SPRITE_IMAGE_URL = "https://api.mapbox.com/styles/v1/aninggo/cjikt35x83t1z2rnxpdmjs7y7/sprite.png"
-	TEST_GLYPHS_URL       = "https://api.mapbox.com/fonts/v1/aninggo/Arial%20Unicode%20MS%20Regular/0-255.pbf"
+	TEST_SPRITE_JSON_URL  = "https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite@3x"
+	TEST_SPRITE_IMAGE_URL = "https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite.png"
+	TEST_GLYPHS_URL       = "https://api.mapbox.com/fonts/v1/examples/Arial%20Unicode%20MS%20Regular/0-255.pbf"
 )
 
 func TestMapboxTilejsonRequest(t *testing.T) {

@@ -17,6 +17,10 @@ type LegendLayer interface {
 	GetLegend(query *LegendQuery) tile.Source
 }
 
+type MapboxTileJSONLayer interface {
+	GetTileJSON(id string) *resource.TileJSON
+}
+
 type Layer interface {
 	GetMap(query *MapQuery) (tile.Source, error)
 	GetResolutionRange() *geo.ResolutionRange

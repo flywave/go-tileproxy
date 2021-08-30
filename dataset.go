@@ -73,8 +73,6 @@ func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, gl
 			s.Sources[k] = setting.LoadTileSource(source, globals, s)
 		case *setting.MapboxTileSource:
 			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s)
-		case *setting.LuokuangTileSource:
-			s.Sources[k] = setting.LoadLuokuangTileSource(source, globals, s)
 		case *setting.ArcGISSource:
 			if source.Opts.Featureinfo != nil && *source.Opts.Featureinfo {
 				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals, preferred)

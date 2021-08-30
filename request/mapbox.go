@@ -151,7 +151,7 @@ func (r *MapboxStyleRequest) init(param interface{}, url string, validate bool, 
 	r.RequestHandlerName = "style"
 	r.Version = "v1"
 	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/(?P<username>[^/]+)/(?P<style_id>[^/]+)`)
+	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<style_id>[^/]+)`)
 	r.initRequest()
 }
 
@@ -197,7 +197,7 @@ func (r *MapboxSpriteRequest) init(param interface{}, url string, validate bool,
 	r.RequestHandlerName = "sprite"
 	r.Version = "v1"
 	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/(?P<username>[^/]+)/(?P<style_id>[^/]+)/sprite(@(?P<retina>[^/]+)x)?\.?(?P<format>\w+)?`)
+	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<style_id>[^/]+)/sprite(@(?P<retina>[^/]+)x)?\.?(?P<format>\w+)?`)
 	r.initRequest()
 }
 
@@ -253,7 +253,7 @@ func (r *MapboxGlyphsRequest) init(param interface{}, url string, validate bool,
 	r.RequestHandlerName = "glyphs"
 	r.Version = "v1"
 	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/fonts/(?P<version>[^/]+)/(?P<username>[^/]+)/(?P<font>[^/]+)/(?P<start>-?\d+)-(?P<end>-?\d+)\.(?P<format>\w+)`)
+	r.ReqRegex = regexp.MustCompile(`^/fonts/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<font>[^/]+)/(?P<start>-?\d+)-(?P<end>-?\d+)\.(?P<format>\w+)`)
 	r.initRequest()
 }
 

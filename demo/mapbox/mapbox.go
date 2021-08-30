@@ -11,38 +11,34 @@ import (
 
 const (
 	MAPBOX_API_URL     = "https://api.mapbox.com"
-	MAPBOX_USERNAME    = "examples"
+	MAPBOX_TILE_URL    = "https://a.tiles.mapbox.com"
 	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ"
 )
 
 var (
 	mapboxMVTSource = setting.MapboxTileSource{
-		Url:         MAPBOX_API_URL,
-		TilesetID:   "mapbox.mapbox-streets-v8",
-		Version:     "v4",
-		UserName:    MAPBOX_USERNAME,
-		AccessToken: MAPBOX_ACCESSTOKEN,
-		Options:     &setting.VectorOpts{Format: "mvt", Extent: 4096},
-		Grid:        "global_webmercator",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Options:       &setting.VectorOpts{Format: "mvt", Extent: 4096},
+		Grid:          "global_webmercator",
+		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
+		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxRasterSource = setting.MapboxTileSource{
-		Url:         MAPBOX_API_URL,
-		TilesetID:   "mapbox.satellite",
-		Version:     "v4",
-		UserName:    MAPBOX_USERNAME,
-		AccessToken: MAPBOX_ACCESSTOKEN,
-		Options:     &setting.ImageOpts{Format: "png"},
-		Grid:        "global_webmercator",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite/{z}/{x}/{y}.png",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Options:       &setting.ImageOpts{Format: "png"},
+		Grid:          "global_webmercator",
+		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
+		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxRasterDemSource = setting.MapboxTileSource{
-		Url:         MAPBOX_API_URL,
-		Version:     "v1",
-		Layer:       setting.NewString("raster"),
-		TilesetID:   "mapbox.mapbox-terrain-dem-v1",
-		UserName:    MAPBOX_USERNAME,
-		AccessToken: MAPBOX_ACCESSTOKEN,
-		Options:     &setting.ImageOpts{Format: "webp"},
-		Grid:        "global_webmercator",
+		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Options:       &setting.ImageOpts{Format: "webp"},
+		Grid:          "global_webmercator",
+		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
+		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxMVTCache = setting.Caches{
 		Sources:       []string{"mvt"},
@@ -83,58 +79,31 @@ var (
 	mapboxService = setting.MapboxService{
 		Layers: []setting.MapboxTileLayer{
 			{
-				Source: "mvt_cache",
-				Name:   "mvt_layer",
-				TileJSON: setting.TileJSONSource{
-					Url:         MAPBOX_API_URL,
-					Version:     "v4",
-					UserName:    MAPBOX_USERNAME,
-					AccessToken: MAPBOX_ACCESSTOKEN,
-					TilesetID:   "mapbox.mapbox-streets-v8",
-					Store:       &setting.LocalStore{Directory: "./cache_data/mvt/tilejson/"},
-				},
+				Source:   "mvt_cache",
+				Name:     "mvt_layer",
+				TileJSON: "mvt",
 			},
 			{
-				Source: "raster_cache",
-				Name:   "raster_layer",
-				TileJSON: setting.TileJSONSource{
-					Url:         MAPBOX_API_URL,
-					Version:     "v4",
-					UserName:    MAPBOX_USERNAME,
-					AccessToken: MAPBOX_ACCESSTOKEN,
-					TilesetID:   "mapbox.satellite",
-					Store:       &setting.LocalStore{Directory: "./cache_data/raster/tilejson/"},
-				},
+				Source:   "raster_cache",
+				Name:     "raster_layer",
+				TileJSON: "raster",
 			},
 			{
-				Source: "rasterdem_cache",
-				Name:   "rasterdem_layer",
-				TileJSON: setting.TileJSONSource{
-					Url:         MAPBOX_API_URL,
-					Version:     "v4",
-					UserName:    MAPBOX_USERNAME,
-					AccessToken: MAPBOX_ACCESSTOKEN,
-					TilesetID:   "mapbox.mapbox-terrain-dem-v1",
-					Store:       &setting.LocalStore{Directory: "./cache_data/rasterdem/tilejson/"},
-				},
+				Source:   "rasterdem_cache",
+				Name:     "rasterdem_layer",
+				TileJSON: "rasterdem",
 			},
 		},
 		Styles: []setting.StyleSource{
 			{
-				Url:         MAPBOX_API_URL,
-				UserName:    MAPBOX_USERNAME,
-				Version:     "v1",
-				StyleID:     "cjikt35x83t1z2rnxpdmjs7y7",
+				Url:         MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7",
+				StyleID:     "style",
 				AccessToken: MAPBOX_ACCESSTOKEN,
 				Store:       &setting.LocalStore{Directory: "./cache_data/style/"},
-				Fonts: setting.GlyphsSource{
-					Url:         MAPBOX_API_URL,
-					UserName:    MAPBOX_USERNAME,
-					Version:     "v1",
-					AccessToken: MAPBOX_ACCESSTOKEN,
-					Font:        "Arial Unicode MS Regular",
-					Store:       &setting.LocalStore{Directory: "./cache_data/glyphs/"},
-				},
+				Sprite:      MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite",
+				Glyphs:      MAPBOX_API_URL + "/fonts/v1/examples/{fontstack}/{range}.pbf",
+				GlyphsStore: &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				Fonts:       []string{"Arial Unicode MS Regular"},
 			},
 		},
 	}

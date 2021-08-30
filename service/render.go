@@ -28,6 +28,6 @@ type Provider interface {
 	GetFormatMimeType() string
 	GetFormat() string
 	GetMetadata() map[string]string
-	GetTileBBox(request request.Request, use_profiles bool, limit bool) (*RequestError, vec2d.Rect)
-	Render(tile_request request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse)
+	GetTileBBox(request request.TiledRequest, use_profiles bool, limit bool) (*RequestError, vec2d.Rect)
+	Render(tile_request request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse)
 }

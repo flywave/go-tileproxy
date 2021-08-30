@@ -285,7 +285,7 @@ func (t *MapboxTileProvider) GetFormat() string {
 	return t.tileManager.GetRequestFormat()
 }
 
-func (t *MapboxTileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
+func (t *MapboxTileProvider) GetTileBBox(req request.TiledRequest, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
 	tileRequest := req.(*request.TileRequest)
 	tile_coord := tileRequest.Tile
 	return nil, t.GetGrid().TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
@@ -301,7 +301,7 @@ func (t *MapboxTileProvider) emptyResponse() TileResponse {
 	return newImageResponse(t.empty_tile, format, time.Now())
 }
 
-func (tl *MapboxTileProvider) Render(req request.Request, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
+func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.MapboxTileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil

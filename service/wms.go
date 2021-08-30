@@ -256,7 +256,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 
 	mimetype := freq.GetFormatString()
 
-	if infos == nil || len(infos) == 0 {
+	if len(infos) == 0 {
 		return NewResponse([]byte{}, 200, mimetype)
 	}
 
@@ -455,7 +455,7 @@ type WMSLayer interface {
 	mapLayersForQuery(query *layer.MapQuery) map[string]layer.Layer
 	infoLayersForQuery(query *layer.InfoQuery) map[string]layer.InfoLayer
 	legend(query *layer.LegendQuery) []tile.Source
-	GetLegendSize() int
+	GetLegendSize() []int
 	GetName() string
 	GetTitle() string
 	GetLegendURL() string
@@ -498,6 +498,14 @@ func (l *WMSLayerBase) GetName() string {
 
 func (l *WMSLayerBase) GetTitle() string {
 	return l.title
+}
+
+func (l *WMSLayerBase) GetLegendURL() string {
+	return l.legendUrl
+}
+
+func (l *WMSLayerBase) GetLegendSize() []int {
+	return l.legendSize
 }
 
 func (l *WMSLayerBase) GetMetadata() map[string]string {
@@ -590,7 +598,7 @@ func mergeLayerResRanges(layers map[string]layer.Layer) *geo.ResolutionRange {
 }
 
 func mergeLayerExtents(layers map[string]layer.Layer) *geo.MapExtent {
-	if layers == nil || len(layers) == 0 {
+	if len(layers) == 0 {
 		return geo.MapExtentFromDefault()
 	}
 	var extent *geo.MapExtent
@@ -649,7 +657,7 @@ func NewWMSGroupLayer(name string, title string, this WMSLayer, layers map[strin
 	return ret
 }
 
-func (l *WMSGroupLayer) GetLegendSize() int {
+func (l *WMSGroupLayer) GetLegendSize() []int {
 	return l.this.GetLegendSize()
 }
 

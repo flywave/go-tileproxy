@@ -11,11 +11,10 @@ import (
 )
 
 type WMTSCapabilities struct {
-	Service          map[string]string
-	Layers           []WMTSTileLayer
-	MatrixSets       map[string]*TileMatrixSet
-	InfoFormats      map[string]string
-	resourceTemplate string
+	Service     map[string]string
+	Layers      []WMTSTileLayer
+	MatrixSets  map[string]*TileMatrixSet
+	InfoFormats map[string]string
 }
 
 func formatResourceTemplate(layer WMTSTileLayer, tpl string, service map[string]string) string {
@@ -179,6 +178,7 @@ type RestfulCapabilities struct {
 	WMTSCapabilities
 	urlConverter     *request.URLTemplateConverter
 	infoUrlConverter *request.URLTemplateConverter
+	resourceTemplate string
 }
 
 func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
@@ -296,7 +296,7 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 }
 
 func newWMTSRestCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string) *RestfulCapabilities {
-	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, resourceTemplate: resourceTemplate}, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
+	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
 }
 
 type ServiceProvider struct {

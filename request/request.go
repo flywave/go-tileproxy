@@ -10,6 +10,15 @@ type ParamPair []string
 
 type RequestParams http.Header
 
+func NewRequestParams(dict map[string][]string) RequestParams {
+	ret := make(RequestParams)
+	for k, v := range dict {
+		upkey := strings.ToLower(k)
+		ret[upkey] = v
+	}
+	return ret
+}
+
 func (p RequestParams) genDict(params []ParamPair) map[string][]string {
 	dict := make(map[string][]string)
 	for _, pa := range params {

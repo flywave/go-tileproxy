@@ -77,7 +77,7 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 }
 
 //https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/11/710/1117.png
-
+//http://127.0.0.1:8000?service=WMTS&request=GetTile&version=1.0.0&layer=wmts_layer&style=&format=image/png&TileMatrixSet=GLOBAL_WEB_MERCATOR&TileMatrix=11&TileRow=1117&TileCol=710
 func main() {
 	http.HandleFunc("/", DatasetServer)
 	err := http.ListenAndServe(":8000", nil)

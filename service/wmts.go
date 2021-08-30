@@ -45,14 +45,14 @@ func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge
 		},
 	}
 	ret.requestParser = func(r *http.Request) request.Request {
-		return request.MakeWMTSRequest(r, true)
+		return request.MakeWMTSRequest(r, false)
 	}
 	return ret
 }
 
 func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMTSTileLayer, map[string]*TileMatrixSet) {
 	sets := make(map[string]*TileMatrixSet)
-	layers_grids := make(map[string][]Provider)
+	layers_grids := make(map[string]map[string]Provider)
 	for _, layer := range tlayers {
 		grid := layer.GetGrid()
 		if !grid.SupportsAccessWithOrigin(geo.ORIGIN_NW) {
@@ -61,11 +61,14 @@ func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMT
 		if _, ok := sets[grid.Name]; !ok {
 			sets[grid.Name] = NewTileMatrixSet(grid)
 		}
-		layers_grids[grid.Name] = append(layers_grids[grid.Name], layer)
+		if _, ok := layers_grids[layer.GetName()]; !ok {
+			layers_grids[layer.GetName()] = make(map[string]Provider)
+		}
+		layers_grids[layer.GetName()][grid.Name] = layer
 	}
 	wmts_layers := make(map[string]WMTSTileLayer)
 	for layer_name, layers := range layers_grids {
-		wmts_layers[layer_name] = NewWMTSTileLayer(layers)
+		wmts_layers[layer_name] = WMTSTileLayer(layers)
 	}
 	return wmts_layers, sets
 }
@@ -95,7 +98,22 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	params := request.NewWMTSTileRequestParams(tile_request.Params)
 
-	tile_layer := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]
+	tileMatrixSet := params.GetTileMatrixSet()
+	layer := params.GetLayer()
+
+	var tile_layer Provider
+	if layerSet, ok := s.Layers[layer]; ok {
+		if p, ok := layerSet[tileMatrixSet]; ok {
+			tile_layer = p
+		} else {
+			resp := NewRequestError(fmt.Sprintf("layer %s's tileMatrixSet %s not queryable", layer, tileMatrixSet), "OperationNotSupported", &WMTS100ExceptionHandler{}, req, false, nil)
+			return resp.Render()
+		}
+	} else {
+		resp := NewRequestError(fmt.Sprintf("layer %s's not queryable", layer), "OperationNotSupported", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
+
 	if params.GetFormat() == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
 		params.SetFormat(tf)
@@ -126,7 +144,19 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 	}
 
 	resp := NewResponse(tile.getBuffer(), -1, tile.GetFormatMime())
-	resp.cacheHeaders(tile.getTimestamp(), []string{tile.getTimestamp().String(), strconv.Itoa(tile.getSize())}, int(s.MaxTileAge.Seconds()))
+
+	if s.MaxTileAge != nil {
+		timestrs := []string{}
+
+		if tile.getTimestamp() != nil {
+			timestrs = append(timestrs, tile.getTimestamp().String())
+		}
+
+		timestrs = append(timestrs, strconv.Itoa(tile.getSize()))
+
+		resp.cacheHeaders(tile.getTimestamp(), timestrs, int(s.MaxTileAge.Seconds()))
+	}
+
 	resp.makeConditional(tile_request.Http)
 	return resp
 }
@@ -193,7 +223,7 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 
 	mimetype := infoformat
 
-	if infos == nil || len(infos) == 0 {
+	if len(infos) == 0 {
 		return NewResponse([]byte{}, 200, mimetype)
 	}
 
@@ -280,6 +310,20 @@ func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTil
 	ret.infoTemplate = DEFAULT_WMTS_INFO_TEMPLATE
 	ret.urlConverter = request.NewURLTemplateConverter(ret.template)
 	ret.infoUrlConverter = request.NewFeatureInfoURLTemplateConverter(ret.infoTemplate)
+	ret.router = map[string]func(r request.Request) *Response{
+		"tile": func(r request.Request) *Response {
+			return ret.GetTile(r)
+		},
+		"featureinfo": func(r request.Request) *Response {
+			return ret.GetFeatureInfo(r)
+		},
+		"capabilities": func(r request.Request) *Response {
+			return ret.GetCapabilities(r)
+		},
+	}
+	ret.requestParser = func(r *http.Request) request.Request {
+		return request.MakeWMTSRequest(r, false)
+	}
 	return ret
 }
 
@@ -288,14 +332,6 @@ func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, reque
 }
 
 type WMTSTileLayer map[string]Provider
-
-func NewWMTSTileLayer(layer []Provider) WMTSTileLayer {
-	ret := make(WMTSTileLayer)
-	for i := range layer {
-		ret[layer[i].GetName()] = layer[i]
-	}
-	return ret
-}
 
 func (l WMTSTileLayer) frist() Provider {
 	for k := range l {
@@ -380,7 +416,7 @@ func (l WMTSTileLayer) GetMetadata() map[string]string {
 	return nil
 }
 
-func (l WMTSTileLayer) GetTileBBox(request request.Request, use_profiles bool, limit bool) (*RequestError, vec2d.Rect) {
+func (l WMTSTileLayer) GetTileBBox(request request.TiledRequest, use_profiles bool, limit bool) (*RequestError, vec2d.Rect) {
 	p := l.frist()
 	if p != nil {
 		return p.GetTileBBox(request, use_profiles, limit)

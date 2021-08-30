@@ -8,11 +8,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-type TileRequest struct {
+type TiledRequest interface {
 	Request
+	GetFormat() *tile.TileFormat
+	GetTile() [3]int
+	GetOriginString() string
+	GetOrigin() geo.OriginType
+}
+
+type TileRequest struct {
+	TiledRequest
 	TileReqRegex       *regexp.Regexp
 	RequestHandlerName string
 	UseProfiles        bool
@@ -29,6 +38,22 @@ func NewTileRequest(req *http.Request) *TileRequest {
 	r := &TileRequest{Http: req}
 	r.init()
 	return r
+}
+
+func (r *TileRequest) GetFormat() *tile.TileFormat {
+	return r.Format
+}
+
+func (r *TileRequest) GetTile() [3]int {
+	return [3]int{r.Tile[0], r.Tile[1], r.Tile[2]}
+}
+
+func (r *TileRequest) GetOriginString() string {
+	return r.Origin
+}
+
+func (r *TileRequest) GetOrigin() geo.OriginType {
+	return geo.OriginFromString(r.Origin)
 }
 
 func (r *TileRequest) GetRequestHandler() string {
@@ -55,7 +80,7 @@ func (r *TileRequest) initRequest() error {
 		}
 	}
 
-	if match == nil || len(match) == 0 || result["begin"] != r.RequestPrefix {
+	if len(match) == 0 || result["begin"] != r.RequestPrefix {
 		return errors.New(fmt.Sprintf("invalid request (%s)", url))
 	}
 

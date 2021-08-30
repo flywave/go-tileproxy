@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -112,6 +113,25 @@ type WMTSRequest struct {
 
 type WMTS100TileRequest struct {
 	WMTSRequest
+}
+
+func (r *WMTS100TileRequest) GetFormat() *tile.TileFormat {
+	p := r.GetRequestParams()
+	f := p.GetFormat()
+	return &f
+}
+
+func (r *WMTS100TileRequest) GetTile() [3]int {
+	p := r.GetRequestParams()
+	return p.GetCoord()
+}
+
+func (r *WMTS100TileRequest) GetOriginString() string {
+	return "nw"
+}
+
+func (r *WMTS100TileRequest) GetOrigin() geo.OriginType {
+	return geo.ORIGIN_NW
 }
 
 func (r *WMTSRequest) GetRequestParams() WMTSTileRequestParams {
@@ -294,33 +314,35 @@ func (r *WMTS100CapabilitiesRequest) init(param interface{}, url string, validat
 	r.MimeType = "text/xml"
 }
 
-func parseWMTSRequestType(req *http.Request) string {
-	if _, ok := req.Header["request"]; ok {
-		request_type := strings.ToLower(req.Header["request"][0])
+func parseWMTSRequestType(req *http.Request) (string, RequestParams) {
+	values, _ := url.ParseQuery(req.URL.RawQuery)
+	if _, ok := values["request"]; ok {
+		request_type := strings.ToLower(values["request"][0])
 		if strings.HasPrefix(request_type, "get") {
 			request_type = request_type[3:]
 			if utils.ContainsString([]string{"tile", "featureinfo", "capabilities"}, request_type) {
-				return request_type
+				return request_type, NewRequestParams(values)
 			}
 		}
 	}
-	return ""
+	return "", nil
 }
 
 func MakeWMTSRequest(req *http.Request, validate bool) Request {
-	req_type := parseWMTSRequestType(req)
+	req_type, values := parseWMTSRequestType(req)
+
 	switch req_type {
 	case "featureinfo":
 		r := &WMTS100FeatureInfoRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	case "tile":
 		r := &WMTS100TileRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	case "capabilities":
 		r := &WMTS100CapabilitiesRequest{}
-		r.init(req.Header, req.URL.String(), validate, req)
+		r.init(values, req.URL.String(), validate, req)
 		return r
 	}
 	return nil

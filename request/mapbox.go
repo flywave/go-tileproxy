@@ -81,6 +81,22 @@ type MapboxTileRequest struct {
 	Origin    string
 }
 
+func (r *MapboxTileRequest) GetFormat() *tile.TileFormat {
+	return r.Format
+}
+
+func (r *MapboxTileRequest) GetTile() [3]int {
+	return [3]int{r.Tile[0], r.Tile[1], r.Tile[2]}
+}
+
+func (r *MapboxTileRequest) GetOriginString() string {
+	return r.Origin
+}
+
+func (r *MapboxTileRequest) GetOrigin() geo.OriginType {
+	return geo.OriginFromString(r.Origin)
+}
+
 func NewMapboxTileRequest(hreq *http.Request, validate bool) *MapboxTileRequest {
 	req := &MapboxTileRequest{}
 	req.init(hreq.Header, hreq.URL.Path, validate, hreq)

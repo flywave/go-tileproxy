@@ -527,15 +527,17 @@ func (t *TileProvider) GetFormat() string {
 	return formats[1]
 }
 
-func (t *TileProvider) getInternalTileCoord(tileRequest *request.TileRequest, useProfiles bool) (*RequestError, []int) {
-	tile_coord := t.grid.InternalTileCoord([3]int{tileRequest.Tile[0], tileRequest.Tile[1], tileRequest.Tile[2]}, useProfiles)
+func (t *TileProvider) getInternalTileCoord(tileRequest request.TiledRequest, useProfiles bool) (*RequestError, []int) {
+	tile := tileRequest.GetTile()
+	origin := tileRequest.GetOriginString()
+	tile_coord := t.grid.InternalTileCoord([3]int{tile[0], tile[1], tile[2]}, useProfiles)
 	if tile_coord == nil {
 		return NewRequestError("The requested tile is outside the bounding box  of the tile map.", "TileOutOfRange", t.errorHandler, tileRequest, false, nil), nil
 	}
-	if tileRequest.Origin == "nw" && !utils.ContainsString([]string{"ul", "nw"}, t.grid.GetOrigin()) {
+	if origin == "nw" && !utils.ContainsString([]string{"ul", "nw"}, t.grid.GetOrigin()) {
 		coords := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
 		tile_coord = coords[:]
-	} else if tileRequest.Origin == "sw" && !utils.ContainsString([]string{"ll", "sw"}, t.grid.GetOrigin()) {
+	} else if origin == "sw" && !utils.ContainsString([]string{"ll", "sw"}, t.grid.GetOrigin()) {
 		coords := t.grid.grid.FlipTileCoord(tile_coord[0], tile_coord[1], tile_coord[2])
 		tile_coord = coords[:]
 	}
@@ -552,16 +554,15 @@ func (t *TileProvider) emptyResponse() TileResponse {
 	return newImageResponse(t.emptyTile, format, time.Now())
 }
 
-func (tl *TileProvider) GetTileBBox(req request.Request, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
-	tileRequest := req.(*request.TileRequest)
-	err, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
+func (tl *TileProvider) GetTileBBox(req request.TiledRequest, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
+	err, tile_coord := tl.getInternalTileCoord(req, useProfiles)
 	if err != nil {
 		return err, vec2d.Rect{}
 	}
 	return nil, tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
 }
 
-func (tl *TileProvider) checkedDimensions(request *request.TileRequest) utils.Dimensions {
+func (tl *TileProvider) checkedDimensions(request request.TiledRequest) utils.Dimensions {
 	dimensions := make(utils.Dimensions)
 	for dimension, values := range tl.dimensions {
 		dimensions[dimension] = values
@@ -569,12 +570,12 @@ func (tl *TileProvider) checkedDimensions(request *request.TileRequest) utils.Di
 	return dimensions
 }
 
-func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
-	tileRequest := req.(*request.TileRequest)
-	if string(*tileRequest.Format) != tl.GetFormat() {
-		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", string(*tileRequest.Format), tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, tileRequest, false, nil), nil
+func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
+	format := req.GetFormat()
+	if format == nil || format.Extension() != tl.GetFormat() {
+		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", tl.GetFormat(), tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
 	}
-	_, tile_coord := tl.getInternalTileCoord(tileRequest, useProfiles)
+	_, tile_coord := tl.getInternalTileCoord(req, useProfiles)
 	var tile_bbox vec2d.Rect
 	coverage_intersects := false
 	if coverage != nil {
@@ -588,7 +589,7 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 		}
 	}
 
-	dimensions := tl.checkedDimensions(tileRequest)
+	dimensions := tl.checkedDimensions(req)
 
 	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
 	if t.Source == nil {
@@ -608,7 +609,6 @@ func (tl *TileProvider) Render(req request.Request, useProfiles bool, coverage g
 		return nil, newTileResponse(nt, &format, nil, tl.tileManager.GetTileOptions())
 	}
 
-	format := tileRequest.Format
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 

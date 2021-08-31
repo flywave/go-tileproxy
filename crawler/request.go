@@ -24,6 +24,7 @@ type Request struct {
 	abort                     bool
 	baseURL                   *url.URL
 	ProxyURL                  string
+	UserData                  interface{}
 }
 
 type serializableRequest struct {
@@ -46,6 +47,7 @@ func (r *Request) New(method, URL string, body io.Reader) (*Request, error) {
 		URL:       u,
 		Body:      body,
 		Ctx:       r.Ctx,
+		UserData:  r.UserData,
 		Headers:   &http.Header{},
 		ID:        atomic.AddUint32(&r.collector.requestCount, 1),
 		collector: r.collector,
@@ -78,15 +80,15 @@ func (r *Request) AbsoluteURL(u string) string {
 }
 
 func (r *Request) Visit(URL string) error {
-	return r.collector.scrape(r.AbsoluteURL(URL), "GET", r.Depth+1, nil, r.Ctx, nil)
+	return r.collector.scrape(r.AbsoluteURL(URL), "GET", r.Depth+1, nil, r.Ctx, r.UserData, nil)
 }
 
 func (r *Request) Post(URL string, requestData map[string]string) error {
-	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, createFormReader(requestData), r.Ctx, nil)
+	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, createFormReader(requestData), r.Ctx, r.UserData, nil)
 }
 
 func (r *Request) PostRaw(URL string, requestData []byte) error {
-	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, bytes.NewReader(requestData), r.Ctx, nil)
+	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, bytes.NewReader(requestData), r.Ctx, r.UserData, nil)
 }
 
 func (r *Request) PostMultipart(URL string, requestData map[string][]byte) error {
@@ -94,16 +96,16 @@ func (r *Request) PostMultipart(URL string, requestData map[string][]byte) error
 	hdr := http.Header{}
 	hdr.Set("Content-Type", "multipart/form-data; boundary="+boundary)
 	hdr.Set("User-Agent", r.collector.UserAgent)
-	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, createMultipartReader(boundary, requestData), r.Ctx, hdr)
+	return r.collector.scrape(r.AbsoluteURL(URL), "POST", r.Depth+1, createMultipartReader(boundary, requestData), r.Ctx, r.UserData, hdr)
 }
 
 func (r *Request) Retry() error {
 	r.Headers.Del("Cookie")
-	return r.collector.scrape(r.URL.String(), r.Method, r.Depth, r.Body, r.Ctx, *r.Headers)
+	return r.collector.scrape(r.URL.String(), r.Method, r.Depth, r.Body, r.Ctx, r.UserData, *r.Headers)
 }
 
 func (r *Request) Do() error {
-	return r.collector.scrape(r.URL.String(), r.Method, r.Depth, r.Body, r.Ctx, *r.Headers)
+	return r.collector.scrape(r.URL.String(), r.Method, r.Depth, r.Body, r.Ctx, r.UserData, *r.Headers)
 }
 
 func (r *Request) Marshal() ([]byte, error) {

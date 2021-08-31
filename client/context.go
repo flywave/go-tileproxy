@@ -14,10 +14,10 @@ type Config struct {
 	DisableKeepAlives bool
 	Proxys            []string
 	RequestTimeout    time.Duration
+	MaxQueueSize      int
 }
 
 type Context interface {
-	Sync()
 	Client() HttpClient
 }
 
@@ -27,7 +27,7 @@ type CollectorContext struct {
 }
 
 func NewCollectorContext(config *Config) *CollectorContext {
-	client := NewCollectorClient(config)
+	client := NewCollectorClient(config, nil)
 	return &CollectorContext{client: client}
 }
 
@@ -37,8 +37,4 @@ func (c *CollectorContext) Client() HttpClient {
 
 func (c *CollectorContext) GetCollector() *crawler.Collector {
 	return c.client.GetCollector()
-}
-
-func (c *CollectorContext) Sync() {
-	c.GetCollector().Wait()
 }

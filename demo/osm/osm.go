@@ -19,7 +19,7 @@ var (
 		Options:     &setting.ImageOpts{Format: "png"},
 		Grid:        "global_webmercator",
 	}
-	osmTMSCache = setting.Caches{
+	osmTMSCache = setting.CacheSource{
 		Sources:       []string{"tms"},
 		Name:          "tms_cache",
 		Grid:          "global_webmercator",

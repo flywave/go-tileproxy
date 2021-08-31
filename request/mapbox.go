@@ -53,6 +53,9 @@ func (r *MapboxTileJSONRequest) init(param interface{}, url string, validate boo
 
 func (r *MapboxTileJSONRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
@@ -115,6 +118,9 @@ func (r *MapboxTileRequest) init(param interface{}, url string, validate bool, h
 
 func (r *MapboxTileRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
 	if len(match) == 0 {
@@ -173,6 +179,9 @@ func (r *MapboxStyleRequest) init(param interface{}, url string, validate bool, 
 
 func (r *MapboxStyleRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
@@ -219,6 +228,9 @@ func (r *MapboxSpriteRequest) init(param interface{}, url string, validate bool,
 
 func (r *MapboxSpriteRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
@@ -275,6 +287,9 @@ func (r *MapboxGlyphsRequest) init(param interface{}, url string, validate bool,
 
 func (r *MapboxGlyphsRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.ReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {

@@ -24,7 +24,7 @@ var (
 		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
 		TilejsonStore:   &setting.LocalStore{Directory: "./cache_data/tilejson/"},
 	}
-	mapboxMVTCache = setting.Caches{
+	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"mvt"},
 		Name:          "mvt_cache",
 		Grid:          "global_webmercator",

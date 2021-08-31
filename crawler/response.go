@@ -1,14 +1,11 @@
 package crawler
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"mime"
 	"net/http"
 	"strings"
-
-	"golang.org/x/net/html/charset"
 )
 
 type Response struct {
@@ -18,6 +15,7 @@ type Response struct {
 	Request    *Request
 	Headers    *http.Header
 	Trace      *HTTPTrace
+	UserData   interface{}
 }
 
 func (r *Response) Save(fileName string) error {
@@ -33,12 +31,4 @@ func (r *Response) FileName() string {
 		return SanitizeFileName(fmt.Sprintf("%s_%s", r.Request.URL.Path, r.Request.URL.RawQuery))
 	}
 	return SanitizeFileName(strings.TrimPrefix(r.Request.URL.Path, "/"))
-}
-
-func encodeBytes(b []byte, contentType string) ([]byte, error) {
-	r, err := charset.NewReader(bytes.NewReader(b), contentType)
-	if err != nil {
-		return nil, err
-	}
-	return ioutil.ReadAll(r)
 }

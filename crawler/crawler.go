@@ -22,8 +22,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/flywave/go-tileproxy/crawler/debug"
-
 	"github.com/kennygrant/sanitize"
 )
 
@@ -37,7 +35,6 @@ type Collector struct {
 	URLFilters               []*regexp.Regexp
 	MaxBodySize              int
 	CacheDir                 string
-	IgnoreRobotsTxt          bool
 	Async                    bool
 	ParseHTTPErrorResponse   bool
 	ID                       uint32
@@ -46,12 +43,10 @@ type Collector struct {
 	CheckHead                bool
 	TraceHTTP                bool
 	Context                  context.Context
-	debugger                 debug.Debugger
 	requestCallbacks         []RequestCallback
 	responseCallbacks        []ResponseCallback
 	responseHeadersCallbacks []ResponseHeadersCallback
 	errorCallbacks           []ErrorCallback
-	scrapedCallbacks         []ScrapedCallback
 	requestCount             uint32
 	responseCount            uint32
 	backend                  *httpBackend
@@ -67,14 +62,7 @@ type ResponseCallback func(*Response)
 
 type ErrorCallback func(*Response, error)
 
-type ScrapedCallback func(*Response)
-
 type ProxyFunc func(*http.Request) (*url.URL, error)
-
-type cookieJarSerializer struct {
-	store Storage
-	lock  *sync.RWMutex
-}
 
 var collectorCounter uint32
 
@@ -111,9 +99,6 @@ var envMap = map[string]func(*Collector, string){
 	},
 	"DISALLOWED_DOMAINS": func(c *Collector, val string) {
 		c.DisallowedDomains = strings.Split(val, ",")
-	},
-	"IGNORE_ROBOTSTXT": func(c *Collector, val string) {
-		c.IgnoreRobotsTxt = isYesString(val)
 	},
 	"FOLLOW_REDIRECTS": func(c *Collector, val string) {
 		if !isYesString(val) {
@@ -200,12 +185,6 @@ func CacheDir(path string) CollectorOption {
 	}
 }
 
-func IgnoreRobotsTxt() CollectorOption {
-	return func(c *Collector) {
-		c.IgnoreRobotsTxt = true
-	}
-}
-
 func TraceHTTP() CollectorOption {
 	return func(c *Collector) {
 		c.TraceHTTP = true
@@ -236,13 +215,6 @@ func DetectCharset() CollectorOption {
 	}
 }
 
-func Debugger(d debug.Debugger) CollectorOption {
-	return func(c *Collector) {
-		d.Init()
-		c.debugger = d
-	}
-}
-
 func CheckHead() CollectorOption {
 	return func(c *Collector) {
 		c.CheckHead = true
@@ -258,7 +230,6 @@ func (c *Collector) Init() {
 	c.backend.Client.CheckRedirect = c.checkRedirectFunc()
 	c.wg = &sync.WaitGroup{}
 	c.lock = &sync.RWMutex{}
-	c.IgnoreRobotsTxt = true
 	c.ID = atomic.AddUint32(&collectorCounter, 1)
 	c.TraceHTTP = false
 	c.Context = context.Background()
@@ -266,23 +237,23 @@ func (c *Collector) Init() {
 
 func (c *Collector) Visit(URL string) error {
 	if c.CheckHead {
-		if check := c.scrape(URL, "HEAD", 1, nil, nil, nil); check != nil {
+		if check := c.scrape(URL, "HEAD", 1, nil, nil, nil, nil); check != nil {
 			return check
 		}
 	}
-	return c.scrape(URL, "GET", 1, nil, nil, nil)
+	return c.scrape(URL, "GET", 1, nil, nil, nil, nil)
 }
 
 func (c *Collector) Head(URL string) error {
-	return c.scrape(URL, "HEAD", 1, nil, nil, nil)
+	return c.scrape(URL, "HEAD", 1, nil, nil, nil, nil)
 }
 
 func (c *Collector) Post(URL string, requestData map[string]string) error {
-	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, nil)
+	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, nil, nil)
 }
 
 func (c *Collector) PostRaw(URL string, requestData []byte) error {
-	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, nil)
+	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, nil, nil)
 }
 
 func (c *Collector) PostMultipart(URL string, requestData map[string][]byte) error {
@@ -290,16 +261,11 @@ func (c *Collector) PostMultipart(URL string, requestData map[string][]byte) err
 	hdr := http.Header{}
 	hdr.Set("Content-Type", "multipart/form-data; boundary="+boundary)
 	hdr.Set("User-Agent", c.UserAgent)
-	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, hdr)
+	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, nil, hdr)
 }
 
-func (c *Collector) Request(method, URL string, requestData io.Reader, ctx *Context, hdr http.Header) error {
-	return c.scrape(URL, method, 1, requestData, ctx, hdr)
-}
-
-func (c *Collector) SetDebugger(d debug.Debugger) {
-	d.Init()
-	c.debugger = d
+func (c *Collector) Request(method, URL string, requestData io.Reader, ctx *Context, userData interface{}, hdr http.Header) error {
+	return c.scrape(URL, method, 1, requestData, ctx, userData, hdr)
 }
 
 func (c *Collector) UnmarshalRequest(r []byte) (*Request, error) {
@@ -331,7 +297,7 @@ func (c *Collector) UnmarshalRequest(r []byte) (*Request, error) {
 	}, nil
 }
 
-func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, ctx *Context, hdr http.Header) error {
+func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, ctx *Context, userData interface{}, hdr http.Header) error {
 	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return err
@@ -371,10 +337,10 @@ func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, c
 	u = parsedURL.String()
 	c.wg.Add(1)
 	if c.Async {
-		go c.fetch(u, method, depth, requestData, ctx, hdr, req)
+		go c.fetch(u, method, depth, requestData, ctx, userData, hdr, req)
 		return nil
 	}
-	return c.fetch(u, method, depth, requestData, ctx, hdr, req)
+	return c.fetch(u, method, depth, requestData, ctx, userData, hdr, req)
 }
 
 func setRequestBody(req *http.Request, body io.Reader) {
@@ -409,7 +375,7 @@ func setRequestBody(req *http.Request, body io.Reader) {
 	}
 }
 
-func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ctx *Context, hdr http.Header, req *http.Request) error {
+func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ctx *Context, userData interface{}, hdr http.Header, req *http.Request) error {
 	defer c.wg.Done()
 	if ctx == nil {
 		ctx = NewContext()
@@ -464,14 +430,13 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 	response.Ctx = ctx
 	response.Request = request
 	response.Trace = hTrace
+	response.UserData = userData
 
 	c.handleOnResponse(response)
 
 	if err != nil {
 		c.handleOnError(response, err, request, ctx)
 	}
-
-	c.handleOnScraped(response)
 
 	return err
 }
@@ -567,15 +532,6 @@ func (c *Collector) OnError(f ErrorCallback) {
 	c.lock.Unlock()
 }
 
-func (c *Collector) OnScraped(f ScrapedCallback) {
-	c.lock.Lock()
-	if c.scrapedCallbacks == nil {
-		c.scrapedCallbacks = make([]ScrapedCallback, 0, 4)
-	}
-	c.scrapedCallbacks = append(c.scrapedCallbacks, f)
-	c.lock.Unlock()
-}
-
 func (c *Collector) SetClient(client *http.Client) {
 	c.backend.Client = client
 }
@@ -594,14 +550,6 @@ func (c *Collector) SetCookieJar(j http.CookieJar) {
 
 func (c *Collector) SetRequestTimeout(timeout time.Duration) {
 	c.backend.Client.Timeout = timeout
-}
-
-func (c *Collector) SetStorage(s Storage) error {
-	if err := s.Init(); err != nil {
-		return err
-	}
-	c.backend.Client.Jar = createJar(s)
-	return nil
 }
 
 func (c *Collector) SetProxy(proxyURL string) error {
@@ -628,45 +576,19 @@ func (c *Collector) SetProxyFunc(p ProxyFunc) {
 	}
 }
 
-func createEvent(eventType string, requestID, collectorID uint32, kvargs map[string]string) *debug.Event {
-	return &debug.Event{
-		CollectorID: collectorID,
-		RequestID:   requestID,
-		Type:        eventType,
-		Values:      kvargs,
-	}
-}
-
 func (c *Collector) handleOnRequest(r *Request) {
-	if c.debugger != nil {
-		c.debugger.Event(createEvent("request", r.ID, c.ID, map[string]string{
-			"url": r.URL.String(),
-		}))
-	}
 	for _, f := range c.requestCallbacks {
 		f(r)
 	}
 }
 
 func (c *Collector) handleOnResponse(r *Response) {
-	if c.debugger != nil {
-		c.debugger.Event(createEvent("response", r.Request.ID, c.ID, map[string]string{
-			"url":    r.Request.URL.String(),
-			"status": http.StatusText(r.StatusCode),
-		}))
-	}
 	for _, f := range c.responseCallbacks {
 		f(r)
 	}
 }
 
 func (c *Collector) handleOnResponseHeaders(r *Response) {
-	if c.debugger != nil {
-		c.debugger.Event(createEvent("responseHeaders", r.Request.ID, c.ID, map[string]string{
-			"url":    r.Request.URL.String(),
-			"status": http.StatusText(r.StatusCode),
-		}))
-	}
 	for _, f := range c.responseHeadersCallbacks {
 		f(r)
 	}
@@ -685,12 +607,6 @@ func (c *Collector) handleOnError(response *Response, err error, request *Reques
 			Ctx:     ctx,
 		}
 	}
-	if c.debugger != nil {
-		c.debugger.Event(createEvent("error", request.ID, c.ID, map[string]string{
-			"url":    request.URL.String(),
-			"status": http.StatusText(response.StatusCode),
-		}))
-	}
 	if response.Request == nil {
 		response.Request = request
 	}
@@ -701,17 +617,6 @@ func (c *Collector) handleOnError(response *Response, err error, request *Reques
 		f(response, err)
 	}
 	return err
-}
-
-func (c *Collector) handleOnScraped(r *Response) {
-	if c.debugger != nil {
-		c.debugger.Event(createEvent("scraped", r.Request.ID, c.ID, map[string]string{
-			"url": r.Request.URL.String(),
-		}))
-	}
-	for _, f := range c.scrapedCallbacks {
-		f(r)
-	}
 }
 
 func (c *Collector) Limit(rule *LimitRule) error {
@@ -757,7 +662,6 @@ func (c *Collector) Clone() *Collector {
 		DetectCharset:          c.DetectCharset,
 		DisallowedDomains:      c.DisallowedDomains,
 		ID:                     atomic.AddUint32(&collectorCounter, 1),
-		IgnoreRobotsTxt:        c.IgnoreRobotsTxt,
 		MaxBodySize:            c.MaxBodySize,
 		DisallowedURLFilters:   c.DisallowedURLFilters,
 		URLFilters:             c.URLFilters,
@@ -767,11 +671,9 @@ func (c *Collector) Clone() *Collector {
 		TraceHTTP:              c.TraceHTTP,
 		Context:                c.Context,
 		backend:                c.backend,
-		debugger:               c.debugger,
 		Async:                  c.Async,
 		redirectHandler:        c.redirectHandler,
 		errorCallbacks:         make([]ErrorCallback, 0, 8),
-		scrapedCallbacks:       make([]ScrapedCallback, 0, 8),
 		lock:                   c.lock,
 		requestCallbacks:       make([]RequestCallback, 0, 8),
 		responseCallbacks:      make([]ResponseCallback, 0, 8),
@@ -871,43 +773,6 @@ func isYesString(s string) bool {
 		return true
 	}
 	return false
-}
-
-func createJar(s Storage) http.CookieJar {
-	return &cookieJarSerializer{store: s, lock: &sync.RWMutex{}}
-}
-
-func (j *cookieJarSerializer) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	j.lock.Lock()
-	defer j.lock.Unlock()
-	cookieStr := j.store.Cookies(u)
-
-	cnew := make([]*http.Cookie, len(cookies))
-	copy(cnew, cookies)
-	existing := UnstringifyCookies(cookieStr)
-	for _, c := range existing {
-		if !ContainsCookie(cnew, c.Name) {
-			cnew = append(cnew, c)
-		}
-	}
-	j.store.SetCookies(u, StringifyCookies(cnew))
-}
-
-func (j *cookieJarSerializer) Cookies(u *url.URL) []*http.Cookie {
-	cookies := UnstringifyCookies(j.store.Cookies(u))
-
-	now := time.Now()
-	cnew := make([]*http.Cookie, 0, len(cookies))
-	for _, c := range cookies {
-		if c.RawExpires != "" && c.Expires.Before(now) {
-			continue
-		}
-		if c.Secure && u.Scheme != "https" {
-			continue
-		}
-		cnew = append(cnew, c)
-	}
-	return cnew
 }
 
 func isMatchingFilter(fs []*regexp.Regexp, d []byte) bool {

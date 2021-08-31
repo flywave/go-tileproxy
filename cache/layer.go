@@ -18,11 +18,11 @@ type CacheMapLayer struct {
 	maxTileLimit *int
 }
 
-func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, image_opts *imagery.ImageOptions, maxTileLimit *int) *CacheMapLayer {
+func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int) *CacheMapLayer {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
-	ret := &CacheMapLayer{MapLayer: layer.MapLayer{SupportMetaTiles: true, Extent: ext, Options: image_opts}, tileManager: tm, grid: tm.GetGrid(), maxTileLimit: maxTileLimit}
+	ret := &CacheMapLayer{MapLayer: layer.MapLayer{SupportMetaTiles: true, Extent: ext, Options: opts}, tileManager: tm, grid: tm.GetGrid(), maxTileLimit: maxTileLimit}
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
 		ret.ResRange = layer.MergeLayerResRanges(tm.GetSources())

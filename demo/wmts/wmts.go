@@ -29,7 +29,7 @@ var (
 		Grid:        "global_webmercator",
 		Subdomains:  []string{"1", "2", "3", "4"},
 	}
-	wmtsTMSCache = setting.Caches{
+	wmtsTMSCache = setting.CacheSource{
 		Sources:       []string{"wmts"},
 		Name:          "wmts_cache",
 		Grid:          "global_webmercator",

@@ -21,6 +21,7 @@ type WMSClient struct {
 	RequestTemplate *request.WMSMapRequest
 	HttpMethod      string
 	FWDReqParams    map[string]string
+	AdaptTo111      bool
 }
 
 func NewWMSClient(req *request.WMSMapRequest, ctx Context) *WMSClient {
@@ -76,9 +77,12 @@ func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *re
 	params := request.NewWMSMapRequestParams(req.GetParams())
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
-	params.SetSrs(query.Srs.GetSrsCode())
+	params.SetCrs(query.Srs.GetSrsCode())
 	params.SetFormat(*format)
 	params.Update(query.DimensionsForParams(c.FWDReqParams))
+	if c.AdaptTo111 {
+		req.AdaptToWMS111()
+	}
 	return &req
 }
 
@@ -103,6 +107,7 @@ type WMSInfoClient struct {
 	BaseClient
 	RequestTemplate *request.WMSFeatureInfoRequest
 	SupportedSrs    *geo.SupportedSRS
+	AdaptTo111      bool
 }
 
 func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, ctx Context) *WMSInfoClient {
@@ -171,7 +176,7 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetPos(query.Pos)
-	params.SetSrs(query.Srs.GetDef())
+	params.SetCrs(query.Srs.GetDef())
 
 	if query.FeatureCount != nil {
 		fc := strconv.FormatInt(int64(*query.FeatureCount), 10)
@@ -187,7 +192,9 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	} else {
 		params.SetFormat("image/png")
 	}
-
+	if c.AdaptTo111 {
+		req.AdaptToWMS111()
+	}
 	return req.CompleteUrl()
 }
 

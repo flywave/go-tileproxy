@@ -2,7 +2,6 @@ package cache
 
 import (
 	"github.com/flywave/go-tileproxy/geo"
-	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -12,7 +11,7 @@ type CacheSource struct {
 	TiledOnly bool
 }
 
-func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts *imagery.ImageOptions, maxTileLimit *int, tiled_only bool) *CacheSource {
+func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions, maxTileLimit *int, tiled_only bool) *CacheSource {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}

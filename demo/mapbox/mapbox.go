@@ -40,7 +40,7 @@ var (
 		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
 	}
-	mapboxMVTCache = setting.Caches{
+	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"mvt"},
 		Name:          "mvt_cache",
 		Grid:          "global_webmercator",
@@ -52,7 +52,7 @@ var (
 			UseGridNames:    false,
 		},
 	}
-	mapboxRasterCache = setting.Caches{
+	mapboxRasterCache = setting.CacheSource{
 		Sources:       []string{"raster"},
 		Name:          "raster_cache",
 		Grid:          "global_webmercator",
@@ -64,7 +64,7 @@ var (
 			UseGridNames:    false,
 		},
 	}
-	mapboxRasterDemCache = setting.Caches{
+	mapboxRasterDemCache = setting.CacheSource{
 		Sources:       []string{"rasterdem"},
 		Name:          "rasterdem_cache",
 		Grid:          "global_webmercator",

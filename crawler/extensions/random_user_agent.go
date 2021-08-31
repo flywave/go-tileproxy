@@ -12,23 +12,11 @@ var uaGens = []func() string{
 	genFirefoxUA,
 	genChromeUA,
 	genEdgeUA,
-	genOperaUA,
-}
-
-var uaGensMobile = []func() string{
-	genMobileUcwebUA,
-	genMobileNexus10UA,
 }
 
 func RandomUserAgent(c *crawler.Collector) {
 	c.OnRequest(func(r *crawler.Request) {
 		r.Headers.Set("User-Agent", uaGens[rand.Intn(len(uaGens))]())
-	})
-}
-
-func RandomMobileUserAgent(c *crawler.Collector) {
-	c.OnRequest(func(r *crawler.Request) {
-		r.Headers.Set("User-Agent", uaGensMobile[rand.Intn(len(uaGensMobile))]())
 	})
 }
 
@@ -104,96 +92,6 @@ var edgeVersions = []string{
 	"90.0.4430.72,90.0.818.39",
 }
 
-var operaVersions = []string{
-	"2.7.62 Version/11.00",
-	"2.2.15 Version/10.10",
-	"2.9.168 Version/11.50",
-	"2.2.15 Version/10.00",
-	"2.8.131 Version/11.11",
-	"2.5.24 Version/10.54",
-}
-
-var ucwebVersions = []string{
-	"10.9.8.1006",
-	"11.0.0.1016",
-	"11.0.6.1040",
-	"11.1.0.1041",
-	"11.1.1.1091",
-	"11.1.2.1113",
-	"11.1.3.1128",
-	"11.2.0.1125",
-	"11.3.0.1130",
-	"11.4.0.1180",
-	"11.4.1.1138",
-	"11.5.2.1188",
-}
-
-var androidVersions = []string{
-	"4.4.2",
-	"4.4.4",
-	"5.0",
-	"5.0.1",
-	"5.0.2",
-	"5.1",
-	"5.1.1",
-	"5.1.2",
-	"6.0",
-	"6.0.1",
-	"7.0",
-	"7.1.1",
-	"7.1.2",
-	"8.0.0",
-	"8.1.0",
-	"9",
-	"10",
-	"11",
-}
-
-var ucwebDevices = []string{
-	"SM-C111",
-	"SM-J727T1",
-	"SM-J701F",
-	"SM-J330G",
-	"SM-N900",
-	"DLI-TL20",
-	"LG-X230",
-	"AS-5433_Secret",
-	"IdeaTabA1000-G",
-	"GT-S5360",
-	"HTC_Desire_601_dual_sim",
-	"ALCATEL_ONE_TOUCH_7025D",
-	"SM-N910H",
-	"Micromax_Q4101",
-	"SM-G600FY",
-}
-
-var nexus10Builds = []string{
-	"JOP40D",
-	"JOP40F",
-	"JVP15I",
-	"JVP15P",
-	"JWR66Y",
-	"KTU84P",
-	"LMY47D",
-	"LMY47V",
-	"LMY48M",
-	"LMY48T",
-	"LMY48X",
-	"LMY49F",
-	"LMY49H",
-	"LRX21P",
-	"NOF27C",
-}
-
-var nexus10Safari = []string{
-	"534.30",
-	"535.19",
-	"537.22",
-	"537.31",
-	"537.36",
-	"600.1.4",
-}
-
 var osStrings = []string{
 	// MacOS - High Sierra
 	"Macintosh; Intel Mac OS X 10_13",
@@ -260,25 +158,4 @@ func genEdgeUA() string {
 	edgeVersion := strings.Split(version, ",")[1]
 	os := osStrings[rand.Intn(len(osStrings))]
 	return fmt.Sprintf("Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Safari/537.36 Edg/%s", os, chromeVersion, edgeVersion)
-}
-
-func genOperaUA() string {
-	version := operaVersions[rand.Intn(len(operaVersions))]
-	os := osStrings[rand.Intn(len(osStrings))]
-	return fmt.Sprintf("Opera/9.80 (%s; U; en) Presto/%s", os, version)
-}
-
-func genMobileUcwebUA() string {
-	device := ucwebDevices[rand.Intn(len(ucwebDevices))]
-	version := ucwebVersions[rand.Intn(len(ucwebVersions))]
-	android := androidVersions[rand.Intn(len(androidVersions))]
-	return fmt.Sprintf("UCWEB/2.0 (Java; U; MIDP-2.0; Nokia203/20.37) U2/1.0.0 UCMini/%s (SpeedMode; Proxy; Android %s; %s ) U2/1.0.0 Mobile", version, android, device)
-}
-
-func genMobileNexus10UA() string {
-	build := nexus10Builds[rand.Intn(len(nexus10Builds))]
-	android := androidVersions[rand.Intn(len(androidVersions))]
-	chrome := chromeVersions[rand.Intn(len(chromeVersions))]
-	safari := nexus10Safari[rand.Intn(len(nexus10Safari))]
-	return fmt.Sprintf("Mozilla/5.0 (Linux; Android %s; Nexus 10 Build/%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Safari/%s", android, build, chrome, safari)
 }

@@ -1,17 +1,68 @@
-package wms
+package main
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/flywave/go-tileproxy"
+	"github.com/flywave/go-tileproxy/demo"
+	"github.com/flywave/go-tileproxy/setting"
+)
 
 var (
-	base_url  = "https://wms.geo.admin.ch"
-	srs       = "EPSG:21781"
-	center    = []float64{8.23, 46.86}
-	centersrs = "EPSG:4326"
-	extent    = []float64{420000, 30000, 900000, 350000}
-	extentsrs = "EPSG:21781"
-	layers    = []string{
-		"ch.swisstopo.pixelkarte-farbe-pk1000.noscale",
-		"ch.bafu.hydroweb-warnkarte_national",
+	wmsTMSSource = setting.WMSSource{
+		Opts: setting.WMSSourceOpts{
+			Version: "1.1.1",
+			Map:     setting.NewBool(true),
+		},
+		Request: setting.WMSRequest{
+			Url:    "https://maps.omniscale.net/v2/demo/style.default/map?",
+			Layers: []string{"osm"},
+		},
+		SupportedSrs: []string{"EPSG:31467", "EPSG:4326"},
+	}
+
+	wmsService = setting.WMSService{
+		Srs:                []string{"EPSG:4326", "EPSG:900913", "EPSG:25832"},
+		BBoxSrs:            []setting.BBoxSrs{{Srs: "EPSG:4326"}},
+		ImageFormats:       []string{"image/jpeg", "image/png", "image/gif", "image/GeoTIFF", "image/tiff"},
+		Layers:             []setting.WMSLayer{{MapSources: []string{"osm_wms"}, Name: "osm", Title: "Omniscale OSM WMS - osm.omniscale.net"}},
+		MaxOutputPixels:    setting.NewInt(2000 * 2000),
+		Strict:             setting.NewBool(true),
+		FeatureinfoFormats: []setting.FeatureinfoFormat{{Suffix: "text", MimeType: "text/plain"}, {Suffix: "html", MimeType: "text/html"}, {Suffix: "xml", MimeType: "text/xml"}},
 	}
 )
 
-//https://wms.geo.admin.ch/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fjpeg&TRANSPARENT=true&LAYERS=ch.swisstopo.pixelkarte-farbe-pk1000.noscale&WIDTH=256&HEIGHT=256&CRS=EPSG%3A21781&STYLES=&BBOX=705373.9428000001%2C124338.29039999997%2C749274.8168%2C168239.16439999998
-//https://wms.geo.admin.ch/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&TRANSPARENT=true&LAYERS=ch.bafu.hydroweb-warnkarte_national&WIDTH=256&HEIGHT=256&CRS=EPSG%3A21781&STYLES=&BBOX=793175.6908%2C212140.03839999996%2C837076.5647999999%2C256040.91239999997
+func getProxyDataset() *setting.ProxyDataset {
+	pd := setting.NewProxyDataset("wms")
+	pd.Grids = demo.GridMap
+
+	pd.Sources["osm_wms"] = &wmsTMSSource
+
+	pd.Service = &wmsService
+	return pd
+}
+
+func getDataset() *tileproxy.Dataset {
+	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals, nil)
+}
+
+var dataset *tileproxy.Dataset
+
+func DatasetServer(w http.ResponseWriter, req *http.Request) {
+	if dataset == nil {
+		dataset = getDataset()
+	}
+	dataset.Service.ServeHTTP(w, req)
+}
+
+// https://maps.omniscale.net/v2/demo/style.default/map?LAYERS=osm&FORMAT=image/png&SERVICE=WMS&VERSION=1.1.1&SRS=EPSG:31467&REQUEST=GetMap&BBOX=3648808.05872,5599105.55872,3669808.05872,5621605.55872&WIDTH=420&HEIGHT=450
+// http://127.0.0.1:8000/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fjpeg&TRANSPARENT=true&LAYERS=osm&WIDTH=256&HEIGHT=256&CRS=EPSG%3A21781&STYLES=&BBOX=705373.9428000001%2C124338.29039999997%2C749274.8168%2C168239.16439999998
+
+func main() {
+	http.HandleFunc("/", DatasetServer)
+	err := http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+}

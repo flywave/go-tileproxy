@@ -13,30 +13,6 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
-func TestWMSLayer(t *testing.T) {
-
-}
-
-func TestWMSGroupLayer(t *testing.T) {
-
-}
-
-func TestWMSServiceGetMap(t *testing.T) {
-
-}
-
-func TestWMSServiceGetFeatureInfo(t *testing.T) {
-
-}
-
-func TestWMSServiceLegendgraphic(t *testing.T) {
-
-}
-
-func TestCombinedLayers(t *testing.T) {
-
-}
-
 func TestWMSServiceGetCapabilities(t *testing.T) {
 	service := make(map[string]string)
 	service["url"] = "http://flywave.net"

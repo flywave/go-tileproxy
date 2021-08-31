@@ -219,3 +219,15 @@ func (r *DirectMapLayer) GetMap(query *MapQuery) (tile.Source, error) {
 	}
 	return r.source.GetMap(query)
 }
+
+func MergeLayerExtents(layers []Layer) *geo.MapExtent {
+	if len(layers) == 0 {
+		return geo.MapExtentFromDefault()
+	}
+	extent := layers[0].GetExtent()
+	layers = layers[1:]
+	for _, layer := range layers[1:] {
+		extent = extent.Add(layer.GetExtent())
+	}
+	return extent
+}

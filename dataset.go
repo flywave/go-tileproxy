@@ -86,7 +86,7 @@ func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, gl
 func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
-		case *setting.Caches:
+		case *setting.CacheSource:
 			s.Caches[k] = setting.LoadCacheManager(cache, globals, s)
 		}
 	}
@@ -137,6 +137,24 @@ func (s *Dataset) GetSource(name string) layer.Layer {
 func (s *Dataset) GetCache(name string) cache.Manager {
 	if l, ok := s.Caches[name]; ok {
 		return l
+	}
+	return nil
+}
+
+func (s *Dataset) GetCacheSource(name string) layer.Layer {
+	manager := s.GetCache(name)
+	if manager != nil {
+		tile_grid := manager.GetGrid()
+		sources := manager.GetSources()
+		extent := layer.MergeLayerExtents(sources)
+		if extent.IsDefault() {
+			extent = geo.MapExtentFromGrid(tile_grid)
+		}
+
+		cache_extent := geo.MapExtentFromGrid(tile_grid)
+		cache_extent = extent.Intersection(cache_extent)
+
+		return cache.NewCacheSource(manager, cache_extent, manager.GetTileOptions(), nil, true)
 	}
 	return nil
 }

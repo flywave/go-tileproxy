@@ -15,22 +15,6 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-func TestWMTSServiceGetCapabilities(t *testing.T) {
-
-}
-
-func TestWMTSServiceGetTile(t *testing.T) {
-
-}
-
-func TestWMTSServiceGetFeatureInfo(t *testing.T) {
-
-}
-
-func TestWMTSRestService(t *testing.T) {
-
-}
-
 func TestWMTSCapabilities(t *testing.T) {
 
 	service := make(map[string]string)

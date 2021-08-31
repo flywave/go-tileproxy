@@ -144,14 +144,22 @@ func LoadFilter(f interface{}) cache.Filter {
 	return nil
 }
 
-func LoadCacheManager(c *Caches, globals *GlobalsSetting, instance ProxyInstance) cache.Manager {
+func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance) cache.Manager {
 	opts := []tile.TileOptions{}
 	layers := []layer.Layer{}
 
 	for i := range c.Sources {
 		l := instance.GetSource(c.Sources[i])
-		layers = append(layers, l)
-		opts = append(opts, l.GetOptions())
+		if l != nil {
+			layers = append(layers, l)
+			opts = append(opts, l.GetOptions())
+		} else {
+			l := instance.GetCacheSource(c.Sources[i])
+			if l != nil {
+				layers = append(layers, l)
+				opts = append(opts, l.GetOptions())
+			}
+		}
 	}
 
 	grid := instance.GetGrid(c.Grid)
@@ -338,7 +346,15 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 	legends := make([]layer.LegendLayer, 0)
 
 	for _, name := range l.MapSources {
-		mapLayers[name] = instance.GetSource(name)
+		s := instance.GetSource(name)
+		if s != nil {
+			mapLayers[name] = s
+		} else {
+			s = instance.GetCacheSource(name)
+			if s != nil {
+				mapLayers[name] = s
+			}
+		}
 	}
 
 	for _, name := range l.FeatureinfoSources {
@@ -408,6 +424,11 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, p
 	}
 
 	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(http))
+
+	if s.Opts.Version == "1.1.1" {
+		c.AdaptTo111 = true
+	}
+
 	return sources.NewWMSInfoSource(c, coverage, transformer)
 }
 
@@ -465,7 +486,11 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
 	res_range := NewResolutionRange(&s.ScaleHints)
 	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
-	coverage := LoadCoverage(s.Coverage)
+
+	var coverage geo.Coverage
+	if s.Coverage != nil {
+		coverage = LoadCoverage(s.Coverage)
+	}
 
 	var transparent_color color.Color
 	transparent_color_tolerance := s.Image.TransparentColorTolerance
@@ -486,6 +511,11 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 
 	req := request.NewWMSMapRequest(params, url, false, nil, false)
 	c := client.NewWMSClient(req, newCollectorContext(http))
+
+	if s.Opts.Version == "1.1.1" {
+		c.AdaptTo111 = true
+	}
+
 	return sources.NewWMSSource(c, image_opts, coverage,
 		res_range, transparent_color,
 		transparent_color_tolerance, supported_srs, s.SupportedFormats,
@@ -515,6 +545,17 @@ func newCollectorContext(httpOpts *HttpOpts) *client.CollectorContext {
 	} else {
 		conf.RequestTimeout = time.Duration(DefaultRequestTimeout * int(time.Second))
 	}
+	if httpOpts.Threads != nil {
+		conf.Threads = *httpOpts.Threads
+	} else {
+		conf.Threads = DefaultThreads
+	}
+	if httpOpts.MaxQueueSize != nil {
+		conf.MaxQueueSize = *httpOpts.MaxQueueSize
+	} else {
+		conf.MaxQueueSize = DefaultMaxQueueSize
+	}
+
 	return client.NewCollectorContext(&conf)
 }
 
@@ -849,7 +890,17 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, preferred geo.PreferredSrcSRS) *service.WMSService {
 	md := s.Metadata
 
-	rootLayer := loadWMSRootLayer(s.Layer, instance)
+	var rootLayer *service.WMSGroupLayer
+	var layers map[string]service.WMSLayer
+	if s.RootLayer != nil {
+		rootLayer = loadWMSRootLayer(s.RootLayer, instance)
+	} else {
+		layers = make(map[string]service.WMSLayer)
+		for i := range s.Layers {
+			layers[s.Layers[i].Name] = ConvertWMSLayer(&s.Layers[i], instance)
+		}
+	}
+
 	supported_srs := newSupportedSrs(s.Srs, preferred)
 
 	imageFormats := make(map[string]*imagery.ImageOptions)
@@ -881,5 +932,5 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, pref
 
 	extents := extentsForSrs(s.BBoxSrs)
 
-	return service.NewWMSService(rootLayer, md, supported_srs, imageFormats, info_formats, extents, maxOutputPixels, max_tile_age, strict, ftransformers)
+	return service.NewWMSService(rootLayer, layers, md, supported_srs, imageFormats, info_formats, extents, maxOutputPixels, max_tile_age, strict, ftransformers)
 }

@@ -140,7 +140,7 @@ type S3Cache struct {
 	TileLockDir     string `json:"tile_lock_dir,omitempty"`
 }
 
-type Caches struct {
+type CacheSource struct {
 	Sources              []string      `json:"sources,omitempty"`
 	Name                 string        `json:"name,omitempty"`
 	Grid                 string        `json:"grid,omitempty"`
@@ -171,6 +171,8 @@ type HttpOpts struct {
 	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`
 	Proxys            []string       `json:"proxys,omitempty"`
 	RequestTimeout    *time.Duration `json:"request_timeout,omitempty"`
+	MaxQueueSize      *int           `json:"max_queue_size,omitempty"`
+	Threads           *int           `json:"thread_size,omitempty"`
 }
 
 type WMSSourceOpts struct {
@@ -192,26 +194,30 @@ type SourceCommons struct {
 	SeedOnly           *bool     `json:"seed_only,omitempty"`
 }
 
+type WMSRequest struct {
+	Url         string   `json:"url,omitempty"`
+	Layers      []string `json:"layers"`
+	Transparent *bool    `json:"transparent,omitempty"`
+	Format      string   `json:"format,omitempty"`
+}
+
+type WMSImageOpts struct {
+	ImageOpts
+	Opacity                   *float64  `json:"opacity,omitempty"`
+	TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
+	TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
+}
+
 type WMSSource struct {
 	SourceCommons
-	Opts  WMSSourceOpts `json:"wms_opts"`
-	Image struct {
-		ImageOpts
-		Opacity                   *float64  `json:"opacity,omitempty"`
-		TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
-		TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
-	} `json:"image"`
+	Opts             WMSSourceOpts     `json:"wms_opts"`
+	Image            WMSImageOpts      `json:"image"`
 	ForwardReqParams map[string]string `json:"forward_req_params,omitempty"`
 	SupportedFormats []string          `json:"supported_formats,omitempty"`
 	SupportedSrs     []string          `json:"supported_srs,omitempty"`
 	Http             *HttpOpts         `json:"http,omitempty"`
-	Request          struct {
-		Url         string   `json:"url,omitempty"`
-		Layers      []string `json:"layers"`
-		Transparent *bool    `json:"transparent,omitempty"`
-		Format      string   `json:"format,omitempty"`
-	} `json:"req"`
-	Store interface{} `json:"store"`
+	Request          WMSRequest        `json:"req"`
+	Store            interface{}       `json:"store"`
 }
 
 type TileSource struct {
@@ -238,33 +244,39 @@ type MapboxTileSource struct {
 	TilejsonStore   interface{} `json:"tilejson_store"`
 }
 
+type ArcGISImageOpts struct {
+	ImageOpts
+	Opacity                   *float64  `json:"opacity,omitempty"`
+	TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
+	TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
+}
+
+type ArcGISRequest struct {
+	Url                string   `json:"url,omitempty"`
+	Dpi                *int     `json:"dpi,omitempty"`
+	Layers             []string `json:"layers"`
+	Transparent        *bool    `json:"transparent,omitempty"`
+	Time               *int64   `json:"time,omitempty"`
+	Format             string   `json:"format,omitempty"`
+	LercVersion        *int     `json:"lerc_version,omitempty"`
+	PixelType          *string  `json:"pixel_type,omitempty"`
+	CompressionQuality *int     `json:"compression_quality,omitempty"`
+}
+
+type ArcGISSourceOpts struct {
+	Featureinfo                 *bool `json:"featureinfo,omitempty"`
+	FeatureinfoTolerance        *int  `json:"featureinfo_tolerance,omitempty"`
+	FeatureinfoReturnGeometries *bool `json:"featureinfo_return_geometries,omitempty"`
+}
+
 type ArcGISSource struct {
 	SourceCommons
-	Image struct {
-		ImageOpts
-		Opacity                   *float64  `json:"opacity,omitempty"`
-		TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
-		TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
-	} `json:"image"`
-	Request struct {
-		Url                string   `json:"url,omitempty"`
-		Dpi                *int     `json:"dpi,omitempty"`
-		Layers             []string `json:"layers"`
-		Transparent        *bool    `json:"transparent,omitempty"`
-		Time               *int64   `json:"time,omitempty"`
-		Format             string   `json:"format,omitempty"`
-		LercVersion        *int     `json:"lerc_version,omitempty"`
-		PixelType          *string  `json:"pixel_type,omitempty"`
-		CompressionQuality *int     `json:"compression_quality,omitempty"`
-	} `json:"req"`
-	Opts struct {
-		Featureinfo                 *bool `json:"featureinfo,omitempty"`
-		FeatureinfoTolerance        *int  `json:"featureinfo_tolerance,omitempty"`
-		FeatureinfoReturnGeometries *bool `json:"featureinfo_return_geometries,omitempty"`
-	} `json:"opts"`
-	SupportedFormats []string  `json:"supported_formats,omitempty"`
-	SupportedSrs     []string  `json:"supported_srs,omitempty"`
-	Http             *HttpOpts `json:"http,omitempty"`
+	Image            ArcGISImageOpts  `json:"image"`
+	Request          ArcGISRequest    `json:"req"`
+	Opts             ArcGISSourceOpts `json:"opts"`
+	SupportedFormats []string         `json:"supported_formats,omitempty"`
+	SupportedSrs     []string         `json:"supported_srs,omitempty"`
+	Http             *HttpOpts        `json:"http,omitempty"`
 }
 
 type WaterMark struct {
@@ -291,16 +303,13 @@ type TMSService struct {
 }
 
 type WMTSService struct {
-	Restful                    *bool             `json:"restful,omitempty"`
-	RestfulTemplate            string            `json:"restful_template,omitempty"`
-	RestfulFeatureinfoTemplate string            `json:"restful_featureinfo_template,omitempty"`
-	Metadata                   map[string]string `json:"metadata,omitempty"`
-	FeatureinfoFormats         []struct {
-		MimeType string `json:"mimetype"`
-		Suffix   string `json:"suffix,omitempty"`
-	} `json:"featureinfo_formats,omitempty"`
-	Layers     []TileLayer `json:"layers,omitempty"`
-	MaxTileAge *int        `json:"max_tile_age,omitempty"`
+	Restful                    *bool               `json:"restful,omitempty"`
+	RestfulTemplate            string              `json:"restful_template,omitempty"`
+	RestfulFeatureinfoTemplate string              `json:"restful_featureinfo_template,omitempty"`
+	Metadata                   map[string]string   `json:"metadata,omitempty"`
+	FeatureinfoFormats         []FeatureinfoFormat `json:"featureinfo_formats,omitempty"`
+	Layers                     []TileLayer         `json:"layers,omitempty"`
+	MaxTileAge                 *int                `json:"max_tile_age,omitempty"`
 }
 
 type BBoxSrs struct {
@@ -308,21 +317,24 @@ type BBoxSrs struct {
 	BBox [4]float64 `json:"bbox,omitempty"`
 }
 
+type FeatureinfoFormat struct {
+	MimeType string `json:"mimetype"`
+	Suffix   string `json:"suffix,omitempty"`
+}
+
 type WMSService struct {
-	Srs                []string  `json:"srs,omitempty"`
-	BBoxSrs            []BBoxSrs `json:"bbox_srs,omitempty"`
-	ImageFormats       []string  `json:"image_formats,omitempty"`
-	FeatureinfoFormats []struct {
-		MimeType string `json:"mimetype"`
-		Suffix   string `json:"suffix,omitempty"`
-	} `json:"featureinfo_formats,omitempty"`
-	FeatureinfoXslt map[string]string `json:"featureinfo_xslt,omitempty"`
-	MaxOutputPixels *int              `json:"max_output_pixels,omitempty"`
-	Strict          *bool             `json:"strict,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	InspireMetadata map[string]string `json:"inspire_metadata,omitempty"`
-	Layer           *WMSLayer         `json:"layer,omitempty"`
-	MaxTileAge      *int              `json:"max_tile_age,omitempty"`
+	Srs                []string            `json:"srs,omitempty"`
+	BBoxSrs            []BBoxSrs           `json:"bbox_srs,omitempty"`
+	ImageFormats       []string            `json:"image_formats,omitempty"`
+	FeatureinfoFormats []FeatureinfoFormat `json:"featureinfo_formats,omitempty"`
+	FeatureinfoXslt    map[string]string   `json:"featureinfo_xslt,omitempty"`
+	MaxOutputPixels    *int                `json:"max_output_pixels,omitempty"`
+	Strict             *bool               `json:"strict,omitempty"`
+	Metadata           map[string]string   `json:"metadata,omitempty"`
+	InspireMetadata    map[string]string   `json:"inspire_metadata,omitempty"`
+	RootLayer          *WMSLayer           `json:"layer,omitempty"`
+	Layers             []WMSLayer          `json:"layers,omitempty"`
+	MaxTileAge         *int                `json:"max_tile_age,omitempty"`
 }
 
 type MapboxTileLayer struct {

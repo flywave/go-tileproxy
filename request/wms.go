@@ -41,7 +41,10 @@ func NewWMSMapRequestParams(params RequestParams) WMSMapRequestParams {
 }
 
 func (r *WMSMapRequestParams) switchBBox() {
-	r.SetBBox(SwitchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
+	srs := r.GetSrs()
+	if srs != "" {
+		r.SetBBox(SwitchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
+	}
 }
 
 func (r *WMSMapRequestParams) Update(params map[string]string) {
@@ -141,12 +144,16 @@ func (r *WMSMapRequestParams) SetSize(si [2]uint32) {
 	r.params.Set("height", []string{height})
 }
 
-func (r *WMSMapRequestParams) GetSrs() string {
+func (r *WMSMapRequestParams) GetCrs() string {
 	return r.params.GetOne("crs", "EPSG:4326")
 }
 
-func (r *WMSMapRequestParams) SetSrs(srs string) {
+func (r *WMSMapRequestParams) SetCrs(srs string) {
 	r.params.Set("crs", []string{srs})
+}
+
+func (r *WMSMapRequestParams) GetSrs() string {
+	return r.params.GetOne("srs", "")
 }
 
 func (r *WMSMapRequestParams) GetFormat() tile.TileFormat {
@@ -198,6 +205,10 @@ type WMSRequest struct {
 	NonStrict          bool
 	NonStrictParams    mapset.Set
 	v                  *Version
+}
+
+func (r *WMSRequest) GetRequestHandler() string {
+	return r.RequestHandlerName
 }
 
 type Version struct {
@@ -256,6 +267,22 @@ func (r *WMSMapRequest) init(param interface{}, url string, validate bool, http 
 	r.FixedParams["styles"] = ""
 	r.ExpectedParam = []string{"version", "request", "layers", "styles", "srs", "bbox",
 		"width", "height", "format"}
+}
+
+func (r *WMSMapRequest) AdaptToWMS111() {
+	if _, ok := r.Params["CRS"]; ok {
+		r.Params["SRS"] = r.Params["CRS"]
+		delete(r.Params, "CRS")
+	}
+	r.GetRequestParams().switchBBox()
+}
+
+func (r *WMSMapRequest) AdaptParamsToVersion() {
+	r.GetRequestParams().switchBBox()
+	if _, ok := r.Params["SRS"]; ok {
+		r.Params["CRS"] = r.Params["SRS"]
+		delete(r.Params, "SRS")
+	}
 }
 
 func (r *WMSMapRequest) GetRequestParams() *WMSMapRequestParams {
@@ -332,7 +359,7 @@ func (s *WMSMapRequest) ValidateFormat(image_formats []string) error {
 
 func (s *WMSMapRequest) ValidateSrs(srs []string) error {
 	params := &WMSMapRequestParams{params: s.Params}
-	ss := strings.ToUpper(params.GetSrs())
+	ss := strings.ToUpper(params.GetCrs())
 	if utils.ContainsString(srs, ss) {
 		return errors.New("unsupported srs: " + ss)
 	}
@@ -445,6 +472,30 @@ func NewWMSFeatureInfoRequest(param interface{}, url string, validate bool, ht *
 	return req
 }
 
+func (r *WMSFeatureInfoRequest) AdaptToWMS111() {
+	r.WMSMapRequest.AdaptToWMS111()
+	if _, ok := r.Params["I"]; ok {
+		r.Params["X"] = r.Params["I"]
+		delete(r.Params, "I")
+	}
+	if _, ok := r.Params["J"]; ok {
+		r.Params["Y"] = r.Params["J"]
+		delete(r.Params, "J")
+	}
+}
+
+func (r *WMSFeatureInfoRequest) AdaptParamsToVersion() {
+	r.WMSMapRequest.AdaptParamsToVersion()
+	if _, ok := r.Params["X"]; ok {
+		r.Params["I"] = r.Params["X"]
+		delete(r.Params, "X")
+	}
+	if _, ok := r.Params["Y"]; ok {
+		r.Params["J"] = r.Params["Y"]
+		delete(r.Params, "Y")
+	}
+}
+
 func (r *WMSFeatureInfoRequest) GetRequestParams() *WMSFeatureInfoRequestParams {
 	return &WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: r.Params}}
 }
@@ -510,9 +561,10 @@ func NewWMSCapabilitiesRequest(param interface{}, url string, validate bool, ht 
 }
 
 func parseWMSRequestType(req *http.Request) (string, RequestParams) {
-	values, _ := url.ParseQuery(req.URL.RawQuery)
+	values, _ := url.ParseQuery(strings.ToLower(req.URL.RawQuery))
 	if _, ok := values["request"]; ok {
 		request_type := strings.ToLower(values["request"][0])
+		values, _ = url.ParseQuery(req.URL.RawQuery)
 		if utils.ContainsString([]string{"getmap", "map"}, request_type) {
 			return "map", NewRequestParams(values)
 		} else if utils.ContainsString([]string{"getfeatureinfo", "feature_info"}, request_type) {

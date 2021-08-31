@@ -72,6 +72,9 @@ func (r *TileRequest) init() {
 func (r *TileRequest) initRequest() error {
 	url := r.Http.URL.Path
 	match := r.TileReqRegex.FindStringSubmatch(url)
+	if len(match) == 0 {
+		return errors.New("url error")
+	}
 	groupNames := r.TileReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"log"
 	"net"
@@ -8,21 +9,26 @@ import (
 	"time"
 
 	"github.com/flywave/go-tileproxy/crawler"
-	"github.com/flywave/go-tileproxy/crawler/debug"
 	"github.com/flywave/go-tileproxy/crawler/extensions"
 )
 
 type HttpClient interface {
 	Open(url string, data []byte) (statusCode int, body []byte)
+	Start() error
+	Stop()
 }
 
 type CollectorClient struct {
 	HttpClient
-	Collector *crawler.Collector
+	Collector      *crawler.Collector
+	CollectorQueue *Queue
+	BaseRequest    *crawler.Request
 }
 
-func NewCollectorClient(config *Config) *CollectorClient {
-	return &CollectorClient{Collector: createCollector(config)}
+func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
+	q, _ := NewQueue(config.Threads, config.MaxQueueSize)
+	c := createCollector(config)
+	return &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}
 }
 
 func createCollector(config *Config) *crawler.Collector {
@@ -31,7 +37,6 @@ func createCollector(config *Config) *crawler.Collector {
 		log.Fatal(err)
 	}
 	sc := crawler.NewCollector(
-		crawler.Debugger(&debug.LogDebugger{}),
 		crawler.Async(true),
 	)
 
@@ -60,31 +65,50 @@ func createCollector(config *Config) *crawler.Collector {
 	}
 	extensions.Referer(sc)
 
+	sc.OnResponse(func(resp *crawler.Response) {
+		if resp.UserData != nil {
+			fut := resp.UserData.(*Future)
+			fut.setResult(resp)
+		}
+	})
+
 	return sc
+}
+
+func (c *CollectorClient) Start() error {
+	return c.CollectorQueue.Run(c.Collector)
+}
+
+func (c *CollectorClient) Stop() {
+	c.CollectorQueue.Stop()
 }
 
 func (c *CollectorClient) GetCollector() *crawler.Collector {
 	return c.Collector
 }
 
-func (c *CollectorClient) Open(url string, data []byte) (statusCode int, body []byte) {
+func (c *CollectorClient) Open(u string, data []byte) (statusCode int, body []byte) {
 	if data == nil {
-		c.Collector.Visit(url)
-		c.Collector.OnResponse(func(resp *crawler.Response) {
-			statusCode = resp.StatusCode
-			body = resp.Body
-		})
-		defer c.Collector.ResetOnResponse()
-		c.Collector.Wait()
-		return
+		req, err := c.BaseRequest.New("GET", u, nil)
+		if err != nil {
+			return 500, nil
+		}
+		fut, err := c.CollectorQueue.AddRequest(req)
+		if err != nil {
+			return 500, nil
+		}
+		reqult := fut.GetResult()
+		return reqult.StatusCode, reqult.Body
 	} else {
-		c.Collector.PostRaw(url, data)
-		c.Collector.OnResponse(func(resp *crawler.Response) {
-			statusCode = resp.StatusCode
-			body = resp.Body
-		})
-		defer c.Collector.ResetOnResponse()
-		c.Collector.Wait()
-		return
+		req, err := c.BaseRequest.New("POST", u, bytes.NewBuffer(data))
+		if err != nil {
+			return 500, nil
+		}
+		fut, err := c.CollectorQueue.AddRequest(req)
+		if err != nil {
+			return 500, nil
+		}
+		reqult := fut.GetResult()
+		return reqult.StatusCode, reqult.Body
 	}
 }

@@ -47,9 +47,9 @@ func TestWMSMapRequest(t *testing.T) {
 		t.FailNow()
 	}
 
-	rp.SetSrs("EPSG:900913")
+	rp.SetCrs("EPSG:900913")
 
-	srscode := rp.GetSrs()
+	srscode := rp.GetCrs()
 
 	if srscode != "EPSG:900913" {
 		t.FailNow()

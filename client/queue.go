@@ -55,7 +55,7 @@ func (q *Queue) storeRequest(r *crawler.Request) (*Future, error) {
 }
 
 func (q *Queue) Size() int {
-	return q.storage.Len()
+	return q.storage.Cap()
 }
 
 func (q *Queue) Run(c *crawler.Collector) error {
@@ -130,6 +130,9 @@ func independentRunner(requestc <-chan *Future, complete chan<- struct{}) {
 }
 
 func (q *Queue) loadFuture(c *crawler.Collector) *Future {
+	if q.storage.Len() == 0 {
+		return nil
+	}
 	fraw := q.storage.PopFront()
 	fut := fraw.(*Future)
 	if fut != nil {

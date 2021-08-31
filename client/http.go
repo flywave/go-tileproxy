@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/flywave/go-tileproxy/crawler"
@@ -28,7 +29,11 @@ type CollectorClient struct {
 func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
 	q, _ := NewQueue(config.Threads, config.MaxQueueSize)
 	c := createCollector(config)
-	return &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}
+
+	cli := &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}
+	cli.Start()
+
+	return cli
 }
 
 func createCollector(config *Config) *crawler.Collector {
@@ -89,9 +94,13 @@ func (c *CollectorClient) GetCollector() *crawler.Collector {
 
 func (c *CollectorClient) Open(u string, data []byte) (statusCode int, body []byte) {
 	if data == nil {
-		req, err := c.BaseRequest.New("GET", u, nil)
+		u, err := url.Parse(u)
 		if err != nil {
 			return 500, nil
+		}
+		req := &crawler.Request{
+			URL:    u,
+			Method: "GET",
 		}
 		fut, err := c.CollectorQueue.AddRequest(req)
 		if err != nil {
@@ -100,9 +109,14 @@ func (c *CollectorClient) Open(u string, data []byte) (statusCode int, body []by
 		reqult := fut.GetResult()
 		return reqult.StatusCode, reqult.Body
 	} else {
-		req, err := c.BaseRequest.New("POST", u, bytes.NewBuffer(data))
+		u, err := url.Parse(u)
 		if err != nil {
 			return 500, nil
+		}
+		req := &crawler.Request{
+			URL:    u,
+			Method: "POST",
+			Body:   bytes.NewBuffer(data),
 		}
 		fut, err := c.CollectorQueue.AddRequest(req)
 		if err != nil {

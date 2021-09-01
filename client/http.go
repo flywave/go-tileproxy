@@ -31,7 +31,8 @@ func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
 	c := createCollector(config)
 
 	cli := &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}
-	cli.Start()
+
+	go cli.Start()
 
 	return cli
 }

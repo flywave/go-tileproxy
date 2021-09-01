@@ -15,6 +15,7 @@ type Queue struct {
 	mut     sync.Mutex
 	running bool
 	storage *utils.Deque
+	q       sync.Mutex
 }
 
 func NewQueue(threads int, maxSize int) (*Queue, error) {
@@ -50,7 +51,9 @@ func (q *Queue) storeRequest(r *crawler.Request) (*Future, error) {
 		return nil, err
 	}
 	f := newFuture(d)
+	q.q.Lock()
 	q.storage.PushBack(f)
+	q.q.Unlock()
 	return f, nil
 }
 
@@ -133,7 +136,9 @@ func (q *Queue) loadFuture(c *crawler.Collector) *Future {
 	if q.storage.Len() == 0 {
 		return nil
 	}
+	q.q.Lock()
 	fraw := q.storage.PopFront()
+	q.q.Unlock()
 	fut := fraw.(*Future)
 	if fut != nil {
 		fut.setCollector(c)

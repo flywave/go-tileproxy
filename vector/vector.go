@@ -2,11 +2,13 @@ package vector
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"github.com/flywave/go-geom"
+	"github.com/flywave/go-mapbox/mvt"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -92,7 +94,7 @@ func (s *VectorSource) SetSource(src interface{}) {
 func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
 	if s.buf == nil {
 		var err error
-		s.buf, err = s.io.Encode(s.GetTile())
+		s.buf, err = s.io.Encode(s.GetTile().(Vector))
 		if err != nil {
 			return nil
 		}
@@ -167,6 +169,27 @@ func CreateVectorSourceFromBufer(buf []byte, tile [3]int, opts *VectorOptions) t
 	return nil
 }
 
+func CreateVectorSourceFromVector(vt Vector, tile [3]int, opts *VectorOptions, cacheable *tile.CacheInfo) tile.Source {
+	format := opts.GetFormat()
+	if format.Extension() == "mvt" {
+		mvt := NewMVTSource(tile, PBF_PTOTO_MAPBOX, opts)
+		mvt.SetSource(vt)
+		mvt.SetCacheable(cacheable)
+		return mvt
+	} else if format.Extension() == "pbf" {
+		mvt := NewMVTSource(tile, PBF_PTOTO_LUOKUANG, opts)
+		mvt.SetSource(vt)
+		mvt.SetCacheable(cacheable)
+		return mvt
+	} else if format.Extension() == "json" || format.Extension() == "geojson" {
+		geojson := NewGeoJSONVTSource(tile, opts)
+		geojson.SetSource(vt)
+		geojson.SetCacheable(cacheable)
+		return geojson
+	}
+	return nil
+}
+
 type VectorSourceCreater struct {
 	Opt *VectorOptions
 }
@@ -181,4 +204,32 @@ func (c *VectorSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 
 func (c *VectorSourceCreater) GetExtension() string {
 	return c.Opt.Format.Extension()
+}
+
+func EncodeRaster(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error) {
+	if opts.Format.Extension() == "mvt" {
+		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
+		return io.Encode(data)
+	} else if opts.Format.Extension() == "pbf" {
+		io := &PBFIO{tile: tile, proto: mvt.PROTO_LK}
+		return io.Encode(data)
+	} else if opts.Format.Extension() == "json" || opts.Format.Extension() == "geojson" {
+		io := &GeoJSONVTIO{tile: tile, options: opts}
+		return io.Encode(data)
+	}
+	return nil, errors.New("the format not support!")
+}
+
+func DecodeRaster(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, error) {
+	if opts.Format.Extension() == "mvt" {
+		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
+		return io.Decode(reader)
+	} else if opts.Format.Extension() == "pbf" {
+		io := &PBFIO{tile: tile, proto: mvt.PROTO_LK}
+		return io.Decode(reader)
+	} else if opts.Format.Extension() == "json" || opts.Format.Extension() == "geojson" {
+		io := &GeoJSONVTIO{tile: tile, options: opts}
+		return io.Decode(reader)
+	}
+	return nil, errors.New("the format not support!")
 }

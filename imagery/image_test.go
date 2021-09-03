@@ -16,6 +16,7 @@ var (
 	PNG_FORMAT  = &ImageOptions{Format: tile.TileFormat("image/png")}
 	JPEG_FORMAT = &ImageOptions{Format: tile.TileFormat("image/jpeg")}
 	TIFF_FORMAT = &ImageOptions{Format: tile.TileFormat("image/tiff")}
+	WEBP_FORMAT = &ImageOptions{Format: tile.TileFormat("image/webp")}
 )
 
 func createTmpImageFile(size [2]uint32) string {

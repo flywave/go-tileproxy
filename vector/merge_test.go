@@ -6,14 +6,14 @@ import (
 	"os"
 	"testing"
 
+	m "github.com/flywave/go-mapbox/tileid"
+
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
-	m "github.com/flywave/go-mapbox/tileid"
 	"github.com/flywave/go-mbgeom/geojson"
 	"github.com/flywave/go-mbgeom/geojsonvt"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestMergeLK(t *testing.T) {
@@ -46,14 +46,10 @@ func TestMergeLK(t *testing.T) {
 		}
 	}
 
-	creater := func(feature map[string][]*geom.Feature, opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, cacheable *tile.CacheInfo) tile.Source {
-		return nil
-	}
-
 	sources := []tile.Source{}
 	layers := []Vector{}
 
-	merger := &VectorMerger{Creater: creater}
+	merger := &VectorMerger{}
 
 	for i := range tilesCoord {
 		z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]

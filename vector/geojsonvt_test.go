@@ -27,5 +27,4 @@ func TestGeojsonVTSource(t *testing.T) {
 	if jsonvt == "" {
 		t.FailNow()
 	}
-
 }

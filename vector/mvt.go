@@ -42,14 +42,14 @@ type PBFIO struct {
 	proto mvt.ProtoType
 }
 
-func (i *PBFIO) Decode(r io.Reader) (interface{}, error) {
+func (i *PBFIO) Decode(r io.Reader) (Vector, error) {
 	PBF := LoadPBF(r, i.tile, i.proto)
 	return PBF, nil
 }
 
-func (i *PBFIO) Encode(data interface{}) ([]byte, error) {
+func (i *PBFIO) Encode(data Vector) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := SavePBF(buf, i.tile, i.proto, data.(Vector))
+	err := SavePBF(buf, i.tile, i.proto, data)
 	return buf.Bytes(), err
 }
 

@@ -19,7 +19,6 @@ func TestTerrainSource(t *testing.T) {
 	if t1 == nil {
 		t.FailNow()
 	}
-
 }
 
 func TestGenTerrainSourceFromDem(t *testing.T) {

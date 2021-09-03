@@ -130,27 +130,28 @@ func (b *TileBuilder) Finalize() map[string][]*geom.Feature {
 
 type VectorMerger struct {
 	tile.Merger
-	Layers    []tile.Source
-	Cacheable *tile.CacheInfo
-	Creater   func(feature map[string][]*geom.Feature, opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, cacheable *tile.CacheInfo) tile.Source
+	Layers []tile.Source
+}
+
+func NewVectorMerger(tiles []tile.Source) *VectorMerger {
+	return &VectorMerger{Layers: tiles}
 }
 
 func (l *VectorMerger) AddSource(src tile.Source, cov geo.Coverage) {
 	l.Layers = append(l.Layers, src)
 }
 
-func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) tile.Source {
+func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, tile [3]int, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Vector {
 	if len(l.Layers) == 1 {
 		t := l.Layers[0].GetTile()
 		feats := t.(map[string][]*geom.Feature)
-		return l.Creater(feats, opts, size, bbox, bbox_srs, l.Layers[0].GetCacheable())
+		return feats
 	}
 
 	if size == nil {
 		ss := l.Layers[0].GetSize()
 		size = ss[:]
 	}
-	cacheable := l.Cacheable
 
 	if coverage == nil {
 		coverage = geo.NewBBoxCoverage(bbox, bbox_srs, false)
@@ -160,9 +161,6 @@ func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Re
 	for i := range l.Layers {
 		layer_vec := l.Layers[i]
 
-		if layer_vec.GetCacheable() == nil {
-			cacheable = layer_vec.GetCacheable()
-		}
 		t := layer_vec.GetTile()
 		if t == nil {
 			return nil
@@ -174,5 +172,34 @@ func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Re
 		builder.AddLayers(feats)
 	}
 	feats := builder.Finalize()
-	return l.Creater(feats, opts, size, bbox, bbox_srs, cacheable)
+	return feats
+}
+
+type TiledVector struct {
+	Tiles    []tile.Source
+	TileGrid [2]int
+	TileSize [2]uint32
+	SrcBBox  vec2d.Rect
+	SrcSRS   geo.Proj
+}
+
+func NewTiledVector(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj) *TiledVector {
+	return &TiledVector{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: src_srs}
+}
+
+func (t *TiledVector) GetVector(v_opts *VectorOptions, tile [3]int) Vector {
+	tm := NewVectorMerger(t.Tiles)
+	return tm.Merge(v_opts, t.TileSize[:], tile, t.SrcBBox, t.SrcSRS, nil)
+}
+
+func (t *TiledVector) Transform(req_bbox vec2d.Rect, grid geo.TileGrid, vec_opts *VectorOptions) tile.Source {
+	_, _, tiles, _ := grid.GetAffectedTiles(req_bbox, t.TileSize, grid.Srs)
+
+	x, y, z, _ := tiles.Next()
+
+	src_img := t.GetVector(vec_opts, [3]int{x, y, z})
+
+	transformer := NewVectorTransformer(t.SrcSRS, grid.Srs)
+	vecs := transformer.ApplyVector(src_img)
+	return CreateVectorSourceFromVector(vecs, [3]int{x, y, z}, vec_opts, nil)
 }

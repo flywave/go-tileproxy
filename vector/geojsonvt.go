@@ -37,14 +37,14 @@ type GeoJSONVTIO struct {
 	options *VectorOptions
 }
 
-func (i *GeoJSONVTIO) Decode(r io.Reader) (interface{}, error) {
+func (i *GeoJSONVTIO) Decode(r io.Reader) (Vector, error) {
 	vt := LoadGeoJSONVT(r, i.tile, i.options)
 	return vt, nil
 }
 
-func (i *GeoJSONVTIO) Encode(data interface{}) ([]byte, error) {
+func (i *GeoJSONVTIO) Encode(data Vector) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := SaveGeoJSONVT(buf, i.tile, i.options, data.(Vector))
+	err := SaveGeoJSONVT(buf, i.tile, i.options, data)
 	return buf.Bytes(), err
 }
 

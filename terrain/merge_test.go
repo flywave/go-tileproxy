@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestRasterMerger(t *testing.T) {
@@ -66,14 +67,7 @@ func TestRasterMerger(t *testing.T) {
 		sources = append(sources, source)
 	}
 
-	creater := func(data *TileData, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source {
-		s := NewDemRasterSource(ModeMapbox, opts)
-		s.SetSource(data)
-		s.SetCacheable(cacheable)
-		return s
-	}
-
-	m := NewRasterMerger(grids, [2]uint32{512, 512}, creater)
+	m := NewRasterMerger(grids, [2]uint32{512, 512})
 	rr := m.Merge(sources, opts)
 
 	if rr != nil && rect.Min[0] == 0 {

@@ -145,6 +145,16 @@ func (s *RasterSource) SetSource(src interface{}) {
 }
 
 func (s *RasterSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
+	var dem_opts *RasterOptions
+	if in_tile_opts != nil {
+		dem_opts = in_tile_opts.(*RasterOptions)
+	} else {
+		dem_opts = s.Options.(*RasterOptions)
+	}
+	if format != nil {
+		dem_opts = s.Options.(*RasterOptions)
+		dem_opts.Format = *format
+	}
 	if s.buf == nil {
 		var err error
 		s.buf, err = s.io.Encode(s.data)
@@ -153,6 +163,10 @@ func (s *RasterSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.Tile
 		}
 	}
 	return s.buf
+}
+
+func (s *RasterSource) getRasterOptions() *RasterOptions {
+	return s.Options.(*RasterOptions)
 }
 
 func (s *RasterSource) SetTileOptions(options tile.TileOptions) {
@@ -365,6 +379,31 @@ func CreateRasterSourceFromBufer(buf []byte, opts *RasterOptions) tile.Source {
 	return nil
 }
 
+func CreateRasterSourceFromTileData(data *TileData, opts *RasterOptions, cacheable *tile.CacheInfo) tile.Source {
+	if opts.Format.Extension() == "webp" || opts.Format.Extension() == "png" {
+		src := NewDemRasterSource(ModeMapbox, opts)
+		src.SetSource(data)
+		src.SetCacheable(cacheable)
+		return src
+	} else if opts.Format.Extension() == "atm" {
+		src := NewLercRasterSource(opts.Mode, opts.MaxError, opts)
+		src.SetSource(data)
+		src.SetCacheable(cacheable)
+		return src
+	} else if opts.Format.Extension() == "tif" || opts.Format.Extension() == "tiff" {
+		src := NewGeoTIFFRasterSource(opts.Mode, opts)
+		src.SetSource(data)
+		src.SetCacheable(cacheable)
+		return src
+	} else if opts.Format.Extension() == "terrain" {
+		src := NewTerrainSource(opts)
+		src.SetSource(data)
+		src.SetCacheable(cacheable)
+		return src
+	}
+	return nil
+}
+
 type RasterSourceCreater struct {
 	Opt *RasterOptions
 }
@@ -379,4 +418,32 @@ func (c *RasterSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 
 func (c *RasterSourceCreater) GetExtension() string {
 	return c.Opt.Format.Extension()
+}
+
+func EncodeRaster(opts *RasterOptions, data *TileData) ([]byte, error) {
+	if opts.Format.Extension() == "webp" || opts.Format.Extension() == "png" {
+		io := &DemIO{Mode: ModeMapbox, Format: opts.Format}
+		return io.Encode(data)
+	} else if opts.Format.Extension() == "atm" {
+		io := &LercIO{Mode: opts.Mode, MaxZError: opts.MaxError}
+		return io.Encode(data)
+	} else if opts.Format.Extension() == "tif" || opts.Format.Extension() == "tiff" {
+		io := &GeoTIFFIO{Mode: opts.Mode}
+		return io.Encode(data)
+	}
+	return nil, errors.New("the format not support!")
+}
+
+func DecodeRaster(opts *RasterOptions, reader io.Reader) (*TileData, error) {
+	if opts.Format.Extension() == "webp" || opts.Format.Extension() == "png" {
+		io := &DemIO{Mode: ModeMapbox, Format: opts.Format}
+		return io.Decode(reader)
+	} else if opts.Format.Extension() == "atm" {
+		io := &LercIO{Mode: opts.Mode, MaxZError: opts.MaxError}
+		return io.Decode(reader)
+	} else if opts.Format.Extension() == "tif" || opts.Format.Extension() == "tiff" {
+		io := &GeoTIFFIO{Mode: opts.Mode}
+		return io.Decode(reader)
+	}
+	return nil, errors.New("the format not support!")
 }

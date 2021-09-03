@@ -69,3 +69,10 @@ func (t *VectorTransformer) Apply(feats []*geom.Feature) []*geom.Feature {
 	}
 	return rets
 }
+
+func (t *VectorTransformer) ApplyVector(layers Vector) Vector {
+	for k, l := range layers {
+		layers[k] = t.Apply(l)
+	}
+	return layers
+}

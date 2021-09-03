@@ -200,6 +200,8 @@ func (t *TiledVector) Transform(req_bbox vec2d.Rect, grid geo.TileGrid, vec_opts
 	src_img := t.GetVector(vec_opts, [3]int{x, y, z})
 
 	transformer := NewVectorTransformer(t.SrcSRS, grid.Srs)
+
 	vecs := transformer.ApplyVector(src_img)
+
 	return CreateVectorSourceFromVector(vecs, [3]int{x, y, z}, vec_opts, nil)
 }

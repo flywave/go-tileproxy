@@ -165,7 +165,7 @@ func (s *RasterSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.Tile
 	return s.buf
 }
 
-func (s *RasterSource) getRasterOptions() *RasterOptions {
+func (s *RasterSource) GetRasterOptions() *RasterOptions {
 	return s.Options.(*RasterOptions)
 }
 

@@ -341,7 +341,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Center[0], tilejson.Center[1], tilejson.Center[2] = float32(bbox.Min[0]+(bbox.Max[0]-bbox.Min[0])/2), float32(bbox.Min[1]+(bbox.Max[1]-bbox.Min[1])/2), 0
 
 	tilejson.Format = c.GetFormat()
-	tilejson.Id = req.TilesetID
+	tilejson.ID = req.TilesetID
 
 	tilejson.Name = c.metadata["name"]
 

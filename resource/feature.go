@@ -117,17 +117,13 @@ func (d HTMLFeatureInfoDoc) ContentType() string {
 func NewHTMLFeatureInfoDoc(content interface{}) *HTMLFeatureInfoDoc {
 	switch v := content.(type) {
 	case string:
-		{
-			reader := bytes.NewBufferString(v)
-			node, _ := html.Parse(reader)
-			return &HTMLFeatureInfoDoc{XMLFeatureInfoDoc: XMLFeatureInfoDoc{Content: v}, root: node}
-		}
+		reader := bytes.NewBufferString(v)
+		node, _ := html.Parse(reader)
+		return &HTMLFeatureInfoDoc{XMLFeatureInfoDoc: XMLFeatureInfoDoc{Content: v}, root: node}
 	case []byte:
-		{
-			reader := bytes.NewBuffer(v)
-			node, _ := html.Parse(reader)
-			return &HTMLFeatureInfoDoc{XMLFeatureInfoDoc: XMLFeatureInfoDoc{Content: string(v)}, root: node}
-		}
+		reader := bytes.NewBuffer(v)
+		node, _ := html.Parse(reader)
+		return &HTMLFeatureInfoDoc{XMLFeatureInfoDoc: XMLFeatureInfoDoc{Content: string(v)}, root: node}
 	case *etree.Document:
 		return &HTMLFeatureInfoDoc{XMLFeatureInfoDoc: XMLFeatureInfoDoc{Doc: v}}
 	}

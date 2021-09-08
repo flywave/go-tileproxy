@@ -36,7 +36,7 @@ type TileJSON struct {
 	FileSize        uint64         `json:"filesize"`
 	FillZoom        uint32         `json:"fillzoom"`
 	Format          string         `json:"format"`
-	Id              string         `json:"id"`
+	ID              string         `json:"id"`
 	MaxZoom         uint32         `json:"maxzoom"`
 	MinZoom         uint32         `json:"minzoom"`
 	Modified        uint64         `json:"modified"`

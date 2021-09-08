@@ -85,20 +85,34 @@ func (t *RasterMerger) tileOffset(i int) [2]int {
 }
 
 type RasterSplitter struct {
-	dem     *RasterSource
+	dem     tile.Source
 	Options *RasterOptions
 }
 
 func NewRasterSplitter(dem_tile tile.Source, dem_opts *RasterOptions) *RasterSplitter {
-	return &RasterSplitter{dem: dem_tile.(*RasterSource), Options: dem_opts}
+	return &RasterSplitter{dem: dem_tile, Options: dem_opts}
 }
 
 func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [2]uint32) tile.Source {
+	type _rasterSource interface {
+		GetRasterOptions() *RasterOptions
+		Resample(georef *geo.GeoReference, grid *Grid) error
+	}
+	rasterS, ok := t.dem.(_rasterSource)
+
+	if !ok {
+		return nil
+	}
+
 	georef := geo.NewGeoReference(newbox, boxsrs)
 
-	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.dem.getRasterOptions().Mode, georef)
+	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), rasterS.GetRasterOptions().Mode, georef)
 
-	t.dem.Resample(nil, grid)
+	err := rasterS.Resample(nil, grid)
+
+	if err != nil {
+		return nil
+	}
 
 	smtd := grid.GetTileDate(t.Options.Mode)
 
@@ -109,12 +123,10 @@ type TiledRaster struct {
 	Tiles    []tile.Source
 	TileGrid [2]int
 	TileSize [2]uint32
-	SrcBBox  vec2d.Rect
-	SrcSRS   geo.Proj
 }
 
-func NewTiledRaster(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj) *TiledRaster {
-	return &TiledRaster{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: src_srs}
+func NewTiledRaster(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32) *TiledRaster {
+	return &TiledRaster{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size}
 }
 
 func (t *TiledRaster) GetRaster(dem_opts *RasterOptions) tile.Source {

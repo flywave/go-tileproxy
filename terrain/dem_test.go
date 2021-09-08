@@ -13,6 +13,7 @@ func TestDem(t *testing.T) {
 	f.Close()
 
 	tiledata := NewTileData([2]uint32{uint32(data.Dim - 2), uint32(data.Dim - 2)}, BORDER_BILATERAL)
+
 	for x := 0; x < data.Dim; x++ {
 		for y := 0; y < data.Dim; y++ {
 			if x > 0 && y > 0 && x < data.Dim-1 && y < data.Dim-1 {

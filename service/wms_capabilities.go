@@ -16,7 +16,7 @@ import (
 
 type WMSCapabilities struct {
 	service         map[string]string
-	root_layer      *WMSGroupLayer
+	rootLayer       *WMSGroupLayer
 	imageFormats    []string
 	infoFormats     []string
 	srs             *geo.SupportedSRS
@@ -29,7 +29,7 @@ type WMSCapabilities struct {
 func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
 	inspireMetadata := extendedCapabilitiesFromMetadata(service)
 	contact := contactInformationFromMetadata(service)
-	return &WMSCapabilities{service: service, root_layer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
+	return &WMSCapabilities{service: service, rootLayer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
 }
 
 func (c *WMSCapabilities) layerSrsBBox(layer WMSLayer, epsgAxisOrder bool) map[string]vec2d.Rect {
@@ -214,7 +214,6 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 
 	if c.inspireMetadata != nil {
 		ec := &wms130.ExtendedCapabilities{}
-		ec.MetadataURL.Type = c.inspireMetadata.MetadataURL.Type
 		ec.MetadataURL.URL = c.inspireMetadata.MetadataURL.URL
 		ec.MetadataURL.MediaType = c.inspireMetadata.MetadataURL.MediaType
 
@@ -224,13 +223,14 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		capabilities.ExtendedCapabilities = ec
 	}
 
-	for _, l := range c.root_layer.layers {
+	for _, l := range c.rootLayer.layers {
 		layer := &wms130.Layer{}
 		name := l.GetName()
 		layer.Name = &name
 		layer.Title = l.GetTitle()
 		layer.Queryable = geo.NewInt(1)
 		metadata := l.GetMetadata()
+
 		if ab, ok := metadata["abstract"]; ok {
 			layer.Abstract = ab
 		}
@@ -392,7 +392,6 @@ func contactInformationFromMetadata(metadata map[string]string) *ContactInformat
 
 type ExtendedCapabilities struct {
 	MetadataURL struct {
-		Type      string
 		URL       string
 		MediaType string
 	}
@@ -408,9 +407,6 @@ type ExtendedCapabilities struct {
 
 func extendedCapabilitiesFromMetadata(metadata map[string]string) *ExtendedCapabilities {
 	ret := &ExtendedCapabilities{}
-	if l, ok := metadata["extendedcapabilities.metadataurl.type"]; ok {
-		ret.MetadataURL.Type = l
-	}
 	if l, ok := metadata["extendedcapabilities.metadataurl.url"]; ok {
 		ret.MetadataURL.URL = l
 	}

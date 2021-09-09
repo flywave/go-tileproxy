@@ -207,7 +207,9 @@ func (s *TileService) renderCapabilities(layer []Provider, service map[string]st
 	}
 
 	baseUrl := service["url"]
+
 	i := strings.LastIndex(baseUrl, "/")
+
 	if i != -1 {
 		baseUrl = baseUrl[:i]
 	}

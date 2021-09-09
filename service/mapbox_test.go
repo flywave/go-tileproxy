@@ -62,7 +62,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	mockStyleClient := client.NewMapboxStyleClient("https://api.mapbox.com/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7", "{token}", "access_token", ctx)
 	stylesCache := resource.NewStyleCache(resource.NewLocalStore("./test_styles_cache"))
-	styleProvider := &StyleProvider{sources.NewMapboxStyleSource(mockStyleClient, nil, stylesCache), sources.NewMapboxGlyphsSource(mockGlyphsClient, []string{"mock"}, glyphsCache)}
+	styleProvider := &StyleProvider{styleSource: sources.NewMapboxStyleSource(mockStyleClient, nil, stylesCache), glyphsSource: sources.NewMapboxGlyphsSource(mockGlyphsClient, []string{"mock"}, glyphsCache)}
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 

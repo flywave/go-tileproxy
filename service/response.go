@@ -89,7 +89,7 @@ func NewResponse(response []byte, status int, mimetype string) *Response {
 	if content_type == "" {
 		content_type = DefaultContentType
 	}
-	r.headers["Content-type"] = []string{content_type}
+	r.headers["Content-Type"] = []string{content_type}
 	return r
 }
 
@@ -103,11 +103,11 @@ func (r *Response) GetStatus() int {
 
 func (r *Response) SetLastModified(date time.Time) {
 	r.timestamp = &date
-	r.headers["Last-modified"] = []string{utils.FormatHTTPDate(*r.timestamp)}
+	r.headers["Last-Modified"] = []string{utils.FormatHTTPDate(*r.timestamp)}
 }
 
 func (r *Response) GetLastModified() *time.Time {
-	if vs, ok := r.headers["Last-modified"]; ok {
+	if vs, ok := r.headers["Last-Modified"]; ok {
 		t, err := utils.ParseHTTPDate(vs[0])
 		if err != nil {
 			return nil
@@ -152,10 +152,10 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 
 func (r *Response) makeConditional(req *http.Request) {
 	not_modified := false
-	if v := req.Header.Get("If-none-match"); v == r.GetETag() && v != "" {
+	if v := req.Header.Get("If-None-Match"); v == r.GetETag() && v != "" {
 		not_modified = true
 	} else if r.timestamp != nil {
-		if date := req.Header.Get("If-modified-since"); date != "" {
+		if date := req.Header.Get("If-Modified-Since"); date != "" {
 			timestamp, _ := utils.ParseDateTime(date)
 			if r.timestamp.Before(timestamp) {
 				not_modified = true
@@ -166,14 +166,14 @@ func (r *Response) makeConditional(req *http.Request) {
 	if not_modified {
 		r.status = 304
 		r.response = nil
-		if _, ok := r.headers["Content-type"]; ok {
-			delete(r.headers, "Content-type")
+		if _, ok := r.headers["Content-Type"]; ok {
+			delete(r.headers, "Content-Type")
 		}
 	}
 }
 
 func (r *Response) GetContentLength() int {
-	if vs, ok := r.headers["Content-length"]; ok {
+	if vs, ok := r.headers["Content-Length"]; ok {
 		l, err := strconv.Atoi(vs[0])
 		if err != nil {
 			return 0
@@ -184,7 +184,7 @@ func (r *Response) GetContentLength() int {
 }
 
 func (r *Response) GetContentType() string {
-	if vs, ok := r.headers["Content-type"]; ok {
+	if vs, ok := r.headers["Content-Type"]; ok {
 		return vs[0]
 	}
 	return ""

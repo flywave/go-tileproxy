@@ -30,8 +30,8 @@ type WMTSService struct {
 
 func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSService {
 	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
-	lay, ms := ret.getMatrixSets(layers)
-	ret.Layers = lay
+	layer, ms := ret.getMatrixSets(layers)
+	ret.Layers = layer
 	ret.MatrixSets = ms
 	ret.router = map[string]func(r request.Request) *Response{
 		"tile": func(r request.Request) *Response {

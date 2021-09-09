@@ -16,14 +16,6 @@ func NewContext() *Context {
 	}
 }
 
-func (c *Context) UnmarshalBinary(_ []byte) error {
-	return nil
-}
-
-func (c *Context) MarshalBinary() (_ []byte, _ error) {
-	return nil, nil
-}
-
 func (c *Context) Put(key string, value interface{}) {
 	c.lock.Lock()
 	c.contextMap[key] = value

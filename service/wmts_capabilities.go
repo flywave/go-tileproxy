@@ -73,8 +73,6 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 
 		serviceProvider.ServiceContact.IndividualName = sp.ServiceContact.IndividualName
 		serviceProvider.ServiceContact.PositionName = sp.ServiceContact.PositionName
-		serviceProvider.ServiceContact.ContactInfo.Text = sp.ServiceContact.ContactInfo.Text
-		serviceProvider.ServiceContact.ContactInfo.Text = sp.ServiceContact.ContactInfo.Text
 		serviceProvider.ServiceContact.ContactInfo.Phone.Voice = sp.ServiceContact.ContactInfo.Phone.Voice
 		serviceProvider.ServiceContact.ContactInfo.Phone.Facsimile = sp.ServiceContact.ContactInfo.Phone.Facsimile
 
@@ -135,7 +133,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 
 		layer.Identifier = l.GetName()
 		layer.Style = append(layer.Style, wmts100.Style{Identifier: "default"})
-		layer.Format = l.GetFormatMimeType()
+		layer.Format = []string{l.GetFormatMimeType()}
 
 		for _, g := range l.GetGrids() {
 			layer.TileMatrixSetLink = append(layer.TileMatrixSetLink, wmts100.TileMatrixSetLink{TileMatrixSet: g.Name})
@@ -217,8 +215,6 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 
 		serviceProvider.ServiceContact.IndividualName = sp.ServiceContact.IndividualName
 		serviceProvider.ServiceContact.PositionName = sp.ServiceContact.PositionName
-		serviceProvider.ServiceContact.ContactInfo.Text = sp.ServiceContact.ContactInfo.Text
-		serviceProvider.ServiceContact.ContactInfo.Text = sp.ServiceContact.ContactInfo.Text
 		serviceProvider.ServiceContact.ContactInfo.Phone.Voice = sp.ServiceContact.ContactInfo.Phone.Voice
 		serviceProvider.ServiceContact.ContactInfo.Phone.Facsimile = sp.ServiceContact.ContactInfo.Phone.Facsimile
 
@@ -252,7 +248,7 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 
 		layer.Identifier = l.GetName()
 		layer.Style = append(layer.Style, wmts100.Style{Identifier: "default"})
-		layer.Format = l.GetFormatMimeType()
+		layer.Format = []string{l.GetFormatMimeType()}
 
 		for i := range c.InfoFormats {
 			layer.InfoFormat = append(layer.InfoFormat, c.InfoFormats[i])
@@ -309,7 +305,6 @@ type ServiceProvider struct {
 		IndividualName string
 		PositionName   string
 		ContactInfo    struct {
-			Text  string
 			Phone struct {
 				Voice     string
 				Facsimile string
@@ -349,9 +344,6 @@ func serviceProviderFromMetadata(metadata map[string]string) *ServiceProvider {
 	}
 	if l, ok := metadata["serviceprovider.servicecontact.positionname"]; ok {
 		ret.ServiceContact.PositionName = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.text"]; ok {
-		ret.ServiceContact.ContactInfo.Text = l
 	}
 	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.phone.voice"]; ok {
 		ret.ServiceContact.ContactInfo.Phone.Voice = l

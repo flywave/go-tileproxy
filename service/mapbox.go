@@ -49,6 +49,7 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 		for _, fontId := range sty.getFonts() {
 			s.Fonts[fontId] = sty
 		}
+		sty.service = s
 	}
 	s.requestParser = func(r *http.Request) request.Request {
 		return request.MakeMapboxRequest(r, false)
@@ -168,6 +169,7 @@ func (s *MapboxService) GetGlyphs(req request.Request) *Response {
 }
 
 type StyleProvider struct {
+	service      *MapboxService
 	styleSource  *sources.MapboxStyleSource
 	glyphsSource *sources.MapboxGlyphsSource
 }
@@ -180,9 +182,18 @@ func (c *StyleProvider) getFonts() []string {
 	return c.glyphsSource.Fonts
 }
 
+func (c *StyleProvider) convertTileJson(style *resource.Style, req *request.MapboxStyleRequest) []byte {
+	sprite_url := c.service.Metadata["url"] + "/" + req.Version + "/sprites/{style_id}"
+	glyphs_url := c.service.Metadata["url"] + "/" + req.Version + "/fonts/{fontstack}/{range}.pbf"
+	styleJson := style.GetStyle()
+	styleJson.Sprite = &sprite_url
+	styleJson.Glyphs = &glyphs_url
+	return style.GetData()
+}
+
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
 	styles := c.styleSource.GetStyle(req.StyleID)
-	return styles.GetData()
+	return c.convertTileJson(styles, req)
 }
 
 func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
@@ -327,10 +338,16 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 
+func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest) []byte {
+	url := c.metadata["url"] + "/" + req.Version + "/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	tilejson.Tiles = append(tilejson.Tiles, url)
+	return tilejson.GetData()
+}
+
 func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) []byte {
 	if c.tilejsonSource != nil {
 		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
-		return styles.GetData()
+		return c.convertTileJson(styles, req)
 	}
 
 	tilejson := &resource.TileJSON{}

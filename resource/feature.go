@@ -167,14 +167,14 @@ func NewJSONFeatureInfoDoc(content interface{}) *JSONFeatureInfoDoc {
 	return nil
 }
 
-func merge_map(base map[string]interface{}, other map[string]interface{}) map[string]interface{} {
+func mergeMap(base map[string]interface{}, other map[string]interface{}) map[string]interface{} {
 	for k, v := range other {
 		if _, ok := base[k]; !ok {
 			base[k] = v
 		} else {
 			if m, ok := base[k].(map[string]interface{}); ok {
 				if m2, ok := v.(map[string]interface{}); ok {
-					merge_map(m, m2)
+					mergeMap(m, m2)
 				}
 			} else if l, ok := base[k].([]interface{}); ok {
 				if l2, ok := v.([]interface{}); ok {
@@ -198,7 +198,7 @@ func (d JSONFeatureInfoDoc) Combine(docs []FeatureInfoDoc) FeatureInfoDoc {
 	}
 	result := make(map[string]interface{})
 	for _, m := range maps {
-		result = merge_map(result, m)
+		result = mergeMap(result, m)
 	}
 	resultJson, _ := json.Marshal(result)
 	return NewJSONFeatureInfoDoc(resultJson)

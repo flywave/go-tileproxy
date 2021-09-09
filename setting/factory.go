@@ -555,7 +555,6 @@ func newCollectorContext(httpOpts *HttpOpts) *client.CollectorContext {
 	} else {
 		conf.MaxQueueSize = DefaultMaxQueueSize
 	}
-
 	return client.NewCollectorContext(&conf)
 }
 
@@ -793,14 +792,14 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 		styles[st.StyleID] = service.NewStyleProvider(sts, glys)
 	}
 
-	var max_tile_age *time.Duration
+	var maxTileAge *time.Duration
 
 	if s.MaxTileAge != nil {
 		d := time.Duration(*s.MaxTileAge * int(time.Hour))
-		max_tile_age = &d
+		maxTileAge = &d
 	}
 
-	return service.NewMapboxService(layers, styles, s.Metadata, max_tile_age)
+	return service.NewMapboxService(layers, styles, s.Metadata, maxTileAge)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {
@@ -810,15 +809,15 @@ func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService 
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
 	}
 
-	var max_tile_age *time.Duration
+	var maxTileAge *time.Duration
 
 	if s.MaxTileAge != nil {
 		d := time.Duration(*s.MaxTileAge * int(time.Hour))
-		max_tile_age = &d
+		maxTileAge = &d
 	}
 	origin := s.Origin
 
-	return service.NewTileService(layers, s.Metadata, max_tile_age, false, origin)
+	return service.NewTileService(layers, s.Metadata, maxTileAge, false, origin)
 }
 
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
@@ -828,11 +827,11 @@ func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSServic
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
 	}
 
-	var max_tile_age *time.Duration
+	var maxTileAge *time.Duration
 
 	if s.MaxTileAge != nil {
 		d := time.Duration(*s.MaxTileAge * int(time.Hour))
-		max_tile_age = &d
+		maxTileAge = &d
 	}
 
 	info_formats := make(map[string]string)
@@ -840,7 +839,7 @@ func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSServic
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSService(layers, s.Metadata, max_tile_age, info_formats)
+	return service.NewWMTSService(layers, s.Metadata, maxTileAge, info_formats)
 }
 
 func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMTSRestService {
@@ -854,11 +853,11 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
 	}
 
-	var max_tile_age *time.Duration
+	var maxTileAge *time.Duration
 
 	if s.MaxTileAge != nil {
 		d := time.Duration(*s.MaxTileAge * int(time.Hour))
-		max_tile_age = &d
+		maxTileAge = &d
 	}
 
 	info_formats := make(map[string]string)
@@ -866,7 +865,7 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSRestService(layers, s.Metadata, max_tile_age, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
+	return service.NewWMTSRestService(layers, s.Metadata, maxTileAge, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
 }
 
 func loadXSLTransformer(featureinfoXslt map[string]string, basePath string) map[string]*resource.XSLTransformer {
@@ -901,16 +900,16 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, pref
 		}
 	}
 
-	supported_srs := newSupportedSrs(s.Srs, preferred)
+	supportedSrs := newSupportedSrs(s.Srs, preferred)
 
 	imageFormats := make(map[string]*imagery.ImageOptions)
 	for _, format := range s.ImageFormats {
 		imageFormats[format] = &imagery.ImageOptions{Format: tile.TileFormat(format)}
 	}
 
-	info_formats := make(map[string]string)
+	infoFormats := make(map[string]string)
 	for _, info := range s.FeatureinfoFormats {
-		info_formats[info.Suffix] = info.MimeType
+		infoFormats[info.Suffix] = info.MimeType
 	}
 	strict := false
 	if s.Strict != nil {
@@ -921,16 +920,16 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, pref
 		maxOutputPixels = *s.MaxOutputPixels
 	}
 
-	var max_tile_age *time.Duration
+	var maxTileAge *time.Duration
 
 	if s.MaxTileAge != nil {
 		d := time.Duration(*s.MaxTileAge * int(time.Hour))
-		max_tile_age = &d
+		maxTileAge = &d
 	}
 
 	ftransformers := loadXSLTransformer(s.FeatureinfoXslt, basePath)
 
 	extents := extentsForSrs(s.BBoxSrs)
 
-	return service.NewWMSService(rootLayer, layers, md, supported_srs, imageFormats, info_formats, extents, maxOutputPixels, max_tile_age, strict, ftransformers)
+	return service.NewWMSService(rootLayer, layers, md, supportedSrs, imageFormats, infoFormats, extents, maxOutputPixels, maxTileAge, strict, ftransformers)
 }

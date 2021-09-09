@@ -83,6 +83,10 @@ func (l *Style) GetGlyphs() string {
 	return *l.style.Glyphs
 }
 
+func (l *Style) GetStyle() *style.Style {
+	return &l.style
+}
+
 func (l *Style) GetSources() map[string]style.Source {
 	ret := make(map[string]style.Source)
 	for k, data := range l.style.Sources {

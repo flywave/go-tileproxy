@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
+	"github.com/flywave/go-mapbox/style"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
@@ -182,13 +186,31 @@ func (c *StyleProvider) getFonts() []string {
 	return c.glyphsSource.Fonts
 }
 
-func (c *StyleProvider) convertTileJson(style *resource.Style, req *request.MapboxStyleRequest) []byte {
-	sprite_url := c.service.Metadata["url"] + "/" + req.Version + "/sprites/{style_id}"
-	glyphs_url := c.service.Metadata["url"] + "/" + req.Version + "/fonts/{fontstack}/{range}.pbf"
-	styleJson := style.GetStyle()
+func (c *StyleProvider) convertTileJson(style_ *resource.Style, req *request.MapboxStyleRequest) []byte {
+	sprite_url := c.service.Metadata["url"] + "/v1/sprites/{style_id}"
+	glyphs_url := c.service.Metadata["url"] + "/v1/fonts/{fontstack}/{range}.pbf"
+	styleJson := style_.GetStyle()
 	styleJson.Sprite = &sprite_url
 	styleJson.Glyphs = &glyphs_url
-	return style.GetData()
+	for k, data := range styleJson.Sources {
+		var src style.Source
+		dec := json.NewDecoder(bytes.NewBuffer(data))
+		if err := dec.Decode(&src); err != nil {
+			return nil
+		}
+
+		if strings.Contains(src.URL, "mapbox://") {
+			src.URL = strings.ReplaceAll(src.URL, "mapbox://", c.service.Metadata["url"]+"/v4/")
+		}
+
+		buf := &bytes.Buffer{}
+		enc := json.NewEncoder(buf)
+		if err := enc.Encode(src); err != nil {
+			return nil
+		}
+		styleJson.Sources[k] = buf.Bytes()
+	}
+	return style_.GetData()
 }
 
 func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
@@ -339,7 +361,7 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 }
 
 func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest) []byte {
-	url := c.metadata["url"] + "/" + req.Version + "/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := c.metadata["url"] + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 	tilejson.Tiles = append(tilejson.Tiles, url)
 	return tilejson.GetData()
 }
@@ -379,7 +401,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := c.metadata["url"] + "/" + req.Version + "/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := c.metadata["url"] + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

@@ -10,10 +10,13 @@ import (
 
 	qmt "github.com/flywave/go-quantized-mesh"
 	tin "github.com/flywave/go-tin"
+	vec2d "github.com/flywave/go3d/float64/vec2"
+	vec3d "github.com/flywave/go3d/float64/vec3"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
+	"github.com/flywave/go-tileproxy/utils/ray"
 )
 
 type TerrainSource struct {
@@ -53,6 +56,10 @@ func (s *TerrainSource) GetFileName() string {
 
 func (s *TerrainSource) GetTile() interface{} {
 	return s.GetQuantizedMeshTile()
+}
+
+func (s *TerrainSource) GetRasterOptions() *RasterOptions {
+	return s.Options.(*RasterOptions)
 }
 
 func (s *TerrainSource) Decode(r io.Reader) (*qmt.QuantizedMeshTile, error) {
@@ -178,4 +185,122 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 	source.SetSource(qmesh)
 
 	return source, nil
+}
+
+func newRayMesh(qmesh *qmt.QuantizedMeshTile) *ray.RayMesh {
+	mdata, err := qmesh.GetMesh()
+	if err != nil {
+		return nil
+	}
+	return ray.NewRayMesh(mdata.Vertices, mdata.Faces, mdata.BBox)
+}
+
+func (s *TerrainSource) Resample(georef *geo.GeoReference, grid *Grid) error {
+	if georef == nil && s.georef != nil {
+		georef = s.georef
+	}
+	if georef == nil {
+		return errors.New("source georef is nil")
+	}
+	bbox := grid.GetRect()
+	if !grid.srs.Eq(georef.GetSrs()) {
+		bbox = grid.srs.TransformRectTo(georef.GetSrs(), bbox, 16)
+	}
+	if !geo.BBoxContains(georef.GetBBox(), bbox) {
+		return errors.New("not Contains target grid")
+	}
+
+	rayMesh := newRayMesh(s.GetQuantizedMeshTile())
+
+	if rayMesh == nil {
+		return errors.New("ray mesh error")
+	}
+
+	rays := grid.GetRay()
+
+	grid.Coordinates = make(Coordinates, len(rays))
+
+	for i, ray := range rays {
+		lon, lat := ray.Start[0], ray.Start[1]
+		if !grid.srs.Eq(georef.GetSrs()) {
+			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
+			lon, lat = d[0][0], d[0][1]
+		}
+		intersection := rayMesh.Intersect(&ray)
+		grid.Coordinates[i][0] = lon
+		grid.Coordinates[i][1] = lat
+		grid.Coordinates[i][2] = intersection.Point[2]
+	}
+	return nil
+}
+
+type TerrainMerger struct {
+	Grid [2]int
+}
+
+func NewTerrainMerger(tile_grid [2]int) *TerrainMerger {
+	return &TerrainMerger{Grid: tile_grid}
+}
+
+func (t *TerrainMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) tile.Source {
+	if t.Grid[0] == 1 && t.Grid[1] == 1 {
+		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
+			tile := ordered_tiles[0]
+			return tile
+		}
+	}
+
+	var cacheable *tile.CacheInfo
+
+	fdata := ordered_tiles[0].GetTile().(*qmt.QuantizedMeshTile)
+
+	var bbox vec3d.Box
+
+	mdata, err := fdata.GetMesh()
+	if err != nil {
+		return nil
+	}
+
+	bbox = vec3d.Box{Min: vec3d.T{mdata.BBox[0][0], mdata.BBox[0][1], mdata.BBox[0][2]},
+		Max: vec3d.T{mdata.BBox[1][0], mdata.BBox[1][1], mdata.BBox[1][2]}}
+
+	for _, source := range ordered_tiles {
+		if source == nil {
+			continue
+		}
+
+		if source.GetCacheable() == nil {
+			cacheable = source.GetCacheable()
+		}
+
+		tdata := source.GetTile().(*qmt.QuantizedMeshTile)
+
+		tmdata, err := tdata.GetMesh()
+		if err != nil {
+			return nil
+		}
+
+		bboxss := vec3d.Box{Min: vec3d.T{tmdata.BBox[0][0], tmdata.BBox[0][1], tmdata.BBox[0][2]},
+			Max: vec3d.T{tmdata.BBox[1][0], tmdata.BBox[1][1], tmdata.BBox[1][2]}}
+		bbox = vec3d.Joined(&bbox, &bboxss)
+
+		faceindxe := len(mdata.Vertices)
+
+		mdata.Vertices = append(mdata.Vertices, tmdata.Vertices...)
+
+		for _, f := range tmdata.Faces {
+			mdata.Faces = append(mdata.Faces, [3]int{f[0] + faceindxe, f[1] + faceindxe, f[2] + faceindxe})
+		}
+	}
+
+	mdata.BBox[0] = [3]float64(bbox.Min)
+	mdata.BBox[1] = [3]float64(bbox.Max)
+
+	qmesh := &qmt.QuantizedMeshTile{}
+	qmesh.SetMesh(mdata, false)
+
+	src := NewTerrainSource(opts)
+	src.cacheable = cacheable
+	src.SetSource(qmesh)
+	return src
 }

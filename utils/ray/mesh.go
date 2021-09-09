@@ -2,11 +2,12 @@ package ray
 
 import (
 	"math"
+	"unsafe"
 
 	vec3d "github.com/flywave/go3d/float64/vec3"
 )
 
-func SolveEquation(a, b, c vec3d.T) (float64, float64) {
+func solveEquation(a, b, c vec3d.T) (float64, float64) {
 	coefficientMatrix := [2][2]float64{{a[0], b[0]}, {a[1], b[1]}}
 	constantCoefficientMatrix := [2]float64{c[0], c[1]}
 
@@ -19,11 +20,11 @@ func SolveEquation(a, b, c vec3d.T) (float64, float64) {
 	return x, y
 }
 
-func Negative(v *vec3d.T) vec3d.T {
+func negative(v *vec3d.T) vec3d.T {
 	return v.Scaled(-1)
 }
 
-func MixedProduct(a, b, c *vec3d.T) float64 {
+func mixedProduct(a, b, c *vec3d.T) float64 {
 	ab := vec3d.Cross(a, b)
 	return vec3d.Dot(&ab, c)
 }
@@ -33,75 +34,61 @@ const (
 	TrianglesPerLeaf = 20
 )
 
-type Vertex struct {
-	Normal      vec3d.T `json:"normal"`
-	Coordinates vec3d.T `json:"coordinates"`
-	UV          vec3d.T `json:"uv"`
-}
-
 type Triangle struct {
-	Vertices      [3]int   `json:"vertices"`
-	Material      int      `json:"material"`
 	AB, AC, ABxAC *vec3d.T `json:"-"`
-	Normal        *vec3d.T `json:"normal"`
-	surfaceOx     *vec3d.T `json:"-"`
-	surfaceOy     *vec3d.T `json:"-"`
 }
 
-type Mesh struct {
-	Vertices    []Vertex     `json:"vertices"`
-	Faces       []Triangle   `json:"faces"`
-	tree        *KDtree      `json:"-"`
-	BoundingBox *BoundingBox `json:"-"`
+type RayMesh struct {
+	Vertices  []vec3d.T  `json:"vertices"`
+	Faces     [][3]int   `json:"faces"`
+	Triangles []Triangle `json:"-"`
+	tree      *KDtree    `json:"-"`
+	BBox      *BBox      `json:"-"`
 }
 
-func (m *Mesh) Init() {
+func NewRayMesh(vertices [][3]float64, faces [][3]int, bbox [2][3]float64) *RayMesh {
+	vvecs := *(*[]vec3d.T)(unsafe.Pointer(&vertices))
+	vbbox := *(*[2]vec3d.T)(unsafe.Pointer(&bbox))
+	ret := &RayMesh{Vertices: vvecs, Faces: faces, BBox: NewBBoxWithData(vbbox)}
+	ret.Init()
+	return ret
+}
+
+func (m *RayMesh) Init() {
 	allIndices := make([]int, len(m.Faces))
+
 	for i := range allIndices {
 		allIndices[i] = i
 	}
 
-	m.BoundingBox = m.GetBoundingBox()
-	m.tree = m.newKDtree(m.BoundingBox, allIndices, 0)
+	m.Triangles = make([]Triangle, len(m.Faces))
+	if m.BBox != nil {
+		m.BBox = m.GetBBox()
+	}
+	m.tree = m.newKDtree(m.BBox, allIndices, 0)
 	for i := range m.Faces {
 		triangle := &m.Faces[i]
 
-		A := &m.Vertices[triangle.Vertices[0]].Coordinates
-		B := &m.Vertices[triangle.Vertices[1]].Coordinates
-		C := &m.Vertices[triangle.Vertices[2]].Coordinates
+		A := &m.Vertices[triangle[0]]
+		B := &m.Vertices[triangle[1]]
+		C := &m.Vertices[triangle[2]]
 
 		AB := vec3d.Sub(B, A)
 		AC := vec3d.Sub(C, A)
 
-		triangle.AB = &AB
-		triangle.AC = &AC
+		m.Triangles[i].AB = &AB
+		m.Triangles[i].AC = &AC
 		c := vec3d.Cross(&AB, &AC)
-		triangle.ABxAC = &c
-
-		surfaceA := &m.Vertices[triangle.Vertices[0]].UV
-		surfaceB := &m.Vertices[triangle.Vertices[1]].UV
-		surfaceC := &m.Vertices[triangle.Vertices[2]].UV
-
-		surfaceAB := vec3d.Sub(surfaceB, surfaceA)
-		surfaceAC := vec3d.Sub(surfaceC, surfaceA)
-
-		px, qx := SolveEquation(surfaceAB, surfaceAC, vec3d.T{1, 0, 0})
-		py, qy := SolveEquation(surfaceAB, surfaceAC, vec3d.T{0, 1, 0})
-		aas, acs := AB.Scaled(px), AC.Scaled(qx)
-		ox := vec3d.Add(&aas, &acs)
-		triangle.surfaceOx = &ox
-		aas, acs = AB.Scaled(py), AC.Scaled(qy)
-		oy := vec3d.Add(&aas, &acs)
-		triangle.surfaceOy = &oy
+		m.Triangles[i].ABxAC = &c
 	}
 }
 
-func (m *Mesh) SlowIntersect(incoming *Ray) *Intersection {
+func (m *RayMesh) SlowIntersect(incoming *Ray) *Intersection {
 	intersection := &Intersection{}
 	intersection.Distance = Inf
 	found := false
-	for _, triangle := range m.Faces {
-		if m.intersectTriangle(incoming, &triangle, intersection, nil) {
+	for i, triangle := range m.Faces {
+		if m.intersectTriangle(incoming, triangle, &m.Triangles[i], intersection, nil) {
 			found = true
 		}
 	}
@@ -111,13 +98,13 @@ func (m *Mesh) SlowIntersect(incoming *Ray) *Intersection {
 	return intersection
 }
 
-func (m *Mesh) Intersect(incoming *Ray) *Intersection {
+func (m *RayMesh) Intersect(incoming *Ray) *Intersection {
 	incoming.Init()
-	if !m.BoundingBox.Intersect(incoming) {
+	if !m.BBox.Intersect(incoming) {
 		return nil
 	}
 	intersectionInfo := &Intersection{Distance: Inf}
-	if m.IntersectKD(incoming, m.BoundingBox, m.tree, intersectionInfo) {
+	if m.IntersectKD(incoming, m.BBox, m.tree, intersectionInfo) {
 		return intersectionInfo
 	}
 	return nil
@@ -126,7 +113,7 @@ func (m *Mesh) Intersect(incoming *Ray) *Intersection {
 func IntersectTriangle(ray *Ray, A, B, C *vec3d.T) (bool, float64) {
 	AB := vec3d.Sub(B, A)
 	AC := vec3d.Sub(C, A)
-	reverseDirection := Negative(&ray.Direction)
+	reverseDirection := negative(&ray.Direction)
 	distToA := vec3d.Sub(&ray.Start, A)
 	ABxAC := vec3d.Cross(&AB, &AC)
 	det := vec3d.Dot(&ABxAC, &reverseDirection)
@@ -134,8 +121,8 @@ func IntersectTriangle(ray *Ray, A, B, C *vec3d.T) (bool, float64) {
 	if math.Abs(det) < Epsilon {
 		return false, Inf
 	}
-	lambda2 := MixedProduct(&distToA, &AC, &reverseDirection) * reverseDet
-	lambda3 := MixedProduct(&AB, &distToA, &reverseDirection) * reverseDet
+	lambda2 := mixedProduct(&distToA, &AC, &reverseDirection) * reverseDet
+	lambda3 := mixedProduct(&AB, &distToA, &reverseDirection) * reverseDet
 	gamma := vec3d.Dot(&ABxAC, &distToA) * reverseDet
 	if gamma < 0 {
 		return false, Inf
@@ -146,8 +133,8 @@ func IntersectTriangle(ray *Ray, A, B, C *vec3d.T) (bool, float64) {
 	return true, gamma
 }
 
-func (m *Mesh) intersectTriangle(ray *Ray, triangle *Triangle, intersection *Intersection, boundingBox *BoundingBox) bool {
-	A := &m.Vertices[triangle.Vertices[0]].Coordinates
+func (m *RayMesh) intersectTriangle(ray *Ray, vertices [3]int, triangle *Triangle, intersection *Intersection, bbox *BBox) bool {
+	A := &m.Vertices[vertices[0]]
 	distToA := vec3d.Sub(&ray.Start, A)
 	rayDir := ray.Direction
 	ABxAC := triangle.ABxAC
@@ -160,8 +147,8 @@ func (m *Mesh) intersectTriangle(ray *Ray, triangle *Triangle, intersection *Int
 	if intersectDist < 0 || intersectDist > intersection.Distance {
 		return false
 	}
-	lambda2 := MixedProduct(&distToA, &rayDir, triangle.AC) * reverseDet
-	lambda3 := -MixedProduct(&distToA, &rayDir, triangle.AB) * reverseDet
+	lambda2 := mixedProduct(&distToA, &rayDir, triangle.AC) * reverseDet
+	lambda3 := -mixedProduct(&distToA, &rayDir, triangle.AB) * reverseDet
 	if lambda2 < 0 || lambda2 > 1 || lambda3 < 0 || lambda3 > 1 || lambda2+lambda3 > 1 {
 		return false
 	}
@@ -169,126 +156,94 @@ func (m *Mesh) intersectTriangle(ray *Ray, triangle *Triangle, intersection *Int
 	sc := rayDir.Scaled(intersectDist)
 	ip := vec3d.Add(&ray.Start, &sc)
 
-	if boundingBox != nil && !boundingBox.Inside(ip) {
+	if bbox != nil && !bbox.Inside(ip) {
 		return false
 	}
 	intersection.Point = &ip
 	intersection.Distance = intersectDist
-	if triangle.Normal != nil {
-		intersection.Normal = triangle.Normal
-	} else {
-		Anormal := &m.Vertices[triangle.Vertices[0]].Normal
-		Bnormal := &m.Vertices[triangle.Vertices[1]].Normal
-		Cnormal := &m.Vertices[triangle.Vertices[2]].Normal
-		bas := vec3d.Sub(Bnormal, Anormal)
-		ABxlambda2 := bas.Scaled(lambda2)
-		cas := vec3d.Sub(Cnormal, Anormal)
-		ACxlambda3 := cas.Scaled(lambda3)
-		abc := vec3d.Add(&ABxlambda2, &ACxlambda3)
-		normal := vec3d.Add(Anormal, &abc)
-		intersection.Normal = &normal
-	}
-	uvA := &m.Vertices[triangle.Vertices[0]].UV
-	uvB := &m.Vertices[triangle.Vertices[1]].UV
-	uvC := &m.Vertices[triangle.Vertices[2]].UV
-
-	uvba := vec3d.Sub(uvB, uvA)
-	uvABxlambda2 := uvba.Scaled(lambda2)
-	uvca := vec3d.Sub(uvC, uvA)
-	uvACxlambda3 := uvca.Scaled(lambda3)
-
-	uvabbc := vec3d.Add(&uvABxlambda2, &uvACxlambda3)
-	uv := vec3d.Add(uvA, &uvabbc)
-
-	intersection.U = uv[0]
-	intersection.V = uv[1]
-
-	intersection.SurfaceOx = triangle.surfaceOx
-	intersection.SurfaceOy = triangle.surfaceOy
-
 	intersection.Incoming = ray
-	intersection.Material = triangle.Material
 	return true
 }
 
-func (m *Mesh) GetBoundingBox() *BoundingBox {
-	boundingBox := NewBoundingBox()
+func (m *RayMesh) GetBBox() *BBox {
+	bbox := NewBBox()
 	for _, vertex := range m.Vertices {
-		boundingBox.AddPoint(vertex.Coordinates)
+		bbox.AddPoint(vertex)
 	}
-	return boundingBox
+	return bbox
 }
 
-func (m *Mesh) newKDtree(boundingBox *BoundingBox, trianglesIndices []int, depth int) *KDtree {
+func (m *RayMesh) newKDtree(bbox *BBox, trianglesIndices []int, depth int) *KDtree {
 	if depth > MaxTreeDepth || len(trianglesIndices) < TrianglesPerLeaf {
 		node := NewLeaf(trianglesIndices)
 		return node
 	}
 	axis := (depth + 2) % 3
-	leftLimit := boundingBox.MaxVolume[axis]
-	righLimit := boundingBox.MinVolume[axis]
+	leftLimit := bbox.MaxVolume[axis]
+	righLimit := bbox.MinVolume[axis]
 
 	median := (leftLimit + righLimit) / 2
 
 	var leftTriangles, rightTriangles []int
 	var A, B, C *vec3d.T
-	leftBoundingBox, rightBoundingBox := boundingBox.Split(axis, median)
+	leftBBox, rightBBox := bbox.Split(axis, median)
 	for _, index := range trianglesIndices {
-		A = &m.Vertices[m.Faces[index].Vertices[0]].Coordinates
-		B = &m.Vertices[m.Faces[index].Vertices[1]].Coordinates
-		C = &m.Vertices[m.Faces[index].Vertices[2]].Coordinates
+		A = &m.Vertices[m.Faces[index][0]]
+		B = &m.Vertices[m.Faces[index][1]]
+		C = &m.Vertices[m.Faces[index][2]]
 
-		if leftBoundingBox.IntersectTriangle(*A, *B, *C) {
+		if leftBBox.IntersectTriangle(*A, *B, *C) {
 			leftTriangles = append(leftTriangles, index)
 		}
 
-		if rightBoundingBox.IntersectTriangle(*A, *B, *C) {
+		if rightBBox.IntersectTriangle(*A, *B, *C) {
 			rightTriangles = append(rightTriangles, index)
 		}
 	}
 	node := NewNode(median, axis)
-	leftChild := m.newKDtree(leftBoundingBox, leftTriangles, depth+1)
-	rightChild := m.newKDtree(rightBoundingBox, rightTriangles, depth+1)
+	leftChild := m.newKDtree(leftBBox, leftTriangles, depth+1)
+	rightChild := m.newKDtree(rightBBox, rightTriangles, depth+1)
 	node.Children[0] = leftChild
 	node.Children[1] = rightChild
 	return node
 }
 
-func (m *Mesh) IntersectKD(ray *Ray, boundingBox *BoundingBox, node *KDtree, intersectionInfo *Intersection) bool {
+func (m *RayMesh) IntersectKD(ray *Ray, bbox *BBox, node *KDtree, intersectionInfo *Intersection) bool {
 	foundIntersection := false
 	if node.Axis == Leaf {
 		for _, triangle := range node.Triangles {
-			if m.intersectTriangle(ray, &m.Faces[triangle], intersectionInfo, boundingBox) {
+			if m.intersectTriangle(ray, m.Faces[triangle], &m.Triangles[triangle], intersectionInfo, bbox) {
 				foundIntersection = true
 			}
 		}
 		return foundIntersection
 	}
 
-	leftBoundingBoxChild, rightBoundingBoxChild := boundingBox.Split(node.Axis, node.Median)
+	leftBBoxChild, rightBBoxChild := bbox.Split(node.Axis, node.Median)
 
-	var firstBoundingBox, secondBoundingBox *BoundingBox
+	var firstBBox, secondBBox *BBox
 	var firstNodeChild, secondNodeChild *KDtree
-	if GetDimension(&ray.Start, node.Axis) <= node.Median {
-		firstBoundingBox = leftBoundingBoxChild
-		secondBoundingBox = rightBoundingBoxChild
+
+	if getDimension(&ray.Start, node.Axis) <= node.Median {
+		firstBBox = leftBBoxChild
+		secondBBox = rightBBoxChild
 		firstNodeChild = node.Children[0]
 		secondNodeChild = node.Children[1]
 	} else {
-		firstBoundingBox = rightBoundingBoxChild
-		secondBoundingBox = leftBoundingBoxChild
+		firstBBox = rightBBoxChild
+		secondBBox = leftBBoxChild
 		firstNodeChild = node.Children[1]
 		secondNodeChild = node.Children[0]
 	}
 
-	if boundingBox.IntersectWall(node.Axis, node.Median, ray) {
-		if m.IntersectKD(ray, firstBoundingBox, firstNodeChild, intersectionInfo) {
+	if bbox.IntersectWall(node.Axis, node.Median, ray) {
+		if m.IntersectKD(ray, firstBBox, firstNodeChild, intersectionInfo) {
 			return true
 		}
-		return m.IntersectKD(ray, secondBoundingBox, secondNodeChild, intersectionInfo)
+		return m.IntersectKD(ray, secondBBox, secondNodeChild, intersectionInfo)
 	}
-	if firstBoundingBox.Intersect(ray) {
-		return m.IntersectKD(ray, firstBoundingBox, firstNodeChild, intersectionInfo)
+	if firstBBox.Intersect(ray) {
+		return m.IntersectKD(ray, firstBBox, firstNodeChild, intersectionInfo)
 	}
-	return m.IntersectKD(ray, secondBoundingBox, secondNodeChild, intersectionInfo)
+	return m.IntersectKD(ray, secondBBox, secondNodeChild, intersectionInfo)
 }

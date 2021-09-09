@@ -43,12 +43,7 @@ func (r *Ray) Init() {
 }
 
 type Intersection struct {
-	Point     *vec3d.T
-	Incoming  *Ray
-	Material  int
-	Distance  float64
-	U, V      float64
-	Normal    *vec3d.T
-	SurfaceOx *vec3d.T
-	SurfaceOy *vec3d.T
+	Point    *vec3d.T
+	Incoming *Ray
+	Distance float64
 }

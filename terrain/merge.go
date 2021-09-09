@@ -130,8 +130,13 @@ func NewTiledRaster(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32) 
 }
 
 func (t *TiledRaster) GetRaster(dem_opts *RasterOptions) tile.Source {
-	tm := NewRasterMerger(t.TileGrid, t.TileSize)
-	return tm.Merge(t.Tiles, dem_opts)
+	if dem_opts.Format.Extension() == "terrain" {
+		tm := NewTerrainMerger(t.TileGrid)
+		return tm.Merge(t.Tiles, dem_opts)
+	} else {
+		tm := NewRasterMerger(t.TileGrid, t.TileSize)
+		return tm.Merge(t.Tiles, dem_opts)
+	}
 }
 
 func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, dem_opts *RasterOptions) tile.Source {

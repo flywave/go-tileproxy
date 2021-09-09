@@ -7,6 +7,7 @@ import (
 	vec3d "github.com/flywave/go3d/float64/vec3"
 
 	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-tileproxy/utils/ray"
 )
 
 type Coordinates []vec3d.T
@@ -85,6 +86,28 @@ func CaclulateGrid(width, height int, mode BorderMode, georef *geo.GeoReference)
 	}
 	grid.Coordinates = coords
 	return grid
+}
+
+func (h *Grid) SetIntersection(ins []*ray.Intersection) {
+	coords := make(Coordinates, len(ins))
+
+	for i, intersection := range ins {
+		coords[i][0] = intersection.Point[0]
+		coords[i][1] = intersection.Point[1]
+		coords[i][2] = intersection.Point[2]
+	}
+
+	h.Coordinates = coords
+}
+
+func (h *Grid) GetRay() []ray.Ray {
+	ret := []ray.Ray{}
+
+	for _, coord := range h.Coordinates {
+		ret = append(ret, ray.Ray{Start: vec3d.T{coord[0], coord[1], 10000}, Direction: vec3d.T{0, 0, -1}})
+	}
+
+	return ret
 }
 
 func (h *Grid) GetRect() vec2d.Rect {

@@ -31,26 +31,25 @@ func (i *TileFormat) MimeType() string {
 
 func (i *TileFormat) Extension() string {
 	ext := string(*i)
+	ext = strings.Trim(ext, " ")
+	if strings.Contains(ext, "vnd.mapbox-vector-tile") {
+		return "mvt"
+	}
+	if strings.Contains(ext, "application/x-protobuf") {
+		return "pbf"
+	}
+	if strings.Contains(ext, "application/json") {
+		return "geojson"
+	}
+	if strings.Contains(ext, "application/vnd.quantized-mesh") {
+		return "terrain"
+	}
+
 	if strings.Contains(ext, "/") {
 		ext = strings.Split(ext, "/")[1]
 	}
 	if strings.Contains(ext, ";") {
 		ext = strings.Split(ext, ";")[0]
 	}
-	ext = strings.Trim(ext, " ")
-
-	if ext == "vnd.mapbox-vector-tile" {
-		ext = "mvt"
-	}
-	if ext == "application/x-protobuf" {
-		ext = "pbf"
-	}
-	if ext == "application/json" {
-		ext = "geojson"
-	}
-	if strings.Contains(ext, "application/vnd.quantized-mesh") {
-		ext = "terrain"
-	}
-
 	return ext
 }

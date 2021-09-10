@@ -33,7 +33,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/mvt",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	mapboxService = setting.MapboxService{
@@ -44,7 +43,7 @@ var (
 				TileJSON: "mvt",
 			},
 		},
-		Styles: []setting.StyleSource{
+		Styles: []setting.MapboxStyleLayer{
 			{
 				Url:              LK_API_URL + "/openplatform/v1/mapStyle/getStyle?styleId=standard&type=1",
 				StyleID:          "standard",

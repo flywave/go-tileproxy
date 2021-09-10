@@ -334,7 +334,6 @@ func (s *BlankImageSource) GetBuffer(format *tile.TileFormat, in_image_opts tile
 			image_opts = s.Options.(*ImageOptions)
 			image_opts.Format = *format
 		}
-		image_opts.Colors = 0
 		s.buf = imageToBuf(s.GetImage(), image_opts, nil)
 	}
 	return s.buf

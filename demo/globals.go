@@ -11,8 +11,6 @@ func init() {
 	Globals.Geoid.GeoidDataDir = "../../geoid_data"
 
 	Globals.Cache.BaseDir = "./cache_data"
-	Globals.Cache.LockDir = "./cache_data/locks"
-	Globals.Cache.TileLockDir = "./cache_data/tile_locks"
 	Globals.Cache.MetaSize = []uint32{4, 4}
 	Globals.Cache.MetaBuffer = 80
 
@@ -24,7 +22,7 @@ func init() {
 	Globals.Image.Paletted = setting.NewBool(false)
 	Globals.Image.FontDir = setting.NewString("../../imagery/fonts/")
 	Globals.Image.Formats = map[string]setting.ImageOpts{
-		"custom_format": {Format: "image/png", Mode: "rgba", Colors: setting.NewInt(32), Transparent: setting.NewBool(true)},
+		"custom_format": {Format: "image/png", Mode: "rgba", Transparent: setting.NewBool(true)},
 		"image/jpeg":    {Format: "image/jpeg", Mode: "rgb", Transparent: setting.NewBool(false), EncodingOptions: map[string]interface{}{"jpeg_quality": 90}},
 	}
 }

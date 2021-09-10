@@ -28,7 +28,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/osm",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	osmService = setting.TMSService{

@@ -33,9 +33,6 @@ func NewImageOptions(opt *ImageOpts) *imagery.ImageOptions {
 	} else {
 		image_opt.Resampling = DefaultResamplingMethod
 	}
-	if opt.Colors != nil {
-		image_opt.Colors = *opt.Colors
-	}
 	if opt.Mode != "" {
 		image_opt.Mode = imagery.ImageModeFromString(opt.Mode)
 	}
@@ -741,7 +738,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 	return sources.NewArcGISInfoSource(c)
 }
 
-func LoadStyleSource(s *StyleSource, globals *GlobalsSetting) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
+func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
 	var http *HttpOpts
 	if s.Http != nil {
 		http = s.Http

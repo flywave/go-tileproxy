@@ -38,7 +38,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/wmts",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	wmtsService = setting.WMTSService{

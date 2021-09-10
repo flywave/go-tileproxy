@@ -34,7 +34,6 @@ type ImageOptions struct {
 	Resampling      string
 	Mode            ImageMode
 	BgColor         color.Color
-	Colors          int
 	EncodingOptions map[string]interface{}
 }
 
@@ -76,15 +75,6 @@ func CreateImage(size [2]uint32, image_opts *ImageOptions) image.Image {
 }
 
 func CompatibleImageOptions(img_opts []ImageOptions, base_opts *ImageOptions) ImageOptions {
-	colors := 0
-	for i := range img_opts {
-		if img_opts[i].Colors != 0 {
-			if img_opts[i].Colors > colors {
-				colors = img_opts[i].Colors
-			}
-		}
-	}
-
 	transparent := false
 	for _, o := range img_opts {
 		if o.Transparent != nil {
@@ -104,9 +94,6 @@ func CompatibleImageOptions(img_opts []ImageOptions, base_opts *ImageOptions) Im
 	var options ImageOptions
 	if base_opts != nil {
 		options = *base_opts
-		if options.Colors != 0 {
-			options.Colors = colors
-		}
 		if options.Mode != AUTO {
 			options.Mode = mode
 		}
@@ -115,7 +102,6 @@ func CompatibleImageOptions(img_opts []ImageOptions, base_opts *ImageOptions) Im
 		}
 	} else {
 		options = img_opts[0]
-		options.Colors = colors
 		options.Transparent = &transparent
 		options.Mode = mode
 	}

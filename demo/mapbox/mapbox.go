@@ -49,7 +49,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/mvt",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	mapboxRasterCache = setting.CacheSource{
@@ -61,7 +60,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/raster/",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	mapboxRasterDemCache = setting.CacheSource{
@@ -73,7 +71,6 @@ var (
 		CacheInfo: &setting.LocalCache{
 			Directory:       "./cache_data/rasterdem/",
 			DirectoryLayout: "tms",
-			UseGridNames:    false,
 		},
 	}
 	mapboxService = setting.MapboxService{
@@ -94,7 +91,7 @@ var (
 				TileJSON: "rasterdem",
 			},
 		},
-		Styles: []setting.StyleSource{
+		Styles: []setting.MapboxStyleLayer{
 			{
 				Url:         MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7",
 				StyleID:     "style",

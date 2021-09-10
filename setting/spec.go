@@ -14,8 +14,6 @@ type GlobalsSetting struct {
 	} `json:"http,omitempty"`
 	Cache struct {
 		BaseDir              string   `json:"base_dir,omitempty"`
-		LockDir              string   `json:"lock_dir,omitempty"`
-		TileLockDir          string   `json:"tile_lock_dir,omitempty"`
 		MetaSize             []uint32 `json:"meta_size,omitempty"`
 		MetaBuffer           int      `json:"meta_buffer,omitempty"`
 		BulkMetaTiles        bool     `json:"bulk_meta_tiles,omitempty"`
@@ -57,7 +55,6 @@ type RasterOpts struct {
 
 type ImageOpts struct {
 	Mode             string                 `json:"mode,omitempty"`
-	Colors           *int                   `json:"colors,omitempty"`
 	Transparent      *bool                  `json:"transparent,omitempty"`
 	ResamplingMethod string                 `json:"resampling_method,omitempty"`
 	Format           string                 `json:"format,omitempty"`
@@ -120,9 +117,7 @@ type Srs struct {
 
 type LocalCache struct {
 	DirectoryLayout string `json:"directory_layout,omitempty"`
-	UseGridNames    bool   `json:"use_grid_names,omitempty"`
 	Directory       string `json:"directory,omitempty"`
-	TileLockDir     string `json:"tile_lock_dir,omitempty"`
 }
 
 type S3Cache struct {
@@ -137,7 +132,6 @@ type S3Cache struct {
 	Bucket          string `json:"bucket,omitempty"`
 	Encrypt         bool   `json:"encrypt,omitempty"`
 	Trace           bool   `json:"trace,omitempty"`
-	TileLockDir     string `json:"tile_lock_dir,omitempty"`
 }
 
 type CacheSource struct {
@@ -244,13 +238,6 @@ type MapboxTileSource struct {
 	TilejsonStore   interface{} `json:"tilejson_store"`
 }
 
-type ArcGISImageOpts struct {
-	ImageOpts
-	Opacity                   *float64  `json:"opacity,omitempty"`
-	TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
-	TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
-}
-
 type ArcGISRequest struct {
 	Url                string   `json:"url,omitempty"`
 	Dpi                *int     `json:"dpi,omitempty"`
@@ -271,7 +258,7 @@ type ArcGISSourceOpts struct {
 
 type ArcGISSource struct {
 	SourceCommons
-	Image            ArcGISImageOpts  `json:"image"`
+	Image            WMSImageOpts     `json:"image"`
 	Request          ArcGISRequest    `json:"req"`
 	Opts             ArcGISSourceOpts `json:"opts"`
 	SupportedFormats []string         `json:"supported_formats,omitempty"`
@@ -288,18 +275,17 @@ type WaterMark struct {
 }
 
 type MapboxService struct {
-	Metadata   map[string]string `json:"metadata,omitempty"`
-	Layers     []MapboxTileLayer `json:"layers,omitempty"`
-	Styles     []StyleSource     `json:"styles,omitempty"`
-	MaxTileAge *int              `json:"max_tile_age,omitempty"`
+	Metadata   map[string]string  `json:"metadata,omitempty"`
+	Layers     []MapboxTileLayer  `json:"layers,omitempty"`
+	Styles     []MapboxStyleLayer `json:"styles,omitempty"`
+	MaxTileAge *int               `json:"max_tile_age,omitempty"`
 }
 
 type TMSService struct {
-	Metadata     map[string]string `json:"metadata,omitempty"`
-	UseGridNames *bool             `json:"use_grid_names,omitempty"`
-	Origin       string            `json:"origin,omitempty"`
-	Layers       []TileLayer       `json:"layers,omitempty"`
-	MaxTileAge   *int              `json:"max_tile_age,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
+	Origin     string            `json:"origin,omitempty"`
+	Layers     []TileLayer       `json:"layers,omitempty"`
+	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
 type WMTSService struct {
@@ -418,7 +404,7 @@ type S3Store struct {
 	Trace     bool   `json:"trace,omitempty"`
 }
 
-type StyleSource struct {
+type MapboxStyleLayer struct {
 	Url              string      `json:"url,omitempty"`
 	AccessToken      string      `json:"access_token,omitempty"`
 	AccessTokenName  string      `json:"access_token_name,omitempty"`

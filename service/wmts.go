@@ -22,13 +22,14 @@ import (
 type WMTSService struct {
 	BaseService
 	Metadata    map[string]string
+	Provider    *wsc110.ServiceProvider
 	MaxTileAge  *time.Duration
 	Layers      map[string]WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
 }
 
-func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSService {
+func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string, provider *wsc110.ServiceProvider) *WMTSService {
 	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
 	layer, ms := ret.getMatrixSets(layers)
 	ret.Layers = layer
@@ -47,6 +48,7 @@ func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge
 	ret.requestParser = func(r *http.Request) request.Request {
 		return request.MakeWMTSRequest(r, false)
 	}
+	ret.Provider = provider
 	return ret
 }
 
@@ -86,7 +88,7 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 	service := s.serviceMetadata(tile_request)
 	layers := s.authorizedTileLayers()
 
-	cap := newWMTSCapabilities(service, layers, s.MatrixSets, s.InfoFormats)
+	cap := newWMTSCapabilities(service, layers, s.MatrixSets, s.InfoFormats, s.Provider)
 	result := cap.render(tile_request)
 
 	return NewResponse(result, 200, "application/xml")

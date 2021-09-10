@@ -59,7 +59,7 @@ func (l *MapLayer) GetCoverage() geo.Coverage {
 func (l *MapLayer) CheckResRange(query *MapQuery) error {
 	if l.ResRange != nil &&
 		!l.ResRange.Contains(query.BBox, query.Size, query.Srs) {
-		return errors.New("BlankImage")
+		return errors.New("res range not set")
 	}
 	return nil
 }

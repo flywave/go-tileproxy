@@ -8,9 +8,11 @@ import (
 
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/ogc-specifications/pkg/wmts100"
+	"github.com/flywave/ogc-specifications/pkg/wsc110"
 )
 
 type WMTSCapabilities struct {
+	Provider    *wsc110.ServiceProvider
 	Service     map[string]string
 	Layers      []WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
@@ -63,33 +65,8 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 		identification.AccessConstraints = "none"
 	}
 
-	sp := serviceProviderFromMetadata(c.Service)
-
-	if sp != nil {
-		serviceProvider := &resp.ServiceProvider
-		serviceProvider.ProviderName = sp.ProviderName
-		serviceProvider.ProviderSite.Type = sp.ProviderSite.Type
-		serviceProvider.ProviderSite.Href = sp.ProviderSite.Href
-
-		serviceProvider.ServiceContact.IndividualName = sp.ServiceContact.IndividualName
-		serviceProvider.ServiceContact.PositionName = sp.ServiceContact.PositionName
-		serviceProvider.ServiceContact.ContactInfo.Phone.Voice = sp.ServiceContact.ContactInfo.Phone.Voice
-		serviceProvider.ServiceContact.ContactInfo.Phone.Facsimile = sp.ServiceContact.ContactInfo.Phone.Facsimile
-
-		serviceProvider.ServiceContact.ContactInfo.Address.DeliveryPoint = sp.ServiceContact.ContactInfo.Address.DeliveryPoint
-		serviceProvider.ServiceContact.ContactInfo.Address.City = sp.ServiceContact.ContactInfo.Address.City
-		serviceProvider.ServiceContact.ContactInfo.Address.AdministrativeArea = sp.ServiceContact.ContactInfo.Address.AdministrativeArea
-		serviceProvider.ServiceContact.ContactInfo.Address.PostalCode = sp.ServiceContact.ContactInfo.Address.PostalCode
-		serviceProvider.ServiceContact.ContactInfo.Address.Country = sp.ServiceContact.ContactInfo.Address.Country
-		serviceProvider.ServiceContact.ContactInfo.Address.ElectronicMailAddress = sp.ServiceContact.ContactInfo.Address.ElectronicMailAddress
-
-		serviceProvider.ServiceContact.ContactInfo.OnlineResource.Type = sp.ServiceContact.ContactInfo.OnlineResource.Type
-		serviceProvider.ServiceContact.ContactInfo.OnlineResource.Href = sp.ServiceContact.ContactInfo.OnlineResource.Href
-
-		serviceProvider.ServiceContact.ContactInfo.HoursOfService = sp.ServiceContact.ContactInfo.HoursOfService
-		serviceProvider.ServiceContact.ContactInfo.ContactInstructions = sp.ServiceContact.ContactInfo.ContactInstructions
-
-		serviceProvider.ServiceContact.Role = sp.ServiceContact.Role
+	if c.Provider != nil {
+		resp.ServiceProvider = *c.Provider
 	}
 
 	url := c.Service["url"]
@@ -168,8 +145,8 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	return si
 }
 
-func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
-	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}
+func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string, provider *wsc110.ServiceProvider) *WMTSCapabilities {
+	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Provider: provider}
 }
 
 type RestfulCapabilities struct {
@@ -205,33 +182,8 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 		identification.AccessConstraints = "none"
 	}
 
-	sp := serviceProviderFromMetadata(c.Service)
-
-	if sp != nil {
-		serviceProvider := &resp.ServiceProvider
-		serviceProvider.ProviderName = sp.ProviderName
-		serviceProvider.ProviderSite.Type = sp.ProviderSite.Type
-		serviceProvider.ProviderSite.Href = sp.ProviderSite.Href
-
-		serviceProvider.ServiceContact.IndividualName = sp.ServiceContact.IndividualName
-		serviceProvider.ServiceContact.PositionName = sp.ServiceContact.PositionName
-		serviceProvider.ServiceContact.ContactInfo.Phone.Voice = sp.ServiceContact.ContactInfo.Phone.Voice
-		serviceProvider.ServiceContact.ContactInfo.Phone.Facsimile = sp.ServiceContact.ContactInfo.Phone.Facsimile
-
-		serviceProvider.ServiceContact.ContactInfo.Address.DeliveryPoint = sp.ServiceContact.ContactInfo.Address.DeliveryPoint
-		serviceProvider.ServiceContact.ContactInfo.Address.City = sp.ServiceContact.ContactInfo.Address.City
-		serviceProvider.ServiceContact.ContactInfo.Address.AdministrativeArea = sp.ServiceContact.ContactInfo.Address.AdministrativeArea
-		serviceProvider.ServiceContact.ContactInfo.Address.PostalCode = sp.ServiceContact.ContactInfo.Address.PostalCode
-		serviceProvider.ServiceContact.ContactInfo.Address.Country = sp.ServiceContact.ContactInfo.Address.Country
-		serviceProvider.ServiceContact.ContactInfo.Address.ElectronicMailAddress = sp.ServiceContact.ContactInfo.Address.ElectronicMailAddress
-
-		serviceProvider.ServiceContact.ContactInfo.OnlineResource.Type = sp.ServiceContact.ContactInfo.OnlineResource.Type
-		serviceProvider.ServiceContact.ContactInfo.OnlineResource.Href = sp.ServiceContact.ContactInfo.OnlineResource.Href
-
-		serviceProvider.ServiceContact.ContactInfo.HoursOfService = sp.ServiceContact.ContactInfo.HoursOfService
-		serviceProvider.ServiceContact.ContactInfo.ContactInstructions = sp.ServiceContact.ContactInfo.ContactInstructions
-
-		serviceProvider.ServiceContact.Role = sp.ServiceContact.Role
+	if c.Provider != nil {
+		resp.ServiceProvider = *c.Provider
 	}
 
 	url := c.Service["url"]
@@ -291,98 +243,6 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 	return si
 }
 
-func newWMTSRestCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string) *RestfulCapabilities {
-	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
-}
-
-type ServiceProvider struct {
-	ProviderName string
-	ProviderSite struct {
-		Type string
-		Href string
-	}
-	ServiceContact struct {
-		IndividualName string
-		PositionName   string
-		ContactInfo    struct {
-			Phone struct {
-				Voice     string
-				Facsimile string
-			}
-			Address struct {
-				DeliveryPoint         string
-				City                  string
-				AdministrativeArea    string
-				PostalCode            string
-				Country               string
-				ElectronicMailAddress string
-			}
-			OnlineResource struct {
-				Type string
-				Href string
-			}
-			HoursOfService      string
-			ContactInstructions string
-		}
-		Role string
-	}
-}
-
-func serviceProviderFromMetadata(metadata map[string]string) *ServiceProvider {
-	ret := &ServiceProvider{}
-	if l, ok := metadata["serviceprovider.providername"]; ok {
-		ret.ProviderName = l
-	}
-	if l, ok := metadata["serviceprovider.providersite.type"]; ok {
-		ret.ProviderSite.Type = l
-	}
-	if l, ok := metadata["serviceprovider.providersite.href"]; ok {
-		ret.ProviderSite.Href = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.individualname"]; ok {
-		ret.ServiceContact.IndividualName = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.positionname"]; ok {
-		ret.ServiceContact.PositionName = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.phone.voice"]; ok {
-		ret.ServiceContact.ContactInfo.Phone.Voice = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.phone.facsimile"]; ok {
-		ret.ServiceContact.ContactInfo.Phone.Facsimile = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.deliverypoint"]; ok {
-		ret.ServiceContact.ContactInfo.Address.DeliveryPoint = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.city"]; ok {
-		ret.ServiceContact.ContactInfo.Address.City = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.administrativearea"]; ok {
-		ret.ServiceContact.ContactInfo.Address.AdministrativeArea = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.postalcode"]; ok {
-		ret.ServiceContact.ContactInfo.Address.PostalCode = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.country"]; ok {
-		ret.ServiceContact.ContactInfo.Address.Country = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.address.electronicmailaddress"]; ok {
-		ret.ServiceContact.ContactInfo.Address.ElectronicMailAddress = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.onlineresource.type"]; ok {
-		ret.ServiceContact.ContactInfo.OnlineResource.Type = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.onlineresource.href"]; ok {
-		ret.ServiceContact.ContactInfo.OnlineResource.Href = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.hoursofservice"]; ok {
-		ret.ServiceContact.ContactInfo.HoursOfService = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.contactinfo.contactinstructions"]; ok {
-		ret.ServiceContact.ContactInfo.ContactInstructions = l
-	}
-	if l, ok := metadata["serviceprovider.servicecontact.role"]; ok {
-		ret.ServiceContact.Role = l
-	}
-	return ret
+func newWMTSRestCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string, provider *wsc110.ServiceProvider) *RestfulCapabilities {
+	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Provider: provider}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
 }

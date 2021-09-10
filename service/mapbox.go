@@ -409,7 +409,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	return tilejson.ToJson()
 }
 
-type mapboxException struct {
+type MapboxException struct {
 	Message string `json:"message"`
 }
 

@@ -288,14 +288,48 @@ type TMSService struct {
 	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
+type WMTSServiceProvider struct {
+	ProviderName string `json:"providername"`
+	ProviderSite struct {
+		Type string `json:"type"`
+		Href string `json:"href"`
+	} `json:"providersite"`
+	ServiceContact struct {
+		IndividualName string `json:"individualname"`
+		PositionName   string `json:"positionname"`
+		ContactInfo    struct {
+			Phone struct {
+				Voice     string `json:"voice"`
+				Facsimile string `json:"facsimile"`
+			} `json:"phone"`
+			Address struct {
+				DeliveryPoint         string `json:"deliverypoint"`
+				City                  string `json:"city"`
+				AdministrativeArea    string `json:"administrativearea"`
+				PostalCode            string `json:"postalcode"`
+				Country               string `json:"country"`
+				ElectronicMailAddress string `json:"electronicmailaddress"`
+			} `json:"address"`
+			OnlineResource *struct {
+				Type string `json:"type"`
+				Href string `json:"href"`
+			} `json:"onlineresource,omitempty"`
+			HoursOfService      string `json:"hoursofservice"`
+			ContactInstructions string `json:"contactinstructions"`
+		} `json:"contactinfo"`
+		Role string `json:"role"`
+	} `json:"servicecontact"`
+}
+
 type WMTSService struct {
-	Restful                    *bool               `json:"restful,omitempty"`
-	RestfulTemplate            string              `json:"restful_template,omitempty"`
-	RestfulFeatureinfoTemplate string              `json:"restful_featureinfo_template,omitempty"`
-	Metadata                   map[string]string   `json:"metadata,omitempty"`
-	FeatureinfoFormats         []FeatureinfoFormat `json:"featureinfo_formats,omitempty"`
-	Layers                     []TileLayer         `json:"layers,omitempty"`
-	MaxTileAge                 *int                `json:"max_tile_age,omitempty"`
+	Restful                    *bool                `json:"restful,omitempty"`
+	RestfulTemplate            string               `json:"restful_template,omitempty"`
+	RestfulFeatureinfoTemplate string               `json:"restful_featureinfo_template,omitempty"`
+	Metadata                   map[string]string    `json:"metadata,omitempty"`
+	Provider                   *WMTSServiceProvider `json:"provider,omitempty"`
+	FeatureinfoFormats         []FeatureinfoFormat  `json:"featureinfo_formats,omitempty"`
+	Layers                     []TileLayer          `json:"layers,omitempty"`
+	MaxTileAge                 *int                 `json:"max_tile_age,omitempty"`
 }
 
 type BBoxSrs struct {
@@ -345,6 +379,57 @@ type TileLayer struct {
 	LegendStore interface{}              `json:"legendstore"`
 }
 
+type WMSKeywords struct {
+	Keyword []string `json:"keyword,omitempty"`
+}
+
+type WMSOnlineResource struct {
+	Xlink *string `json:"xlink,omitempty"`
+	Type  *string `json:"type,omitempty"`
+	Href  *string `json:"href,omitempty"`
+}
+
+type WMSAuthorityURL struct {
+	Name           string            `json:"name,omitempty"`
+	OnlineResource WMSOnlineResource `json:"onlineresource,omitempty"`
+}
+
+type WMSIdentifier struct {
+	Authority string `json:"authority,omitempty"`
+	Value     string `json:"value,omitempty"`
+}
+
+type WMSMetadataURL struct {
+	Type           *string           `json:"type,omitempty"`
+	Format         *string           `json:"format,omitempty"`
+	OnlineResource WMSOnlineResource `json:"onlineresource,omitempty"`
+}
+
+type WMSStyle struct {
+	Name      string `json:"name"`
+	Title     string `json:"title"`
+	Abstract  string `json:"abstract"`
+	LegendURL struct {
+		Width          int               `json:"width"`
+		Height         int               `json:"height"`
+		Format         string            `json:"format"`
+		OnlineResource WMSOnlineResource `json:"onlineresource"`
+	} `json:"legendurl"`
+	StyleSheetURL *struct {
+		Format         string            `json:"format"`
+		OnlineResource WMSOnlineResource `json:"onlineresource"`
+	} `json:"stylesheeturl"`
+}
+
+type WMSLayerMetadata struct {
+	Abstract     string            `json:"abstract"`
+	KeywordList  *WMSKeywords      `json:"keyword_list,omitempty"`
+	AuthorityURL *WMSAuthorityURL  `json:"authority_url,omitempty"`
+	Identifier   *WMSIdentifier    `json:"identifier,omitempty"`
+	MetadataURL  []*WMSMetadataURL `json:"metadata_url,omitempty"`
+	Style        []*WMSStyle       `json:"style,omitempty"`
+}
+
 type WMSLayer struct {
 	ScaleHints
 	MapSources         []string                 `json:"map_source"`
@@ -353,7 +438,7 @@ type WMSLayer struct {
 	Name               string                   `json:"name,omitempty"`
 	Title              string                   `json:"title"`
 	LegendURL          string                   `json:"legend_url,omitempty"`
-	Metadata           map[string]string        `json:"metadata,omitempty"`
+	Metadata           *WMSLayerMetadata        `json:"metadata,omitempty"`
 	Layers             []WMSLayer               `json:"layers,omitempty"`
 	Dimensions         map[string][]interface{} `json:"dimensions,omitempty"`
 	LegendStore        interface{}              `json:"legendstore"`

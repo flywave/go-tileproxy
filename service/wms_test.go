@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/ogc-specifications/pkg/wms130"
 
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
@@ -40,17 +41,18 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 	service["supportedlanguages.defaultlanguage.language"] = "simple"
 	service["responselanguage.language"] = "simple"
 
-	layerMetadata := map[string]string{}
-	layerMetadata["tilemetadata.authorityurl.name"] = "flywave"
-	layerMetadata["tilemetadata.authorityurl.onlineresource.xlink"] = "http://flywave.net"
-	layerMetadata["tilemetadata.authorityurl.onlineresource.type"] = "simple"
-	layerMetadata["tilemetadata.authorityurl.onlineresource.href"] = "http://flywave.net"
-	layerMetadata["tilemetadata.identifier.authority"] = "flywave"
-	layerMetadata["tilemetadata.identifier.value"] = "flywave"
-	layerMetadata["tilemetadata.style.name"] = "flywave"
-	layerMetadata["tilemetadata.style.legend.width"] = "256"
-	layerMetadata["tilemetadata.style.legend.height"] = "256"
-	layerMetadata["tilemetadata.style.legend.url"] = "http://flywave.net"
+	newString := func(s string) *string {
+		return &s
+	}
+
+	layerMetadata := &WMSLayerMetadata{}
+	layerMetadata.AuthorityURL.Name = "flywave"
+	layerMetadata.AuthorityURL.OnlineResource.Xlink = newString("http://flywave.net")
+	layerMetadata.AuthorityURL.OnlineResource.Type = newString("simple")
+	layerMetadata.AuthorityURL.OnlineResource.Href = newString("http://flywave.net")
+	layerMetadata.Identifier.Authority = "flywave"
+	layerMetadata.Identifier.Value = "flywave"
+	layerMetadata.Style = append(layerMetadata.Style, &wms130.Style{Name: "flywave"})
 
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 

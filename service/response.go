@@ -89,7 +89,7 @@ func NewResponse(response []byte, status int, mimetype string) *Response {
 	if content_type == "" {
 		content_type = DefaultContentType
 	}
-	r.headers["Content-Type"] = []string{content_type}
+	r.headers[http.CanonicalHeaderKey("Content-Type")] = []string{content_type}
 	return r
 }
 
@@ -103,11 +103,11 @@ func (r *Response) GetStatus() int {
 
 func (r *Response) SetLastModified(date time.Time) {
 	r.timestamp = &date
-	r.headers["Last-Modified"] = []string{utils.FormatHTTPDate(*r.timestamp)}
+	r.headers[http.CanonicalHeaderKey("Last-Modified")] = []string{utils.FormatHTTPDate(*r.timestamp)}
 }
 
 func (r *Response) GetLastModified() *time.Time {
-	if vs, ok := r.headers["Last-Modified"]; ok {
+	if vs, ok := r.headers[http.CanonicalHeaderKey("Last-Modified")]; ok {
 		t, err := utils.ParseHTTPDate(vs[0])
 		if err != nil {
 			return nil
@@ -118,11 +118,11 @@ func (r *Response) GetLastModified() *time.Time {
 }
 
 func (r *Response) SetETag(value string) {
-	r.headers["ETag"] = []string{value}
+	r.headers[http.CanonicalHeaderKey("ETag")] = []string{value}
 }
 
 func (r *Response) GetETag() string {
-	if vs, ok := r.headers["ETag"]; ok {
+	if vs, ok := r.headers[http.CanonicalHeaderKey("ETag")]; ok {
 		return vs[0]
 	}
 	return ""
@@ -133,9 +133,9 @@ func etagFor(data []byte) string {
 }
 
 func (r *Response) noCacheHeaders() {
-	r.headers["Cache-Control"] = []string{"no-cache, no-store"}
-	r.headers["Pragma"] = []string{"no-cache"}
-	r.headers["Expires"] = []string{"-1"}
+	r.headers[http.CanonicalHeaderKey("Cache-Control")] = []string{"no-cache, no-store"}
+	r.headers[http.CanonicalHeaderKey("Pragma")] = []string{"no-cache"}
+	r.headers[http.CanonicalHeaderKey("Expires")] = []string{"-1"}
 }
 
 func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_age int) {
@@ -143,10 +143,11 @@ func (r *Response) cacheHeaders(timestamp *time.Time, etag_data []string, max_ag
 		hash_src := strings.Join(etag_data, "")
 		r.SetETag(etagFor([]byte(hash_src)))
 	}
-
-	r.SetLastModified(*timestamp)
+	if timestamp != nil {
+		r.SetLastModified(*timestamp)
+	}
 	if (timestamp != nil || etag_data != nil) && max_age != -1 {
-		r.headers["Cache-Control"] = []string{fmt.Sprintf("public, max-age=%d, s-maxage=%d", max_age, max_age)}
+		r.headers[http.CanonicalHeaderKey("Cache-Control")] = []string{fmt.Sprintf("public, max-age=%d, s-maxage=%d", max_age, max_age)}
 	}
 }
 
@@ -166,14 +167,12 @@ func (r *Response) makeConditional(req *http.Request) {
 	if not_modified {
 		r.status = 304
 		r.response = nil
-		if _, ok := r.headers["Content-Type"]; ok {
-			delete(r.headers, "Content-Type")
-		}
+		delete(r.headers, "Content-Type")
 	}
 }
 
 func (r *Response) GetContentLength() int {
-	if vs, ok := r.headers["Content-Length"]; ok {
+	if vs, ok := r.headers[http.CanonicalHeaderKey("Content-Length")]; ok {
 		l, err := strconv.Atoi(vs[0])
 		if err != nil {
 			return 0
@@ -184,7 +183,7 @@ func (r *Response) GetContentLength() int {
 }
 
 func (r *Response) GetContentType() string {
-	if vs, ok := r.headers["Content-Type"]; ok {
+	if vs, ok := r.headers[http.CanonicalHeaderKey("Content-Type")]; ok {
 		return vs[0]
 	}
 	return ""

@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/xml"
 	"math"
-	"strconv"
 	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -21,7 +20,7 @@ type WMSCapabilities struct {
 	infoFormats     []string
 	srs             *geo.SupportedSRS
 	srsExtents      map[string]*geo.MapExtent
-	inspireMetadata *ExtendedCapabilities
+	inspireMetadata *wms130.ExtendedCapabilities
 	maxOutputPixels int
 	contact         *ContactInformation
 }
@@ -231,17 +230,8 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		layer.Queryable = geo.NewInt(1)
 		metadata := l.GetMetadata()
 
-		if ab, ok := metadata["abstract"]; ok {
-			layer.Abstract = ab
-		}
-
-		if l, ok := metadata["keyword_list"]; ok {
-			layer.KeywordList = &wms130.Keywords{}
-			keys := strings.Split(l, ",")
-			for i := range keys {
-				layer.KeywordList.Keyword = append(layer.KeywordList.Keyword, keys[i])
-			}
-		}
+		layer.Abstract = metadata.Abstract
+		layer.KeywordList = metadata.KeywordList
 
 		for i := range c.srs.Srs {
 			SrsCode := c.srs.Srs[i].GetSrsCode()
@@ -281,46 +271,21 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 			layer.BoundingBox = append(layer.BoundingBox, bbox1)
 		}
 
-		tm := tileMetadataFromMetadata(metadata)
-
-		if tm != nil {
-			if tm.AuthorityURL != nil {
-				au := &wms130.AuthorityURL{}
-				au.Name = tm.AuthorityURL.Name
-				au.OnlineResource.Type = tm.AuthorityURL.OnlineResource.Type
-				au.OnlineResource.Href = tm.AuthorityURL.OnlineResource.Href
-				au.OnlineResource.Xlink = tm.AuthorityURL.OnlineResource.Xlink
-				layer.AuthorityURL = au
+		if metadata != nil {
+			if metadata.AuthorityURL != nil {
+				layer.AuthorityURL = metadata.AuthorityURL
 			}
 
-			if tm.Identifier != nil {
-				id := &wms130.Identifier{}
-				id.Authority = tm.Identifier.Authority
-				id.Value = tm.Identifier.Value
-				layer.Identifier = id
+			if metadata.Identifier != nil {
+				layer.Identifier = metadata.Identifier
 			}
 
-			for i := range tm.MetadataURL {
-				u := &wms130.MetadataURL{}
-				u.Type = tm.MetadataURL[i].Type
-				u.Format = tm.MetadataURL[i].Format
-				u.OnlineResource.Xlink = tm.MetadataURL[i].OnlineResource.Xlink
-				u.OnlineResource.Type = tm.MetadataURL[i].OnlineResource.Type
-				u.OnlineResource.Href = tm.MetadataURL[i].OnlineResource.Href
-				layer.MetadataURL = append(layer.MetadataURL, u)
+			if len(metadata.MetadataURL) > 0 {
+				layer.MetadataURL = append(layer.MetadataURL, metadata.MetadataURL...)
 			}
 
-			for i := range tm.Style {
-				s := &wms130.Style{}
-				s.Name = tm.Style[i].Name
-				s.Title = tm.Style[i].Title
-				s.LegendURL.Width = tm.Style[i].LegendURL.Width
-				s.LegendURL.Height = tm.Style[i].LegendURL.Height
-				s.LegendURL.Format = tm.Style[i].LegendURL.Format
-				s.LegendURL.OnlineResource.Xlink = tm.Style[i].LegendURL.OnlineResource.Xlink
-				s.LegendURL.OnlineResource.Type = tm.Style[i].LegendURL.OnlineResource.Type
-				s.LegendURL.OnlineResource.Href = tm.Style[i].LegendURL.OnlineResource.Href
-				layer.Style = append(layer.Style, s)
+			if len(metadata.Style) > 0 {
+				layer.Style = append(layer.Style, metadata.Style...)
 			}
 		}
 	}
@@ -332,21 +297,21 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 
 type ContactInformation struct {
 	ContactPersonPrimary struct {
-		ContactPerson       string
-		ContactOrganization string
-	}
-	ContactPosition string
+		ContactPerson       string `xml:"ContactPerson" yaml:"contactperson"`
+		ContactOrganization string `xml:"ContactOrganization" yaml:"contactorganization"`
+	} `xml:"ContactPersonPrimary" yaml:"contactpersonprimary"`
+	ContactPosition string `xml:"ContactPosition" yaml:"contactposition"`
 	ContactAddress  struct {
-		AddressType     string
-		Address         string
-		City            string
-		StateOrProvince string
-		PostCode        string
-		Country         string
-	}
-	ContactVoiceTelephone        string
-	ContactFacsimileTelephone    string
-	ContactElectronicMailAddress string
+		AddressType     string `xml:"AddressType" yaml:"addresstype"`
+		Address         string `xml:"Address" yaml:"address"`
+		City            string `xml:"City" yaml:"city"`
+		StateOrProvince string `xml:"StateOrProvince" yaml:"stateorprovince"`
+		PostCode        string `xml:"PostCode" yaml:"postalcode"`
+		Country         string `xml:"Country" yaml:"country"`
+	} `xml:"ContactAddress" yaml:"contactaddress"`
+	ContactVoiceTelephone        string `xml:"ContactVoiceTelephone" yaml:"contactvoicetelephone"`
+	ContactFacsimileTelephone    string `xml:"ContactFacsimileTelephone" yaml:"contactfacsimiletelephone"`
+	ContactElectronicMailAddress string `xml:"ContactElectronicMailAddress" yaml:"contactelectronicmailaddress"`
 }
 
 func contactInformationFromMetadata(metadata map[string]string) *ContactInformation {
@@ -390,23 +355,8 @@ func contactInformationFromMetadata(metadata map[string]string) *ContactInformat
 	return ret
 }
 
-type ExtendedCapabilities struct {
-	MetadataURL struct {
-		URL       string
-		MediaType string
-	}
-	SupportedLanguages struct {
-		DefaultLanguage struct {
-			Language string
-		}
-	}
-	ResponseLanguage struct {
-		Language string
-	}
-}
-
-func extendedCapabilitiesFromMetadata(metadata map[string]string) *ExtendedCapabilities {
-	ret := &ExtendedCapabilities{}
+func extendedCapabilitiesFromMetadata(metadata map[string]string) *wms130.ExtendedCapabilities {
+	ret := &wms130.ExtendedCapabilities{}
 	if l, ok := metadata["extendedcapabilities.metadataurl.url"]; ok {
 		ret.MetadataURL.URL = l
 	}
@@ -418,124 +368,6 @@ func extendedCapabilitiesFromMetadata(metadata map[string]string) *ExtendedCapab
 	}
 	if l, ok := metadata["responselanguage.language"]; ok {
 		ret.ResponseLanguage.Language = l
-	}
-	return ret
-}
-
-type OnlineResource struct {
-	Xlink *string
-	Type  *string
-	Href  *string
-}
-
-type Identifier struct {
-	Authority string
-	Value     string
-}
-
-type MetadataURL struct {
-	Type           *string
-	Format         *string
-	OnlineResource OnlineResource
-}
-
-type AuthorityURL struct {
-	Name           string
-	OnlineResource OnlineResource
-}
-
-type Style struct {
-	Name      string
-	Title     string
-	LegendURL struct {
-		Width          int
-		Height         int
-		Format         string
-		OnlineResource OnlineResource
-	}
-}
-
-type TileMetadata struct {
-	AuthorityURL *AuthorityURL
-	Identifier   *Identifier
-	MetadataURL  []*MetadataURL
-	Style        []*Style
-}
-
-func tileMetadataFromMetadata(metadata map[string]string) *TileMetadata {
-	ret := &TileMetadata{}
-	if l, ok := metadata["tilemetadata.authorityurl.name"]; ok {
-		if ret.AuthorityURL == nil {
-			ret.AuthorityURL = &AuthorityURL{}
-		}
-		ret.AuthorityURL.Name = l
-	}
-	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.xlink"]; ok {
-		if ret.AuthorityURL == nil {
-			ret.AuthorityURL = &AuthorityURL{}
-		}
-		ret.AuthorityURL.OnlineResource.Xlink = &l
-	}
-	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.type"]; ok {
-		if ret.AuthorityURL == nil {
-			ret.AuthorityURL = &AuthorityURL{}
-		}
-		ret.AuthorityURL.OnlineResource.Type = &l
-	}
-	if l, ok := metadata["tilemetadata.authorityurl.onlineresource.href"]; ok {
-		if ret.AuthorityURL == nil {
-			ret.AuthorityURL = &AuthorityURL{}
-		}
-		ret.AuthorityURL.OnlineResource.Href = &l
-	}
-	if l, ok := metadata["tilemetadata.identifier.authority"]; ok {
-		if ret.Identifier == nil {
-			ret.Identifier = &Identifier{}
-		}
-		ret.Identifier.Authority = l
-	}
-	if l, ok := metadata["tilemetadata.identifier.value"]; ok {
-		if ret.Identifier == nil {
-			ret.Identifier = &Identifier{}
-		}
-		ret.Identifier.Value = l
-	}
-	var style *Style
-	if l, ok := metadata["tilemetadata.style.name"]; ok {
-		if style == nil {
-			style = &Style{}
-			style.Title = "default"
-			style.LegendURL.Format = "image/png"
-		}
-		style.Name = l
-	}
-	if l, ok := metadata["tilemetadata.style.legend.width"]; ok {
-		if style == nil {
-			style = &Style{}
-			style.Title = "default"
-			style.LegendURL.Format = "image/png"
-		}
-		style.LegendURL.Width, _ = strconv.Atoi(l)
-	}
-	if l, ok := metadata["tilemetadata.style.legend.height"]; ok {
-		if style == nil {
-			style = &Style{}
-			style.Title = "default"
-			style.LegendURL.Format = "image/png"
-		}
-		style.LegendURL.Height, _ = strconv.Atoi(l)
-	}
-	if l, ok := metadata["tilemetadata.style.legend.url"]; ok {
-		if style == nil {
-			style = &Style{}
-			style.Title = "default"
-			style.LegendURL.Format = "image/png"
-		}
-		url := metadata["url"]
-		s := "simple"
-		style.LegendURL.OnlineResource.Type = &s
-		u := url + l
-		style.LegendURL.OnlineResource.Href = &u
 	}
 	return ret
 }

@@ -393,7 +393,7 @@ func (t *TileServiceGrid) ExternalTileCoord(tile_coord [3]int, use_profiles bool
 		z -= 1
 	}
 	if t.skip_odd_level {
-		z = int(math.Floor(float64(z / 2)))
+		z = int(float64(z / 2))
 	}
 	return []int{x, y, z}
 }

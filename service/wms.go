@@ -453,6 +453,15 @@ func (l *LayerRenderer) renderLayer(layer layer.Layer) (layer.Layer, tile.Source
 	return layer, layer_img, nil
 }
 
+type WMSLayerMetadata struct {
+	Abstract     string
+	KeywordList  *wms130.Keywords
+	AuthorityURL *wms130.AuthorityURL
+	Identifier   *wms130.Identifier
+	MetadataURL  []*wms130.MetadataURL
+	Style        []*wms130.Style
+}
+
 type WMSLayer interface {
 	layer.Layer
 	rendersQuery(query *layer.MapQuery) bool
@@ -465,7 +474,7 @@ type WMSLayer interface {
 	GetLegendURL() string
 	HasLegend() bool
 	Queryable() bool
-	GetMetadata() map[string]string
+	GetMetadata() *WMSLayerMetadata
 	GetExtent() *geo.MapExtent
 }
 
@@ -475,7 +484,7 @@ type WMSLayerBase struct {
 	title      string
 	isActive   bool
 	layers     map[string]WMSLayer
-	metadata   map[string]string
+	metadata   *WMSLayerMetadata
 	queryable  bool
 	hasLegend  bool
 	legendUrl  string
@@ -512,7 +521,7 @@ func (l *WMSLayerBase) GetLegendSize() []int {
 	return l.legendSize
 }
 
-func (l *WMSLayerBase) GetMetadata() map[string]string {
+func (l *WMSLayerBase) GetMetadata() *WMSLayerMetadata {
 	return l.metadata
 }
 
@@ -527,7 +536,7 @@ type WMSNodeLayer struct {
 	legendLayers []layer.LegendLayer
 }
 
-func NewWMSNodeLayer(name string, title string, map_layers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer, res_range *geo.ResolutionRange, md map[string]string) *WMSNodeLayer {
+func NewWMSNodeLayer(name string, title string, map_layers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer, res_range *geo.ResolutionRange, md *WMSLayerMetadata) *WMSNodeLayer {
 	queryable := false
 	if len(infos) > 0 {
 		queryable = true
@@ -624,7 +633,7 @@ func cloneLayers(tags map[string]WMSLayer) map[string]layer.Layer {
 	return cloneTags
 }
 
-func NewWMSGroupLayer(name string, title string, this WMSLayer, layers map[string]WMSLayer, md map[string]string) *WMSGroupLayer {
+func NewWMSGroupLayer(name string, title string, this WMSLayer, layers map[string]WMSLayer, md *WMSLayerMetadata) *WMSGroupLayer {
 	is_active := false
 	if this != nil {
 		is_active = true

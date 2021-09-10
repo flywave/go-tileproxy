@@ -73,7 +73,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	layers := []WMTSTileLayer{WMTSTileLayer(map[string]Provider{})}
 
-	capabilities := newWMTSCapabilities(service, layers, map[string]*TileMatrixSet{"EPSG:4326": tileset}, nil)
+	capabilities := newWMTSCapabilities(service, layers, map[string]*TileMatrixSet{"EPSG:4326": tileset}, nil, nil)
 
 	xml := capabilities.render(nil)
 

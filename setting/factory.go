@@ -8,6 +8,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
@@ -312,8 +313,7 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 	}
 	tileManager := instance.GetCache(l.Source)
 
-	var tilesource interface{}
-	tilesource = instance.GetSource(l.TileJSON)
+	tilesource := instance.GetSource(l.TileJSON)
 
 	tilejsonSource, ok := tilesource.(layer.MapboxTileJSONLayer)
 	if ok {
@@ -334,6 +334,10 @@ func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvide
 	}
 
 	return service.NewTileProvider(l.Name, l.Title, l.Metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
+}
+
+func ConvertWMSLayerMetadata(metadata *WMSLayerMetadata) *service.WMSLayerMetadata {
+	return nil //TODO
 }
 
 func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
@@ -362,7 +366,7 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 		legends = append(legends, instance.GetLegendSource(name))
 	}
 
-	return service.NewWMSNodeLayer(l.Name, l.Title, mapLayers, infos, legends, _range, l.Metadata)
+	return service.NewWMSNodeLayer(l.Name, l.Title, mapLayers, infos, legends, _range, ConvertWMSLayerMetadata(l.Metadata))
 }
 
 func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLayer {
@@ -371,7 +375,7 @@ func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLaye
 	for i := range l.Layers {
 		layers[l.Layers[i].Name] = ConvertWMSLayer(&l.Layers[i], instance)
 	}
-	return service.NewWMSGroupLayer(l.Name, l.Title, thisLayer, layers, l.Metadata)
+	return service.NewWMSGroupLayer(l.Name, l.Title, thisLayer, layers, ConvertWMSLayerMetadata(l.Metadata))
 }
 
 func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.SupportedSRS {
@@ -817,6 +821,10 @@ func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService 
 	return service.NewTileService(layers, s.Metadata, maxTileAge, false, origin)
 }
 
+func ConvertWMTSServiceProvider(provider *WMTSServiceProvider) *wsc110.ServiceProvider {
+	return nil //TODO
+}
+
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
 	layers := make(map[string]service.Provider)
 
@@ -836,7 +844,7 @@ func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSServic
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSService(layers, s.Metadata, maxTileAge, info_formats)
+	return service.NewWMTSService(layers, s.Metadata, maxTileAge, info_formats, ConvertWMTSServiceProvider(s.Provider))
 }
 
 func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMTSRestService {

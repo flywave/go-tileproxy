@@ -9,8 +9,8 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 
+	"github.com/flywave/gg"
 	"github.com/flywave/imaging"
-	"github.com/fogleman/gg"
 )
 
 type TileMerger struct {

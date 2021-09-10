@@ -10,7 +10,7 @@ import (
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 
-	"github.com/fogleman/gg"
+	"github.com/flywave/gg"
 )
 
 type LayerMerger struct {

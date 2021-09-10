@@ -8,15 +8,15 @@ import (
 
 type Watermark struct {
 	Filter
-	text       string
-	opacity    *float64
-	spacing    *string
-	font_size  *int
-	font_color *color.Color
+	text      string
+	opacity   *float64
+	spacing   *string
+	fontSize  *int
+	fontColor *color.Color
 }
 
 func NewWatermark(text string, opacity *float64, spacing *string, font_size *int, font_color *color.Color) *Watermark {
-	return &Watermark{text: text, opacity: opacity, spacing: spacing, font_size: font_size, font_color: font_color}
+	return &Watermark{text: text, opacity: opacity, spacing: spacing, fontSize: font_size, fontColor: font_color}
 }
 
 func tileWatermarkPlacement(coord [3]int, double_spacing bool) string {
@@ -42,7 +42,7 @@ func (w *Watermark) Apply(tile *Tile) *Tile {
 	}
 	placement := tileWatermarkPlacement(tile.Coord, double_spacing)
 	wimg := imagery.NewWatermarkImage(w.text, tile.Source.GetTileOptions().(*imagery.ImageOptions),
-		placement, w.opacity, w.font_color, w.font_size)
+		placement, w.opacity, w.fontColor, w.fontSize)
 	tile.Source, _ = wimg.Draw(tile.Source, nil, false)
 	return tile
 }

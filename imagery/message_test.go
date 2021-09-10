@@ -4,8 +4,8 @@ import (
 	"image/color"
 	"testing"
 
+	"github.com/flywave/gg"
 	"github.com/flywave/imaging"
-	"github.com/fogleman/gg"
 )
 
 func TestTextDraw(t *testing.T) {

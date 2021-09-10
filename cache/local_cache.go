@@ -18,7 +18,7 @@ type LocalCache struct {
 
 func NewLocalCache(cache_dir string, directory_layout string, creater tile.SourceCreater) *LocalCache {
 	if !utils.FileExists(cache_dir) {
-		os.MkdirAll(cache_dir, 0777)
+		os.MkdirAll(cache_dir, os.ModePerm)
 	}
 	c := &LocalCache{cacheDir: cache_dir, creater: creater}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)

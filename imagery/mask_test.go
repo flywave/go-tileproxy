@@ -11,8 +11,8 @@ import (
 
 	"github.com/flywave/go-geos"
 
+	"github.com/flywave/gg"
 	"github.com/flywave/imaging"
-	"github.com/fogleman/gg"
 )
 
 func TestMaskImage(t *testing.T) {

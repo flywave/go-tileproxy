@@ -17,6 +17,8 @@ github.com/deckarep/golang-set v1.7.1/go.mod h1:93vsz/8Wt4joVM7c2AVqh+YRMiUSc14y
 github.com/devork/geom v0.0.5/go.mod h1:8Wn8UNIJlX3waA51IiE8NHPWm1JFITeKJfxmYcK+hYg=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
+github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
+github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
 github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb h1:cfvIpGcu887EYg+ydfMj+hWSHHjxBBu066XK2+rKAQc=
 github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb/go.mod h1:ndXH2J5+CsynPtyL7oihZtN8rRxJ8kpqqwy2DOa86OQ=
 github.com/flywave/go-geom v0.0.0-20210604134758-e972b6e6956d/go.mod h1:whIEyVfpaBVcYiDCnnc4IJg5CI5KpLC3quy95YJ1W9I=
@@ -48,12 +50,8 @@ github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290 h1:d/Quyfh7G/2QqZzsNs
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
 github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs=
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
-github.com/flywave/ogc-specifications v0.2.7-0.20210830075946-1de050f4de14 h1:pzDvd1mr6U96HJkcKqsfbkzJuDuaxRkIEgDyGeWFB+k=
-github.com/flywave/ogc-specifications v0.2.7-0.20210830075946-1de050f4de14/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/flywave/ogc-specifications v0.2.7-0.20210909013344-69893fa8a103 h1:7CKrCa0ENqxcuEogoH8C//3db+Qd1wH9wLGg634oHvE=
 github.com/flywave/ogc-specifications v0.2.7-0.20210909013344-69893fa8a103/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
-github.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=
-github.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-courier/ptr v1.0.1/go.mod h1:oBnPUcGul7WHILdX53pcWGzGUUJ4GoZ/YaDTnS2Fi/M=
 github.com/go-courier/reflectx v1.3.4/go.mod h1:UP/ivAcgLD61WD44dpJlEudkcYN37Tlc5eL1e2E96SQ=

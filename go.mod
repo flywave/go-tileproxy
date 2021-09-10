@@ -7,6 +7,7 @@ require (
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
+	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
 	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
 	github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c
@@ -21,7 +22,6 @@ require (
 	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-specifications v0.2.7-0.20210909013344-69893fa8a103
-	github.com/fogleman/gg v1.3.0
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0

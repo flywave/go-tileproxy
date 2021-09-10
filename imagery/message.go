@@ -8,23 +8,27 @@ import (
 	"path"
 	"strings"
 
+	_ "embed"
+
 	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 
-	"github.com/fogleman/gg"
+	"github.com/flywave/gg"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 
 	"golang.org/x/image/font/gofont/goregular"
 )
 
+//go:embed DejaVuSansMono.ttf
+var DejaVuSansMono []byte
+
+//go:embed DejaVuSans.ttf
+var DejaVuSans []byte
+
 var (
 	font_paths string
 )
-
-func init() {
-	font_paths = "./fonts"
-}
 
 func SetFontPath(p string) {
 	font_paths = p
@@ -93,13 +97,28 @@ func newMessageImage(message string, image_opts *ImageOptions) *MessageImage {
 
 func (m *MessageImage) GetFont() font.Face {
 	if m.font_face == nil {
-		if m.font_name != "default" {
+		if m.font_name == "default" || m.font_name == "DejaVu Sans Mono" || m.font_name == "DejaVu Sans" || font_paths == "" {
+			if m.font_name == "DejaVu Sans" {
+				var err error
+				m.font_face, err = gg.LoadFontFaceWithData(DejaVuSansMono, float64(m.font_size))
+				if err != nil {
+					m.font_face = nil
+				}
+			} else {
+				var err error
+				m.font_face, err = gg.LoadFontFaceWithData(DejaVuSans, float64(m.font_size))
+				if err != nil {
+					m.font_face = nil
+				}
+			}
+		} else {
 			var err error
 			m.font_face, err = gg.LoadFontFace(fontFile(m.font_name), float64(m.font_size))
 			if err != nil {
-				return nil
+				m.font_face = nil
 			}
 		}
+
 		if m.font_face == nil {
 			m.font_face = loadDefaultFontFace()
 		}
@@ -211,10 +230,8 @@ func NewWatermarkImage(message string, image_opts *ImageOptions, placement strin
 	switch c := ret.font_color.(type) {
 	case *color.NRGBA:
 		c.A = uint8(opacity)
-		break
 	case *color.NRGBA64:
 		c.A = uint16(opacity)
-		break
 	}
 	ret.font_face = ret.GetFont()
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/flywave/go-geos"
 
-	"github.com/fogleman/gg"
+	"github.com/flywave/gg"
 )
 
 func drawPolygon(dc *gg.Context, pg *geos.Geometry, transf func([]float64) []float64) {

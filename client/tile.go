@@ -98,21 +98,10 @@ func NewURLTemplate(template string, format string, subdomains []string) *TileUR
 		rt.HasSubdomains = false
 	}
 
-	if strings.Contains(template, "{format}") {
-		template = strings.Replace(template, "{format}", "{{ .format }}", 1)
-	}
-
-	if strings.Contains(template, "{x}") {
-		template = strings.Replace(template, "{x}", "{{ .x }}", 1)
-	}
-
-	if strings.Contains(template, "{y}") {
-		template = strings.Replace(template, "{y}", "{{ .y }}", 1)
-	}
-
-	if strings.Contains(template, "{z}") {
-		template = strings.Replace(template, "{z}", "{{ .z }}", 1)
-	}
+	template = strings.Replace(template, "{format}", "{{ .format }}", 1)
+	template = strings.Replace(template, "{x}", "{{ .x }}", 1)
+	template = strings.Replace(template, "{y}", "{{ .y }}", 1)
+	template = strings.Replace(template, "{z}", "{{ .z }}", 1)
 
 	if strings.Contains(template, "{quadkey}") {
 		template = strings.Replace(template, "{quadkey}", "{{ .quadkey }}", 1)

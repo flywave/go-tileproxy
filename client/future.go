@@ -8,10 +8,6 @@ import (
 	"github.com/flywave/go-tileproxy/crawler"
 )
 
-var (
-	timeout_err = errors.New("timeout")
-)
-
 type Future struct {
 	finished   bool
 	req        []byte
@@ -57,11 +53,12 @@ func (f *Future) GetResult() *crawler.Response {
 	if f.finished {
 		return f.result
 	}
+	ticker := time.NewTicker(time.Second * 60)
 	select {
-	case <-time.Tick(time.Second * 60):
+	case <-ticker.C:
 		f.finished = true
 		f.result = nil
-		f.error_ = timeout_err
+		f.error_ = errors.New("timeout")
 		return nil
 	case f.result = <-f.resultchan:
 		f.finished = true

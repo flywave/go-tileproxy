@@ -155,5 +155,5 @@ func (c *MapboxStyleClient) buildGlyphsURL(font string, start, end int) (string,
 		u.RawQuery = q.Encode()
 		return u.String(), nil
 	}
-	return "", errors.New("error")
+	return "", errors.New("build glyphs url error")
 }

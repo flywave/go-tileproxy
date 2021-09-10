@@ -147,7 +147,7 @@ func NewResolutionConditional(a, b Layer, resolution float64, srs geo.Proj, ext 
 
 func (r *ResolutionConditional) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil, errors.New("res error!")
+		return nil, errors.New("res error")
 	}
 	bbox := query.BBox
 	if !query.Srs.Eq(r.srs) {
@@ -166,7 +166,6 @@ func (r *ResolutionConditional) GetMap(query *MapQuery) (tile.Source, error) {
 
 type SRSConditional struct {
 	MapLayer
-	layers       []Layer
 	supportedSRS *geo.SupportedSRS
 	srsMap       map[string]Layer
 }
@@ -193,7 +192,7 @@ func NewSRSConditional(lmap map[string]Layer, ext *geo.MapExtent, preferred_srs 
 
 func (r *SRSConditional) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil, errors.New("res error!")
+		return nil, errors.New("res error")
 	}
 	layer := r.selectLayer(query.Srs)
 	return layer.GetMap(query)
@@ -215,7 +214,7 @@ func NewDirectMapLayer(src Layer, ext *geo.MapExtent) *DirectMapLayer {
 
 func (r *DirectMapLayer) GetMap(query *MapQuery) (tile.Source, error) {
 	if err := r.CheckResRange(query); err != nil {
-		return nil, errors.New("res error!")
+		return nil, errors.New("res error")
 	}
 	return r.source.GetMap(query)
 }

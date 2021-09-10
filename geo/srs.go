@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/flywave/go-tileproxy/utils"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
+
+	"github.com/flywave/go-tileproxy/utils"
 
 	"github.com/flywave/go-proj"
 )
@@ -313,7 +313,7 @@ func ContainsSrs(target string, srcs []Proj) (bool, Proj) {
 
 func (m PreferredSrcSRS) PreferredSrc(target Proj, available_src []Proj) (Proj, error) {
 	if available_src == nil {
-		return nil, errors.New("no available src SRS")
+		return nil, errors.New("no available src srs")
 	}
 
 	if ok, p := ContainsSrs(target.GetSrsCode(), available_src); ok {

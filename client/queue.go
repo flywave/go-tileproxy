@@ -7,8 +7,6 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-const stop = true
-
 type Queue struct {
 	Threads int
 	wake    chan struct{}
@@ -63,7 +61,7 @@ func (q *Queue) Size() int {
 
 func (q *Queue) Run(c *crawler.Collector) error {
 	q.mut.Lock()
-	if q.wake != nil && q.running == true {
+	if q.wake != nil && q.running {
 		q.mut.Unlock()
 		panic("cannot call duplicate Queue.Run")
 	}

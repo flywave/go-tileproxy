@@ -112,11 +112,11 @@ type readCloseSeeker interface {
 func (b *S3Cache) reader(path string) (readCloseSeeker, error) {
 	s3Clnt, err := b.s3New()
 	if err != nil {
-		return nil, errors.New("Reader")
+		return nil, errors.New("reader error")
 	}
 	minioObject, err := s3Clnt.GetObject(b.bucket, path, s3.GetObjectOptions{})
 	if err != nil {
-		return nil, errors.New("Reader")
+		return nil, errors.New("reader error")
 	}
 	return minioObject, nil
 }
@@ -124,7 +124,7 @@ func (b *S3Cache) reader(path string) (readCloseSeeker, error) {
 func (b *S3Cache) writeFile(fr io.Reader, path string) (int64, error) {
 	s3Clnt, err := b.s3New()
 	if err != nil {
-		return 0, errors.New("WriteFile")
+		return 0, errors.New("write file error")
 	}
 
 	format := tile.TileFormat(filepath.Ext(path))
@@ -135,11 +135,11 @@ func (b *S3Cache) writeFile(fr io.Reader, path string) (int64, error) {
 	var buf bytes.Buffer
 	_, err = buf.ReadFrom(fr)
 	if err != nil {
-		return 0, errors.New("WriteFile")
+		return 0, errors.New("write file error")
 	}
 	written, err := s3Clnt.PutObject(b.bucket, path, &buf, int64(buf.Len()), options)
 	if err != nil {
-		return written, errors.New("WriteFile")
+		return written, errors.New("write file error")
 	}
 
 	return written, nil
@@ -167,7 +167,7 @@ func (b *S3Cache) fileExists(path string) (bool, error) {
 	s3Clnt, err := b.s3New()
 
 	if err != nil {
-		return false, errors.New("FileExists")
+		return false, errors.New("file exists")
 	}
 	_, err = s3Clnt.StatObject(b.bucket, path, s3.StatObjectOptions{})
 
@@ -179,7 +179,7 @@ func (b *S3Cache) fileExists(path string) (bool, error) {
 		return false, nil
 	}
 
-	return false, errors.New("FileExists")
+	return false, errors.New("file exists")
 }
 
 func (b *S3Cache) LoadTile(tile *Tile, withMetadata bool) error {
@@ -243,11 +243,11 @@ func (b *S3Cache) RemoveTile(tile *Tile) error {
 	location := b.TileLocation(tile, false)
 	s3Clnt, err := b.s3New()
 	if err != nil {
-		return errors.New("RemoveFile")
+		return errors.New("remove file error")
 	}
 
 	if err := s3Clnt.RemoveObject(b.bucket, location); err != nil {
-		return errors.New("RemoveFile")
+		return errors.New("remove file error")
 	}
 
 	return nil

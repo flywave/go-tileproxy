@@ -170,7 +170,7 @@ func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
 
 func (d *LercIO) Encode(tile *TileData) ([]byte, error) {
 	if d.Mode != tile.Border {
-		return nil, errors.New("Border mode error")
+		return nil, errors.New("border mode error")
 	}
 	data, si, _ := tile.GetExtend32()
 

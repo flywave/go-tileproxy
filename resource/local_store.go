@@ -53,7 +53,7 @@ func (c *LocalStore) Load(r Resource) error {
 		return nil
 	}
 
-	return errors.New("res not found!")
+	return errors.New("res not found")
 }
 
 func NewLocalStore(cache_dir string) *LocalStore {

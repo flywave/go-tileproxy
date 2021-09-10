@@ -121,7 +121,7 @@ func (b *S3Store) reader(path string) (readCloseSeeker, error) {
 func (b *S3Store) writeFile(fr io.Reader, path string) (int64, error) {
 	s3Clnt, err := b.s3New()
 	if err != nil {
-		return 0, errors.New("WriteFile")
+		return 0, errors.New("write file error")
 	}
 
 	format := tile.TileFormat(filepath.Ext(path))
@@ -132,11 +132,11 @@ func (b *S3Store) writeFile(fr io.Reader, path string) (int64, error) {
 	var buf bytes.Buffer
 	_, err = buf.ReadFrom(fr)
 	if err != nil {
-		return 0, errors.New("WriteFile")
+		return 0, errors.New("write file error")
 	}
 	written, err := s3Clnt.PutObject(b.bucket, path, &buf, int64(buf.Len()), options)
 	if err != nil {
-		return written, errors.New("WriteFile")
+		return written, errors.New("write file error")
 	}
 
 	return written, nil
@@ -211,5 +211,5 @@ func (c *S3Store) Load(r Resource) error {
 		return nil
 	}
 
-	return errors.New("res not found!")
+	return errors.New("res not found")
 }

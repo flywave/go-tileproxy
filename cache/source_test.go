@@ -35,14 +35,14 @@ func TestGetEmptyTile(t *testing.T) {
 	mvtOpt := &vector.VectorOptions{Format: "mvt"}
 	empty = GetEmptyTile([2]uint32{4096, 4096}, mvtOpt)
 	buff = empty.GetBuffer(nil, nil)
-	if empty == nil {
+	if empty == nil || buff == nil {
 		t.FailNow()
 	}
 
 	jsonOpt := &vector.VectorOptions{Format: "json"}
 	empty = GetEmptyTile([2]uint32{4096, 4096}, jsonOpt)
 	buff = empty.GetBuffer(nil, nil)
-	if empty == nil {
+	if empty == nil || buff == nil {
 		t.FailNow()
 	}
 

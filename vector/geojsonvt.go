@@ -91,16 +91,6 @@ func project(line [][]int16, x0 float64, y0 float64, size float64) [][]float64 {
 	return retline
 }
 
-const mercatorPole = 20037508.34
-
-func convertPoint(point []float64) []float64 {
-	x := mercatorPole * point[0] / 180.0
-
-	y := math.Log(math.Tan((90.0+point[1])*math.Pi/360.0)) / math.Pi * mercatorPole
-	y = math.Max(-mercatorPole, math.Min(y, mercatorPole))
-	return []float64{x, y}
-}
-
 func tile_ul(tileid [3]int) []float64 {
 	n := math.Pow(2.0, float64(tileid[2]))
 	lon_deg := float64(tileid[0])/n*360.0 - 180.0
@@ -135,7 +125,7 @@ func ToGeoJSONVT(extent int, tile [3]int, feat *geom.Feature) (*geojsonvt.Featur
 	var err error
 	defer func() {
 		if recover() != nil {
-			err = errors.New("Error in feature.ToGeoJSON()")
+			err = errors.New("error in feature.ToGeoJSON()")
 		}
 	}()
 	bound := tileBounds(tile)
@@ -209,7 +199,7 @@ func ToGeoJSON(extent int, tile [3]int, feat *geojsonvt.Feature) (*geom.Feature,
 	var err error
 	defer func() {
 		if recover() != nil {
-			err = errors.New("Error in feature.ToGeoJSON()")
+			err = errors.New("error in feature.ToGeoJSON()")
 		}
 	}()
 	size := float64(extent) * float64(math.Pow(2, float64(tile[2])))

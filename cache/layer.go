@@ -32,10 +32,10 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 
 func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 	if string(query.Format) != r.tileManager.GetFormat() {
-		return errors.New(fmt.Sprintf("invalid tile format, use %s", r.tileManager.GetFormat()))
+		return fmt.Errorf("invalid tile format, use %s", r.tileManager.GetFormat())
 	}
 	if query.Size[0] != r.grid.TileSize[0] || query.Size[1] != r.grid.TileSize[1] {
-		return errors.New(fmt.Sprintf("invalid tile size (use %dx%d)", r.grid.TileSize[0], r.grid.TileSize[1]))
+		return fmt.Errorf("invalid tile size (use %dx%d)", r.grid.TileSize[0], r.grid.TileSize[1])
 	}
 	return nil
 }
@@ -49,7 +49,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	num_tiles := tile_grid[0] * tile_grid[1]
 
 	if r.maxTileLimit != nil && num_tiles >= *r.maxTileLimit {
-		return nil, errors.New(fmt.Sprintf("too many tiles, max_tile_limit: %d, num_tiles: %d", *r.maxTileLimit, num_tiles))
+		return nil, fmt.Errorf("too many tiles, max_tile_limit: %d, num_tiles: %d", *r.maxTileLimit, num_tiles)
 	}
 
 	if query.TiledOnly {

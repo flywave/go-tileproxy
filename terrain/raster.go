@@ -431,7 +431,7 @@ func EncodeRaster(opts *RasterOptions, data *TileData) ([]byte, error) {
 		io := &GeoTIFFIO{Mode: opts.Mode}
 		return io.Encode(data)
 	}
-	return nil, errors.New("the format not support!")
+	return nil, errors.New("the format not support")
 }
 
 func DecodeRaster(opts *RasterOptions, reader io.Reader) (*TileData, error) {
@@ -445,5 +445,5 @@ func DecodeRaster(opts *RasterOptions, reader io.Reader) (*TileData, error) {
 		io := &GeoTIFFIO{Mode: opts.Mode}
 		return io.Decode(reader)
 	}
-	return nil, errors.New("the format not support!")
+	return nil, errors.New("the format not support")
 }

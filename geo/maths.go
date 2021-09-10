@@ -79,7 +79,7 @@ type Pointer interface {
 
 func NewPoints(f []float64) (pts []Pt, err error) {
 	if len(f)%2 != 0 {
-		return pts, errors.New("Expected even number of points.")
+		return pts, errors.New("expected even number of points")
 	}
 	for x, y := 0, 1; y < len(f); x, y = x+2, y+2 {
 		pts = append(pts, Pt{f[x], f[y]})

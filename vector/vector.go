@@ -217,7 +217,7 @@ func EncodeRaster(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error)
 		io := &GeoJSONVTIO{tile: tile, options: opts}
 		return io.Encode(data)
 	}
-	return nil, errors.New("the format not support!")
+	return nil, errors.New("the format not support")
 }
 
 func DecodeRaster(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, error) {
@@ -231,5 +231,5 @@ func DecodeRaster(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, e
 		io := &GeoJSONVTIO{tile: tile, options: opts}
 		return io.Decode(reader)
 	}
-	return nil, errors.New("the format not support!")
+	return nil, errors.New("the format not support")
 }

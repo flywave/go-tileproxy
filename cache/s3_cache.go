@@ -87,18 +87,18 @@ func (b *S3Cache) s3New() (*s3.Client, error) {
 func (b *S3Cache) TestConnection() error {
 	s3Clnt, err := b.s3New()
 	if err != nil {
-		return errors.New("TestFileConnection")
+		return errors.New("test file connection")
 	}
 
 	exists, err := s3Clnt.BucketExists(b.bucket)
 	if err != nil {
-		return errors.New("TestFileConnection")
+		return errors.New("test file connection")
 	}
 
 	if !exists {
 		err := s3Clnt.MakeBucket(b.bucket, b.region)
 		if err != nil {
-			return errors.New("TestFileConnection")
+			return errors.New("test file connection")
 		}
 	}
 	return nil

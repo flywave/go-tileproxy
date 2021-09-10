@@ -34,7 +34,7 @@ func NewGzipPool(n int) (*gzipPool, error) {
 func (p *gzipPool) grow() error {
 	gz, err := gzip.NewWriterLevel(ioutil.Discard, p.gzipCompression)
 	if err != nil {
-		return fmt.Errorf("Can't init GZip compression: %s", err)
+		return fmt.Errorf("can't init gzip compression: %s", err)
 	}
 
 	p.top = &gzipPoolEntry{

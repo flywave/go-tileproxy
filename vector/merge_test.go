@@ -66,6 +66,10 @@ func TestMergeLK(t *testing.T) {
 		layers = append(layers, tt.(Vector))
 	}
 
+	if len(sources) == 0 {
+		t.FailNow()
+	}
+
 	tran := NewVectorTransformer(pgcj02, srs4326)
 
 	tranlayers := []Vector{}

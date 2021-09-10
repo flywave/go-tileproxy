@@ -42,7 +42,7 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if !s.Grid.Srs.Eq(query.Srs) {
-		return nil, errors.New("SRS of cache and tile source do not match")
+		return nil, errors.New("srs of cache and tile source do not match")
 	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
@@ -60,14 +60,13 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if grid != [2]int{1, 1} {
-		return nil, errors.New("BBOX does not align to tile")
+		return nil, errors.New("bbox does not align to tile")
 	}
 
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z})
-	src := s.SourceCreater.Create(resp, [3]int{x, y, z})
-	return src, nil
+	return s.SourceCreater.Create(resp, [3]int{x, y, z}), nil
 }
 
 type MapboxStyleSource struct {

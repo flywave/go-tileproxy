@@ -129,7 +129,7 @@ func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
 
 func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	if d.Mode != tile.Border {
-		return nil, errors.New("Border mode error")
+		return nil, errors.New("border mode error")
 	}
 	data, si, tran := tile.GetExtend()
 

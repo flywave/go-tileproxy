@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -152,5 +151,5 @@ func LocationPaths(layout string) (func(*Tile, string, string, bool) string, fun
 	} else if layout == "arcgis" {
 		return tile_location_arcgiscache, level_location_arcgiscache, nil
 	}
-	return nil, nil, errors.New(fmt.Sprintf("unknown directory_layout \"%s\"", layout))
+	return nil, nil, fmt.Errorf("unknown directory_layout \"%s\"", layout)
 }

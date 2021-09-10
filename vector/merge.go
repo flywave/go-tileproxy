@@ -59,13 +59,10 @@ func (l *FeatureBuilder) Apply(feature *geom.Feature) {
 	switch feature.GeometryData.Type {
 	case "Point":
 		l.applyGeometryPoint(feature)
-		break
 	case "LineString":
 		l.applyGeometryLinestring(feature)
-		break
 	case "Polygon":
 		l.applyGeometryPolygon(feature)
-		break
 	default:
 		break
 	}
@@ -78,7 +75,6 @@ func (l *FeatureBuilder) Finalize() *geom.Feature {
 type LayerBuilder struct {
 	coverage geo.Coverage
 	result   []*geom.Feature
-	builder  *TileBuilder
 	srs      geo.Proj
 }
 
@@ -146,11 +142,6 @@ func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, tile [3]int, 
 		t := l.Layers[0].GetTile()
 		feats := t.(map[string][]*geom.Feature)
 		return feats
-	}
-
-	if size == nil {
-		ss := l.Layers[0].GetSize()
-		size = ss[:]
 	}
 
 	if coverage == nil {

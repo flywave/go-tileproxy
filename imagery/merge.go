@@ -357,10 +357,8 @@ func ConcatLegends(legends []tile.Source, mode ImageMode, format tile.TileFormat
 	case RGB:
 	case RGBA:
 		img = image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
-		break
 	case GRAY:
 		img = image.NewGray(image.Rect(0, 0, int(size[0]), int(size[1])))
-		break
 	}
 	for y := 0; y < int(size[0]); y++ {
 		for x := 0; x < int(size[1]); x++ {

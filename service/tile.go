@@ -26,16 +26,22 @@ var (
 	TILE_SERVICE_REQUEST_METHODS = []string{"map", "tms_capabilities", "tms_root_resource"}
 )
 
+type TileMetadata struct {
+	Title    string
+	Abstract string
+	URL      string
+}
+
 type TileService struct {
 	BaseService
 	Layers             map[string]Provider
-	Metadata           map[string]string
+	Metadata           *TileMetadata
 	MaxTileAge         *time.Duration
 	UseDimensionLayers bool
 	Origin             string
 }
 
-func NewTileService(layers map[string]Provider, md map[string]string, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
+func NewTileService(layers map[string]Provider, md *TileMetadata, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
 	s := &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
 	s.router = map[string]func(r request.Request) *Response{
 		"map": func(r request.Request) *Response {
@@ -79,7 +85,7 @@ func (s *TileService) GetMap(req request.Request) *Response {
 			return nil
 		}
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: bbox}
-		return s.DecorateTile(image, "tms", []string{tilelayer.name}, query_extent)
+		return s.DecorateTile(image, "tms", []string{tilelayer.GetName()}, query_extent)
 	}
 
 	err, t := layer.Render(tile_request, tile_request.UseProfiles, limit_to, decorateTile)
@@ -181,7 +187,7 @@ func (s *TileService) GetCapabilities(req request.Request) *Response {
 			return err.Render()
 		}
 
-		result = s.renderGetLayer(layer, service)
+		result = s.renderGetLayer(layer, &service)
 	} else {
 		layer := s.authorizedTileLayers()
 		result = s.renderCapabilities(layer, service)
@@ -189,24 +195,19 @@ func (s *TileService) GetCapabilities(req request.Request) *Response {
 	return NewResponse(result, 200, "text/xml")
 }
 
-func (s *TileService) serviceMetadata(tms_request *request.TileRequest) map[string]string {
-	md := s.Metadata
-	md["url"] = tms_request.Http.URL.Host
+func (s *TileService) serviceMetadata(tms_request *request.TileRequest) TileMetadata {
+	md := *s.Metadata
+	md.URL = tms_request.Http.URL.Host
 	return md
 }
 
-func (s *TileService) renderCapabilities(layer []Provider, service map[string]string) []byte {
+func (s *TileService) renderCapabilities(layer []Provider, service TileMetadata) []byte {
 	ser := tms100.TileMapService{Version: "1.0.0"}
 
-	if title, ok := service["title"]; ok {
-		ser.Title = title
-	}
+	ser.Title = service.Title
+	ser.Abstract = service.Abstract
 
-	if abstract, ok := service["abstract"]; ok {
-		ser.Abstract = abstract
-	}
-
-	baseUrl := service["url"]
+	baseUrl := service.URL
 
 	i := strings.LastIndex(baseUrl, "/")
 
@@ -215,15 +216,14 @@ func (s *TileService) renderCapabilities(layer []Provider, service map[string]st
 	}
 	for i := range layer {
 		l := layer[i].(*TileProvider)
-		md := l.GetMetadata()
-		tp := tms100.TileMapInfo{Title: l.GetName(), Srs: l.GetSrs().GetDef(), Profile: l.grid.profile, Href: baseUrl + "/" + md["name_path"]}
+		tp := tms100.TileMapInfo{Title: l.GetName(), Srs: l.GetSrs().GetDef(), Profile: l.grid.profile, Href: baseUrl + "/" + l.GetName()}
 		ser.TileMaps.TileMap = append(ser.TileMaps.TileMap, tp)
 	}
 
 	return ser.ToXML()
 }
 
-func (s *TileService) renderGetLayer(layer Provider, service map[string]string) []byte {
+func (s *TileService) renderGetLayer(layer Provider, service *TileMetadata) []byte {
 	tm := &tms100.TileMap{Version: "1.0.0", Title: layer.GetName(), Abstract: "", SRS: layer.GetGrid().Srs.GetDef()}
 	bounds := &tm.BoundingBox
 	bbox := layer.GetBBox()
@@ -248,23 +248,21 @@ func (s *TileService) renderGetLayer(layer Provider, service map[string]string) 
 	tileset := tp.grid.GetTileSets()
 	for level, res := range tileset {
 		ssres := strconv.FormatFloat(res, 'f', -1, 64)
-		ts := tms100.TileSet{Href: service["url"] + "/" + strconv.Itoa(level), PPM: ssres, Order: strconv.Itoa(level)}
+		ts := tms100.TileSet{Href: service.URL + "/" + strconv.Itoa(level), PPM: ssres, Order: strconv.Itoa(level)}
 		tm.TileSets.TileSet = append(tm.TileSets.TileSet, ts)
 	}
 	return tm.ToXML()
 }
 
-func (s *TileService) renderRootResource(service map[string]string) []byte {
+func (s *TileService) renderRootResource(service *TileMetadata) []byte {
 	ser := &tms100.Services{}
 	tms := tms100.ServiceMapinfo{Version: "1.0.0"}
 
-	if title, ok := service["title"]; ok {
-		tms.Title = title
-	}
+	tms.Title = service.Title
 
 	var url string
-	if url_, ok := service["url"]; ok {
-		url = url_
+	if service.URL != "" {
+		url = service.URL
 		i := strings.LastIndex(url, "/")
 		if i == -1 {
 			url = url + "/"
@@ -285,7 +283,7 @@ func (s *TileService) RootResource(req request.Request) *Response {
 		tile_request = &r.TileRequest
 	}
 	service := s.serviceMetadata(tile_request)
-	result := s.renderRootResource(service)
+	result := s.renderRootResource(&service)
 	return NewResponse(result, 200, "text/xml")
 }
 
@@ -474,11 +472,14 @@ func (r *tileResponse) peekFormat() string {
 	return imagery.PeekImageFormat(string(r.buf))
 }
 
+type TileProviderMetadata struct {
+	Name  string
+	Title string
+}
+
 type TileProvider struct {
 	Provider
-	name         string
-	title        string
-	metadata     map[string]string
+	metadata     *TileProviderMetadata
 	tileManager  cache.Manager
 	infoSources  []layer.InfoLayer
 	dimensions   utils.Dimensions
@@ -488,8 +489,8 @@ type TileProvider struct {
 	errorHandler ExceptionHandler
 }
 
-func NewTileProvider(name string, title string, md map[string]string, tileManager cache.Manager, infoSources []layer.InfoLayer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
-	ret := &TileProvider{name: name, title: title, metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid()), errorHandler: errorHandler}
+func NewTileProvider(name string, title string, md *TileProviderMetadata, tileManager cache.Manager, infoSources []layer.InfoLayer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
+	ret := &TileProvider{metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid()), errorHandler: errorHandler}
 	return ret
 }
 
@@ -498,7 +499,7 @@ func (t *TileProvider) GetExtent() *geo.MapExtent {
 }
 
 func (t *TileProvider) GetName() string {
-	return t.name
+	return t.metadata.Name
 }
 
 func (t *TileProvider) GetGrid() *geo.TileGrid {
@@ -513,13 +514,9 @@ func (t *TileProvider) GetSrs() geo.Proj {
 	return t.grid.srs
 }
 
-func (t *TileProvider) GetMetadata() map[string]string {
-	return t.metadata
-}
-
 func (t *TileProvider) GetFormatMimeType() string {
-	if f, ok := t.metadata["format"]; ok {
-		return f
+	if t.tileManager != nil {
+		return t.tileManager.GetFormat()
 	}
 	return "image/png"
 }

@@ -17,30 +17,10 @@ import (
 
 func TestWMTSCapabilities(t *testing.T) {
 
-	service := make(map[string]string)
-	service["url"] = "http://flywave.net"
-	service["title"] = "flywave"
-	service["abstract"] = ""
-
-	service["serviceprovider.providername"] = "flywave"
-	service["serviceprovider.providersite.type"] = "wms"
-	service["serviceprovider.providersite.href"] = "http://flywave.net"
-	service["serviceprovider.servicecontact.individualname"] = "test"
-	service["serviceprovider.servicecontact.positionname"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.text"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.phone.voice"] = "1288766553"
-	service["serviceprovider.servicecontact.contactinfo.phone.facsimile"] = "1288766553"
-	service["serviceprovider.servicecontact.contactinfo.address.deliverypoint"] = "1288766553"
-	service["serviceprovider.servicecontact.contactinfo.address.city"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.address.administrativearea"] = "1288766553"
-	service["serviceprovider.servicecontact.contactinfo.address.postalcode"] = "1288766553"
-	service["serviceprovider.servicecontact.contactinfo.address.country"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.address.electronicmailaddress"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.onlineresource.type"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.onlineresource.href"] = "http://flywave.net"
-	service["serviceprovider.servicecontact.contactinfo.hoursofservice"] = "test"
-	service["serviceprovider.servicecontact.contactinfo.contactinstructions"] = "test"
-	service["serviceprovider.servicecontact.role"] = "test"
+	service := &WMTSMetadata{}
+	service.URL = "http://flywave.net"
+	service.Title = "flywave"
+	service.Abstract = ""
 
 	opts := geo.DefaultTileGridOptions()
 	opts[geo.TILEGRID_SRS] = "EPSG:4326"
@@ -49,7 +29,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	tileset := NewTileMatrixSet(grid)
 
-	layerMetadata := map[string]string{"name_path": "test"}
+	layerMetadata := &TileProviderMetadata{Name: "test"}
 
 	info := []layer.InfoLayer{}
 
@@ -73,7 +53,7 @@ func TestWMTSCapabilities(t *testing.T) {
 
 	layers := []WMTSTileLayer{WMTSTileLayer(map[string]Provider{})}
 
-	capabilities := newWMTSCapabilities(service, layers, map[string]*TileMatrixSet{"EPSG:4326": tileset}, nil, nil)
+	capabilities := newWMTSCapabilities(service, layers, map[string]*TileMatrixSet{"EPSG:4326": tileset}, nil)
 
 	xml := capabilities.render(nil)
 

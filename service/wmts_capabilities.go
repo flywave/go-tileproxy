@@ -8,18 +8,16 @@ import (
 
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/ogc-specifications/pkg/wmts100"
-	"github.com/flywave/ogc-specifications/pkg/wsc110"
 )
 
 type WMTSCapabilities struct {
-	Provider    *wsc110.ServiceProvider
-	Service     map[string]string
+	Service     *WMTSMetadata
 	Layers      []WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
 }
 
-func formatResourceTemplate(layer WMTSTileLayer, tpl string, service map[string]string) string {
+func formatResourceTemplate(layer WMTSTileLayer, tpl string, service *WMTSMetadata) string {
 	p := map[string]string{"Format": layer.GetFormat(), "Layer": layer.GetName()}
 
 	if strings.Contains(tpl, "{InfoFormat}") {
@@ -36,7 +34,7 @@ func formatResourceTemplate(layer WMTSTileLayer, tpl string, service map[string]
 
 	_ = tmpl.Execute(out, p)
 
-	return service["url"] + string(out.Bytes())
+	return service.URL + string(out.Bytes())
 }
 
 func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
@@ -50,26 +48,26 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	resp.Namespaces.Version = "1.0.0"
 
 	identification := &resp.ServiceIdentification
-	identification.Title = c.Service["title"]
-	identification.Abstract = c.Service["abstract"]
+	identification.Title = c.Service.Title
+	identification.Abstract = c.Service.Abstract
 	identification.ServiceType = "OGC WMTS"
 	identification.ServiceTypeVersion = "1.0.0"
-	if f, ok := c.Service["fees"]; ok {
-		identification.Fees = f
+	if c.Service.Fees != nil {
+		identification.Fees = *c.Service.Fees
 	} else {
 		identification.Fees = "none"
 	}
-	if f, ok := c.Service["access_constraints"]; ok {
-		identification.AccessConstraints = f
+	if c.Service.AccessConstraints != nil {
+		identification.AccessConstraints = *c.Service.AccessConstraints
 	} else {
 		identification.AccessConstraints = "none"
 	}
 
-	if c.Provider != nil {
-		resp.ServiceProvider = *c.Provider
+	if c.Service.Provider != nil {
+		resp.ServiceProvider = *c.Service.Provider
 	}
 
-	url := c.Service["url"]
+	url := c.Service.URL
 
 	op := wmts100.Operation{}
 	op.Name = "GetCapabilities"
@@ -145,8 +143,8 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	return si
 }
 
-func newWMTSCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string, provider *wsc110.ServiceProvider) *WMTSCapabilities {
-	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Provider: provider}
+func newWMTSCapabilities(md *WMTSMetadata, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
+	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}
 }
 
 type RestfulCapabilities struct {
@@ -167,26 +165,26 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 	resp.Namespaces.Version = "1.0.0"
 
 	identification := &resp.ServiceIdentification
-	identification.Title = c.Service["title"]
-	identification.Abstract = c.Service["abstract"]
+	identification.Title = c.Service.Title
+	identification.Abstract = c.Service.Abstract
 	identification.ServiceType = "OGC WMTS"
 	identification.ServiceTypeVersion = "1.0.0"
-	if f, ok := c.Service["fees"]; ok {
-		identification.Fees = f
+	if c.Service.Fees != nil {
+		identification.Fees = *c.Service.Fees
 	} else {
 		identification.Fees = "none"
 	}
-	if f, ok := c.Service["access_constraints"]; ok {
-		identification.AccessConstraints = f
+	if c.Service.AccessConstraints != nil {
+		identification.AccessConstraints = *c.Service.AccessConstraints
 	} else {
 		identification.AccessConstraints = "none"
 	}
 
-	if c.Provider != nil {
-		resp.ServiceProvider = *c.Provider
+	if c.Service.Provider != nil {
+		resp.ServiceProvider = *c.Service.Provider
 	}
 
-	url := c.Service["url"]
+	url := c.Service.URL
 
 	contents := &resp.Contents
 	for _, l := range c.Layers {
@@ -243,6 +241,6 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 	return si
 }
 
-func newWMTSRestCapabilities(md map[string]string, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string, provider *wsc110.ServiceProvider) *RestfulCapabilities {
-	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Provider: provider}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
+func newWMTSRestCapabilities(md *WMTSMetadata, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string) *RestfulCapabilities {
+	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
 }

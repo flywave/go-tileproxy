@@ -52,6 +52,8 @@ github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
 github.com/flywave/ogc-specifications v0.2.7-0.20210909013344-69893fa8a103 h1:7CKrCa0ENqxcuEogoH8C//3db+Qd1wH9wLGg634oHvE=
 github.com/flywave/ogc-specifications v0.2.7-0.20210909013344-69893fa8a103/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
+github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322 h1:6sA1g1ZjlCDtVk5+3dUjM1p9REBn8dCPzN8Oub/kzdo=
+github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-courier/ptr v1.0.1/go.mod h1:oBnPUcGul7WHILdX53pcWGzGUUJ4GoZ/YaDTnS2Fi/M=
 github.com/go-courier/reflectx v1.3.4/go.mod h1:UP/ivAcgLD61WD44dpJlEudkcYN37Tlc5eL1e2E96SQ=

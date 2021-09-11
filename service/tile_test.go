@@ -109,7 +109,7 @@ func TestTileProvider(t *testing.T) {
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
-	md := make(map[string]string)
+	md := &TileProviderMetadata{}
 
 	info := []layer.InfoLayer{}
 
@@ -166,7 +166,7 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
-	md := map[string]string{"name_path": "test"}
+	md := &TileProviderMetadata{Name: "test"}
 
 	info := []layer.InfoLayer{}
 
@@ -179,7 +179,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	}
 
 	layers := map[string]Provider{"landsat2000": tp}
-	metadata := map[string]string{}
+	metadata := &TileMetadata{}
 	service := NewTileService(layers, metadata, nil, false, "ul")
 
 	hreq := &http.Request{}

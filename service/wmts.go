@@ -19,17 +19,26 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type WMTSMetadata struct {
+	Title             string
+	Abstract          string
+	KeywordList       []string
+	URL               string
+	Fees              *string
+	AccessConstraints *string
+	Provider          *wsc110.ServiceProvider
+}
+
 type WMTSService struct {
 	BaseService
-	Metadata    map[string]string
-	Provider    *wsc110.ServiceProvider
+	Metadata    *WMTSMetadata
 	MaxTileAge  *time.Duration
 	Layers      map[string]WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
 }
 
-func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, info_formats map[string]string, provider *wsc110.ServiceProvider) *WMTSService {
+func NewWMTSService(layers map[string]Provider, md *WMTSMetadata, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSService {
 	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
 	layer, ms := ret.getMatrixSets(layers)
 	ret.Layers = layer
@@ -48,7 +57,6 @@ func NewWMTSService(layers map[string]Provider, md map[string]string, MaxTileAge
 	ret.requestParser = func(r *http.Request) request.Request {
 		return request.MakeWMTSRequest(r, false)
 	}
-	ret.Provider = provider
 	return ret
 }
 
@@ -75,10 +83,10 @@ func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMT
 	return wmts_layers, sets
 }
 
-func (s *WMTSService) serviceMetadata(tms_request request.Request) map[string]string {
+func (s *WMTSService) serviceMetadata(tms_request request.Request) WMTSMetadata {
 	req := tms_request.(*request.BaseRequest)
-	md := s.Metadata
-	md["url"] = req.Http.URL.Host
+	md := *s.Metadata
+	md.URL = req.Http.URL.Host
 	return md
 }
 
@@ -88,7 +96,7 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 	service := s.serviceMetadata(tile_request)
 	layers := s.authorizedTileLayers()
 
-	cap := newWMTSCapabilities(service, layers, s.MatrixSets, s.InfoFormats, s.Provider)
+	cap := newWMTSCapabilities(&service, layers, s.MatrixSets, s.InfoFormats)
 	result := cap.render(tile_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -303,7 +311,7 @@ type WMTSRestService struct {
 	infoUrlConverter *request.URLTemplateConverter
 }
 
-func NewWMTSRestService(layers map[string]Provider, md map[string]string, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
+func NewWMTSRestService(layers map[string]Provider, md *WMTSMetadata, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
 	ret := &WMTSRestService{names: []string{"wmts"}, requestMethods: []string{"tile", "capabilities"}, WMTSService: WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}}
 	lay, ms := ret.getMatrixSets(layers)
 	ret.Layers = lay
@@ -408,14 +416,6 @@ func (l WMTSTileLayer) GetFormat() string {
 		return p.GetFormat()
 	}
 	return ""
-}
-
-func (l WMTSTileLayer) GetMetadata() map[string]string {
-	p := l.frist()
-	if p != nil {
-		return p.GetMetadata()
-	}
-	return nil
 }
 
 func (l WMTSTileLayer) GetTileBBox(request request.TiledRequest, use_profiles bool, limit bool) (*RequestError, vec2d.Rect) {

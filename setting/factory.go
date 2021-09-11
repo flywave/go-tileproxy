@@ -8,6 +8,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/ogc-specifications/pkg/wms130"
 	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
 	"github.com/flywave/go-tileproxy/cache"
@@ -316,11 +317,14 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 	tilesource := instance.GetSource(l.TileJSON)
 
 	tilejsonSource, ok := tilesource.(layer.MapboxTileJSONLayer)
+
+	metadata := &service.MapboxLayerMetadata{Name: l.Name, Attribution: l.Attribution, Description: l.Description, Legend: l.Legend, FillZoom: l.FillZoom}
+
 	if ok {
-		return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
+		return service.NewMapboxTileProvider(l.Name, tp, metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
 	}
 
-	return service.NewMapboxTileProvider(l.Name, tp, l.Metadata, tileManager, nil, l.VectorLayers, l.ZoomRange)
+	return service.NewMapboxTileProvider(l.Name, tp, metadata, tileManager, nil, l.VectorLayers, l.ZoomRange)
 }
 
 func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
@@ -333,11 +337,84 @@ func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvide
 		infoSources = append(infoSources, instance.GetInfoSource(info))
 	}
 
-	return service.NewTileProvider(l.Name, l.Title, l.Metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
+	metadata := &service.TileProviderMetadata{Name: l.Name, Title: l.Title}
+
+	return service.NewTileProvider(l.Name, l.Title, metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
 }
 
 func ConvertWMSLayerMetadata(metadata *WMSLayerMetadata) *service.WMSLayerMetadata {
-	return nil //TODO
+	if metadata == nil {
+		return nil
+	}
+	ret := &service.WMSLayerMetadata{}
+	ret.Abstract = metadata.Abstract
+
+	if metadata.KeywordList != nil {
+		ret.KeywordList = &wms130.Keywords{}
+		for _, kw := range metadata.KeywordList.Keyword {
+			ret.KeywordList.Keyword = append(ret.KeywordList.Keyword, kw)
+		}
+	}
+
+	if metadata.AuthorityURL != nil {
+		ret.AuthorityURL = &wms130.AuthorityURL{}
+		ret.AuthorityURL.Name = metadata.AuthorityURL.Name
+		ret.AuthorityURL.OnlineResource.Href = metadata.AuthorityURL.OnlineResource.Href
+		ret.AuthorityURL.OnlineResource.Type = metadata.AuthorityURL.OnlineResource.Type
+		ret.AuthorityURL.OnlineResource.Xlink = metadata.AuthorityURL.OnlineResource.Xlink
+	}
+
+	if metadata.Identifier != nil {
+		ret.Identifier = &wms130.Identifier{}
+		ret.Identifier.Authority = metadata.Identifier.Authority
+		ret.Identifier.Value = metadata.Identifier.Value
+	}
+
+	for i := range metadata.MetadataURL {
+		url := &wms130.MetadataURL{}
+		url.Type = metadata.MetadataURL[i].Type
+		url.Format = metadata.MetadataURL[i].Format
+
+		url.Format = metadata.MetadataURL[i].Format
+		url.Format = metadata.MetadataURL[i].Format
+
+		url.OnlineResource.Href = metadata.MetadataURL[i].OnlineResource.Href
+		url.OnlineResource.Type = metadata.MetadataURL[i].OnlineResource.Type
+		url.OnlineResource.Xlink = metadata.MetadataURL[i].OnlineResource.Xlink
+
+		ret.MetadataURL = append(ret.MetadataURL, url)
+	}
+
+	for i := range metadata.Style {
+		stl := &wms130.Style{}
+		stl.Name = metadata.Style[i].Name
+		stl.Title = metadata.Style[i].Title
+		stl.Abstract = metadata.Style[i].Abstract
+
+		stl.LegendURL.Width = metadata.Style[i].LegendURL.Width
+		stl.LegendURL.Height = metadata.Style[i].LegendURL.Height
+		stl.LegendURL.Format = metadata.Style[i].LegendURL.Format
+
+		stl.LegendURL.OnlineResource.Href = metadata.Style[i].LegendURL.OnlineResource.Href
+		stl.LegendURL.OnlineResource.Type = metadata.Style[i].LegendURL.OnlineResource.Type
+		stl.LegendURL.OnlineResource.Xlink = metadata.Style[i].LegendURL.OnlineResource.Xlink
+
+		if metadata.Style[i].StyleSheetURL != nil {
+			stl.StyleSheetURL = new(struct {
+				Format         string                `xml:"Format" yaml:"format"`
+				OnlineResource wms130.OnlineResource `xml:"OnlineResource" yaml:"onlineresource"`
+			})
+			stl.StyleSheetURL.Format = metadata.Style[i].StyleSheetURL.Format
+
+			stl.StyleSheetURL.OnlineResource.Href = metadata.Style[i].StyleSheetURL.OnlineResource.Href
+			stl.StyleSheetURL.OnlineResource.Type = metadata.Style[i].StyleSheetURL.OnlineResource.Type
+			stl.StyleSheetURL.OnlineResource.Xlink = metadata.Style[i].StyleSheetURL.OnlineResource.Xlink
+		}
+
+		ret.Style = append(ret.Style, stl)
+	}
+
+	return ret
 }
 
 func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
@@ -783,6 +860,7 @@ func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sourc
 func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance) *service.MapboxService {
 	layers := make(map[string]service.Provider)
 	styles := make(map[string]*service.StyleProvider)
+	metadata := &service.MapboxMetadata{Name: s.Name}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertMapboxTileLayer(&tl, globals, instance)
@@ -800,11 +878,12 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 		maxTileAge = &d
 	}
 
-	return service.NewMapboxService(layers, styles, s.Metadata, maxTileAge)
+	return service.NewMapboxService(layers, styles, metadata, maxTileAge)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {
 	layers := make(map[string]service.Provider)
+	metadata := &service.TileMetadata{Title: s.Title, Abstract: s.Abstract}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
@@ -818,15 +897,44 @@ func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService 
 	}
 	origin := s.Origin
 
-	return service.NewTileService(layers, s.Metadata, maxTileAge, false, origin)
+	return service.NewTileService(layers, metadata, maxTileAge, false, origin)
 }
 
 func ConvertWMTSServiceProvider(provider *WMTSServiceProvider) *wsc110.ServiceProvider {
-	return nil //TODO
+	if provider == nil {
+		return nil
+	}
+	ret := &wsc110.ServiceProvider{}
+	ret.ProviderName = provider.ProviderName
+	ret.ProviderSite.Type = provider.ProviderSite.Type
+	ret.ProviderSite.Href = provider.ProviderSite.Href
+
+	ret.ServiceContact.IndividualName = provider.ServiceContact.IndividualName
+	ret.ServiceContact.PositionName = provider.ServiceContact.PositionName
+	ret.ServiceContact.ContactInfo.Phone.Voice = provider.ServiceContact.ContactInfo.Phone.Voice
+	ret.ServiceContact.ContactInfo.Phone.Facsimile = provider.ServiceContact.ContactInfo.Phone.Facsimile
+
+	ret.ServiceContact.ContactInfo.Address.DeliveryPoint = provider.ServiceContact.ContactInfo.Address.DeliveryPoint
+	ret.ServiceContact.ContactInfo.Address.City = provider.ServiceContact.ContactInfo.Address.City
+	ret.ServiceContact.ContactInfo.Address.AdministrativeArea = provider.ServiceContact.ContactInfo.Address.AdministrativeArea
+	ret.ServiceContact.ContactInfo.Address.PostalCode = provider.ServiceContact.ContactInfo.Address.PostalCode
+	ret.ServiceContact.ContactInfo.Address.Country = provider.ServiceContact.ContactInfo.Address.Country
+	ret.ServiceContact.ContactInfo.Address.ElectronicMailAddress = provider.ServiceContact.ContactInfo.Address.ElectronicMailAddress
+
+	ret.ServiceContact.ContactInfo.OnlineResource.Type = provider.ServiceContact.ContactInfo.OnlineResource.Type
+	ret.ServiceContact.ContactInfo.OnlineResource.Href = provider.ServiceContact.ContactInfo.OnlineResource.Href
+
+	ret.ServiceContact.ContactInfo.HoursOfService = provider.ServiceContact.ContactInfo.HoursOfService
+	ret.ServiceContact.ContactInfo.ContactInstructions = provider.ServiceContact.ContactInfo.ContactInstructions
+
+	ret.ServiceContact.Role = provider.ServiceContact.Role
+
+	return ret
 }
 
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
 	layers := make(map[string]service.Provider)
+	metadata := &service.WMTSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, Fees: s.Fees, AccessConstraints: s.AccessConstraints, Provider: ConvertWMTSServiceProvider(s.Provider)}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
@@ -844,7 +952,7 @@ func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSServic
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSService(layers, s.Metadata, maxTileAge, info_formats, ConvertWMTSServiceProvider(s.Provider))
+	return service.NewWMTSService(layers, metadata, maxTileAge, info_formats)
 }
 
 func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMTSRestService {
@@ -853,6 +961,7 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 	}
 
 	layers := make(map[string]service.Provider)
+	metadata := &service.WMTSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, Fees: s.Fees, AccessConstraints: s.AccessConstraints, Provider: ConvertWMTSServiceProvider(s.Provider)}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
@@ -870,7 +979,7 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSRestService(layers, s.Metadata, maxTileAge, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
+	return service.NewWMTSRestService(layers, metadata, maxTileAge, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
 }
 
 func loadXSLTransformer(featureinfoXslt map[string]string, basePath string) map[string]*resource.XSLTransformer {
@@ -892,7 +1001,11 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 }
 
 func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, preferred geo.PreferredSrcSRS) *service.WMSService {
-	md := s.Metadata
+	md := &service.WMSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, OnlineResource: struct {
+		Xlink *string
+		Type  *string
+		Href  *string
+	}{Xlink: s.OnlineResource.Xlink, Type: s.OnlineResource.Type, Href: s.OnlineResource.Href}, Fees: s.Fees, AccessConstraints: s.AccessConstraints}
 
 	var rootLayer *service.WMSGroupLayer
 	var layers map[string]service.WMSLayer
@@ -936,5 +1049,60 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, pref
 
 	extents := extentsForSrs(s.BBoxSrs)
 
+	md.Extended = ConvertExtendedCapabilities(s.ExtendedCapabilities)
+	md.Contact = ConvertContactInformation(s.ContactInformation)
+
 	return service.NewWMSService(rootLayer, layers, md, supportedSrs, imageFormats, infoFormats, extents, maxOutputPixels, maxTileAge, strict, ftransformers)
+}
+
+func ConvertExtendedCapabilities(extendedCapabilities *WMSExtendedCapabilities) *wms130.ExtendedCapabilities {
+	if extendedCapabilities == nil {
+		return nil
+	}
+
+	ret := &wms130.ExtendedCapabilities{}
+
+	ret.MetadataURL.URL = extendedCapabilities.MetadataURL.URL
+	ret.MetadataURL.MediaType = extendedCapabilities.MetadataURL.MediaType
+
+	ret.SupportedLanguages.DefaultLanguage.Language = extendedCapabilities.SupportedLanguages.DefaultLanguage.Language
+
+	if extendedCapabilities.SupportedLanguages.SupportedLanguage != nil {
+		ret.SupportedLanguages.SupportedLanguage = new([]struct {
+			Language string "xml:\"inspire_common:Language\" yaml:\"language\""
+		})
+		for _, lan := range *extendedCapabilities.SupportedLanguages.SupportedLanguage {
+			*ret.SupportedLanguages.SupportedLanguage = append(*ret.SupportedLanguages.SupportedLanguage, struct {
+				Language string "xml:\"inspire_common:Language\" yaml:\"language\""
+			}{Language: lan.Language})
+		}
+	}
+	ret.ResponseLanguage.Language = extendedCapabilities.ResponseLanguage.Language
+	return ret
+}
+
+func ConvertContactInformation(contactInformation *WMSContactInformation) *wms130.ContactInformation {
+	if contactInformation == nil {
+		return nil
+	}
+
+	ret := &wms130.ContactInformation{}
+
+	ret.ContactPersonPrimary.ContactPerson = contactInformation.ContactPersonPrimary.ContactPerson
+	ret.ContactPersonPrimary.ContactOrganization = contactInformation.ContactPersonPrimary.ContactOrganization
+
+	ret.ContactPosition = contactInformation.ContactPosition
+
+	ret.ContactAddress.AddressType = contactInformation.ContactAddress.AddressType
+	ret.ContactAddress.Address = contactInformation.ContactAddress.Address
+	ret.ContactAddress.City = contactInformation.ContactAddress.City
+	ret.ContactAddress.StateOrProvince = contactInformation.ContactAddress.StateOrProvince
+	ret.ContactAddress.PostCode = contactInformation.ContactAddress.PostCode
+	ret.ContactAddress.Country = contactInformation.ContactAddress.Country
+
+	ret.ContactVoiceTelephone = contactInformation.ContactVoiceTelephone
+	ret.ContactFacsimileTelephone = contactInformation.ContactFacsimileTelephone
+	ret.ContactElectronicMailAddress = contactInformation.ContactElectronicMailAddress
+
+	return ret
 }

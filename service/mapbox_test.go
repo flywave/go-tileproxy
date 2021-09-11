@@ -66,13 +66,15 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
 
-	md := make(map[string]string)
+	lmd := &MapboxLayerMetadata{}
 
-	tp := NewMapboxTileProvider("test", MapboxVector, md, manager, nil, nil, nil)
+	tp := NewMapboxTileProvider("test", MapboxVector, lmd, manager, nil, nil, nil)
 
 	if tp == nil {
 		t.FailNow()
 	}
+
+	md := &MapboxMetadata{}
 
 	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, md, nil)
 

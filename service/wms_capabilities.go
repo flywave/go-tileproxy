@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/xml"
 	"math"
-	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -14,21 +13,17 @@ import (
 )
 
 type WMSCapabilities struct {
-	service         map[string]string
+	service         *WMSMetadata
 	rootLayer       *WMSGroupLayer
 	imageFormats    []string
 	infoFormats     []string
 	srs             *geo.SupportedSRS
 	srsExtents      map[string]*geo.MapExtent
-	inspireMetadata *wms130.ExtendedCapabilities
 	maxOutputPixels int
-	contact         *ContactInformation
 }
 
-func newCapabilities(service map[string]string, root_layer *WMSGroupLayer, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
-	inspireMetadata := extendedCapabilitiesFromMetadata(service)
-	contact := contactInformationFromMetadata(service)
-	return &WMSCapabilities{service: service, rootLayer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, inspireMetadata: inspireMetadata, contact: contact, maxOutputPixels: maxOutputPixels}
+func newCapabilities(service *WMSMetadata, root_layer *WMSGroupLayer, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
+	return &WMSCapabilities{service: service, rootLayer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, maxOutputPixels: maxOutputPixels}
 }
 
 func (c *WMSCapabilities) layerSrsBBox(layer WMSLayer, epsgAxisOrder bool) map[string]vec2d.Rect {
@@ -136,45 +131,39 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 
 	service := &cam.WMSService
 	service.Name = "WMS"
-	service.Title = c.service["title"]
-	service.Abstract = c.service["abstract"]
-	if l, ok := c.service["keyword_list"]; ok {
+	service.Title = c.service.Title
+	service.Abstract = c.service.Abstract
+	if len(c.service.KeywordList) > 0 {
 		service.KeywordList = &wms130.Keywords{}
-		keys := strings.Split(l, ",")
-		for i := range keys {
-			service.KeywordList.Keyword = append(service.KeywordList.Keyword, keys[i])
+		for i := range c.service.KeywordList {
+			service.KeywordList.Keyword = append(service.KeywordList.Keyword, c.service.KeywordList[i])
 		}
 	}
-	url := c.service["url"]
+	url := c.service.URL
 
-	if l, ok := c.service["online_resource"]; ok {
-		service.OnlineResource.Href = &l
+	if c.service.OnlineResource.Href != nil {
+		service.OnlineResource.Href = c.service.OnlineResource.Href
 	} else {
 		service.OnlineResource.Href = &url
 	}
-
-	if c.contact != nil {
-		service.ContactInformation.ContactPersonPrimary.ContactPerson = c.contact.ContactPersonPrimary.ContactPerson
-		service.ContactInformation.ContactPersonPrimary.ContactOrganization = c.contact.ContactPersonPrimary.ContactOrganization
-		service.ContactInformation.ContactPosition = c.contact.ContactPosition
-		service.ContactInformation.ContactAddress.AddressType = c.contact.ContactAddress.AddressType
-		service.ContactInformation.ContactAddress.Address = c.contact.ContactAddress.Address
-		service.ContactInformation.ContactAddress.City = c.contact.ContactAddress.City
-		service.ContactInformation.ContactAddress.StateOrProvince = c.contact.ContactAddress.StateOrProvince
-		service.ContactInformation.ContactAddress.PostCode = c.contact.ContactAddress.PostCode
-		service.ContactInformation.ContactAddress.Country = c.contact.ContactAddress.Country
-		service.ContactInformation.ContactVoiceTelephone = c.contact.ContactVoiceTelephone
-		service.ContactInformation.ContactFacsimileTelephone = c.contact.ContactFacsimileTelephone
-		service.ContactInformation.ContactElectronicMailAddress = c.contact.ContactElectronicMailAddress
+	if c.service.OnlineResource.Type != nil {
+		service.OnlineResource.Type = c.service.OnlineResource.Type
+	}
+	if c.service.OnlineResource.Xlink != nil {
+		service.OnlineResource.Xlink = c.service.OnlineResource.Xlink
 	}
 
-	if f, ok := c.service["fees"]; ok {
-		service.Fees = f
+	if c.service.Contact != nil {
+		service.ContactInformation = *c.service.Contact
+	}
+
+	if c.service.Fees != nil {
+		service.Fees = *c.service.Fees
 	} else {
 		service.Fees = "none"
 	}
-	if f, ok := c.service["access_constraints"]; ok {
-		service.AccessConstraints = f
+	if c.service.AccessConstraints != nil {
+		service.AccessConstraints = *c.service.AccessConstraints
 	} else {
 		service.AccessConstraints = "none"
 	}
@@ -211,15 +200,8 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 
 	capabilities.Exception.Format = []string{"XML", "INIMAGE", "BLANK"}
 
-	if c.inspireMetadata != nil {
-		ec := &wms130.ExtendedCapabilities{}
-		ec.MetadataURL.URL = c.inspireMetadata.MetadataURL.URL
-		ec.MetadataURL.MediaType = c.inspireMetadata.MetadataURL.MediaType
-
-		ec.SupportedLanguages.DefaultLanguage.Language = c.inspireMetadata.SupportedLanguages.DefaultLanguage.Language
-		ec.ResponseLanguage.Language = c.inspireMetadata.ResponseLanguage.Language
-
-		capabilities.ExtendedCapabilities = ec
+	if c.service.Extended != nil {
+		capabilities.ExtendedCapabilities = c.service.Extended
 	}
 
 	for _, l := range c.rootLayer.layers {
@@ -293,81 +275,4 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	si, _ := xml.MarshalIndent(cam, "", "")
 
 	return si
-}
-
-type ContactInformation struct {
-	ContactPersonPrimary struct {
-		ContactPerson       string `xml:"ContactPerson" yaml:"contactperson"`
-		ContactOrganization string `xml:"ContactOrganization" yaml:"contactorganization"`
-	} `xml:"ContactPersonPrimary" yaml:"contactpersonprimary"`
-	ContactPosition string `xml:"ContactPosition" yaml:"contactposition"`
-	ContactAddress  struct {
-		AddressType     string `xml:"AddressType" yaml:"addresstype"`
-		Address         string `xml:"Address" yaml:"address"`
-		City            string `xml:"City" yaml:"city"`
-		StateOrProvince string `xml:"StateOrProvince" yaml:"stateorprovince"`
-		PostCode        string `xml:"PostCode" yaml:"postalcode"`
-		Country         string `xml:"Country" yaml:"country"`
-	} `xml:"ContactAddress" yaml:"contactaddress"`
-	ContactVoiceTelephone        string `xml:"ContactVoiceTelephone" yaml:"contactvoicetelephone"`
-	ContactFacsimileTelephone    string `xml:"ContactFacsimileTelephone" yaml:"contactfacsimiletelephone"`
-	ContactElectronicMailAddress string `xml:"ContactElectronicMailAddress" yaml:"contactelectronicmailaddress"`
-}
-
-func contactInformationFromMetadata(metadata map[string]string) *ContactInformation {
-	ret := &ContactInformation{}
-	if l, ok := metadata["contactinformation.contactpersonprimary.contactperson"]; ok {
-		ret.ContactPersonPrimary.ContactPerson = l
-	}
-	if l, ok := metadata["contactinformation.contactpersonprimary.contactorganization"]; ok {
-		ret.ContactPersonPrimary.ContactOrganization = l
-	}
-	if l, ok := metadata["contactinformation.contactposition"]; ok {
-		ret.ContactPosition = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.addresstype"]; ok {
-		ret.ContactAddress.AddressType = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.address"]; ok {
-		ret.ContactAddress.Address = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.city"]; ok {
-		ret.ContactAddress.City = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.stateorprovince"]; ok {
-		ret.ContactAddress.StateOrProvince = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.postcode"]; ok {
-		ret.ContactAddress.PostCode = l
-	}
-	if l, ok := metadata["contactinformation.contactaddress.country"]; ok {
-		ret.ContactAddress.Country = l
-	}
-	if l, ok := metadata["contactinformation.contactvoicetelephone"]; ok {
-		ret.ContactVoiceTelephone = l
-	}
-	if l, ok := metadata["contactinformation.contactfacsimiletelephone"]; ok {
-		ret.ContactFacsimileTelephone = l
-	}
-	if l, ok := metadata["contactinformation.contactelectronicmailaddress"]; ok {
-		ret.ContactElectronicMailAddress = l
-	}
-	return ret
-}
-
-func extendedCapabilitiesFromMetadata(metadata map[string]string) *wms130.ExtendedCapabilities {
-	ret := &wms130.ExtendedCapabilities{}
-	if l, ok := metadata["extendedcapabilities.metadataurl.url"]; ok {
-		ret.MetadataURL.URL = l
-	}
-	if l, ok := metadata["extendedcapabilities.metadataurl.mediatype"]; ok {
-		ret.MetadataURL.MediaType = l
-	}
-	if l, ok := metadata["supportedlanguages.defaultlanguage.language"]; ok {
-		ret.SupportedLanguages.DefaultLanguage.Language = l
-	}
-	if l, ok := metadata["responselanguage.language"]; ok {
-		ret.ResponseLanguage.Language = l
-	}
-	return ret
 }

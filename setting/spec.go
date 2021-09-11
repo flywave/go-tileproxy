@@ -275,17 +275,18 @@ type WaterMark struct {
 }
 
 type MapboxService struct {
-	Metadata   map[string]string  `json:"metadata,omitempty"`
+	Name       string             `json:"name,omitempty"`
 	Layers     []MapboxTileLayer  `json:"layers,omitempty"`
 	Styles     []MapboxStyleLayer `json:"styles,omitempty"`
 	MaxTileAge *int               `json:"max_tile_age,omitempty"`
 }
 
 type TMSService struct {
-	Metadata   map[string]string `json:"metadata,omitempty"`
-	Origin     string            `json:"origin,omitempty"`
-	Layers     []TileLayer       `json:"layers,omitempty"`
-	MaxTileAge *int              `json:"max_tile_age,omitempty"`
+	Title      string      `json:"title,omitempty"`
+	Abstract   string      `json:"abstract,omitempty"`
+	Origin     string      `json:"origin,omitempty"`
+	Layers     []TileLayer `json:"layers,omitempty"`
+	MaxTileAge *int        `json:"max_tile_age,omitempty"`
 }
 
 type WMTSServiceProvider struct {
@@ -325,7 +326,11 @@ type WMTSService struct {
 	Restful                    *bool                `json:"restful,omitempty"`
 	RestfulTemplate            string               `json:"restful_template,omitempty"`
 	RestfulFeatureinfoTemplate string               `json:"restful_featureinfo_template,omitempty"`
-	Metadata                   map[string]string    `json:"metadata,omitempty"`
+	Title                      string               `json:"title,omitempty"`
+	Abstract                   string               `json:"abstract,omitempty"`
+	KeywordList                []string             `json:"keyword_list,omitempty"`
+	Fees                       *string              `json:"fees,omitempty"`
+	AccessConstraints          *string              `json:"access_constraints,omitempty"`
 	Provider                   *WMTSServiceProvider `json:"provider,omitempty"`
 	FeatureinfoFormats         []FeatureinfoFormat  `json:"featureinfo_formats,omitempty"`
 	Layers                     []TileLayer          `json:"layers,omitempty"`
@@ -342,6 +347,43 @@ type FeatureinfoFormat struct {
 	Suffix   string `json:"suffix,omitempty"`
 }
 
+type WMSExtendedCapabilities struct {
+	MetadataURL struct {
+		URL       string `json:"url,omitempty"`
+		MediaType string `json:"mediatype,omitempty"`
+	} `json:"metadataurl,omitempty"`
+	SupportedLanguages struct {
+		DefaultLanguage struct {
+			Language string `json:"language,omitempty"`
+		} `json:"defaultlanguage,omitempty"`
+		SupportedLanguage *[]struct {
+			Language string `json:"language,omitempty"`
+		} `json:"supportedlanguage,omitempty"`
+	} `json:"supportedlanguages,omitempty"`
+	ResponseLanguage struct {
+		Language string `json:"language,omitempty"`
+	} `json:"responselanguage,omitempty"`
+}
+
+type WMSContactInformation struct {
+	ContactPersonPrimary struct {
+		ContactPerson       string `json:"contactperson,omitempty"`
+		ContactOrganization string `json:"contactorganization,omitempty"`
+	} `json:"contactpersonprimary,omitempty"`
+	ContactPosition string `json:"contactposition,omitempty"`
+	ContactAddress  struct {
+		AddressType     string `json:"addresstype,omitempty"`
+		Address         string `json:"address,omitempty"`
+		City            string `json:"city,omitempty"`
+		StateOrProvince string `json:"stateorprovince,omitempty"`
+		PostCode        string `json:"postalcode,omitempty"`
+		Country         string `json:"country,omitempty"`
+	} `json:"contactaddress,omitempty"`
+	ContactVoiceTelephone        string `json:"contactvoicetelephone,omitempty"`
+	ContactFacsimileTelephone    string `json:"contactfacsimiletelephone,omitempty"`
+	ContactElectronicMailAddress string `json:"contactelectronicmailaddress,omitempty"`
+}
+
 type WMSService struct {
 	Srs                []string            `json:"srs,omitempty"`
 	BBoxSrs            []BBoxSrs           `json:"bbox_srs,omitempty"`
@@ -350,21 +392,34 @@ type WMSService struct {
 	FeatureinfoXslt    map[string]string   `json:"featureinfo_xslt,omitempty"`
 	MaxOutputPixels    *int                `json:"max_output_pixels,omitempty"`
 	Strict             *bool               `json:"strict,omitempty"`
-	Metadata           map[string]string   `json:"metadata,omitempty"`
-	InspireMetadata    map[string]string   `json:"inspire_metadata,omitempty"`
-	RootLayer          *WMSLayer           `json:"layer,omitempty"`
-	Layers             []WMSLayer          `json:"layers,omitempty"`
-	MaxTileAge         *int                `json:"max_tile_age,omitempty"`
+	Title              string              `json:"title,omitempty"`
+	Abstract           string              `json:"abstract,omitempty"`
+	KeywordList        []string            `json:"keyword_list,omitempty"`
+	OnlineResource     struct {
+		Xlink *string `json:"xlink,omitempty"`
+		Type  *string `json:"type,omitempty"`
+		Href  *string `json:"href,omitempty"`
+	} `json:"online_resource"`
+	Fees                 *string                  `json:"fees,omitempty"`
+	AccessConstraints    *string                  `json:"access_constraints,omitempty"`
+	RootLayer            *WMSLayer                `json:"layer,omitempty"`
+	Layers               []WMSLayer               `json:"layers,omitempty"`
+	MaxTileAge           *int                     `json:"max_tile_age,omitempty"`
+	ExtendedCapabilities *WMSExtendedCapabilities `json:"extended_capabilities,omitempty"`
+	ContactInformation   *WMSContactInformation   `json:"contact_information,omitempty"`
 }
 
 type MapboxTileLayer struct {
 	Source       string                  `json:"source"`
 	Name         string                  `json:"name,omitempty"`
-	Metadata     map[string]string       `json:"metadata,omitempty"`
 	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
 	TileType     string                  `json:"tile_type,omitempty"`
 	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`
 	TileJSON     string                  `json:"tilejson,omitempty"`
+	Attribution  *string                 `json:"attribution,omitempty"`
+	Description  *string                 `json:"description,omitempty"`
+	Legend       *string                 `json:"legend,omitempty"`
+	FillZoom     *uint32                 `json:"fill_zoom,omitempty"`
 }
 
 type TileLayer struct {
@@ -373,10 +428,7 @@ type TileLayer struct {
 	InfoSources []string                 `json:"info_sources"`
 	Name        string                   `json:"name,omitempty"`
 	Title       string                   `json:"title"`
-	LegendURL   string                   `json:"legend_url,omitempty"`
-	Metadata    map[string]string        `json:"metadata,omitempty"`
 	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
-	LegendStore interface{}              `json:"legendstore"`
 }
 
 type WMSKeywords struct {

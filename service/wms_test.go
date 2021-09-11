@@ -15,31 +15,12 @@ import (
 )
 
 func TestWMSServiceGetCapabilities(t *testing.T) {
-	service := make(map[string]string)
-	service["url"] = "http://flywave.net"
-	service["title"] = "flywave"
-	service["abstract"] = ""
-	service["keyword_list"] = "helll,testhnh"
-	service["online_resource"] = "http://flywave.net"
-
-	service["contactinformation.contactpersonprimary.contactperson"] = "dd"
-	service["contactinformation.contactpersonprimary.contactorganization"] = "flywave"
-	service["contactinformation.contactposition"] = "flywave"
-	service["contactinformation.contactaddress.addresstype"] = "flywave"
-	service["contactinformation.contactaddress.address"] = "flywave"
-	service["contactinformation.contactaddress.city"] = "flywave"
-	service["contactinformation.contactaddress.stateorprovince"] = "flywave"
-	service["contactinformation.contactaddress.postcode"] = "flywave"
-	service["contactinformation.contactaddress.country"] = "flywave"
-	service["contactinformation.contactvoicetelephone"] = "flywave"
-	service["contactinformation.contactfacsimiletelephone"] = "flywave"
-	service["contactinformation.contactelectronicmailaddress"] = "flywave"
-
-	service["extendedcapabilities.metadataurl.type"] = "simple"
-	service["extendedcapabilities.metadataurl.url"] = "http://flywave.net"
-	service["extendedcapabilities.metadataurl.mediatype"] = "simple"
-	service["supportedlanguages.defaultlanguage.language"] = "simple"
-	service["responselanguage.language"] = "simple"
+	service := &WMSMetadata{}
+	service.URL = "http://flywave.net"
+	service.Title = "flywave"
+	service.Abstract = ""
+	service.KeywordList = []string{"helll", "testhnh"}
+	service.OnlineResource.Href = &service.URL
 
 	newString := func(s string) *string {
 		return &s

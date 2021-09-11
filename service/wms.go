@@ -20,13 +20,30 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+type WMSMetadata struct {
+	Title          string
+	Abstract       string
+	KeywordList    []string
+	URL            string
+	OnlineResource struct {
+		Xlink *string
+		Type  *string
+		Href  *string
+	}
+	Fees              *string
+	AccessConstraints *string
+	HasLegend         bool
+	Extended          *wms130.ExtendedCapabilities
+	Contact           *wms130.ContactInformation
+}
+
 type WMSService struct {
 	BaseService
 	RootLayer           *WMSGroupLayer
 	Layers              map[string]WMSLayer
 	Strict              bool
 	ImageFormats        map[string]*imagery.ImageOptions
-	Metadata            map[string]string
+	Metadata            *WMSMetadata
 	InfoFormats         map[string]string
 	Srs                 *geo.SupportedSRS
 	SrsExtents          map[string]*geo.MapExtent
@@ -35,7 +52,7 @@ type WMSService struct {
 	FeatureTransformers map[string]*resource.XSLTransformer
 }
 
-func NewWMSService(rootLayer *WMSGroupLayer, layers map[string]WMSLayer, metadata map[string]string, srs *geo.SupportedSRS, imageFormats map[string]*imagery.ImageOptions, infoFormats map[string]string, srsExtents map[string]*geo.MapExtent, maxOutputPixels int, maxTileAge *time.Duration, strict bool, ftransformers map[string]*resource.XSLTransformer) *WMSService {
+func NewWMSService(rootLayer *WMSGroupLayer, layers map[string]WMSLayer, metadata *WMSMetadata, srs *geo.SupportedSRS, imageFormats map[string]*imagery.ImageOptions, infoFormats map[string]string, srsExtents map[string]*geo.MapExtent, maxOutputPixels int, maxTileAge *time.Duration, strict bool, ftransformers map[string]*resource.XSLTransformer) *WMSService {
 	ret := &WMSService{RootLayer: rootLayer, Strict: strict, ImageFormats: imageFormats, Metadata: metadata, InfoFormats: infoFormats, Srs: srs, SrsExtents: srsExtents, MaxOutputPixels: maxOutputPixels, MaxTileAge: maxTileAge, FeatureTransformers: ftransformers}
 	if rootLayer == nil {
 		ret.Layers = layers
@@ -171,7 +188,7 @@ func (s *WMSService) authorizedLayers(feature string, layers []string, ext *geo.
 func (s *WMSService) GetCapabilities(req request.Request) *Response {
 	map_request := req.(*request.WMSRequest)
 
-	service := s.serviceMetadata(req)
+	service := s.serviceMetadata(req, s.Metadata)
 	root_layer := s.authorizedCapabilityLayers()
 
 	info_types := []string{"text", "html", "xml"}
@@ -195,7 +212,7 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 		image_formats = append(info_formats, k)
 	}
 
-	cap := newCapabilities(service, root_layer, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
+	cap := newCapabilities(&service, root_layer, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
 	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -396,14 +413,14 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 	return NewResponse(result.GetBuffer(nil, img_opts), 200, mimetype)
 }
 
-func (s *WMSService) serviceMetadata(tms_request request.Request) map[string]string {
+func (s *WMSService) serviceMetadata(tms_request request.Request, metadata *WMSMetadata) WMSMetadata {
 	req := tms_request.(*request.BaseRequest)
-	md := s.Metadata
-	md["url"] = req.Http.URL.Host
+	md := *metadata
+	md.URL = req.Http.URL.Host
 	if s.RootLayer.hasLegend {
-		md["has_legend"] = "true"
+		md.HasLegend = true
 	} else {
-		md["has_legend"] = "false"
+		md.HasLegend = false
 	}
 	return md
 }

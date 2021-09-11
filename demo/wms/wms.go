@@ -15,10 +15,8 @@ var (
 			Version: "1.1.1",
 			Map:     setting.NewBool(true),
 		},
-		Request: setting.WMSRequest{
-			Url:    "https://maps.omniscale.net/v2/demo/style.default/map?",
-			Layers: []string{"osm"},
-		},
+		Url:          "https://maps.omniscale.net/v2/demo/style.default/map?",
+		Layers:       []string{"osm"},
 		SupportedSrs: []string{"EPSG:31467", "EPSG:4326"},
 	}
 

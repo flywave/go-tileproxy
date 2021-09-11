@@ -147,9 +147,6 @@ type CacheSource struct {
 	TileOptions          interface{}   `json:"tile_options,omitempty"`
 	MaxTileLimit         *int          `json:"max_tile_limit,omitempty"`
 	MinimizeMetaRequests *bool         `json:"minimize_meta_requests,omitempty"`
-	UseDirectFromLevel   *int          `json:"use_direct_from_level,omitempty"`
-	UseDirectFromRes     *float64      `json:"use_direct_from_res,omitempty"`
-	DisableStorage       *bool         `json:"disable_storage,omitempty"`
 	Format               string        `json:"format,omitempty"`
 	RequestFormat        string        `json:"request_format,omitempty"`
 	CacheRescaledTiles   *bool         `json:"cache_rescaled_tiles,omitempty"`
@@ -183,16 +180,7 @@ type WMSSourceOpts struct {
 
 type SourceCommons struct {
 	ScaleHints
-	ConcurrentRequests *int      `json:"concurrent_requests,omitempty"`
-	Coverage           *Coverage `json:"coverage,omitempty"`
-	SeedOnly           *bool     `json:"seed_only,omitempty"`
-}
-
-type WMSRequest struct {
-	Url         string   `json:"url,omitempty"`
-	Layers      []string `json:"layers"`
-	Transparent *bool    `json:"transparent,omitempty"`
-	Format      string   `json:"format,omitempty"`
+	Coverage *Coverage `json:"coverage,omitempty"`
 }
 
 type WMSImageOpts struct {
@@ -210,7 +198,10 @@ type WMSSource struct {
 	SupportedFormats []string          `json:"supported_formats,omitempty"`
 	SupportedSrs     []string          `json:"supported_srs,omitempty"`
 	Http             *HttpOpts         `json:"http,omitempty"`
-	Request          WMSRequest        `json:"req"`
+	Url              string            `json:"url,omitempty"`
+	Layers           []string          `json:"layers"`
+	Transparent      *bool             `json:"transparent,omitempty"`
+	Format           string            `json:"format,omitempty"`
 	Store            interface{}       `json:"store"`
 }
 
@@ -238,18 +229,6 @@ type MapboxTileSource struct {
 	TilejsonStore   interface{} `json:"tilejson_store"`
 }
 
-type ArcGISRequest struct {
-	Url                string   `json:"url,omitempty"`
-	Dpi                *int     `json:"dpi,omitempty"`
-	Layers             []string `json:"layers"`
-	Transparent        *bool    `json:"transparent,omitempty"`
-	Time               *int64   `json:"time,omitempty"`
-	Format             string   `json:"format,omitempty"`
-	LercVersion        *int     `json:"lerc_version,omitempty"`
-	PixelType          *string  `json:"pixel_type,omitempty"`
-	CompressionQuality *int     `json:"compression_quality,omitempty"`
-}
-
 type ArcGISSourceOpts struct {
 	Featureinfo                 *bool `json:"featureinfo,omitempty"`
 	FeatureinfoTolerance        *int  `json:"featureinfo_tolerance,omitempty"`
@@ -258,12 +237,19 @@ type ArcGISSourceOpts struct {
 
 type ArcGISSource struct {
 	SourceCommons
-	Image            WMSImageOpts     `json:"image"`
-	Request          ArcGISRequest    `json:"req"`
-	Opts             ArcGISSourceOpts `json:"opts"`
-	SupportedFormats []string         `json:"supported_formats,omitempty"`
-	SupportedSrs     []string         `json:"supported_srs,omitempty"`
-	Http             *HttpOpts        `json:"http,omitempty"`
+	Image              WMSImageOpts     `json:"image"`
+	Url                string           `json:"url,omitempty"`
+	Dpi                *int             `json:"dpi,omitempty"`
+	Layers             []string         `json:"layers"`
+	Transparent        *bool            `json:"transparent,omitempty"`
+	Format             string           `json:"format,omitempty"`
+	LercVersion        *int             `json:"lerc_version,omitempty"`
+	PixelType          *string          `json:"pixel_type,omitempty"`
+	CompressionQuality *int             `json:"compression_quality,omitempty"`
+	Opts               ArcGISSourceOpts `json:"opts"`
+	SupportedFormats   []string         `json:"supported_formats,omitempty"`
+	SupportedSrs       []string         `json:"supported_srs,omitempty"`
+	Http               *HttpOpts        `json:"http,omitempty"`
 }
 
 type WaterMark struct {
@@ -274,11 +260,47 @@ type WaterMark struct {
 	Spacing  *string   `json:"spacing,omitempty"`
 }
 
+type MapboxTileLayer struct {
+	Source       string                  `json:"source"`
+	Name         string                  `json:"name,omitempty"`
+	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
+	TileType     string                  `json:"tile_type,omitempty"`
+	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`
+	TileJSON     string                  `json:"tilejson,omitempty"`
+	Attribution  *string                 `json:"attribution,omitempty"`
+	Description  *string                 `json:"description,omitempty"`
+	Legend       *string                 `json:"legend,omitempty"`
+	FillZoom     *uint32                 `json:"fill_zoom,omitempty"`
+}
+
+type MapboxStyleLayer struct {
+	Url              string      `json:"url,omitempty"`
+	AccessToken      string      `json:"access_token,omitempty"`
+	AccessTokenName  string      `json:"access_token_name,omitempty"`
+	StyleID          string      `json:"style_id,omitempty"`
+	Store            interface{} `json:"store"`
+	Http             *HttpOpts   `json:"http,omitempty"`
+	Sprite           string      `json:"sprite"`
+	Glyphs           string      `json:"glyphs"`
+	GlyphsStore      interface{} `json:"glyphs_store"`
+	Fonts            []string    `json:"fonts,omitempty"`
+	StyleContentAttr *string     `json:"style_content,omitempty"`
+}
+
 type MapboxService struct {
 	Name       string             `json:"name,omitempty"`
 	Layers     []MapboxTileLayer  `json:"layers,omitempty"`
 	Styles     []MapboxStyleLayer `json:"styles,omitempty"`
 	MaxTileAge *int               `json:"max_tile_age,omitempty"`
+}
+
+type TileLayer struct {
+	ScaleHints
+	TileSource  string                   `json:"tile_source"`
+	InfoSources []string                 `json:"info_sources"`
+	Name        string                   `json:"name,omitempty"`
+	Title       string                   `json:"title"`
+	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
 }
 
 type TMSService struct {
@@ -409,28 +431,6 @@ type WMSService struct {
 	ContactInformation   *WMSContactInformation   `json:"contact_information,omitempty"`
 }
 
-type MapboxTileLayer struct {
-	Source       string                  `json:"source"`
-	Name         string                  `json:"name,omitempty"`
-	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
-	TileType     string                  `json:"tile_type,omitempty"`
-	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`
-	TileJSON     string                  `json:"tilejson,omitempty"`
-	Attribution  *string                 `json:"attribution,omitempty"`
-	Description  *string                 `json:"description,omitempty"`
-	Legend       *string                 `json:"legend,omitempty"`
-	FillZoom     *uint32                 `json:"fill_zoom,omitempty"`
-}
-
-type TileLayer struct {
-	ScaleHints
-	TileSource  string                   `json:"tile_source"`
-	InfoSources []string                 `json:"info_sources"`
-	Name        string                   `json:"name,omitempty"`
-	Title       string                   `json:"title"`
-	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
-}
-
 type WMSKeywords struct {
 	Keyword []string `json:"keyword,omitempty"`
 }
@@ -539,18 +539,4 @@ type S3Store struct {
 	Bucket    string `json:"bucket,omitempty"`
 	Encrypt   bool   `json:"encrypt,omitempty"`
 	Trace     bool   `json:"trace,omitempty"`
-}
-
-type MapboxStyleLayer struct {
-	Url              string      `json:"url,omitempty"`
-	AccessToken      string      `json:"access_token,omitempty"`
-	AccessTokenName  string      `json:"access_token_name,omitempty"`
-	StyleID          string      `json:"style_id,omitempty"`
-	Store            interface{} `json:"store"`
-	Http             *HttpOpts   `json:"http,omitempty"`
-	Sprite           string      `json:"sprite"`
-	Glyphs           string      `json:"glyphs"`
-	GlyphsStore      interface{} `json:"glyphs_store"`
-	Fonts            []string    `json:"fonts,omitempty"`
-	StyleContentAttr *string     `json:"style_content,omitempty"`
 }

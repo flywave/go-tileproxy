@@ -8,6 +8,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/ogc-specifications/pkg/wms130"
 	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
@@ -469,7 +470,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, p
 	}
 	params := make(request.RequestParams)
 
-	request_format := s.Request.Format
+	request_format := s.Format
 	if request_format == "" {
 		params["format"] = []string{request_format}
 	}
@@ -478,7 +479,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, p
 		params["info_format"] = []string{s.Opts.FeatureinfoFormat}
 	}
 
-	url := s.Request.Url
+	url := s.Url
 	coverage := LoadCoverage(s.Coverage)
 
 	var transformer *resource.XSLTransformer
@@ -516,11 +517,11 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 	}
 	params := make(request.RequestParams)
 
-	request_format := s.Request.Format
+	request_format := s.Format
 	if request_format == "" {
 		params["format"] = []string{request_format}
 	}
-	if s.Request.Transparent != nil && *s.Request.Transparent {
+	if s.Transparent != nil && *s.Transparent {
 		params["transparent"] = []string{"true"}
 	}
 
@@ -531,9 +532,9 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 		http = &globals.Http.HttpOpts
 	}
 
-	url := s.Request.Url
+	url := s.Url
 	lg_clients := make([]*client.WMSLegendClient, 0)
-	for _, layer := range s.Request.Layers {
+	for _, layer := range s.Layers {
 		params["layer"] = []string{layer}
 		lg_request := request.NewWMSLegendGraphicRequest(params, url, false, nil, false)
 		lg_clients = append(lg_clients, client.NewWMSLegendClient(lg_request, newCollectorContext(http)))
@@ -556,7 +557,7 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 
 	params := make(request.RequestParams)
 
-	request_format := s.Request.Format
+	request_format := s.Format
 	if request_format == "" {
 		params["format"] = []string{request_format}
 	}
@@ -578,7 +579,7 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 		transparent_color = color.RGBA{R: c[0], G: c[1], B: c[2], A: c[3]}
 	}
 
-	url := s.Request.Url
+	url := s.Url
 
 	var http *HttpOpts
 	if s.Http != nil {
@@ -705,43 +706,39 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.ArcGISSource {
 	params := make(request.RequestParams)
 
-	request_format := s.Request.Format
+	request_format := s.Format
 	if request_format == "" {
 		params["format"] = []string{request_format}
 	}
 
-	if s.Request.Layers != nil {
-		params["layers"] = s.Request.Layers
+	if s.Layers != nil {
+		params["layers"] = s.Layers
 	}
 
-	if s.Request.Transparent != nil {
-		if *s.Request.Transparent {
+	if s.Transparent != nil {
+		if *s.Transparent {
 			params["transparent"] = []string{"true"}
 		} else {
 			params["transparent"] = []string{"false"}
 		}
 	}
 
-	if s.Request.PixelType != nil {
-		params["pixelType"] = []string{*s.Request.PixelType}
+	if s.PixelType != nil {
+		params["pixelType"] = []string{*s.PixelType}
 	} else {
 		params["pixelType"] = []string{"UNKNOWN"}
 	}
 
-	if s.Request.Dpi != nil {
-		params["dpi"] = []string{strconv.Itoa(*s.Request.Dpi)}
+	if s.Dpi != nil {
+		params["dpi"] = []string{strconv.Itoa(*s.Dpi)}
 	}
 
-	if s.Request.Time != nil {
-		params["time"] = []string{strconv.FormatInt(*s.Request.Time, 10)}
+	if s.LercVersion != nil {
+		params["lercVersion"] = []string{strconv.Itoa(*s.LercVersion)}
 	}
 
-	if s.Request.LercVersion != nil {
-		params["lercVersion"] = []string{strconv.Itoa(*s.Request.LercVersion)}
-	}
-
-	if s.Request.CompressionQuality != nil {
-		params["compressionQuality"] = []string{strconv.Itoa(*s.Request.CompressionQuality)}
+	if s.CompressionQuality != nil {
+		params["compressionQuality"] = []string{strconv.Itoa(*s.CompressionQuality)}
 	}
 
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
@@ -754,7 +751,7 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	url := s.Request.Url
+	url := s.Url
 
 	coverage := LoadCoverage(s.Coverage)
 
@@ -766,29 +763,25 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.ArcGISInfoSource {
 	params := make(request.RequestParams)
 
-	request_format := s.Request.Format
+	request_format := s.Format
 	if request_format != "" {
 		params["format"] = []string{request_format}
 	}
 
-	if s.Request.Layers != nil {
-		params["layers"] = s.Request.Layers
+	if s.Layers != nil {
+		params["layers"] = s.Layers
 	}
 
-	if s.Request.Transparent != nil {
-		if *s.Request.Transparent {
+	if s.Transparent != nil {
+		if *s.Transparent {
 			params["transparent"] = []string{"true"}
 		} else {
 			params["transparent"] = []string{"false"}
 		}
 	}
 
-	if s.Request.Dpi != nil {
-		params["dpi"] = []string{strconv.Itoa(*s.Request.Dpi)}
-	}
-
-	if s.Request.Time != nil {
-		params["time"] = []string{strconv.FormatInt(*s.Request.Time, 10)}
+	if s.Dpi != nil {
+		params["dpi"] = []string{strconv.Itoa(*s.Dpi)}
 	}
 
 	var tolerance int
@@ -811,7 +804,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 	} else {
 		http = &globals.Http.HttpOpts
 	}
-	url := s.Request.Url
+	url := s.Url
 
 	fi_request := request.NewArcGISIdentifyRequest(params, url)
 

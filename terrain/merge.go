@@ -4,6 +4,7 @@ import (
 	"math"
 
 	qmt "github.com/flywave/go-quantized-mesh"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
 

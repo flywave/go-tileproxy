@@ -6,10 +6,29 @@ import (
 	"github.com/flywave/go-tileproxy/resource"
 )
 
+type ImageSetting struct {
+	ResamplingMethod string               `json:"resampling_method,omitempty"`
+	Paletted         *bool                `json:"paletted,omitempty"`
+	MaxStretchFactor *float64             `json:"max_stretch_factor,omitempty"`
+	MaxShrinkFactor  *float64             `json:"max_shrink_factor,omitempty"`
+	FontDir          *string              `json:"font_dir,omitempty"`
+	Formats          map[string]ImageOpts `json:"formats,omitempty"`
+}
+
+type HttpSetting struct {
+	UserAgent         *string        `json:"user_agent,omitempty"`
+	RandomDelay       *int           `json:"random_delay,omitempty"`
+	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`
+	Proxys            []string       `json:"proxys,omitempty"`
+	RequestTimeout    *time.Duration `json:"request_timeout,omitempty"`
+	MaxQueueSize      *int           `json:"max_queue_size,omitempty"`
+	Threads           *int           `json:"thread_size,omitempty"`
+}
+
 type GlobalsSetting struct {
 	Image ImageSetting `json:"image,omitempty"`
 	Http  struct {
-		HttpOpts
+		HttpSetting
 		AccessControlAllowOrigin string `json:"access_control_allow_origin,omitempty"`
 	} `json:"http,omitempty"`
 	Cache struct {
@@ -95,15 +114,6 @@ type ScaleHints struct {
 	MinRes   *float64 `json:"min_res,omitempty"`
 }
 
-type ImageSetting struct {
-	ResamplingMethod string               `json:"resampling_method,omitempty"`
-	Paletted         *bool                `json:"paletted,omitempty"`
-	MaxStretchFactor *float64             `json:"max_stretch_factor,omitempty"`
-	MaxShrinkFactor  *float64             `json:"max_shrink_factor,omitempty"`
-	FontDir          *string              `json:"font_dir,omitempty"`
-	Formats          map[string]ImageOpts `json:"formats,omitempty"`
-}
-
 type Geoid struct {
 	GeoidDataDir string `json:"geoid_data_dir,omitempty"`
 }
@@ -156,16 +166,6 @@ type CacheSource struct {
 	CacheInfo            interface{}   `json:"cache,omitempty"`
 }
 
-type HttpOpts struct {
-	UserAgent         *string        `json:"user_agent,omitempty"`
-	RandomDelay       *int           `json:"random_delay,omitempty"`
-	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`
-	Proxys            []string       `json:"proxys,omitempty"`
-	RequestTimeout    *time.Duration `json:"request_timeout,omitempty"`
-	MaxQueueSize      *int           `json:"max_queue_size,omitempty"`
-	Threads           *int           `json:"thread_size,omitempty"`
-}
-
 type WMSSourceOpts struct {
 	Version              string `json:"version,omitempty"`
 	Map                  *bool  `json:"map,omitempty"`
@@ -197,7 +197,7 @@ type WMSSource struct {
 	ForwardReqParams map[string]string `json:"forward_req_params,omitempty"`
 	SupportedFormats []string          `json:"supported_formats,omitempty"`
 	SupportedSrs     []string          `json:"supported_srs,omitempty"`
-	Http             *HttpOpts         `json:"http,omitempty"`
+	Http             *HttpSetting      `json:"http,omitempty"`
 	Url              string            `json:"url,omitempty"`
 	Layers           []string          `json:"layers"`
 	Transparent      *bool             `json:"transparent,omitempty"`
@@ -207,26 +207,26 @@ type WMSSource struct {
 
 type TileSource struct {
 	SourceCommons
-	URLTemplate   string      `json:"url_template,omitempty"`
-	Transparent   *bool       `json:"transparent,omitempty"`
-	Options       interface{} `json:"options,omitempty"`
-	Grid          string      `json:"grid,omitempty"`
-	RequestFormat string      `json:"request_format,omitempty"`
-	Subdomains    []string    `json:"subdomains,omitempty"`
-	Origin        string      `json:"origin,omitempty"`
-	Http          *HttpOpts   `json:"http,omitempty"`
+	URLTemplate   string       `json:"url_template,omitempty"`
+	Transparent   *bool        `json:"transparent,omitempty"`
+	Options       interface{}  `json:"options,omitempty"`
+	Grid          string       `json:"grid,omitempty"`
+	RequestFormat string       `json:"request_format,omitempty"`
+	Subdomains    []string     `json:"subdomains,omitempty"`
+	Origin        string       `json:"origin,omitempty"`
+	Http          *HttpSetting `json:"http,omitempty"`
 }
 
 type MapboxTileSource struct {
 	SourceCommons
-	Url             string      `json:"url,omitempty"`
-	AccessToken     string      `json:"access_token,omitempty"`
-	AccessTokenName string      `json:"access_token_name,omitempty"`
-	Options         interface{} `json:"options,omitempty"`
-	Grid            string      `json:"grid,omitempty"`
-	Http            *HttpOpts   `json:"http,omitempty"`
-	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
-	TilejsonStore   interface{} `json:"tilejson_store"`
+	Url             string       `json:"url,omitempty"`
+	AccessToken     string       `json:"access_token,omitempty"`
+	AccessTokenName string       `json:"access_token_name,omitempty"`
+	Options         interface{}  `json:"options,omitempty"`
+	Grid            string       `json:"grid,omitempty"`
+	Http            *HttpSetting `json:"http,omitempty"`
+	TilejsonUrl     string       `json:"tilejson_url,omitempty"`
+	TilejsonStore   interface{}  `json:"tilejson_store"`
 }
 
 type ArcGISSourceOpts struct {
@@ -249,7 +249,7 @@ type ArcGISSource struct {
 	Opts               ArcGISSourceOpts `json:"opts"`
 	SupportedFormats   []string         `json:"supported_formats,omitempty"`
 	SupportedSrs       []string         `json:"supported_srs,omitempty"`
-	Http               *HttpOpts        `json:"http,omitempty"`
+	Http               *HttpSetting     `json:"http,omitempty"`
 }
 
 type WaterMark struct {
@@ -274,17 +274,17 @@ type MapboxTileLayer struct {
 }
 
 type MapboxStyleLayer struct {
-	Url              string      `json:"url,omitempty"`
-	AccessToken      string      `json:"access_token,omitempty"`
-	AccessTokenName  string      `json:"access_token_name,omitempty"`
-	StyleID          string      `json:"style_id,omitempty"`
-	Store            interface{} `json:"store"`
-	Http             *HttpOpts   `json:"http,omitempty"`
-	Sprite           string      `json:"sprite"`
-	Glyphs           string      `json:"glyphs"`
-	GlyphsStore      interface{} `json:"glyphs_store"`
-	Fonts            []string    `json:"fonts,omitempty"`
-	StyleContentAttr *string     `json:"style_content,omitempty"`
+	Url              string       `json:"url,omitempty"`
+	AccessToken      string       `json:"access_token,omitempty"`
+	AccessTokenName  string       `json:"access_token_name,omitempty"`
+	StyleID          string       `json:"style_id,omitempty"`
+	Store            interface{}  `json:"store"`
+	Http             *HttpSetting `json:"http,omitempty"`
+	Sprite           string       `json:"sprite"`
+	Glyphs           string       `json:"glyphs"`
+	GlyphsStore      interface{}  `json:"glyphs_store"`
+	Fonts            []string     `json:"fonts,omitempty"`
+	StyleContentAttr *string      `json:"style_content,omitempty"`
 }
 
 type MapboxService struct {

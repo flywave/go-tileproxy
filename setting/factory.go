@@ -495,11 +495,11 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, p
 
 	fi_request := request.NewWMSFeatureInfoRequest(params, url, false, nil, false)
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 
 	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(http))
@@ -525,11 +525,11 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 		params["transparent"] = []string{"true"}
 	}
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 
 	url := s.Url
@@ -581,11 +581,11 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 
 	url := s.Url
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 
 	req := request.NewWMSMapRequest(params, url, false, nil, false)
@@ -601,7 +601,7 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 		s.ForwardReqParams)
 }
 
-func newCollectorContext(httpOpts *HttpOpts) *client.CollectorContext {
+func newCollectorContext(httpOpts *HttpSetting) *client.CollectorContext {
 	conf := client.Config{}
 	if httpOpts.UserAgent != nil {
 		conf.UserAgent = *httpOpts.UserAgent
@@ -654,11 +654,11 @@ func LoadTileSource(s *TileSource, globals *GlobalsSetting, instance ProxyInstan
 	}
 	res_range := NewResolutionRange(&s.ScaleHints)
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 	creater := cache.GetSourceCreater(opts)
 	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat, s.Subdomains)
@@ -679,11 +679,11 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 
 	grid := instance.GetGrid(s.Grid)
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 
 	var tcache *resource.TileJSONCache
@@ -745,11 +745,11 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 	res_range := NewResolutionRange(&s.ScaleHints)
 	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 	url := s.Url
 
@@ -798,11 +798,11 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 		return_geometries = false
 	}
 
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 	url := s.Url
 
@@ -813,11 +813,11 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 }
 
 func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
-	var http *HttpOpts
+	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
 	} else {
-		http = &globals.Http.HttpOpts
+		http = &globals.Http.HttpSetting
 	}
 	accessTokenName := "access_token"
 	if s.AccessTokenName != "" {

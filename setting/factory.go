@@ -27,6 +27,16 @@ import (
 	"github.com/flywave/go-tileproxy/vector"
 )
 
+func GetPreferredSrcSRS(srs *Srs) geo.PreferredSrcSRS {
+	ret := make(geo.PreferredSrcSRS)
+	for k, ss := range srs.PreferredSrcProj {
+		for i := range ss {
+			ret[k] = append(ret[k], geo.NewProj(ss[i]))
+		}
+	}
+	return ret
+}
+
 func NewImageOptions(opt *ImageOpts) *imagery.ImageOptions {
 	image_opt := &imagery.ImageOptions{}
 	image_opt.Transparent = opt.Transparent
@@ -352,9 +362,7 @@ func ConvertWMSLayerMetadata(metadata *WMSLayerMetadata) *service.WMSLayerMetada
 
 	if metadata.KeywordList != nil {
 		ret.KeywordList = &wms130.Keywords{}
-		for _, kw := range metadata.KeywordList.Keyword {
-			ret.KeywordList.Keyword = append(ret.KeywordList.Keyword, kw)
-		}
+		copy(ret.KeywordList.Keyword, metadata.KeywordList.Keyword)
 	}
 
 	if metadata.AuthorityURL != nil {
@@ -464,7 +472,7 @@ func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.
 	return &geo.SupportedSRS{Srs: srs, Preferred: preferred}
 }
 
-func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.WMSInfoSource {
+func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting) *sources.WMSInfoSource {
 	if s.Opts.FeatureInfo == nil || !*s.Opts.FeatureInfo {
 		return nil
 	}
@@ -502,7 +510,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting, p
 		http = &globals.Http.HttpSetting
 	}
 
-	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(http))
+	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), newCollectorContext(http))
 
 	if s.Opts.Version == "1.1.1" {
 		c.AdaptTo111 = true
@@ -550,7 +558,7 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 	return sources.NewWMSLegendSource(s.Opts.LegendID, lg_clients, cache)
 }
 
-func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.WMSSource {
+func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSetting) *sources.WMSSource {
 	if s.Opts.Map == nil || !*s.Opts.Map {
 		return nil
 	}
@@ -564,7 +572,7 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
 	res_range := NewResolutionRange(&s.ScaleHints)
-	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
+	supported_srs := newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs))
 
 	var coverage geo.Coverage
 	if s.Coverage != nil {
@@ -703,7 +711,7 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }
 
-func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.ArcGISSource {
+func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsSetting) *sources.ArcGISSource {
 	params := make(request.RequestParams)
 
 	request_format := s.Format
@@ -743,7 +751,7 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 
 	image_opts := NewImageOptions(&s.Image.ImageOpts)
 	res_range := NewResolutionRange(&s.ScaleHints)
-	supported_srs := newSupportedSrs(s.SupportedSrs, preferred)
+	supported_srs := newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs))
 
 	var http *HttpSetting
 	if s.Http != nil {
@@ -760,7 +768,7 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 	return sources.NewArcGISSource(c, image_opts, coverage, res_range, supported_srs, s.SupportedFormats)
 }
 
-func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred geo.PreferredSrcSRS) *sources.ArcGISInfoSource {
+func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting) *sources.ArcGISInfoSource {
 	params := make(request.RequestParams)
 
 	request_format := s.Format
@@ -808,7 +816,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting, preferred ge
 
 	fi_request := request.NewArcGISIdentifyRequest(params, url)
 
-	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, preferred), newCollectorContext(http), return_geometries, tolerance)
+	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), newCollectorContext(http), return_geometries, tolerance)
 	return sources.NewArcGISInfoSource(c)
 }
 
@@ -993,7 +1001,7 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 	return extents
 }
 
-func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, preferred geo.PreferredSrcSRS) *service.WMSService {
+func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetting, basePath string) *service.WMSService {
 	md := &service.WMSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, OnlineResource: struct {
 		Xlink *string
 		Type  *string
@@ -1011,7 +1019,7 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, basePath string, pref
 		}
 	}
 
-	supportedSrs := newSupportedSrs(s.Srs, preferred)
+	supportedSrs := newSupportedSrs(s.Srs, GetPreferredSrcSRS(&globals.Srs))
 
 	imageFormats := make(map[string]*imagery.ImageOptions)
 	for _, format := range s.ImageFormats {

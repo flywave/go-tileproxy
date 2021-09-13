@@ -32,7 +32,7 @@ type Dataset struct {
 	Caches        map[string]cache.Manager
 }
 
-func NewDataset(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) *Dataset {
+func NewDataset(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) *Dataset {
 	ret := &Dataset{
 		Identifier:    dataset.Identifier,
 		Grids:         make(map[string]geo.Grid),
@@ -41,33 +41,33 @@ func NewDataset(dataset *setting.ProxyDataset, basePath string, globals *setting
 		InfoSources:   make(map[string]layer.InfoLayer),
 		LegendSources: make(map[string]layer.LegendLayer),
 	}
-	ret.load(dataset, basePath, globals, preferred)
+	ret.load(dataset, basePath, globals)
 	return ret
 }
 
-func (s *Dataset) load(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
-	s.loadGrids(dataset, basePath, globals, preferred)
-	s.loadSources(dataset, basePath, globals, preferred)
-	s.loadCaches(dataset, basePath, globals, preferred)
-	s.loadService(dataset, basePath, globals, preferred)
+func (s *Dataset) load(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+	s.loadGrids(dataset, basePath, globals)
+	s.loadSources(dataset, basePath, globals)
+	s.loadCaches(dataset, basePath, globals)
+	s.loadService(dataset, basePath, globals)
 }
 
-func (s *Dataset) loadGrids(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
+func (s *Dataset) loadGrids(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
 	for k, g := range dataset.Grids {
 		s.Grids[k] = setting.ConvertGridOpts(&g)
 	}
 }
 
-func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
+func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
 	for k, src := range dataset.Sources {
 		switch source := src.(type) {
 		case *setting.WMSSource:
 			if source.Opts.FeatureInfo != nil && *source.Opts.FeatureInfo {
-				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, globals, preferred)
+				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, globals)
 			} else if source.Opts.LegendGraphic != nil && *source.Opts.LegendGraphic {
 				s.LegendSources[k] = setting.LoadWMSLegendsSource(source, globals)
 			} else {
-				s.Sources[k] = setting.LoadWMSMapSource(source, s, globals, preferred)
+				s.Sources[k] = setting.LoadWMSMapSource(source, s, globals)
 			}
 		case *setting.TileSource:
 			s.Sources[k] = setting.LoadTileSource(source, globals, s)
@@ -75,15 +75,15 @@ func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, gl
 			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s)
 		case *setting.ArcGISSource:
 			if source.Opts.Featureinfo != nil && *source.Opts.Featureinfo {
-				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals, preferred)
+				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals)
 			} else {
-				s.Sources[k] = setting.LoadArcGISSource(source, s, globals, preferred)
+				s.Sources[k] = setting.LoadArcGISSource(source, s, globals)
 			}
 		}
 	}
 }
 
-func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
+func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
 		case *setting.CacheSource:
@@ -92,12 +92,12 @@ func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, glo
 	}
 }
 
-func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS) {
+func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
 	switch srv := dataset.Service.(type) {
 	case *setting.TMSService:
 		s.Service = setting.LoadTMSService(srv, s)
 	case *setting.WMSService:
-		s.Service = setting.LoadWMSService(srv, s, basePath, preferred)
+		s.Service = setting.LoadWMSService(srv, s, globals, basePath)
 	case *setting.MapboxService:
 		s.Service = setting.LoadMapboxService(srv, globals, s)
 	case *setting.WMTSService:

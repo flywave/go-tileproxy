@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/setting"
 )
 
@@ -14,13 +13,12 @@ type TileProxy struct {
 	Datasets        map[string]*Dataset
 	basePath        string
 	globals         *setting.GlobalsSetting
-	preferred       geo.PreferredSrcSRS
 	datasetReqRegex *regexp.Regexp
 }
 
 func (t *TileProxy) UpdateDataset(dataset string, d *setting.ProxyDataset) {
 	t.m.Lock()
-	t.Datasets[dataset] = NewDataset(d, t.basePath, t.globals, t.preferred)
+	t.Datasets[dataset] = NewDataset(d, t.basePath, t.globals)
 	t.m.Unlock()
 }
 
@@ -39,7 +37,7 @@ func (t *TileProxy) Reload(proxy []*setting.ProxyDataset) {
 	t.m.Lock()
 	t.Datasets = make(map[string]*Dataset)
 	for i := range proxy {
-		t.Datasets[proxy[i].Identifier] = NewDataset(proxy[i], t.basePath, t.globals, t.preferred)
+		t.Datasets[proxy[i].Identifier] = NewDataset(proxy[i], t.basePath, t.globals)
 	}
 	t.m.Unlock()
 }
@@ -54,7 +52,7 @@ func (t *TileProxy) parseServiceId(r *http.Request) string {
 		}
 	}
 
-	if match == nil || len(match) == 0 {
+	if len(match) == 0 {
 		return ""
 	}
 
@@ -77,8 +75,8 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewTileProxy(basePath string, globals *setting.GlobalsSetting, preferred geo.PreferredSrcSRS, proxys []*setting.ProxyDataset) *TileProxy {
-	proxy := &TileProxy{basePath: basePath, globals: globals, preferred: preferred}
+func NewTileProxy(basePath string, globals *setting.GlobalsSetting, proxys []*setting.ProxyDataset) *TileProxy {
+	proxy := &TileProxy{basePath: basePath, globals: globals}
 	proxy.Reload(proxys)
 	return proxy
 }

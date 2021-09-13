@@ -72,7 +72,7 @@ func getProxyDataset() *setting.ProxyDataset {
 }
 
 func getDataset() *tileproxy.Dataset {
-	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals, nil)
+	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals)
 }
 
 var dataset *tileproxy.Dataset

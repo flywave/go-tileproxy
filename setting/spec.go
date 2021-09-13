@@ -6,6 +6,34 @@ import (
 	"github.com/flywave/go-tileproxy/resource"
 )
 
+type SourceType string
+
+const (
+	NONE_SOURCE       SourceType = "none"
+	WMS_SOURCE        SourceType = "wms"
+	TILE_SOURCE       SourceType = "tile"
+	MAPBOXTILE_SOURCE SourceType = "mapbox_tile"
+	ARCGIS_SOURCE     SourceType = "arcgis"
+)
+
+type ServiceType string
+
+const (
+	NONE_SERVICE      ServiceType = "none"
+	WMS_SERVICE       ServiceType = "wms"
+	TMS_SERVICE       ServiceType = "tms"
+	WMTS_SERVICE      ServiceType = "wmts"
+	WMTS_REST_SERVICE ServiceType = "wmts_rest"
+	MAPBOX_SERVICE    ServiceType = "mapbox"
+)
+
+type CacheType string
+
+const (
+	CACHE_TYPE_FILE CacheType = "local"
+	CACHE_TYPE_S3   CacheType = "s3"
+)
+
 type ImageSetting struct {
 	ResamplingMethod string               `json:"resampling_method,omitempty"`
 	Paletted         *bool                `json:"paletted,omitempty"`
@@ -126,25 +154,28 @@ type Srs struct {
 }
 
 type LocalCache struct {
-	DirectoryLayout string `json:"directory_layout,omitempty"`
-	Directory       string `json:"directory,omitempty"`
+	Type            CacheType `json:"type,omitempty"`
+	DirectoryLayout string    `json:"directory_layout,omitempty"`
+	Directory       string    `json:"directory,omitempty"`
 }
 
 type S3Cache struct {
-	DirectoryLayout string `json:"directory_layout,omitempty"`
-	Directory       string `json:"directory,omitempty"`
-	Endpoint        string `json:"endpoint,omitempty"`
-	AccessKey       string `json:"access_key,omitempty"`
-	SecretKey       string `json:"secret_key,omitempty"`
-	Secure          bool   `json:"secure,omitempty"`
-	SignV2          bool   `json:"signv2,omitempty"`
-	Region          string `json:"region,omitempty"`
-	Bucket          string `json:"bucket,omitempty"`
-	Encrypt         bool   `json:"encrypt,omitempty"`
-	Trace           bool   `json:"trace,omitempty"`
+	Type            CacheType `json:"type,omitempty"`
+	DirectoryLayout string    `json:"directory_layout,omitempty"`
+	Directory       string    `json:"directory,omitempty"`
+	Endpoint        string    `json:"endpoint,omitempty"`
+	AccessKey       string    `json:"access_key,omitempty"`
+	SecretKey       string    `json:"secret_key,omitempty"`
+	Secure          bool      `json:"secure,omitempty"`
+	SignV2          bool      `json:"signv2,omitempty"`
+	Region          string    `json:"region,omitempty"`
+	Bucket          string    `json:"bucket,omitempty"`
+	Encrypt         bool      `json:"encrypt,omitempty"`
+	Trace           bool      `json:"trace,omitempty"`
 }
 
 type CacheSource struct {
+	Type                 SourceType    `json:"type,omitempty"`
 	Sources              []string      `json:"sources,omitempty"`
 	Name                 string        `json:"name,omitempty"`
 	Grid                 string        `json:"grid,omitempty"`
@@ -192,6 +223,7 @@ type WMSImageOpts struct {
 
 type WMSSource struct {
 	SourceCommons
+	Type             SourceType        `json:"type,omitempty"`
 	Opts             WMSSourceOpts     `json:"wms_opts"`
 	Image            WMSImageOpts      `json:"image"`
 	ForwardReqParams map[string]string `json:"forward_req_params,omitempty"`
@@ -207,6 +239,7 @@ type WMSSource struct {
 
 type TileSource struct {
 	SourceCommons
+	Type          SourceType   `json:"type,omitempty"`
 	URLTemplate   string       `json:"url_template,omitempty"`
 	Transparent   *bool        `json:"transparent,omitempty"`
 	Options       interface{}  `json:"options,omitempty"`
@@ -219,6 +252,7 @@ type TileSource struct {
 
 type MapboxTileSource struct {
 	SourceCommons
+	Type            SourceType   `json:"type,omitempty"`
 	Url             string       `json:"url,omitempty"`
 	AccessToken     string       `json:"access_token,omitempty"`
 	AccessTokenName string       `json:"access_token_name,omitempty"`
@@ -237,6 +271,7 @@ type ArcGISSourceOpts struct {
 
 type ArcGISSource struct {
 	SourceCommons
+	Type               SourceType       `json:"type,omitempty"`
 	Image              WMSImageOpts     `json:"image"`
 	Url                string           `json:"url,omitempty"`
 	Dpi                *int             `json:"dpi,omitempty"`
@@ -288,6 +323,7 @@ type MapboxStyleLayer struct {
 }
 
 type MapboxService struct {
+	Type       string             `json:"type,omitempty"`
 	Name       string             `json:"name,omitempty"`
 	Layers     []MapboxTileLayer  `json:"layers,omitempty"`
 	Styles     []MapboxStyleLayer `json:"styles,omitempty"`
@@ -304,6 +340,7 @@ type TileLayer struct {
 }
 
 type TMSService struct {
+	Type       string      `json:"type,omitempty"`
 	Title      string      `json:"title,omitempty"`
 	Abstract   string      `json:"abstract,omitempty"`
 	Origin     string      `json:"origin,omitempty"`
@@ -345,6 +382,7 @@ type WMTSServiceProvider struct {
 }
 
 type WMTSService struct {
+	Type                       string               `json:"type,omitempty"`
 	Restful                    *bool                `json:"restful,omitempty"`
 	RestfulTemplate            string               `json:"restful_template,omitempty"`
 	RestfulFeatureinfoTemplate string               `json:"restful_featureinfo_template,omitempty"`
@@ -407,6 +445,7 @@ type WMSContactInformation struct {
 }
 
 type WMSService struct {
+	Type               string              `json:"type,omitempty"`
 	Srs                []string            `json:"srs,omitempty"`
 	BBoxSrs            []BBoxSrs           `json:"bbox_srs,omitempty"`
 	ImageFormats       []string            `json:"image_formats,omitempty"`
@@ -525,18 +564,20 @@ type Cleanup struct {
 }
 
 type LocalStore struct {
-	Directory string `json:"directory,omitempty"`
+	Type      CacheType `json:"type,omitempty"`
+	Directory string    `json:"directory,omitempty"`
 }
 
 type S3Store struct {
-	Directory string `json:"directory,omitempty"`
-	Endpoint  string `json:"endpoint,omitempty"`
-	AccessKey string `json:"access_key,omitempty"`
-	SecretKey string `json:"secret_key,omitempty"`
-	Secure    bool   `json:"secure,omitempty"`
-	SignV2    bool   `json:"signv2,omitempty"`
-	Region    string `json:"region,omitempty"`
-	Bucket    string `json:"bucket,omitempty"`
-	Encrypt   bool   `json:"encrypt,omitempty"`
-	Trace     bool   `json:"trace,omitempty"`
+	Type      CacheType `json:"type,omitempty"`
+	Directory string    `json:"directory,omitempty"`
+	Endpoint  string    `json:"endpoint,omitempty"`
+	AccessKey string    `json:"access_key,omitempty"`
+	SecretKey string    `json:"secret_key,omitempty"`
+	Secure    bool      `json:"secure,omitempty"`
+	SignV2    bool      `json:"signv2,omitempty"`
+	Region    string    `json:"region,omitempty"`
+	Bucket    string    `json:"bucket,omitempty"`
+	Encrypt   bool      `json:"encrypt,omitempty"`
+	Trace     bool      `json:"trace,omitempty"`
 }

@@ -1,14 +1,17 @@
 package setting
 
+import (
+	"bytes"
+	"encoding/json"
+)
+
 type ProxyDataset struct {
-	Identifier string
-	Service    interface{}
-	Coverages  map[string]Coverage
-	Grids      map[string]GridOpts
-	Sources    map[string]interface{}
-	Caches     map[string]interface{}
-	Seeds      map[string]Seed
-	Cleanups   map[string]Cleanup
+	Identifier string                 `json:"id,omitempty"`
+	Service    interface{}            `json:"service,omitempty"`
+	Coverages  map[string]Coverage    `json:"coverages,omitempty"`
+	Grids      map[string]GridOpts    `json:"grids,omitempty"`
+	Sources    map[string]interface{} `json:"sources,omitempty"`
+	Caches     map[string]interface{} `json:"caches,omitempty"`
 }
 
 func NewProxyDataset(name string) *ProxyDataset {
@@ -17,7 +20,25 @@ func NewProxyDataset(name string) *ProxyDataset {
 		Coverages:  make(map[string]Coverage),
 		Sources:    make(map[string]interface{}),
 		Caches:     make(map[string]interface{}),
-		Seeds:      make(map[string]Seed),
-		Cleanups:   make(map[string]Cleanup),
+		Grids:      make(map[string]GridOpts),
 	}
+}
+
+func CreateProxyDatasetFromJSON(content []byte) *ProxyDataset {
+	set := &ProxyDataset{}
+	reader := bytes.NewBuffer(content)
+	dec := json.NewDecoder(reader)
+	if err := dec.Decode(set); err != nil {
+		return nil
+	}
+	return set
+}
+
+func (gs *ProxyDataset) ToJSON() []byte {
+	var bt []byte
+	wr := bytes.NewBuffer(bt)
+	enc := json.NewEncoder(wr)
+	enc.SetEscapeHTML(false)
+	enc.Encode(gs)
+	return wr.Bytes()
 }

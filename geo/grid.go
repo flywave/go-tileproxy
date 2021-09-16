@@ -48,8 +48,8 @@ func pyramidResLevel(initial_res float64, factor *float32, levels *uint32) []flo
 	}
 	ret := make([]float64, nlevel)
 	for i := range ret {
-		ret[i] = math.Pow(initial_res/fac, float64(i))
-	}
+		ret[i] = initial_res/math.Pow(fac, float64())
+	}i
 	return ret
 }
 
@@ -500,26 +500,6 @@ func newTileGrid(name string, is_geodetic bool, origin OriginType, srs *SRSProj4
 		ret.ThresholdRes = threshold_res[:]
 	}
 
-	ret.Levels = uint32(len(ret.Resolutions))
-	ret.GridSizes = ret.calcGrids()
-	return ret
-}
-
-func NewDefaultTileGrid() *TileGrid {
-	ret := &TileGrid{}
-	ret.SpheroidA = 6378137.0
-	ret.Srs = newSRSProj4("900913")
-	ret.BBox = nil
-	ret.TileSize = []uint32{256, 256}
-	ret.IsGeodetic = false
-	ret.StretchFactor = 1.15
-	ret.MaxShrinkFactor = 4.0
-	ret.Origin = ORIGIN_LL
-	ret.FlippedYAxis = false
-	ret.Levels = 20
-	ret.calcBBox()
-	fac := float32(2.0)
-	ret.Resolutions = ret.calcRes(&fac)
 	ret.Levels = uint32(len(ret.Resolutions))
 	ret.GridSizes = ret.calcGrids()
 	return ret

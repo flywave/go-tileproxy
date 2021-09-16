@@ -3,7 +3,7 @@ package terrain
 import (
 	"testing"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 )
 
 func TestGrid(t *testing.T) {

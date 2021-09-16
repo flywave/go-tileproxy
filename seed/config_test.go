@@ -3,7 +3,7 @@ package seed
 import (
 	"testing"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 )
 
 func assertLevelInLevels(aa int, b []int, t *testing.T) {

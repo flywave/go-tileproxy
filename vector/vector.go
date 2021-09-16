@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 

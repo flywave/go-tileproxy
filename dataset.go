@@ -3,8 +3,8 @@ package tileproxy
 import (
 	"net/http"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/service"
 	"github.com/flywave/go-tileproxy/setting"

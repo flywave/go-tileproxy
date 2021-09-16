@@ -3,7 +3,7 @@ package tile
 import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 )
 
 type Merger interface {

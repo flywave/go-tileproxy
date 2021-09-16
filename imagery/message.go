@@ -10,7 +10,7 @@ import (
 
 	_ "embed"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 
 	"github.com/flywave/gg"

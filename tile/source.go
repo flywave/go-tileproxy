@@ -3,7 +3,7 @@ package tile
 import (
 	"time"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 )
 
 type TileType uint8

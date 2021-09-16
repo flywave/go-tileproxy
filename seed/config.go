@@ -1,6 +1,6 @@
 package seed
 
-import "github.com/flywave/go-tileproxy/geo"
+import "github.com/flywave/go-geo"
 
 type LevelsList []int
 

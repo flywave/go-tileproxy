@@ -1,10 +1,10 @@
 package setting
 
 import (
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-geom/general"
 	"github.com/flywave/go-geos"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go3d/float64/vec2"
 )
 

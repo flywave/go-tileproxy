@@ -3,7 +3,7 @@ package cache
 import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/terrain"
 	"github.com/flywave/go-tileproxy/tile"

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 )
 
 func TestGeoTIFF(t *testing.T) {

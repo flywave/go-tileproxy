@@ -8,11 +8,11 @@ import (
 
 	m "github.com/flywave/go-mapbox/tileid"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
 	"github.com/flywave/go-mbgeom/geojson"
 	"github.com/flywave/go-mbgeom/geojsonvt"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 

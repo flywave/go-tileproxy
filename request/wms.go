@@ -14,7 +14,7 @@ import (
 
 	"github.com/lucasb-eyer/go-colorful"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )

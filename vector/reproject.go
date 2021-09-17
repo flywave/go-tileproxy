@@ -1,8 +1,8 @@
 package vector
 
 import (
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geom"
-	"github.com/flywave/go-tileproxy/geo"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )

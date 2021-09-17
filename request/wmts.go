@@ -12,7 +12,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 )

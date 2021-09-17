@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )

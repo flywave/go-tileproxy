@@ -12,9 +12,9 @@ import (
 	"github.com/flywave/ogc-specifications/pkg/wms130"
 	"github.com/flywave/ogc-specifications/pkg/wsc110"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"

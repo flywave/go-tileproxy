@@ -18,6 +18,8 @@ github.com/devork/geom v0.0.5/go.mod h1:8Wn8UNIJlX3waA51IiE8NHPWm1JFITeKJfxmYcK+
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
+github.com/flywave/go-geo v0.0.0-20210916052327-eae8abcfee59 h1:tF/PgwsoWx7qtJPe35bEDoBcZEpW8G7x+WcrSfyUDJE=
+github.com/flywave/go-geo v0.0.0-20210916052327-eae8abcfee59/go.mod h1:89ynpGeuN8scP8bsxzKcL73hSHIF7OsEEWrkKGq+6Yk=
 github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb h1:cfvIpGcu887EYg+ydfMj+hWSHHjxBBu066XK2+rKAQc=
 github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb/go.mod h1:ndXH2J5+CsynPtyL7oihZtN8rRxJ8kpqqwy2DOa86OQ=
 github.com/flywave/go-geom v0.0.0-20210604134758-e972b6e6956d/go.mod h1:whIEyVfpaBVcYiDCnnc4IJg5CI5KpLC3quy95YJ1W9I=
@@ -26,6 +28,8 @@ github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513 h1:WMEy4Y/zjr4yvR2
 github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513/go.mod h1:yrZ0GpfBo96R17y3jt5tDdY2iq+bTSLctfcW8Bko1O0=
 github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c h1:86+b63QbW10ByMDzJum3OivO9EgoIq5mg0l8NunCqKU=
 github.com/flywave/go-geos v0.0.0-20210609093815-c61604198c0c/go.mod h1:2CKYxCmQE8aQzzVrw23MLuMmC/BA5EvVIdvUaPkeAKI=
+github.com/flywave/go-geos v0.0.0-20210901070302-5537e39a4985 h1:VGHfOMEFPCAPDcHaBBRGK5do+Pc+gshj+l1HonAjOLg=
+github.com/flywave/go-geos v0.0.0-20210901070302-5537e39a4985/go.mod h1:2CKYxCmQE8aQzzVrw23MLuMmC/BA5EvVIdvUaPkeAKI=
 github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680 h1:Kiq6r19Zb3d1yqx6tpwccxk90nAEKWzqEEpPp3A6Yi4=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
@@ -39,8 +43,12 @@ github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e h1:BHGfBgDZ5CZlNtaM
 github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e/go.mod h1:cfHFEG24/0hT2xCSLJb8rT/2WE8ieeIrbOJq1sql/fg=
 github.com/flywave/go-proj v0.0.0-20210803122823-117c8e760a27 h1:iwJ0Nc/By/WaRLtYXTAcx5C+Mby/cbyxrRapseLBYrc=
 github.com/flywave/go-proj v0.0.0-20210803122823-117c8e760a27/go.mod h1:arlOMgTGugKsD+yFiKdAipbAKOZU/KIpTJwk5jnjNow=
+github.com/flywave/go-proj v0.0.0-20210901061921-dbd10648e538/go.mod h1:arlOMgTGugKsD+yFiKdAipbAKOZU/KIpTJwk5jnjNow=
+github.com/flywave/go-proj v0.0.0-20210916052607-87a91fe342a8 h1:vBOXrpU3byei5UVBacL+IvSizQNnztGsfSP4KCClojs=
+github.com/flywave/go-proj v0.0.0-20210916052607-87a91fe342a8/go.mod h1:RX83BRZNwcerL4DIU5TqQyKarhYx8W/cwTMYfSAwXiE=
 github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d h1:VkVUU6hMDO/y1n1du6sLUTswo8bTo4FNSOS0kA+F4e0=
 github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d/go.mod h1:/OSV1sGRbJezuTheaHH6X2Xf/G7MVaOBeHIGQtGpj+0=
+github.com/flywave/go-tileproxy v0.0.0-20210913134313-d49d8dbc595b/go.mod h1:8bO7MNq2EWLjo7cG16q01oaI9VH89yLfZmiceCKIPkk=
 github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8 h1:qlLy3RxWJmE+A5qjlY7LsMSaucUMnnmt91tL6XfusKs=
 github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8/go.mod h1:OFGBbky1hGhO30xl0I6IbUVdOPvjwo9qfi7zcH8fivo=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=

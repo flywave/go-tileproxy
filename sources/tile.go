@@ -3,8 +3,8 @@ package sources
 import (
 	"errors"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/client"
-	"github.com/flywave/go-tileproxy/geo"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/tile"
 )

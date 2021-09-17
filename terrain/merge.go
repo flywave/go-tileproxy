@@ -8,7 +8,7 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	vec3d "github.com/flywave/go3d/float64/vec3"
 
-	"github.com/flywave/go-tileproxy/geo"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 

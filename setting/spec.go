@@ -31,7 +31,6 @@ type CacheType string
 
 const (
 	CACHE_TYPE_FILE CacheType = "local"
-	CACHE_TYPE_S3   CacheType = "s3"
 )
 
 type ImageSetting struct {
@@ -157,21 +156,6 @@ type LocalCache struct {
 	Type            CacheType `json:"type,omitempty"`
 	DirectoryLayout string    `json:"directory_layout,omitempty"`
 	Directory       string    `json:"directory,omitempty"`
-}
-
-type S3Cache struct {
-	Type            CacheType `json:"type,omitempty"`
-	DirectoryLayout string    `json:"directory_layout,omitempty"`
-	Directory       string    `json:"directory,omitempty"`
-	Endpoint        string    `json:"endpoint,omitempty"`
-	AccessKey       string    `json:"access_key,omitempty"`
-	SecretKey       string    `json:"secret_key,omitempty"`
-	Secure          bool      `json:"secure,omitempty"`
-	SignV2          bool      `json:"signv2,omitempty"`
-	Region          string    `json:"region,omitempty"`
-	Bucket          string    `json:"bucket,omitempty"`
-	Encrypt         bool      `json:"encrypt,omitempty"`
-	Trace           bool      `json:"trace,omitempty"`
 }
 
 type CacheSource struct {
@@ -566,18 +550,4 @@ type Cleanup struct {
 type LocalStore struct {
 	Type      CacheType `json:"type,omitempty"`
 	Directory string    `json:"directory,omitempty"`
-}
-
-type S3Store struct {
-	Type      CacheType `json:"type,omitempty"`
-	Directory string    `json:"directory,omitempty"`
-	Endpoint  string    `json:"endpoint,omitempty"`
-	AccessKey string    `json:"access_key,omitempty"`
-	SecretKey string    `json:"secret_key,omitempty"`
-	Secure    bool      `json:"secure,omitempty"`
-	SignV2    bool      `json:"signv2,omitempty"`
-	Region    string    `json:"region,omitempty"`
-	Bucket    string    `json:"bucket,omitempty"`
-	Encrypt   bool      `json:"encrypt,omitempty"`
-	Trace     bool      `json:"trace,omitempty"`
 }

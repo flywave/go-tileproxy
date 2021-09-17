@@ -247,8 +247,6 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	switch cinfo := c.CacheInfo.(type) {
 	case *LocalCache:
 		cacheB = ConvertLocalCache(cinfo, tile_opts)
-	case *S3Cache:
-		cacheB = ConvertS3Cache(cinfo, tile_opts)
 	}
 
 	var locker cache.TileLocker
@@ -286,36 +284,8 @@ func ConvertLocalCache(opt *LocalCache, opts tile.TileOptions) *cache.LocalCache
 	return cache.NewLocalCache(opt.Directory, opt.DirectoryLayout, cache.GetSourceCreater(opts))
 }
 
-func ConvertS3Cache(opt *S3Cache, opts tile.TileOptions) *cache.S3Cache {
-	setting := cache.S3Options{}
-	setting.Endpoint = opt.Endpoint
-	setting.AccessKey = opt.AccessKey
-	setting.SecretKey = opt.SecretKey
-	setting.Secure = opt.Secure
-	setting.SignV2 = opt.SignV2
-	setting.Region = opt.Region
-	setting.Bucket = opt.Bucket
-	setting.Encrypt = opt.Encrypt
-	setting.Trace = opt.Trace
-	return cache.NewS3Cache(opt.Directory, opt.DirectoryLayout, setting, cache.GetSourceCreater(opts))
-}
-
 func ConvertLocalStore(opt *LocalStore) *resource.LocalStore {
 	return resource.NewLocalStore(opt.Directory)
-}
-
-func ConvertS3Store(opt *S3Store) *resource.S3Store {
-	setting := resource.S3Options{}
-	setting.Endpoint = opt.Endpoint
-	setting.AccessKey = opt.AccessKey
-	setting.SecretKey = opt.SecretKey
-	setting.Secure = opt.Secure
-	setting.SignV2 = opt.SignV2
-	setting.Region = opt.Region
-	setting.Bucket = opt.Bucket
-	setting.Encrypt = opt.Encrypt
-	setting.Trace = opt.Trace
-	return resource.NewS3Store(opt.Directory, setting)
 }
 
 func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instance ProxyInstance) *service.MapboxTileProvider {
@@ -550,8 +520,6 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 
 	var cache *resource.LegendCache
 	switch s := s.Store.(type) {
-	case *S3Store:
-		cache = resource.NewLegendCache(ConvertS3Store(s))
 	case *LocalStore:
 		cache = resource.NewLegendCache(ConvertLocalStore(s))
 	}
@@ -696,8 +664,6 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 
 	var tcache *resource.TileJSONCache
 	switch s := s.TilejsonStore.(type) {
-	case *S3Store:
-		tcache = resource.NewTileJSONCache(ConvertS3Store(s))
 	case *LocalStore:
 		tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
 	}
@@ -842,16 +808,12 @@ func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sourc
 
 	var cache *resource.StyleCache
 	switch s := s.Store.(type) {
-	case *S3Store:
-		cache = resource.NewStyleCache(ConvertS3Store(s))
 	case *LocalStore:
 		cache = resource.NewStyleCache(ConvertLocalStore(s))
 	}
 
 	var gcache *resource.GlyphsCache
 	switch s := s.GlyphsStore.(type) {
-	case *S3Store:
-		gcache = resource.NewGlyphsCache(ConvertS3Store(s))
 	case *LocalStore:
 		gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
 	}

@@ -282,6 +282,7 @@ type WaterMark struct {
 type MapboxTileLayer struct {
 	Source       string                  `json:"source"`
 	Name         string                  `json:"name,omitempty"`
+	Title        string                  `json:"title"`
 	VectorLayers []*resource.VectorLayer `json:"vector_layers,omitempty"`
 	TileType     string                  `json:"tile_type,omitempty"`
 	ZoomRange    *[2]int                 `json:"zoom_range,omitempty"`

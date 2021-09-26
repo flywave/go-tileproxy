@@ -280,6 +280,7 @@ type WaterMark struct {
 }
 
 type MapboxTileLayer struct {
+	UUID         string                  `json:"uuid"`
 	Source       string                  `json:"source"`
 	Name         string                  `json:"name,omitempty"`
 	Title        string                  `json:"title"`
@@ -294,6 +295,7 @@ type MapboxTileLayer struct {
 }
 
 type MapboxStyleLayer struct {
+	UUID             string       `json:"uuid"`
 	Url              string       `json:"url,omitempty"`
 	AccessToken      string       `json:"access_token,omitempty"`
 	AccessTokenName  string       `json:"access_token_name,omitempty"`
@@ -317,10 +319,12 @@ type MapboxService struct {
 
 type TileLayer struct {
 	ScaleHints
+	UUID        string                   `json:"uuid"`
 	TileSource  string                   `json:"tile_source"`
 	InfoSources []string                 `json:"info_sources"`
 	Name        string                   `json:"name,omitempty"`
 	Title       string                   `json:"title"`
+	Description string                   `json:"description,omitempty"`
 	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
 }
 
@@ -508,11 +512,13 @@ type WMSLayerMetadata struct {
 
 type WMSLayer struct {
 	ScaleHints
+	UUID               string                   `json:"uuid"`
 	MapSources         []string                 `json:"map_source"`
 	FeatureinfoSources []string                 `json:"featureinfo_sources,omitempty"`
 	LegendSources      []string                 `json:"legend_sources,omitempty"`
 	Name               string                   `json:"name,omitempty"`
 	Title              string                   `json:"title"`
+	Description        string                   `json:"description,omitempty"`
 	LegendURL          string                   `json:"legend_url,omitempty"`
 	Metadata           *WMSLayerMetadata        `json:"metadata,omitempty"`
 	Layers             []WMSLayer               `json:"layers,omitempty"`

@@ -154,7 +154,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	si := mapreq.GetSize()
 	result := merger.Merge(img_opts, si[:], mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs()), coverage)
 
-	if !query.EQ(orig_query) {
+	if !query.Eq(orig_query) {
 		imageSrc := result.(*imagery.ImageSource)
 		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
 	}

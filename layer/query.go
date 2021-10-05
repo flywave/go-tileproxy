@@ -24,7 +24,7 @@ type MapQuery struct {
 	Dimensions  utils.Dimensions
 }
 
-func (q *MapQuery) EQ(o *MapQuery) bool {
+func (q *MapQuery) Eq(o *MapQuery) bool {
 	if q.BBox.Max != o.BBox.Max || q.BBox.Min != o.BBox.Min {
 		return false
 	}
@@ -43,7 +43,7 @@ func (q *MapQuery) EQ(o *MapQuery) bool {
 	if q.TiledOnly != o.TiledOnly {
 		return false
 	}
-	if !q.Dimensions.EQ(o.Dimensions) {
+	if !q.Dimensions.Eq(o.Dimensions) {
 		return false
 	}
 	return true
@@ -90,7 +90,7 @@ type InfoQuery struct {
 	FeatureCount *int
 }
 
-func (q *InfoQuery) EQ(o *InfoQuery) bool {
+func (q *InfoQuery) Eq(o *InfoQuery) bool {
 	if q.BBox.Max != o.BBox.Max || q.BBox.Min != o.BBox.Min {
 		return false
 	}
@@ -125,7 +125,7 @@ type LegendQuery struct {
 	Scale  int
 }
 
-func (q *LegendQuery) EQ(o *LegendQuery) bool {
+func (q *LegendQuery) Eq(o *LegendQuery) bool {
 	if q.Format != o.Format {
 		return false
 	}
@@ -146,7 +146,7 @@ func (req *GlyphsQuery) GetID() string {
 	return fmt.Sprintf("%s-%d-%d", req.Font, req.Start, req.End)
 }
 
-func (q *GlyphsQuery) EQ(o *GlyphsQuery) bool {
+func (q *GlyphsQuery) Eq(o *GlyphsQuery) bool {
 	if q.Start != o.Start {
 		return false
 	}

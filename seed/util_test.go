@@ -14,7 +14,7 @@ func TestProgressLogger(t *testing.T) {
 		t.FailNow()
 	}
 
-	logger.SetCurrentTaskID("test")
+	logger.SetCurrentTaskId("test")
 	logger.LogMessage("hello")
 }
 

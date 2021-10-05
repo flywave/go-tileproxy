@@ -319,7 +319,7 @@ func Seed(tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, pr
 		if err := cache_locker.Lock(md["cache_name"], func() error {
 			var start_progress []interface{}
 			if progress_logger != nil && progress_store != nil {
-				progress_logger.SetCurrentTaskID(task.GetID())
+				progress_logger.SetCurrentTaskId(task.GetID())
 				start_progress = progress_store.Get(task.GetID()).([]interface{})
 			} else {
 				start_progress = nil

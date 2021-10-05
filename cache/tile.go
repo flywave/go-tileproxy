@@ -57,7 +57,7 @@ func (t *Tile) IsMissing() bool {
 	return (t.Source == nil)
 }
 
-func (t *Tile) EQ(o *Tile) bool {
+func (t *Tile) Eq(o *Tile) bool {
 	if t.Coord[0] != o.Coord[0] || t.Coord[1] != o.Coord[1] || t.Coord[2] != o.Coord[2] {
 		return false
 	}

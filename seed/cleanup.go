@@ -59,7 +59,7 @@ func Cleanup(io CacheIO, tasks []*TileCleanupTask, concurrency int, skipGeomsFor
 		var seed_progress *SeedProgress
 		var cleanup_progress *DirectoryCleanupProgress
 		if progress_logger != nil && progress_store != nil {
-			progress_logger.SetCurrentTaskID(task.GetID())
+			progress_logger.SetCurrentTaskId(task.GetID())
 			start_progress := progress_store.Get(task.GetID())
 			seed_progress = &SeedProgress{oldLevelProgresses: start_progress.([]interface{})}
 			cleanup_progress = newDirectoryCleanupProgress(start_progress.([]interface{}))

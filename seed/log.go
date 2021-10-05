@@ -14,6 +14,6 @@ type ProgressLogger interface {
 	LogMessage(msg string)
 	LogStep(progress *SeedProgress)
 	LogProgress(seed *SeedProgress, level int, bbox vec2d.Rect, tiles int)
-	SetCurrentTaskID(id string)
+	SetCurrentTaskId(id string)
 	GetStore() ProgressStore
 }

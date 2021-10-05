@@ -38,7 +38,7 @@ type DefaultProgressLogger struct {
 	LastProgress  time.Time
 	Verbose       bool
 	Silent        bool
-	CurrentTaskID string
+	CurrentTaskId string
 	ProgressStore ProgressStore
 }
 
@@ -53,8 +53,8 @@ func (p *DefaultProgressLogger) GetStore() ProgressStore {
 	return p.ProgressStore
 }
 
-func (p *DefaultProgressLogger) SetCurrentTaskID(id string) {
-	p.CurrentTaskID = id
+func (p *DefaultProgressLogger) SetCurrentTaskId(id string) {
+	p.CurrentTaskId = id
 }
 
 func (p *DefaultProgressLogger) LogMessage(msg string) {
@@ -96,8 +96,8 @@ func (p *DefaultProgressLogger) LogProgress(progress *SeedProgress, level int, b
 	}
 
 	if logProgess {
-		if p.ProgressStore != nil && p.CurrentTaskID != "" {
-			p.ProgressStore.Store(p.CurrentTaskID, progress.CurrentProgressIdentifier())
+		if p.ProgressStore != nil && p.CurrentTaskId != "" {
+			p.ProgressStore.Store(p.CurrentTaskId, progress.CurrentProgressIdentifier())
 			p.ProgressStore.Save()
 		}
 	}

@@ -9,7 +9,7 @@ type Dimension interface {
 	SetValue([]interface{})
 	SetOneValue(interface{})
 	SetDefault(interface{})
-	EQ(o Dimension) bool
+	Eq(o Dimension) bool
 }
 
 type dimension struct {
@@ -48,7 +48,7 @@ func (d *dimension) SetDefault(defa interface{}) {
 	d.default_ = defa
 }
 
-func (d *dimension) EQ(o Dimension) bool {
+func (d *dimension) Eq(o Dimension) bool {
 	if len(d.values) != len(o.GetValue()) {
 		return false
 	}
@@ -146,10 +146,10 @@ func (d Dimensions) GetRawMap() map[string][]interface{} {
 	return ret
 }
 
-func (d Dimensions) EQ(o Dimensions) bool {
+func (d Dimensions) Eq(o Dimensions) bool {
 	for k, vs := range d {
 		if v, ok := o[k]; ok {
-			if !v.EQ(vs) {
+			if !v.Eq(vs) {
 				return false
 			}
 		} else {

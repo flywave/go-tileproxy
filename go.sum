@@ -33,6 +33,8 @@ github.com/flywave/go-geos v0.0.0-20210901070302-5537e39a4985/go.mod h1:2CKYxCmQ
 github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680 h1:Kiq6r19Zb3d1yqx6tpwccxk90nAEKWzqEEpPp3A6Yi4=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
+github.com/flywave/go-gpkg v0.0.0-20210616060957-e0bebbe4933f h1:hnO4z4knnkLA+OEOSRdLw2AMYYDBiKV9s6XlbBvh5i0=
+github.com/flywave/go-gpkg v0.0.0-20210616060957-e0bebbe4933f/go.mod h1:OGlW5WOgxdoOyqZaF9Erobn4TPBoS5iErtfDSwDhZIs=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuqnZcTgZirpm7RlAcXGA1C4MkXPF5Y=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9/go.mod h1:ViGRrCXmuOf68/rpxR2fHy9nKOxdCKgCFd5+/iyWRTs=
 github.com/flywave/go-mapbox v0.0.0-20210811060824-aa7db9dca12d h1:GybfNSNfN+UlJq+nt+iKKXE6DaAlhEhL9CIXw82spIg=

@@ -13,22 +13,22 @@ type TileProxy struct {
 	Services        map[string]*Service
 	basePath        string
 	globals         *setting.GlobalsSetting
-	datasetReqRegex *regexp.Regexp
+	serviceReqRegex *regexp.Regexp
 }
 
-func (t *TileProxy) UpdateService(dataset string, d *setting.ProxyService) {
+func (t *TileProxy) UpdateService(uuid string, d *setting.ProxyService) {
 	t.m.Lock()
-	t.Services[dataset] = NewService(d, t.basePath, t.globals)
+	t.Services[uuid] = NewService(d, t.basePath, t.globals)
 	t.m.Unlock()
 }
 
-func (t *TileProxy) RemoveService(dataset string) {
+func (t *TileProxy) RemoveService(uuid string) {
 	var d *Service
 	t.m.Lock()
-	if d_, ok := t.Services[dataset]; ok {
+	if d_, ok := t.Services[uuid]; ok {
 		d = d_
 	}
-	delete(t.Services, dataset)
+	delete(t.Services, uuid)
 	t.m.Unlock()
 	d.Clean()
 }
@@ -43,8 +43,8 @@ func (t *TileProxy) Reload(proxy []*setting.ProxyService) {
 }
 
 func (t *TileProxy) parseServiceId(r *http.Request) string {
-	match := t.datasetReqRegex.FindStringSubmatch(r.URL.Path)
-	groupNames := t.datasetReqRegex.SubexpNames()
+	match := t.serviceReqRegex.FindStringSubmatch(r.URL.Path)
+	groupNames := t.serviceReqRegex.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {
 		if name != "" && match[i] != "" {

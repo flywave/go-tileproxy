@@ -3,6 +3,7 @@ module github.com/flywave/go-tileproxy
 go 1.16
 
 require (
+	github.com/andybalholm/brotli v1.0.3 // indirect
 	github.com/beevik/etree v1.1.0
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/chai2010/webp v1.1.0
@@ -26,9 +27,16 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/kennygrant/sanitize v1.2.4
+	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/mholt/archiver/v3 v3.5.0 // indirect
+	github.com/nwaples/rardecode v1.1.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.8 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/ulikunitz/xz v0.5.10 // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf

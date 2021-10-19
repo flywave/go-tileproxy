@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/flywave/go-mapbox/style"
 	"github.com/flywave/go-tileproxy/imagery"
 )
 
@@ -45,7 +44,7 @@ func NewGlyphsCache(store Store) *GlyphsCache {
 
 type Style struct {
 	BaseResource
-	style style.Style
+	style MapboxStyle
 }
 
 func (l *Style) GetExtension() string {
@@ -83,14 +82,14 @@ func (l *Style) GetGlyphs() string {
 	return *l.style.Glyphs
 }
 
-func (l *Style) GetStyle() *style.Style {
+func (l *Style) GetStyle() *MapboxStyle {
 	return &l.style
 }
 
-func (l *Style) GetSources() map[string]style.Source {
-	ret := make(map[string]style.Source)
+func (l *Style) GetSources() map[string]MapboxSource {
+	ret := make(map[string]MapboxSource)
 	for k, data := range l.style.Sources {
-		var src style.Source
+		var src MapboxSource
 		dec := json.NewDecoder(bytes.NewBuffer(data))
 		if err := dec.Decode(&src); err != nil {
 			return nil

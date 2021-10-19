@@ -10,34 +10,34 @@ import (
 
 type TileProxy struct {
 	m               sync.RWMutex
-	Datasets        map[string]*Dataset
+	Services        map[string]*Service
 	basePath        string
 	globals         *setting.GlobalsSetting
 	datasetReqRegex *regexp.Regexp
 }
 
-func (t *TileProxy) UpdateDataset(dataset string, d *setting.ProxyDataset) {
+func (t *TileProxy) UpdateService(dataset string, d *setting.ProxyService) {
 	t.m.Lock()
-	t.Datasets[dataset] = NewDataset(d, t.basePath, t.globals)
+	t.Services[dataset] = NewService(d, t.basePath, t.globals)
 	t.m.Unlock()
 }
 
-func (t *TileProxy) RemoveDataset(dataset string) {
-	var d *Dataset
+func (t *TileProxy) RemoveService(dataset string) {
+	var d *Service
 	t.m.Lock()
-	if d_, ok := t.Datasets[dataset]; ok {
+	if d_, ok := t.Services[dataset]; ok {
 		d = d_
 	}
-	delete(t.Datasets, dataset)
+	delete(t.Services, dataset)
 	t.m.Unlock()
 	d.Clean()
 }
 
-func (t *TileProxy) Reload(proxy []*setting.ProxyDataset) {
+func (t *TileProxy) Reload(proxy []*setting.ProxyService) {
 	t.m.Lock()
-	t.Datasets = make(map[string]*Dataset)
+	t.Services = make(map[string]*Service)
 	for i := range proxy {
-		t.Datasets[proxy[i].Identifier] = NewDataset(proxy[i], t.basePath, t.globals)
+		t.Services[proxy[i].UUID] = NewService(proxy[i], t.basePath, t.globals)
 	}
 	t.m.Unlock()
 }
@@ -66,7 +66,7 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.m.Lock()
-	if d, ok := s.Datasets[serviceId]; ok {
+	if d, ok := s.Services[serviceId]; ok {
 		s.m.Unlock()
 		d.ServeHTTP(w, r)
 	} else {
@@ -75,7 +75,7 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewTileProxy(basePath string, globals *setting.GlobalsSetting, proxys []*setting.ProxyDataset) *TileProxy {
+func NewTileProxy(basePath string, globals *setting.GlobalsSetting, proxys []*setting.ProxyService) *TileProxy {
 	proxy := &TileProxy{basePath: basePath, globals: globals}
 	proxy.Reload(proxys)
 	return proxy

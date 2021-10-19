@@ -20,9 +20,9 @@ const (
 	TileService     ServiceType = 4
 )
 
-type Dataset struct {
+type Service struct {
 	setting.ProxyInstance
-	Identifier    string
+	UUID          string
 	Type          ServiceType
 	Service       service.Service
 	Grids         map[string]geo.Grid
@@ -32,9 +32,9 @@ type Dataset struct {
 	Caches        map[string]cache.Manager
 }
 
-func NewDataset(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) *Dataset {
-	ret := &Dataset{
-		Identifier:    dataset.Identifier,
+func NewService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) *Service {
+	ret := &Service{
+		UUID:          dataset.UUID,
 		Grids:         make(map[string]geo.Grid),
 		Sources:       make(map[string]layer.Layer),
 		Caches:        make(map[string]cache.Manager),
@@ -45,20 +45,20 @@ func NewDataset(dataset *setting.ProxyDataset, basePath string, globals *setting
 	return ret
 }
 
-func (s *Dataset) load(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) load(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
 	s.loadGrids(dataset, basePath, globals)
 	s.loadSources(dataset, basePath, globals)
 	s.loadCaches(dataset, basePath, globals)
 	s.loadService(dataset, basePath, globals)
 }
 
-func (s *Dataset) loadGrids(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadGrids(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
 	for k, g := range dataset.Grids {
 		s.Grids[k] = setting.ConvertGridOpts(&g)
 	}
 }
 
-func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
 	for k, src := range dataset.Sources {
 		switch source := src.(type) {
 		case *setting.WMSSource:
@@ -83,7 +83,7 @@ func (s *Dataset) loadSources(dataset *setting.ProxyDataset, basePath string, gl
 	}
 }
 
-func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
 		case *setting.CacheSource:
@@ -92,7 +92,7 @@ func (s *Dataset) loadCaches(dataset *setting.ProxyDataset, basePath string, glo
 	}
 }
 
-func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
 	switch srv := dataset.Service.(type) {
 	case *setting.TMSService:
 		s.Service = setting.LoadTMSService(srv, s)
@@ -109,39 +109,39 @@ func (s *Dataset) loadService(dataset *setting.ProxyDataset, basePath string, gl
 	}
 }
 
-func (s *Dataset) Clean() {
+func (s *Service) Clean() {
 }
 
-func (s *Dataset) GetIdentifier() string {
-	return s.Identifier
+func (s *Service) GetUUID() string {
+	return s.UUID
 }
 
-func (s *Dataset) GetServiceType() ServiceType {
+func (s *Service) GetServiceType() ServiceType {
 	return s.Type
 }
 
-func (s *Dataset) GetGrid(name string) geo.Grid {
+func (s *Service) GetGrid(name string) geo.Grid {
 	if g, ok := s.Grids[name]; ok {
 		return g
 	}
 	return nil
 }
 
-func (s *Dataset) GetSource(name string) layer.Layer {
+func (s *Service) GetSource(name string) layer.Layer {
 	if g, ok := s.Sources[name]; ok {
 		return g
 	}
 	return nil
 }
 
-func (s *Dataset) GetCache(name string) cache.Manager {
+func (s *Service) GetCache(name string) cache.Manager {
 	if l, ok := s.Caches[name]; ok {
 		return l
 	}
 	return nil
 }
 
-func (s *Dataset) GetCacheSource(name string) layer.Layer {
+func (s *Service) GetCacheSource(name string) layer.Layer {
 	manager := s.GetCache(name)
 	if manager != nil {
 		tile_grid := manager.GetGrid()
@@ -159,25 +159,25 @@ func (s *Dataset) GetCacheSource(name string) layer.Layer {
 	return nil
 }
 
-func (s *Dataset) GetInfoSource(name string) layer.InfoLayer {
+func (s *Service) GetInfoSource(name string) layer.InfoLayer {
 	if l, ok := s.InfoSources[name]; ok {
 		return l
 	}
 	return nil
 }
 
-func (s *Dataset) GetLegendSource(name string) layer.LegendLayer {
+func (s *Service) GetLegendSource(name string) layer.LegendLayer {
 	if l, ok := s.LegendSources[name]; ok {
 		return l
 	}
 	return nil
 }
 
-func (s *Dataset) GetService() service.Service {
+func (s *Service) GetService() service.Service {
 	return s.Service
 }
 
-func (s *Dataset) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.Service != nil {
 		s.Service.ServeHTTP(w, r)
 	}

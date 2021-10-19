@@ -14,7 +14,7 @@ type ProxyService struct {
 	Caches    map[string]interface{} `json:"caches,omitempty"`
 }
 
-func NewProxyService(nuuidame string) *ProxyService {
+func NewProxyService(uuid string) *ProxyService {
 	return &ProxyService{
 		UUID:      uuid,
 		Coverages: make(map[string]Coverage),

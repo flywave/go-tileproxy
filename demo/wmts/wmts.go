@@ -51,8 +51,8 @@ var (
 	}
 )
 
-func getProxyDataset() *setting.ProxyDataset {
-	pd := setting.NewProxyDataset("wmts")
+func getProxyService() *setting.ProxyService {
+	pd := setting.NewProxyService("wmts")
 	pd.Grids = demo.GridMap
 
 	pd.Sources["wmts"] = &wmtsTMSSource
@@ -62,15 +62,15 @@ func getProxyDataset() *setting.ProxyDataset {
 	return pd
 }
 
-func getDataset() *tileproxy.Dataset {
-	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals)
+func getService() *tileproxy.Service {
+	return tileproxy.NewService(getProxyService(), "../", &demo.Globals)
 }
 
-var dataset *tileproxy.Dataset
+var dataset *tileproxy.Service
 
-func DatasetServer(w http.ResponseWriter, req *http.Request) {
+func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	if dataset == nil {
-		dataset = getDataset()
+		dataset = getService()
 	}
 	dataset.Service.ServeHTTP(w, req)
 }
@@ -78,7 +78,7 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 //https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/11/710/1117.png
 //http://127.0.0.1:8000?service=WMTS&request=GetTile&version=1.0.0&layer=wmts_layer&style=&format=image/png&TileMatrixSet=GLOBAL_WEB_MERCATOR&TileMatrix=11&TileRow=1117&TileCol=710
 func main() {
-	http.HandleFunc("/", DatasetServer)
+	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

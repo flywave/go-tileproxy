@@ -106,8 +106,8 @@ var (
 	}
 )
 
-func getProxyDataset() *setting.ProxyDataset {
-	pd := setting.NewProxyDataset("mapbox")
+func getProxyService() *setting.ProxyService {
+	pd := setting.NewProxyService("mapbox")
 	pd.Grids = demo.GridMap
 
 	pd.Sources["mvt"] = &mapboxMVTSource
@@ -122,15 +122,15 @@ func getProxyDataset() *setting.ProxyDataset {
 	return pd
 }
 
-func getDataset() *tileproxy.Dataset {
-	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals)
+func getService() *tileproxy.Service {
+	return tileproxy.NewService(getProxyService(), "../", &demo.Globals)
 }
 
-var dataset *tileproxy.Dataset
+var dataset *tileproxy.Service
 
-func DatasetServer(w http.ResponseWriter, req *http.Request) {
+func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	if dataset == nil {
-		dataset = getDataset()
+		dataset = getService()
 	}
 	dataset.Service.ServeHTTP(w, req)
 }
@@ -146,7 +146,7 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 //http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite.png
 //http://127.0.0.1:8000/fonts/v1/examples/Arial%20Unicode%20MS%20Regular/0-255.pbf
 func main() {
-	http.HandleFunc("/", DatasetServer)
+	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

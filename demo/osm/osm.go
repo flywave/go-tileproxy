@@ -40,8 +40,8 @@ var (
 	}
 )
 
-func getProxyDataset() *setting.ProxyDataset {
-	pd := setting.NewProxyDataset("osm")
+func getProxyService() *setting.ProxyService {
+	pd := setting.NewProxyService("osm")
 	pd.Grids = demo.GridMap
 
 	pd.Sources["tms"] = &osmTMSSource
@@ -51,21 +51,21 @@ func getProxyDataset() *setting.ProxyDataset {
 	return pd
 }
 
-func getDataset() *tileproxy.Dataset {
-	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals)
+func getService() *tileproxy.Service {
+	return tileproxy.NewService(getProxyService(), "../", &demo.Globals)
 }
 
-var dataset *tileproxy.Dataset
+var dataset *tileproxy.Service
 
-func DatasetServer(w http.ResponseWriter, req *http.Request) {
+func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	if dataset == nil {
-		dataset = getDataset()
+		dataset = getService()
 	}
 	dataset.Service.ServeHTTP(w, req)
 }
 
 func main() {
-	http.HandleFunc("/", DatasetServer)
+	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

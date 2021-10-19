@@ -31,8 +31,8 @@ var (
 	}
 )
 
-func getProxyDataset() *setting.ProxyDataset {
-	pd := setting.NewProxyDataset("wms")
+func getProxyService() *setting.ProxyService {
+	pd := setting.NewProxyService("wms")
 	pd.Grids = demo.GridMap
 
 	pd.Sources["osm_wms"] = &wmsTMSSource
@@ -41,15 +41,15 @@ func getProxyDataset() *setting.ProxyDataset {
 	return pd
 }
 
-func getDataset() *tileproxy.Dataset {
-	return tileproxy.NewDataset(getProxyDataset(), "../", &demo.Globals)
+func getService() *tileproxy.Service {
+	return tileproxy.NewService(getProxyService(), "../", &demo.Globals)
 }
 
-var dataset *tileproxy.Dataset
+var dataset *tileproxy.Service
 
-func DatasetServer(w http.ResponseWriter, req *http.Request) {
+func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	if dataset == nil {
-		dataset = getDataset()
+		dataset = getService()
 	}
 	dataset.Service.ServeHTTP(w, req)
 }
@@ -58,7 +58,7 @@ func DatasetServer(w http.ResponseWriter, req *http.Request) {
 // http://127.0.0.1:8000/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fjpeg&TRANSPARENT=true&LAYERS=osm&WIDTH=256&HEIGHT=256&CRS=EPSG%3A21781&STYLES=&BBOX=705373.9428000001%2C124338.29039999997%2C749274.8168%2C168239.16439999998
 
 func main() {
-	http.HandleFunc("/", DatasetServer)
+	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

@@ -15,15 +15,15 @@ require (
 	github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d
-	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
+	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
-	github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8
+	github.com/flywave/go-tin v0.0.0-20210814015358-bf6f824e615b
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20211005091456-f6cf94b6f807
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322
 	github.com/gobwas/glob v0.2.3
-	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/gofrs/uuid v4.1.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/kennygrant/sanitize v1.2.4
@@ -36,7 +36,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
-	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
+	golang.org/x/net v0.0.0-20211020060615-d418f374d309
+	golang.org/x/sys v0.0.0-20211020064051-0ec99a608a1b
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )

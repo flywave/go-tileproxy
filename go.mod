@@ -13,9 +13,9 @@ require (
 	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
 	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
-	github.com/flywave/go-gpkg v0.0.0-20211020022141-9f42f3b73748 // indirect
+	github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb // indirect
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20211020024940-b74bf06d9809
+	github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d
 	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
 	github.com/flywave/go-proj v0.0.0-20210916052607-87a91fe342a8 // indirect
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d

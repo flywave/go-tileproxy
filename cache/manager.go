@@ -25,6 +25,8 @@ type Manager interface {
 	LoadTileCoord(tileCoord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error)
 	LoadTileCoords(tileCoord [][3]int, dimensions utils.Dimensions, with_metadata bool) (*TileCollection, error)
 	RemoveTileCoords(tileCoord [][3]int) error
+	StoreTile(tile *Tile) error
+	StoreTiles(tiles *TileCollection) error
 	IsCached(tileCoord [3]int, dimensions utils.Dimensions) bool
 	IsStale(tileCoord [3]int, dimensions utils.Dimensions) bool
 	ExpireTimestamp(tile *Tile) *time.Time

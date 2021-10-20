@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/flywave/go-tileproxy/cache"
+	"github.com/flywave/go-tileproxy/exports"
+	"github.com/flywave/go-tileproxy/imports"
 	"github.com/flywave/go-tileproxy/utils"
 )
 
@@ -38,6 +40,59 @@ type CleanupWorker struct {
 
 func (w *CleanupWorker) Run() {
 	err := w.manager.RemoveTileCoords(w.tiles)
+
+	if err != nil {
+		w.err = err
+	}
+}
+
+type ExportWorker struct {
+	Work
+	task    Task
+	io      exports.ExportIO
+	manager cache.Manager
+	tiles   [][3]int
+	err     error
+}
+
+func (w *ExportWorker) Run() {
+	tc, err := w.manager.LoadTileCoords(w.tiles, nil, false)
+
+	if err != nil {
+		w.err = err
+		return
+	}
+
+	err = w.io.StoreTileCollection(tc)
+
+	if err != nil {
+		w.err = err
+		return
+	}
+}
+
+type ImportWorker struct {
+	Work
+	task    Task
+	io      imports.ImportProvider
+	manager cache.Manager
+	tiles   [][3]int
+	err     error
+}
+
+func (w *ImportWorker) Run() {
+	tc, err := w.io.LoadTileCoords(w.tiles)
+
+	if err != nil {
+		w.err = err
+		return
+	}
+
+	if tc.Empty() {
+		return
+	}
+
+	err = w.manager.StoreTiles(tc)
 
 	if err != nil {
 		w.err = err

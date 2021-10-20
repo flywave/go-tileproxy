@@ -18,6 +18,7 @@ type Task interface {
 	GetLevels() []int
 	GetCoverage() geo.Coverage
 	Intersects(vec2d.Rect) IntersectionType
+	NewWork(handle_tiles [][3]int) Work
 }
 
 type BaseTask struct {
@@ -63,6 +64,10 @@ type TileSeedTask struct {
 	RefreshTimestamp *time.Time
 }
 
+func (t *TileSeedTask) NewWork(handle_tiles [][3]int) Work {
+	return &SeedWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+}
+
 func NewTileSeedTask(md map[string]string, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
 	return &TileSeedTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RefreshTimestamp: refresh_timestamp}
 }
@@ -81,10 +86,46 @@ type TileCleanupTask struct {
 	CompleteExtent  bool
 }
 
+func (t *TileCleanupTask) NewWork(handle_tiles [][3]int) Work {
+	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+}
+
 func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage, complete_extent bool) *TileCleanupTask {
 	return &TileCleanupTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RemoveTimestamp: remove_timestamp, CompleteExtent: complete_extent}
 }
 
 func (t *TileCleanupTask) GetID() string {
 	return fmt.Sprintf("cleanup %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
+}
+
+type TileExportTask struct {
+	BaseTask
+}
+
+func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
+	return &ExportWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+}
+
+func NewTileExportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
+	return &TileExportTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}}
+}
+
+func (t *TileExportTask) GetID() string {
+	return fmt.Sprintf("export %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
+}
+
+type TileImportTask struct {
+	BaseTask
+}
+
+func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
+	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+}
+
+func NewTileImportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
+	return &TileImportTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}}
+}
+
+func (t *TileImportTask) GetID() string {
+	return fmt.Sprintf("import %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
 }

@@ -259,6 +259,14 @@ func (tm *TileManager) RemoveTileCoords(tile_coords [][3]int) error {
 	return tm.cache.RemoveTiles(tiles)
 }
 
+func (tm *TileManager) StoreTile(tile *Tile) error {
+	return tm.cache.StoreTile(tile)
+}
+
+func (tm *TileManager) StoreTiles(tiles *TileCollection) error {
+	return tm.cache.StoreTiles(tiles)
+}
+
 func (tm *TileManager) IsCached(tile_coord [3]int, dimensions utils.Dimensions) bool {
 	tile := NewTile(tile_coord)
 	cached := tm.cache.IsCached(tile)

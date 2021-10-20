@@ -9,19 +9,19 @@ require (
 	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
-	github.com/flywave/go-geo v0.0.0-20210916052327-eae8abcfee59
+	github.com/flywave/go-geo v0.0.0-20211015074126-1d829acc3378
 	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
-	github.com/flywave/go-geos v0.0.0-20210901070302-5537e39a4985
+	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
 	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
-	github.com/flywave/go-gpkg v0.0.0-20210616060957-e0bebbe4933f // indirect
+	github.com/flywave/go-gpkg v0.0.0-20211020022141-9f42f3b73748 // indirect
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20210811060824-aa7db9dca12d
+	github.com/flywave/go-mapbox v0.0.0-20211020024940-b74bf06d9809
 	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
 	github.com/flywave/go-proj v0.0.0-20210916052607-87a91fe342a8 // indirect
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
 	github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
-	github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290
+	github.com/flywave/go3d v0.0.0-20211005091456-f6cf94b6f807
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322
 	github.com/gobwas/glob v0.2.3

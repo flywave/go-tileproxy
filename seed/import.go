@@ -11,15 +11,8 @@ func importTask(task *TileImportTask, concurrency int, skipGeomsForLastLevels in
 		return errors.New("task coverage is null!")
 	}
 
-	task.GetManager().SetMinimizeMetaRequests(false)
-
-	var work_on_metatiles bool
-	if task.GetManager().GetRescaleTiles() != 0 {
-		work_on_metatiles = false
-	}
-
 	tile_worker_pool := NewTileWorkerPool(concurrency, task, progress_logger)
-	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
+	tile_walker := NewTileWalker(task, tile_worker_pool, false, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
 	return nil

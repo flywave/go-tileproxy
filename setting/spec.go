@@ -558,3 +558,19 @@ type LocalStore struct {
 	Type      CacheType `json:"type,omitempty"`
 	Directory string    `json:"directory,omitempty"`
 }
+
+type Export struct {
+	Caches      []string  `json:"caches,omitempty"`
+	Grids       []string  `json:"grids,omitempty"`
+	Coverages   []string  `json:"coverages,omitempty"`
+	Levels      []int     `json:"levels,omitempty"`
+	Resolutions []float64 `json:"resolutions,omitempty"`
+}
+
+type Import struct {
+	Cache       string    `json:"cache,omitempty"`
+	Grids       []string  `json:"grids,omitempty"`
+	Coverages   []string  `json:"coverages,omitempty"`
+	Levels      []int     `json:"levels,omitempty"`
+	Resolutions []float64 `json:"resolutions,omitempty"`
+}

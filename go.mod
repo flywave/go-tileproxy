@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/andybalholm/brotli v1.0.3 // indirect
 	github.com/beevik/etree v1.1.0
-	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
@@ -13,11 +12,10 @@ require (
 	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
 	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
-	github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb // indirect
+	github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d
 	github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49
-	github.com/flywave/go-proj v0.0.0-20210916052607-87a91fe342a8 // indirect
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
 	github.com/flywave/go-tin v0.0.0-20210709095840-eb32125581f8
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67

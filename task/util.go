@@ -1,4 +1,4 @@
-package seed
+package task
 
 import (
 	"encoding/json"
@@ -72,7 +72,7 @@ func formatBBox(bbox vec2d.Rect) string {
 	return fmt.Sprintf("%.5f, %.5f, %.5f, %.5f", bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1])
 }
 
-func (p *DefaultProgressLogger) LogStep(progress *SeedProgress) {
+func (p *DefaultProgressLogger) LogStep(progress *TaskProgress) {
 	if !p.Verbose {
 		return
 	}
@@ -83,7 +83,7 @@ func (p *DefaultProgressLogger) LogStep(progress *SeedProgress) {
 	}
 }
 
-func (p *DefaultProgressLogger) LogProgress(progress *SeedProgress, level int, bbox vec2d.Rect, tiles int) {
+func (p *DefaultProgressLogger) LogProgress(progress *TaskProgress, level int, bbox vec2d.Rect, tiles int) {
 	progressInterval := 1
 	if !p.Verbose {
 		progressInterval = 30
@@ -216,4 +216,17 @@ func izip_longest(fillvalue interface{}, iterables ...interface{}) [][]interface
 	}
 
 	return results
+}
+
+func reverse(slice interface{}) interface{} {
+	s := reflect.ValueOf(slice)
+
+	if s.Kind() == reflect.Ptr {
+		s = s.Elem()
+	}
+	swp := reflect.Swapper(s.Interface())
+	for i, j := 0, s.Len()-1; i < j; i, j = i+1, j-1 {
+		swp(i, j)
+	}
+	return slice
 }

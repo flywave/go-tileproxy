@@ -1,4 +1,4 @@
-package seed
+package task
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"github.com/flywave/go-tileproxy/imports"
 )
 
-func importTask(task *TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
+func importTask(task *TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null!")
 	}
@@ -24,7 +24,7 @@ func Import(io imports.ImportProvider, tasks []*TileImportTask, concurrency int,
 	}
 
 	active_tasks := tasks[:]
-	reverse(active_tasks)
+	active_tasks = reverse(active_tasks).([]*TileImportTask)
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
@@ -36,7 +36,7 @@ func Import(io imports.ImportProvider, tasks []*TileImportTask, concurrency int,
 			} else {
 				start_progress = nil
 			}
-			seed_progress := &SeedProgress{oldLevelProgresses: start_progress}
+			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
 			return importTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileImportTask{task}, active_tasks[:len(active_tasks)-1]...)

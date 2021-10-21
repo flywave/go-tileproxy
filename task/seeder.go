@@ -1,12 +1,10 @@
-package seed
+package task
 
 import (
 	"errors"
-
-	"github.com/flywave/go-tileproxy/exports"
 )
 
-func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *SeedProgress) error {
+func seedTask(task *TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null!")
 	}
@@ -25,13 +23,13 @@ func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels in
 	return nil
 }
 
-func Export(io exports.ExportIO, tasks []*TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
+func Seed(tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
 
 	active_tasks := tasks[:]
-	reverse(active_tasks)
+	active_tasks = reverse(active_tasks).([]*TileSeedTask)
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
@@ -43,10 +41,10 @@ func Export(io exports.ExportIO, tasks []*TileExportTask, concurrency int, skipG
 			} else {
 				start_progress = nil
 			}
-			seed_progress := &SeedProgress{oldLevelProgresses: start_progress}
-			return exportTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
+			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
+			return seedTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
-			active_tasks = append([]*TileExportTask{task}, active_tasks[:len(active_tasks)-1]...)
+			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
 			active_tasks = active_tasks[:len(active_tasks)-1]
 		}

@@ -1,103 +1,11 @@
-package seed
+package task
 
 import (
 	"errors"
 	"sync"
 
-	"github.com/flywave/go-tileproxy/cache"
-	"github.com/flywave/go-tileproxy/exports"
-	"github.com/flywave/go-tileproxy/imports"
 	"github.com/flywave/go-tileproxy/utils"
 )
-
-type Work interface {
-	Run()
-}
-
-type SeedWorker struct {
-	Work
-	task    Task
-	manager cache.Manager
-	tiles   [][3]int
-	err     error
-}
-
-func (w *SeedWorker) Run() {
-	_, err := w.manager.LoadTileCoords(w.tiles, nil, false)
-
-	if err != nil {
-		w.err = err
-	}
-}
-
-type CleanupWorker struct {
-	Work
-	task    Task
-	manager cache.Manager
-	tiles   [][3]int
-	err     error
-}
-
-func (w *CleanupWorker) Run() {
-	err := w.manager.RemoveTileCoords(w.tiles)
-
-	if err != nil {
-		w.err = err
-	}
-}
-
-type ExportWorker struct {
-	Work
-	task    Task
-	io      exports.ExportIO
-	manager cache.Manager
-	tiles   [][3]int
-	err     error
-}
-
-func (w *ExportWorker) Run() {
-	tc, err := w.manager.LoadTileCoords(w.tiles, nil, false)
-
-	if err != nil {
-		w.err = err
-		return
-	}
-
-	err = w.io.StoreTileCollection(tc)
-
-	if err != nil {
-		w.err = err
-		return
-	}
-}
-
-type ImportWorker struct {
-	Work
-	task    Task
-	io      imports.ImportProvider
-	manager cache.Manager
-	tiles   [][3]int
-	err     error
-}
-
-func (w *ImportWorker) Run() {
-	tc, err := w.io.LoadTileCoords(w.tiles)
-
-	if err != nil {
-		w.err = err
-		return
-	}
-
-	if tc.Empty() {
-		return
-	}
-
-	err = w.manager.StoreTiles(tc)
-
-	if err != nil {
-		w.err = err
-	}
-}
 
 type workerQueue struct {
 	Threads int
@@ -230,7 +138,7 @@ func (q *workerQueue) loadRequest() (Work, error) {
 }
 
 type WorkerPool interface {
-	Process(tiles Work, progress *SeedProgress)
+	Process(tiles Work, progress *TaskProgress)
 }
 
 type TileWorkerPool struct {
@@ -246,7 +154,7 @@ func NewTileWorkerPool(threads int, task Task, logger ProgressLogger) *TileWorke
 	return &TileWorkerPool{Queue: queue, Logger: logger, Task: task}
 }
 
-func (p *TileWorkerPool) Process(tiles Work, progress *SeedProgress) {
+func (p *TileWorkerPool) Process(tiles Work, progress *TaskProgress) {
 	p.Queue.AddRequest(tiles)
 
 	if p.Logger != nil {

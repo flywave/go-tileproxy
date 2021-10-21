@@ -1,10 +1,10 @@
-package seed
+package task
 
 import (
 	"testing"
 )
 
-func TestSeedProgressCanSkip(t *testing.T) {
+func TestTaskProgressCanSkip(t *testing.T) {
 	test_old_progress := [][]interface{}{
 		nil,
 		{},
@@ -48,51 +48,13 @@ func TestSeedProgressCanSkip(t *testing.T) {
 		false,
 	}
 
-	seed := &SeedProgress{}
+	seed := &TaskProgress{}
 
 	for i := range test_result {
 		if i == 7 {
 			print("")
 		}
 		if test_result[i] != seed.canSkip(test_old_progress[i], test_current_progress[i]) {
-			t.FailNow()
-		}
-	}
-}
-
-func TestCleanupProgressCanSkip(t *testing.T) {
-	test_old_dir := []string{
-		"",
-		"",
-		"/01/000/001",
-		"/01/000/001",
-		"/01/000/001",
-		"/01/000/001",
-		"/01/000/001",
-	}
-	test_current_dir := []string{
-		"/00",
-		"/00/000/000",
-		"/00",
-		"/01/000/000",
-		"/01/000/000/000",
-		"/01/000/001",
-		"/01/000/001/000",
-	}
-	test_result := []bool{
-		false,
-		false,
-		true,
-		true,
-		true,
-		false,
-		false,
-	}
-
-	seed := &DirectoryCleanupProgress{}
-
-	for i := range test_result {
-		if test_result[i] != seed.canSkip(test_old_dir[i], test_current_dir[i]) {
 			t.FailNow()
 		}
 	}
@@ -112,8 +74,8 @@ func assert(a []interface{}, b [][2]int, t *testing.T) {
 	}
 }
 
-func TestSeedProgress(t *testing.T) {
-	old := NewSeedProgress(nil)
+func TestTaskProgress(t *testing.T) {
+	old := NewTaskProgress(nil)
 
 	old.StepDown(0, 2, func() bool {
 		old.StepDown(0, 4, func() bool {
@@ -151,8 +113,8 @@ func TestSeedProgress(t *testing.T) {
 	})
 }
 
-func TestSeedProgressAlreadyProcessed(t *testing.T) {
-	new := NewSeedProgress([]interface{}{[2]int{0, 2}})
+func TestTaskProgressAlreadyProcessed(t *testing.T) {
+	new := NewTaskProgress([]interface{}{[2]int{0, 2}})
 	new.StepDown(0, 2, func() bool {
 		if new.AlreadyProcessed() {
 			t.FailNow()
@@ -166,7 +128,7 @@ func TestSeedProgressAlreadyProcessed(t *testing.T) {
 		return true
 	})
 
-	new = NewSeedProgress([]interface{}{[2]int{1, 2}})
+	new = NewTaskProgress([]interface{}{[2]int{1, 2}})
 	new.StepDown(0, 2, func() bool {
 		if !new.AlreadyProcessed() {
 			t.FailNow()
@@ -180,7 +142,7 @@ func TestSeedProgressAlreadyProcessed(t *testing.T) {
 		return true
 	})
 
-	new = NewSeedProgress([]interface{}{[2]int{0, 2}, [2]int{1, 4}, [2]int{2, 4}})
+	new = NewTaskProgress([]interface{}{[2]int{0, 2}, [2]int{1, 4}, [2]int{2, 4}})
 	new.StepDown(0, 2, func() bool {
 		if new.AlreadyProcessed() {
 			t.FailNow()

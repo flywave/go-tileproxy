@@ -1,11 +1,11 @@
-package seed
+package task
 
 import (
 	"math"
 	"strings"
 )
 
-type SeedProgress struct {
+type TaskProgress struct {
 	progress                 float32
 	levelProgressPercentages []float32
 	levelProgresses          []interface{}
@@ -14,15 +14,15 @@ type SeedProgress struct {
 	oldLevelProgresses       []interface{}
 }
 
-func NewSeedProgress(oldLevelProgresses []interface{}) *SeedProgress {
-	return &SeedProgress{progress: 0.0, levelProgressPercentages: []float32{1.0}, levelProgressesLevel: 0, progressStrParts: []string{}, oldLevelProgresses: oldLevelProgresses}
+func NewTaskProgress(oldLevelProgresses []interface{}) *TaskProgress {
+	return &TaskProgress{progress: 0.0, levelProgressPercentages: []float32{1.0}, levelProgressesLevel: 0, progressStrParts: []string{}, oldLevelProgresses: oldLevelProgresses}
 }
 
-func (p *SeedProgress) StepForward(subtiles int) {
+func (p *TaskProgress) StepForward(subtiles int) {
 	p.progress += float32(p.levelProgressPercentages[len(p.levelProgressPercentages)-1]) / float32(subtiles)
 }
 
-func (p *SeedProgress) ToString() string {
+func (p *TaskProgress) ToString() string {
 	return strings.Join(p.progressStrParts, "")
 }
 
@@ -37,7 +37,7 @@ func statusSymbol(i, total int) string {
 	}
 }
 
-func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
+func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 	if p.levelProgresses == nil {
 		p.levelProgresses = []interface{}{}
 	}
@@ -61,22 +61,22 @@ func (p *SeedProgress) StepDown(i, subtiles int, task func() bool) bool {
 	return true
 }
 
-func (p *SeedProgress) Running() bool {
+func (p *TaskProgress) Running() bool {
 	return true
 }
 
-func (p *SeedProgress) AlreadyProcessed() bool {
+func (p *TaskProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }
 
-func (p *SeedProgress) CurrentProgressIdentifier() interface{} {
+func (p *TaskProgress) CurrentProgressIdentifier() interface{} {
 	if p.AlreadyProcessed() || p.levelProgresses == nil {
 		return p.oldLevelProgresses
 	}
 	return p.levelProgresses[:]
 }
 
-func (p *SeedProgress) canSkip(old_progress, current_progress []interface{}) bool {
+func (p *TaskProgress) canSkip(old_progress, current_progress []interface{}) bool {
 	if current_progress == nil {
 		return false
 	}

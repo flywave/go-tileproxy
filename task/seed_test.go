@@ -1,4 +1,4 @@
-package seed
+package task
 
 import (
 	"testing"
@@ -72,7 +72,7 @@ type mockWorkerPool struct {
 	seedTiles map[int][][2]int
 }
 
-func (p *mockWorkerPool) Process(work Work, progress *SeedProgress) {
+func (p *mockWorkerPool) Process(work Work, progress *TaskProgress) {
 	if p.seedTiles == nil {
 		p.seedTiles = make(map[int][][2]int)
 	}
@@ -102,7 +102,7 @@ func (c *mockMVTSourceCreater) Create(data []byte, tile [3]int) tile.Source {
 	return source
 }
 
-func seeder(bbox vec2d.Rect, levels []int, seedProgress *SeedProgress, t *testing.T) map[int][][2]int {
+func seeder(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *testing.T) map[int][][2]int {
 	mock := &mockClient{code: 200, body: []byte{0}}
 	ctx := &mockContext{c: mock}
 
@@ -275,7 +275,7 @@ func TestSeederGeom(t *testing.T) {
 }
 
 func TestSeederFullBBoxContinue(t *testing.T) {
-	seedProgress := NewSeedProgress([]interface{}{[2]int{0, 1}, [2]int{1, 2}})
+	seedProgress := NewTaskProgress([]interface{}{[2]int{0, 1}, [2]int{1, 2}})
 	seeded_tiles := seeder(vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, []int{0, 1, 2}, seedProgress, t)
 
 	if len(seeded_tiles) != 3 {

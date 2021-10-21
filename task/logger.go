@@ -1,4 +1,4 @@
-package seed
+package task
 
 import vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -12,8 +12,8 @@ type ProgressStore interface {
 
 type ProgressLogger interface {
 	LogMessage(msg string)
-	LogStep(progress *SeedProgress)
-	LogProgress(seed *SeedProgress, level int, bbox vec2d.Rect, tiles int)
+	LogStep(progress *TaskProgress)
+	LogProgress(seed *TaskProgress, level int, bbox vec2d.Rect, tiles int)
 	SetCurrentTaskId(id string)
 	GetStore() ProgressStore
 }

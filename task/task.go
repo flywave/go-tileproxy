@@ -1,4 +1,4 @@
-package seed
+package task
 
 import (
 	"fmt"
@@ -83,15 +83,14 @@ func (t *TileSeedTask) GetID() string {
 type TileCleanupTask struct {
 	BaseTask
 	RemoveTimestamp time.Time
-	CompleteExtent  bool
 }
 
 func (t *TileCleanupTask) NewWork(handle_tiles [][3]int) Work {
 	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles}
 }
 
-func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage, complete_extent bool) *TileCleanupTask {
-	return &TileCleanupTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RemoveTimestamp: remove_timestamp, CompleteExtent: complete_extent}
+func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
+	return &TileCleanupTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RemoveTimestamp: remove_timestamp}
 }
 
 func (t *TileCleanupTask) GetID() string {

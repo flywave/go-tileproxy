@@ -1,4 +1,4 @@
-package seed
+package task
 
 import (
 	"fmt"

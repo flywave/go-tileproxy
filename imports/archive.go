@@ -25,7 +25,7 @@ type ArchiveImport struct {
 	tempDir      string
 	md           *mbtiles.Metadata
 	options      tile.TileOptions
-	grid         geo.Grid
+	grid         *geo.TileGrid
 	coverage     geo.Coverage
 	creater      tile.SourceCreater
 	tileLocation func(*cache.Tile, string, string, bool) string
@@ -172,7 +172,7 @@ func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 	return nil
 }
 
-func (a *ArchiveImport) getTileGrid(md *mbtiles.Metadata) geo.Grid {
+func (a *ArchiveImport) getTileGrid(md *mbtiles.Metadata) *geo.TileGrid {
 	conf := geo.DefaultTileGridOptions()
 
 	if md.Srs == "" {

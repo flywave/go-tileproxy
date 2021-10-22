@@ -17,7 +17,7 @@ type GeoPackageExport struct {
 	Uri    string
 	Name   string
 	optios tile.TileOptions
-	grid   geo.Grid
+	grid   *geo.TileGrid
 	db     *gpkg.GeoPackage
 	bounds vec2d.Rect
 }

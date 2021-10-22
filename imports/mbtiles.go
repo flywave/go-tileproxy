@@ -18,7 +18,7 @@ type MBTilesImport struct {
 	filename string
 	md       *mbtiles.Metadata
 	options  tile.TileOptions
-	grid     geo.Grid
+	grid     *geo.TileGrid
 	coverage geo.Coverage
 	creater  tile.SourceCreater
 	db       *mbtiles.DB
@@ -126,7 +126,7 @@ func (a *MBTilesImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 	return nil
 }
 
-func (a *MBTilesImport) getTileGrid(md *mbtiles.Metadata) geo.Grid {
+func (a *MBTilesImport) getTileGrid(md *mbtiles.Metadata) *geo.TileGrid {
 	conf := geo.DefaultTileGridOptions()
 
 	if md.Srs == "" {

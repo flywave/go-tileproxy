@@ -80,7 +80,7 @@ func (a *GeoPackageImport) GetTileFormat() tile.TileFormat {
 	return a.options.GetFormat()
 }
 
-func (a *GeoPackageImport) GetGrid() geo.Grid {
+func (a *GeoPackageImport) GetGrid() *geo.TileGrid {
 	grid, err := a.db.GetTileGrid(a.tableName)
 	if err != nil {
 		return nil

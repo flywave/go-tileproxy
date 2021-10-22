@@ -9,7 +9,7 @@ import (
 type ImportProvider interface {
 	Open() error
 	GetTileFormat() tile.TileFormat
-	GetGrid() geo.Grid
+	GetGrid() *geo.TileGrid
 	GetZoomLevels() []int
 	GetCoverage() geo.Coverage
 	LoadTileCoord(t [3]int) (*cache.Tile, error)

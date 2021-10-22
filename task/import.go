@@ -8,7 +8,7 @@ import (
 
 func importTask(task *TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
-		return errors.New("task coverage is null!")
+		return errors.New("task coverage is null")
 	}
 
 	tile_worker_pool := NewTileWorkerPool(concurrency, task, progress_logger)

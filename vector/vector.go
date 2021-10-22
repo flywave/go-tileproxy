@@ -206,7 +206,7 @@ func (c *VectorSourceCreater) GetExtension() string {
 	return c.Opt.Format.Extension()
 }
 
-func EncodeRaster(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error) {
+func EncodeVector(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error) {
 	if opts.Format.Extension() == "mvt" {
 		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
 		return io.Encode(data)
@@ -220,7 +220,7 @@ func EncodeRaster(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error)
 	return nil, errors.New("the format not support")
 }
 
-func DecodeRaster(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, error) {
+func DecodeVector(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, error) {
 	if opts.Format.Extension() == "mvt" {
 		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
 		return io.Decode(reader)

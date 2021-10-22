@@ -16,8 +16,8 @@ type GeoPackageExport struct {
 	ExportIO
 	Uri    string
 	Name   string
-	Optios tile.TileOptions
-	Grid   geo.Grid
+	optios tile.TileOptions
+	grid   geo.Grid
 	db     *gpkg.GeoPackage
 	bounds vec2d.Rect
 }
@@ -30,8 +30,8 @@ func NewGeoPackageExport(uri string, name string, g *geo.TileGrid, optios tile.T
 	ge := &GeoPackageExport{
 		Uri:    uri,
 		Name:   name,
-		Grid:   g,
-		Optios: optios,
+		grid:   g,
+		optios: optios,
 		bounds: vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal},
 		db:     gpkg.Create(uri),
 	}
@@ -44,11 +44,15 @@ func NewGeoPackageExport(uri string, name string, g *geo.TileGrid, optios tile.T
 }
 
 func (a *GeoPackageExport) GetTileFormat() tile.TileFormat {
-	return a.Optios.GetFormat()
+	return a.optios.GetFormat()
 }
 
 func (a *GeoPackageExport) StoreTile(t *cache.Tile) error {
-	data := t.Source.GetBuffer(nil, a.Optios)
+	data, err := cache.EncodeTile(a.optios, t.Coord, t.Source)
+
+	if err != nil {
+		return err
+	}
 
 	if err := a.db.StoreTile(a.Name, t.Coord[2], t.Coord[0], t.Coord[1], data); err != nil {
 		return err
@@ -60,7 +64,7 @@ func (a *GeoPackageExport) StoreTile(t *cache.Tile) error {
 }
 
 func (a *GeoPackageExport) expand(t *cache.Tile) error {
-	bbox := a.Grid.TileBBox(t.Coord, false)
+	bbox := a.grid.TileBBox(t.Coord, false)
 	a.bounds.Join(&bbox)
 	return nil
 }

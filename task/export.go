@@ -8,7 +8,7 @@ import (
 
 func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
-		return errors.New("task coverage is null!")
+		return errors.New("task coverage is null")
 	}
 
 	task.GetManager().SetMinimizeMetaRequests(false)

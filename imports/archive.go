@@ -15,6 +15,7 @@ import (
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
+	"github.com/flywave/go-tileproxy/vector"
 	"github.com/mholt/archiver/v3"
 )
 
@@ -23,15 +24,15 @@ type ArchiveImport struct {
 	fileName     string
 	tempDir      string
 	md           *mbtiles.Metadata
-	Options      tile.TileOptions
-	Grid         geo.Grid
-	Coverage     geo.Coverage
-	Creater      tile.SourceCreater
+	options      tile.TileOptions
+	grid         geo.Grid
+	coverage     geo.Coverage
+	creater      tile.SourceCreater
 	tileLocation func(*cache.Tile, string, string, bool) string
 }
 
-func NewArchiveImport(fileName string) *ArchiveImport {
-	return &ArchiveImport{fileName: fileName}
+func NewArchiveImport(fileName string, opts tile.TileOptions) *ArchiveImport {
+	return &ArchiveImport{fileName: fileName, options: opts}
 }
 
 func (a *ArchiveImport) Open() error {
@@ -70,19 +71,25 @@ func (a *ArchiveImport) Open() error {
 	}
 
 	a.md = &md
-	a.Options = a.getTileOptions(a.md)
-	a.Grid = a.getTileGrid(a.md)
-	a.Coverage = a.getTileCoverage(a.md)
-	a.Creater = cache.GetSourceCreater(a.Options)
+	if a.options == nil {
+		a.options = a.getTileOptions(a.md)
+	}
+	a.grid = a.getTileGrid(a.md)
+	a.coverage = a.getTileCoverage(a.md)
+	a.creater = cache.GetSourceCreater(a.options)
 
-	var directoryLayout string
-	if a.md.DirectoryLayout == "" {
-		directoryLayout = mbtiles.DEFAULT_DIRECTORY_LAYOUT
-	} else {
-		directoryLayout = a.md.DirectoryLayout
+	if a.options == nil || a.grid == nil || a.coverage == nil || a.creater == nil {
+		return errors.New("count open mbtiles")
 	}
 
-	pathLoc, _, err := cache.LocationPaths(directoryLayout)
+	var layout string
+	if a.md.DirectoryLayout == "" {
+		layout = mbtiles.DEFAULT_DIRECTORY_LAYOUT
+	} else {
+		layout = a.md.DirectoryLayout
+	}
+
+	pathLoc, _, err := cache.LocationPaths(layout)
 	if err != nil {
 		return nil
 	}
@@ -97,7 +104,7 @@ func (a *ArchiveImport) Close() error {
 }
 
 func (a *ArchiveImport) GetTileFormat() tile.TileFormat {
-	return a.Options.GetFormat()
+	return a.options.GetFormat()
 }
 
 func (a *ArchiveImport) GetExtension() string {
@@ -106,11 +113,11 @@ func (a *ArchiveImport) GetExtension() string {
 }
 
 func (a *ArchiveImport) GetGrid() geo.Grid {
-	return a.Grid
+	return a.grid
 }
 
 func (a *ArchiveImport) GetCoverage() geo.Coverage {
-	return a.Coverage
+	return a.coverage
 }
 
 func (a *ArchiveImport) GetZoomLevels() []int {
@@ -127,7 +134,7 @@ func (a *ArchiveImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
 
 	if utils.FileExists(location) {
 		data, _ := os.ReadFile(location)
-		tile.Source = a.Creater.Create(data, tile.Coord)
+		tile.Source = a.creater.Create(data, tile.Coord)
 		return tile, nil
 	}
 	return nil, nil
@@ -150,10 +157,6 @@ func (a *ArchiveImport) TileLocation(tile *cache.Tile) string {
 	return a.tileLocation(tile, "", a.GetExtension(), false)
 }
 
-func (a *ArchiveImport) buildTilePath(tile *cache.Tile) string {
-	return a.TileLocation(tile)
-}
-
 func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 	format := md.Format.String()
 	switch format {
@@ -164,7 +167,7 @@ func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 	case "webp":
 		return &imagery.ImageOptions{Format: tile.TileFormat(format)}
 	case "pbf":
-		return &imagery.ImageOptions{Format: tile.TileFormat("mvt")}
+		return &vector.VectorOptions{Format: tile.TileFormat("mvt")}
 	}
 	return nil
 }

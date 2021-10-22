@@ -156,10 +156,10 @@ func (s *LocalProgressStore) Load() map[string]interface{} {
 		return nil
 	} else {
 		f, err := os.Open(s.filename)
-		defer f.Close()
 		if err != nil {
 			return nil
 		}
+		defer f.Close()
 		d, err := ioutil.ReadAll(f)
 		if err != nil {
 			return nil

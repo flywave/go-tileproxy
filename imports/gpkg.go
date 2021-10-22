@@ -3,8 +3,6 @@ package imports
 import (
 	"errors"
 
-	vec2d "github.com/flywave/go3d/float64/vec2"
-
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpkg"
 	"github.com/flywave/go-tileproxy/cache"
@@ -14,23 +12,22 @@ import (
 
 type GeoPackageImport struct {
 	ImportProvider
-	filename string
-	Options  tile.TileOptions
-	Levels   []int
-	Creater  tile.SourceCreater
-	db       *gpkg.GeoPackage
-	tiles    gpkg.TileMatrixSet
+	filename  string
+	options   tile.TileOptions
+	creater   tile.SourceCreater
+	db        *gpkg.GeoPackage
+	tableName string
 }
 
-func NewGeoPackageImport(filename string) *GeoPackageImport {
-	return &GeoPackageImport{filename: filename}
+func NewGeoPackageImport(filename string, opts tile.TileOptions) *GeoPackageImport {
+	return &GeoPackageImport{filename: filename, options: opts}
 }
 
 func (a *GeoPackageImport) Open() error {
 	a.db = gpkg.New(a.filename)
 
 	if !a.db.Exists() {
-		return errors.New("file not found!")
+		return errors.New("file not found")
 	}
 
 	if err := a.db.Init(); err != nil {
@@ -40,30 +37,33 @@ func (a *GeoPackageImport) Open() error {
 	if tms, err := a.db.GetTileMatrixSets(); err != nil {
 		return err
 	} else if len(tms) > 0 {
-		a.tiles = tms[0]
+		a.tableName = tms[0].Name
 	} else {
-		return errors.New("not found tile table!")
+		return errors.New("not found tile table")
 	}
 
-	format, err := a.db.GetTileFormat(a.tiles.Name)
-	if err != nil {
-		return nil
-	}
-	switch format.String() {
-	case "png":
-		a.Options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-	case "jpg":
-		a.Options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-	case "webp":
-		a.Options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-	case "pbf":
-		a.Options = &imagery.ImageOptions{Format: tile.TileFormat("mvt")}
+	if a.options == nil {
+		format, err := a.db.GetTileFormat(a.tableName)
+		if err != nil {
+			return nil
+		}
+
+		switch format.String() {
+		case "png":
+			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
+		case "jpg":
+			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
+		case "webp":
+			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
+		case "pbf":
+			a.options = &imagery.ImageOptions{Format: tile.TileFormat("mvt")}
+		}
 	}
 
-	if a.Options != nil {
-		a.Creater = cache.GetSourceCreater(a.Options)
+	if a.options != nil {
+		a.creater = cache.GetSourceCreater(a.options)
 	} else {
-		return errors.New("format not found!")
+		return errors.New("format not found")
 	}
 
 	return nil
@@ -77,45 +77,29 @@ func (a *GeoPackageImport) Close() error {
 }
 
 func (a *GeoPackageImport) GetTileFormat() tile.TileFormat {
-	return a.Options.GetFormat()
+	return a.options.GetFormat()
 }
 
 func (a *GeoPackageImport) GetGrid() geo.Grid {
-	_, res, err := a.db.GetZoomLevelsAndResolutions(a.tiles.Name)
-	if err != nil {
-		return nil
-	}
-	tileWith, err := a.db.GetTileWidth(a.tiles.Name)
-	if err != nil {
-		return nil
-	}
-	tileHeight, err := a.db.GetTileHeight(a.tiles.Name)
-	if err != nil {
-		return nil
-	}
-	srsid, err := a.db.GetTileSrsId(a.tiles.Name)
+	grid, err := a.db.GetTileGrid(a.tableName)
 	if err != nil {
 		return nil
 	}
 
-	conf := geo.DefaultTileGridOptions()
-
-	conf[geo.TILEGRID_SRS] = geo.NewProj(srsid)
-	conf[geo.TILEGRID_RES] = res
-	conf[geo.TILEGRID_TILE_SIZE] = []uint32{uint32(tileWith), uint32(tileHeight)}
-	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
-
-	return geo.NewTileGrid(conf)
+	return grid
 }
 
 func (a *GeoPackageImport) GetCoverage() geo.Coverage {
-	bbox := vec2d.Rect{Min: vec2d.T{*a.tiles.MinX, *a.tiles.MinY}, Max: vec2d.T{*a.tiles.MaxX, *a.tiles.MaxY}}
-	prj := geo.NewProj(*a.tiles.SpatialReferenceSystemId)
-	return geo.NewBBoxCoverage(bbox, prj, false)
+	cov, err := a.db.GetCoverage(a.tableName)
+	if err != nil {
+		return nil
+	}
+
+	return cov
 }
 
 func (a *GeoPackageImport) GetZoomLevels() []int {
-	levels, _, err := a.db.GetZoomLevelsAndResolutions(a.tiles.Name)
+	levels, err := a.db.GetTileZoomLevels(a.tableName)
 	if err != nil {
 		return nil
 	}
@@ -123,12 +107,12 @@ func (a *GeoPackageImport) GetZoomLevels() []int {
 }
 
 func (a *GeoPackageImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
-	data, err := a.db.GetTile(a.tiles.Name, t[2], t[0], t[1])
+	data, err := a.db.GetTile(a.tableName, t[2], t[0], t[1])
 	if err != nil {
 		return nil, err
 	}
 	tile := cache.NewTile(t)
-	tile.Source = a.Creater.Create(data, tile.Coord)
+	tile.Source = a.creater.Create(data, tile.Coord)
 	return tile, nil
 }
 

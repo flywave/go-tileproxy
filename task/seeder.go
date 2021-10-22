@@ -6,7 +6,7 @@ import (
 
 func seedTask(task *TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
-		return errors.New("task coverage is null!")
+		return errors.New("task coverage is null")
 	}
 
 	task.GetManager().SetMinimizeMetaRequests(false)

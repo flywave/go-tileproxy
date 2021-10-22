@@ -1,6 +1,8 @@
 package imports
 
 import (
+	"errors"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
@@ -8,21 +10,22 @@ import (
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
+	"github.com/flywave/go-tileproxy/vector"
 )
 
 type MBTilesImport struct {
 	ImportProvider
 	filename string
 	md       *mbtiles.Metadata
-	Options  tile.TileOptions
-	Grid     geo.Grid
-	Coverage geo.Coverage
-	Creater  tile.SourceCreater
+	options  tile.TileOptions
+	grid     geo.Grid
+	coverage geo.Coverage
+	creater  tile.SourceCreater
 	db       *mbtiles.DB
 }
 
-func NewMBTilesImport(filename string) *MBTilesImport {
-	return &MBTilesImport{filename: filename}
+func NewMBTilesImport(filename string, opts tile.TileOptions) *MBTilesImport {
+	return &MBTilesImport{filename: filename, options: opts}
 }
 
 func (a *MBTilesImport) Open() error {
@@ -37,10 +40,17 @@ func (a *MBTilesImport) Open() error {
 		return err
 	}
 
-	a.Options = a.getTileOptions(a.md)
-	a.Grid = a.getTileGrid(a.md)
-	a.Coverage = a.getTileCoverage(a.md)
-	a.Creater = cache.GetSourceCreater(a.Options)
+	if a.options == nil {
+		a.options = a.getTileOptions(a.md)
+	}
+
+	a.grid = a.getTileGrid(a.md)
+	a.coverage = a.getTileCoverage(a.md)
+	a.creater = cache.GetSourceCreater(a.options)
+
+	if a.options == nil || a.grid == nil || a.coverage == nil || a.creater == nil {
+		return errors.New("count open mbtiles")
+	}
 
 	return nil
 }
@@ -53,7 +63,7 @@ func (a *MBTilesImport) Close() error {
 }
 
 func (a *MBTilesImport) GetTileFormat() tile.TileFormat {
-	return a.Options.GetFormat()
+	return a.options.GetFormat()
 }
 
 func (a *MBTilesImport) GetExtension() string {
@@ -62,11 +72,11 @@ func (a *MBTilesImport) GetExtension() string {
 }
 
 func (a *MBTilesImport) GetGrid() geo.Grid {
-	return a.Grid
+	return a.grid
 }
 
 func (a *MBTilesImport) GetCoverage() geo.Coverage {
-	return a.Coverage
+	return a.coverage
 }
 
 func (a *MBTilesImport) GetZoomLevels() []int {
@@ -84,7 +94,7 @@ func (a *MBTilesImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
 		return nil, err
 	}
 	tile := cache.NewTile(t)
-	tile.Source = a.Creater.Create(data, tile.Coord)
+	tile.Source = a.creater.Create(data, tile.Coord)
 	return tile, nil
 }
 
@@ -111,7 +121,7 @@ func (a *MBTilesImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 	case "webp":
 		return &imagery.ImageOptions{Format: tile.TileFormat(format)}
 	case "pbf":
-		return &imagery.ImageOptions{Format: tile.TileFormat("mvt")}
+		return &vector.VectorOptions{Format: tile.TileFormat("mvt")}
 	}
 	return nil
 }

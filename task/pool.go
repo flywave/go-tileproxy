@@ -59,7 +59,7 @@ func (q *workerQueue) IsRuning() bool {
 
 func (q *workerQueue) Run() error {
 	q.mut.Lock()
-	if q.wake != nil && q.running == true {
+	if q.wake != nil && q.running {
 		q.mut.Unlock()
 		panic("cannot call duplicate Queue.Run")
 	}

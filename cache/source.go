@@ -1,6 +1,10 @@
 package cache
 
 import (
+	"errors"
+	"io"
+	"io/ioutil"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
@@ -70,4 +74,29 @@ func MaskImageSourceFromCoverage(source tile.Source, bbox vec2d.Rect, bbox_srs g
 		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, op)
 	}
 	return nil
+}
+
+func EncodeTile(opts tile.TileOptions, tile [3]int, data tile.Source) ([]byte, error) {
+	switch opt := opts.(type) {
+	case *imagery.ImageOptions:
+		return data.GetBuffer(nil, opts), nil
+	case *terrain.RasterOptions:
+		return terrain.EncodeRaster(opt, data.GetTile().(*terrain.TileData))
+	case *vector.VectorOptions:
+		return vector.EncodeVector(opt, tile, data.GetTile().(vector.Vector))
+	}
+	return nil, errors.New("error")
+}
+
+func DecodeTile(opts tile.TileOptions, tile [3]int, reader io.Reader) (tile.Source, error) {
+	data, _ := ioutil.ReadAll(reader)
+	switch opt := opts.(type) {
+	case *imagery.ImageOptions:
+		return imagery.CreateImageSourceFromBufer(data, opt), nil
+	case *terrain.RasterOptions:
+		return terrain.CreateRasterSourceFromBufer(data, opt), nil
+	case *vector.VectorOptions:
+		return vector.CreateVectorSourceFromBufer(data, tile, opt), nil
+	}
+	return nil, errors.New("error")
 }

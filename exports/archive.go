@@ -153,10 +153,6 @@ func (a *ArchiveExport) TileLocation(tile *cache.Tile) string {
 	return a.tileLocation(tile, "", a.GetExtension(), false)
 }
 
-func (a *ArchiveExport) buildTilePath(tile *cache.Tile) string {
-	return a.TileLocation(tile)
-}
-
 type readerCloser struct {
 	buf *bytes.Buffer
 }
@@ -192,7 +188,7 @@ func (a *ArchiveExport) writeTile(t *cache.Tile) error {
 		return err
 	}
 
-	name := a.buildTilePath(t)
+	name := a.TileLocation(t)
 
 	err = a.writer.Write(archiver.File{
 		FileInfo: archiver.FileInfo{

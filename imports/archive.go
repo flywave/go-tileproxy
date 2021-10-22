@@ -100,7 +100,7 @@ func (a *ArchiveImport) Open() error {
 }
 
 func (a *ArchiveImport) Close() error {
-	return os.Remove(a.tempDir)
+	return os.RemoveAll(a.tempDir)
 }
 
 func (a *ArchiveImport) GetTileFormat() tile.TileFormat {
@@ -174,16 +174,19 @@ func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 
 func (a *ArchiveImport) getTileGrid(md *mbtiles.Metadata) geo.Grid {
 	conf := geo.DefaultTileGridOptions()
+
 	if md.Srs == "" {
 		conf[geo.TILEGRID_SRS] = geo.NewProj(mbtiles.DEFAULT_SRS)
 	} else {
 		conf[geo.TILEGRID_SRS] = geo.NewProj(md.Srs)
 	}
+
 	if md.Origin == "" {
 		conf[geo.TILEGRID_ORIGIN] = geo.OriginFromString(mbtiles.DEFAULT_ORIGIN)
 	} else {
 		conf[geo.TILEGRID_ORIGIN] = geo.OriginFromString(md.Origin)
 	}
+
 	if md.ResFactor == nil {
 		conf[geo.TILEGRID_RES_FACTOR] = mbtiles.DEFAULT_RES_FACTOR
 	} else {

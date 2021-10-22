@@ -12,9 +12,9 @@ require (
 	github.com/flywave/go-geom v0.0.0-20210811013133-346faa537513
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
 	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
-	github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb
+	github.com/flywave/go-gpkg v0.0.0-20211021143551-766c82d57b76
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d
+	github.com/flywave/go-mapbox v0.0.0-20211022004321-3e97479a070a
 	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
 	github.com/flywave/go-tin v0.0.0-20210814015358-bf6f824e615b
@@ -30,6 +30,7 @@ require (
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.8 // indirect

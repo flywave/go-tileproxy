@@ -49,11 +49,17 @@ github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680 h1:Kiq6r19Zb3d1
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb h1:dkVCKVGJq185N4VlBco1BfF48oY/thxfnMOKCLc9VFs=
 github.com/flywave/go-gpkg v0.0.0-20211020072317-e56b7f074bdb/go.mod h1:IiyCEeP/PFR/TnvII30k6oq3vZxXh4RY9Q8+Hmds8s8=
+github.com/flywave/go-gpkg v0.0.0-20211021143551-766c82d57b76 h1:20F7wnBBKetX+bfei75gD8JI9Mbfje1+rklfpAJF6A4=
+github.com/flywave/go-gpkg v0.0.0-20211021143551-766c82d57b76/go.mod h1:vPZRfa20yC3TZWsBwSyzoXLSOKtDRQaSK4JJEvjMNEE=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuqnZcTgZirpm7RlAcXGA1C4MkXPF5Y=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9/go.mod h1:ViGRrCXmuOf68/rpxR2fHy9nKOxdCKgCFd5+/iyWRTs=
 github.com/flywave/go-mapbox v0.0.0-20210811060824-aa7db9dca12d/go.mod h1:FPaerFAwteQTHe6idQfouVsWvk95+gOxZpnlDuEJcR0=
 github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d h1:T0DyoFV1fTZWWH6tp3bD03eoU9RgOah4Vrih9T4Xuxk=
 github.com/flywave/go-mapbox v0.0.0-20211020084512-a803d6c7b43d/go.mod h1:FPaerFAwteQTHe6idQfouVsWvk95+gOxZpnlDuEJcR0=
+github.com/flywave/go-mapbox v0.0.0-20211021151513-7e80d704db1c h1:JsGBTlUjuh364fTZmSwjiNvpaiEVbU1QoCJgS0Iivjs=
+github.com/flywave/go-mapbox v0.0.0-20211021151513-7e80d704db1c/go.mod h1:FPaerFAwteQTHe6idQfouVsWvk95+gOxZpnlDuEJcR0=
+github.com/flywave/go-mapbox v0.0.0-20211022004321-3e97479a070a h1:hq/Kyj1hJjtfvTh+fQIrQapIyoNtv2/3/ZZbBXCsp1A=
+github.com/flywave/go-mapbox v0.0.0-20211022004321-3e97479a070a/go.mod h1:FPaerFAwteQTHe6idQfouVsWvk95+gOxZpnlDuEJcR0=
 github.com/flywave/go-mbgeom v0.0.0-20210810083149-1030db15bc49/go.mod h1:djwhTOYaEDChMPoEka2L5P/SaFP0JJpCwvHjNutLmck=
 github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4 h1:hxK07K6obrhfqjbCOPR9SGoQs79KOF6i9T5ZxqmpqO4=
 github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4/go.mod h1:sUjJf2Kd42EOnBtA8lSTYUhUso0Bxu+CYpPEC/l3wks=
@@ -143,6 +149,8 @@ github.com/lucasb-eyer/go-colorful v1.2.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i
 github.com/mattn/go-sqlite3 v1.14.0/go.mod h1:JIl7NbARA7phWnGvh0LKTyg7S9BA+6gx71ShQilpsus=
 github.com/mattn/go-sqlite3 v1.14.8 h1:gDp86IdQsN/xWjIEmr9MF6o9mpksUgh0fu+9ByFxzIU=
 github.com/mattn/go-sqlite3 v1.14.8/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
+github.com/mattn/go-sqlite3 v1.14.9 h1:10HX2Td0ocZpYEjhilsuo6WWtUqttj2Kb0KtD86/KYA=
+github.com/mattn/go-sqlite3 v1.14.9/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/mholt/archiver/v3 v3.5.0 h1:nE8gZIrw66cu4osS/U7UW7YDuGMHssxKutU8IfWxwWE=
 github.com/mholt/archiver/v3 v3.5.0/go.mod h1:qqTTPUK/HZPFgFQ/TJ3BzvTpF/dPtFVJXdQbCmeMxwc=
 github.com/minio/md5-simd v1.1.0/go.mod h1:XpBqgZULrMYD3R+M28PcmP0CkI7PEMzB3U77ZrKZ0Gw=

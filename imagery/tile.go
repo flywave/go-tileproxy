@@ -87,6 +87,7 @@ func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSou
 			geo.MinInt(maxy, mrect.Dy())))
 
 		result := CreateImage(tile_size, t.Options)
+
 		dcresult := gg.NewContextForImage(result)
 
 		dcresult.DrawImage(crop, geo.AbsInt(geo.MinInt(minx, 0)), geo.AbsInt(geo.MinInt(miny, 0)))

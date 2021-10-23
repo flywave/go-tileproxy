@@ -66,6 +66,7 @@ func NewArchiveExport(filename string, g *geo.TileGrid, optios tile.TileOptions,
 	} else {
 		return nil, errors.New("only support .tar.gz or .zip")
 	}
+
 	return &ArchiveExport{
 		Name:         filename,
 		grid:         g,

@@ -47,10 +47,6 @@ github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026/go.mod h1:5nZRI3ua
 github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680 h1:Kiq6r19Zb3d1yqx6tpwccxk90nAEKWzqEEpPp3A6Yi4=
 github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
-github.com/flywave/go-gpkg v0.0.0-20211021143551-766c82d57b76 h1:20F7wnBBKetX+bfei75gD8JI9Mbfje1+rklfpAJF6A4=
-github.com/flywave/go-gpkg v0.0.0-20211021143551-766c82d57b76/go.mod h1:vPZRfa20yC3TZWsBwSyzoXLSOKtDRQaSK4JJEvjMNEE=
-github.com/flywave/go-gpkg v0.0.0-20211022093220-bb36b05906ea h1:LJZE7+y5h2aJFzzctiC751qp76hgmZUyz+VBOsonm6Q=
-github.com/flywave/go-gpkg v0.0.0-20211022093220-bb36b05906ea/go.mod h1:vPZRfa20yC3TZWsBwSyzoXLSOKtDRQaSK4JJEvjMNEE=
 github.com/flywave/go-gpkg v0.0.0-20211022122711-30792d4d5c81 h1:3A93vfX0SFWMsfbase0u+By+P6DMwXwEYVbg29FuJ+0=
 github.com/flywave/go-gpkg v0.0.0-20211022122711-30792d4d5c81/go.mod h1:vPZRfa20yC3TZWsBwSyzoXLSOKtDRQaSK4JJEvjMNEE=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuqnZcTgZirpm7RlAcXGA1C4MkXPF5Y=

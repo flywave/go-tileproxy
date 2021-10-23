@@ -526,51 +526,7 @@ type WMSLayer struct {
 	LegendStore        interface{}              `json:"legendstore"`
 }
 
-type TimeSpec struct {
-	Seconds int       `json:"seconds,omitempty"`
-	Minutes int       `json:"minutes,omitempty"`
-	Hours   int       `json:"hours,omitempty"`
-	Days    int       `json:"days,omitempty"`
-	Weeks   int       `json:"weeks,omitempty"`
-	Time    time.Time `json:"time,omitempty"`
-}
-
-type Seed struct {
-	Caches        []string  `json:"caches,omitempty"`
-	Grids         []string  `json:"grids,omitempty"`
-	Coverages     []string  `json:"coverages,omitempty"`
-	Levels        []int     `json:"levels,omitempty"`
-	Resolutions   []float64 `json:"resolutions,omitempty"`
-	RefreshBefore TimeSpec  `json:"refresh_before,omitempty"`
-}
-
-type Cleanup struct {
-	Caches       []string  `json:"caches,omitempty"`
-	Grids        []string  `json:"grids,omitempty"`
-	Coverages    []string  `json:"coverages,omitempty"`
-	Levels       []int     `json:"levels,omitempty"`
-	Resolutions  []float64 `json:"resolutions,omitempty"`
-	RemoveBefore TimeSpec  `json:"remove_before,omitempty"`
-	RemoveAll    bool      `json:"remove_all,omitempty"`
-}
-
 type LocalStore struct {
 	Type      CacheType `json:"type,omitempty"`
 	Directory string    `json:"directory,omitempty"`
-}
-
-type Export struct {
-	Caches      []string  `json:"caches,omitempty"`
-	Grids       []string  `json:"grids,omitempty"`
-	Coverages   []string  `json:"coverages,omitempty"`
-	Levels      []int     `json:"levels,omitempty"`
-	Resolutions []float64 `json:"resolutions,omitempty"`
-}
-
-type Import struct {
-	Cache       string    `json:"cache,omitempty"`
-	Grids       []string  `json:"grids,omitempty"`
-	Coverages   []string  `json:"coverages,omitempty"`
-	Levels      []int     `json:"levels,omitempty"`
-	Resolutions []float64 `json:"resolutions,omitempty"`
 }

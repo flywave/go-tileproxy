@@ -19,7 +19,15 @@ type MapboxTileSource struct {
 }
 
 func NewMapboxTileSource(grid *geo.TileGrid, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater, cache *resource.TileJSONCache) *MapboxTileSource {
-	return &MapboxTileSource{Grid: grid, Client: c, MapLayer: layer.MapLayer{Options: opts}, SourceCreater: creater, Cache: cache}
+	return &MapboxTileSource{
+		Grid:   grid,
+		Client: c,
+		MapLayer: layer.MapLayer{
+			Options: opts,
+		},
+		SourceCreater: creater,
+		Cache:         cache,
+	}
 }
 
 func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {

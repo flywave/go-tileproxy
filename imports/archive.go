@@ -36,13 +36,23 @@ func NewArchiveImport(fileName string, opts tile.TileOptions) *ArchiveImport {
 }
 
 func (a *ArchiveImport) Open() error {
-	p, err := ioutil.TempDir(os.TempDir(), "import")
+	p, err := ioutil.TempDir(os.TempDir(), "import-")
 
 	if err != nil {
 		return err
 	}
 
 	a.tempDir = p
+
+	_, err = archiver.ByExtension(a.fileName)
+
+	if err != nil {
+		return err
+	}
+
+	if !utils.FileExists(a.fileName) {
+		return errors.New("not found archiver")
+	}
 
 	err = archiver.Unarchive(a.fileName, a.tempDir)
 	if err != nil {
@@ -55,12 +65,13 @@ func (a *ArchiveImport) Open() error {
 		return errors.New("not found metadata.json")
 	}
 
-	f, err := os.Open(mdpath)
+	mdf, err := os.Open(mdpath)
 	if err != nil {
 		return err
 	}
+	defer mdf.Close()
 
-	mddata, err := ioutil.ReadAll(f)
+	mddata, err := ioutil.ReadAll(mdf)
 	if err != nil {
 		return err
 	}
@@ -91,7 +102,7 @@ func (a *ArchiveImport) Open() error {
 
 	pathLoc, _, err := cache.LocationPaths(layout)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	a.tileLocation = pathLoc
@@ -137,7 +148,7 @@ func (a *ArchiveImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
 		tile.Source = a.creater.Create(data, tile.Coord)
 		return tile, nil
 	}
-	return nil, nil
+	return nil, errors.New("file not found")
 }
 
 func (a *ArchiveImport) LoadTileCoords(t [][3]int) (*cache.TileCollection, error) {
@@ -154,7 +165,7 @@ func (a *ArchiveImport) LoadTileCoords(t [][3]int) (*cache.TileCollection, error
 }
 
 func (a *ArchiveImport) TileLocation(tile *cache.Tile) string {
-	return a.tileLocation(tile, "", a.GetExtension(), false)
+	return path.Join(a.tempDir, a.tileLocation(tile, "", a.GetExtension(), false))
 }
 
 func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {

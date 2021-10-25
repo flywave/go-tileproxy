@@ -27,7 +27,19 @@ func NewMBTilesExport(uri string, g *geo.TileGrid, optios tile.TileOptions) (*MB
 	if err != nil {
 		return nil, err
 	}
-	return &MBTilesExport{Uri: uri, grid: g, optios: optios, bounds: vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}, db: db, boundsSrs: geo.NewProj("EPSG:4326")}, nil
+	return &MBTilesExport{
+		Uri:    uri,
+		grid:   g,
+		optios: optios,
+		bounds: vec2d.Rect{
+			Min: vec2d.MaxVal,
+			Max: vec2d.MinVal,
+		},
+		db:        db,
+		boundsSrs: geo.NewProj("EPSG:4326"),
+		minZoom:   30,
+		maxZoom:   0,
+	}, nil
 }
 
 func (a *MBTilesExport) GetTileFormat() tile.TileFormat {
@@ -96,7 +108,7 @@ func (a *MBTilesExport) buildMetadata() *mbtiles.Metadata {
 	md.TileSize[0] = int(a.grid.TileSize[0])
 	md.TileSize[1] = int(a.grid.TileSize[1])
 
-	return nil
+	return md
 }
 
 func (a *MBTilesExport) expand(t *cache.Tile) error {

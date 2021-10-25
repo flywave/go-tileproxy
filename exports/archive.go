@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"path/filepath"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -24,7 +28,6 @@ type ArchiveExport struct {
 	ExportIO
 	Name         string
 	layout       string
-	archiveExt   string
 	optios       tile.TileOptions
 	grid         *geo.TileGrid
 	writer       archiver.Writer
@@ -56,25 +59,31 @@ func NewArchiveExport(filename string, g *geo.TileGrid, optios tile.TileOptions,
 		return nil, err
 	}
 
-	archiveExt := filepath.Ext(filename)
-
 	var writer archiver.Writer
-	if archiveExt == TARGZ {
+	if strings.HasSuffix(filename, TARGZ) {
 		writer = archiver.NewTarGz()
-	} else if archiveExt == ZIP {
+	} else if strings.HasSuffix(filename, ZIP) {
 		writer = archiver.NewZip()
 	} else {
 		return nil, errors.New("only support .tar.gz or .zip")
+	}
+
+	if f, err := os.Create(filename); err != nil {
+		return nil, err
+	} else {
+		if err := writer.Create(f); err != nil {
+			return nil, err
+		}
 	}
 
 	return &ArchiveExport{
 		Name:         filename,
 		grid:         g,
 		layout:       directoryLayout,
-		archiveExt:   archiveExt,
 		writer:       writer,
+		optios:       optios,
 		bounds:       vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal},
-		minZoom:      20,
+		minZoom:      30,
 		maxZoom:      0,
 		tileLocation: pathLoc,
 		boundsSrs:    geo.NewProj("EPSG:4326"),
@@ -107,8 +116,28 @@ func (a *ArchiveExport) Close() error {
 	md := a.buildMetadata()
 	data, _ := json.Marshal(md)
 
-	err := a.writer.Write(archiver.File{
+	p, err := ioutil.TempFile(os.TempDir(), "metadata-")
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		p.Close()
+		os.Remove(p.Name())
+	}()
+
+	p.Write(data)
+
+	info, err := p.Stat()
+
+	if err != nil {
+		return err
+	}
+
+	err = a.writer.Write(archiver.File{
 		FileInfo: archiver.FileInfo{
+			FileInfo:   info,
 			CustomName: mbtiles.METADATA_JSON,
 		},
 		ReadCloser: &readerCloser{buf: bytes.NewBuffer(data)},
@@ -147,7 +176,7 @@ func (a *ArchiveExport) buildMetadata() *mbtiles.Metadata {
 	md.TileSize[0] = int(a.grid.TileSize[0])
 	md.TileSize[1] = int(a.grid.TileSize[1])
 
-	return nil
+	return md
 }
 
 func (a *ArchiveExport) TileLocation(tile *cache.Tile) string {
@@ -191,8 +220,28 @@ func (a *ArchiveExport) writeTile(t *cache.Tile) error {
 
 	name := a.TileLocation(t)
 
+	p, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*-%s", path.Base(name)))
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		p.Close()
+		os.Remove(p.Name())
+	}()
+
+	p.Write(data)
+
+	info, err := p.Stat()
+
+	if err != nil {
+		return err
+	}
+
 	err = a.writer.Write(archiver.File{
 		FileInfo: archiver.FileInfo{
+			FileInfo:   info,
 			CustomName: name,
 		},
 		ReadCloser: &readerCloser{buf: bytes.NewBuffer(data)},

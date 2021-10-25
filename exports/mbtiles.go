@@ -10,7 +10,7 @@ import (
 )
 
 type MBTilesExport struct {
-	ExportIO
+	Export
 	Name      string
 	Uri       string
 	optios    tile.TileOptions

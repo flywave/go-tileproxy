@@ -14,7 +14,7 @@ import (
 )
 
 type MBTilesImport struct {
-	ImportProvider
+	Import
 	filename string
 	md       *mbtiles.Metadata
 	options  tile.TileOptions
@@ -71,7 +71,7 @@ func (a *MBTilesImport) GetExtension() string {
 	return format.Extension()
 }
 
-func (a *MBTilesImport) GetGrid() geo.Grid {
+func (a *MBTilesImport) GetGrid() *geo.TileGrid {
 	return a.grid
 }
 

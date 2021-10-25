@@ -25,7 +25,7 @@ func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels in
 	return nil
 }
 
-func Export(io exports.ExportIO, tasks []*TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
+func Export(io exports.Export, tasks []*TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}

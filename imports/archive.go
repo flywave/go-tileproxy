@@ -20,7 +20,7 @@ import (
 )
 
 type ArchiveImport struct {
-	ImportProvider
+	Import
 	fileName     string
 	tempDir      string
 	md           *mbtiles.Metadata
@@ -123,7 +123,7 @@ func (a *ArchiveImport) GetExtension() string {
 	return format.Extension()
 }
 
-func (a *ArchiveImport) GetGrid() geo.Grid {
+func (a *ArchiveImport) GetGrid() *geo.TileGrid {
 	return a.grid
 }
 

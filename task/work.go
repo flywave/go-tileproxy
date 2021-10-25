@@ -45,7 +45,7 @@ func (w *CleanupWorker) Run() {
 type ExportWorker struct {
 	Work
 	task    Task
-	io      exports.ExportIO
+	io      exports.Export
 	manager cache.Manager
 	tiles   [][3]int
 	err     error
@@ -70,7 +70,7 @@ func (w *ExportWorker) Run() {
 type ImportWorker struct {
 	Work
 	task    Task
-	io      imports.ImportProvider
+	io      imports.Import
 	manager cache.Manager
 	tiles   [][3]int
 	err     error

@@ -11,7 +11,7 @@ import (
 )
 
 type GeoPackageImport struct {
-	ImportProvider
+	Import
 	filename  string
 	options   tile.TileOptions
 	creater   tile.SourceCreater

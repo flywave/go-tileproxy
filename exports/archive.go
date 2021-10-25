@@ -25,7 +25,7 @@ const (
 )
 
 type ArchiveExport struct {
-	ExportIO
+	Export
 	Name         string
 	layout       string
 	optios       tile.TileOptions

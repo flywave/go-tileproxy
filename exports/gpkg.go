@@ -13,7 +13,7 @@ import (
 )
 
 type GeoPackageExport struct {
-	ExportIO
+	Export
 	Uri    string
 	Name   string
 	optios tile.TileOptions

@@ -24,7 +24,7 @@ func TestLocalProgressStore(t *testing.T) {
 	store.Store("1", []int{0, 1})
 	store.Store("2", []int{0, 1})
 
-	store.Save()
+	store.flush()
 
 	store = NewLocalProgressStore("./test.task", true)
 

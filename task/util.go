@@ -98,7 +98,6 @@ func (p *DefaultProgressLogger) LogProgress(progress *TaskProgress, level int, b
 	if logProgess {
 		if p.ProgressStore != nil && p.CurrentTaskId != "" {
 			p.ProgressStore.Store(p.CurrentTaskId, progress.CurrentProgressIdentifier())
-			p.ProgressStore.Save()
 		}
 	}
 
@@ -121,7 +120,7 @@ type LocalProgressStore struct {
 func NewLocalProgressStore(filename string, continue_seed bool) *LocalProgressStore {
 	ret := &LocalProgressStore{filename: filename}
 	if continue_seed {
-		ret.status = ret.Load()
+		ret.status = ret.load()
 	} else {
 		ret.status = map[string]interface{}{}
 	}
@@ -142,6 +141,7 @@ func (s *LocalProgressStore) unmarshal(data []byte) error {
 
 func (s *LocalProgressStore) Store(id string, progress interface{}) {
 	s.status[id] = progress
+	s.flush()
 }
 
 func (s *LocalProgressStore) Get(id string) interface{} {
@@ -151,7 +151,7 @@ func (s *LocalProgressStore) Get(id string) interface{} {
 	return nil
 }
 
-func (s *LocalProgressStore) Load() map[string]interface{} {
+func (s *LocalProgressStore) load() map[string]interface{} {
 	if !utils.FileExists(s.filename) {
 		return nil
 	} else {
@@ -172,12 +172,12 @@ func (s *LocalProgressStore) Load() map[string]interface{} {
 	}
 }
 
-func (s *LocalProgressStore) Save() error {
+func (s *LocalProgressStore) flush() error {
 	data := s.marshal()
 	return os.WriteFile(s.filename, data, os.ModePerm)
 }
 
-func (s *LocalProgressStore) Remove() error {
+func (s *LocalProgressStore) remove() error {
 	s.status = map[string]interface{}{}
 	if utils.FileExists(s.filename) {
 		return os.Remove(s.filename)

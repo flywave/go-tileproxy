@@ -99,13 +99,13 @@ func (a *ArchiveExport) GetExtension() string {
 	return format.Extension()
 }
 
-func (a *ArchiveExport) StoreTile(t *cache.Tile) error {
-	return a.writeTile(t)
+func (a *ArchiveExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
+	return a.writeTile(t, srcGrid)
 }
 
-func (a *ArchiveExport) StoreTileCollection(ts *cache.TileCollection) error {
+func (a *ArchiveExport) StoreTileCollection(ts *cache.TileCollection, srcGrid *geo.TileGrid) error {
 	for _, t := range ts.GetSlice() {
-		if err := a.writeTile(t); err != nil {
+		if err := a.writeTile(t, srcGrid); err != nil {
 			return err
 		}
 	}
@@ -211,14 +211,23 @@ func (a *ArchiveExport) expand(t *cache.Tile) error {
 	return nil
 }
 
-func (a *ArchiveExport) writeTile(t *cache.Tile) error {
-	data, err := cache.EncodeTile(a.optios, t.Coord, t.Source)
+func (a *ArchiveExport) writeTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
+	dc, err := cache.TransformCoord(t.Coord, srcGrid, a.grid)
 
 	if err != nil {
 		return err
 	}
 
-	name := a.TileLocation(t)
+	dstTile := *t
+	dstTile.Coord = dc
+
+	data, err := cache.EncodeTile(a.optios, dstTile.Coord, dstTile.Source)
+
+	if err != nil {
+		return err
+	}
+
+	name := a.TileLocation(&dstTile)
 
 	p, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*-%s", path.Base(name)))
 
@@ -248,7 +257,7 @@ func (a *ArchiveExport) writeTile(t *cache.Tile) error {
 	})
 
 	if err == nil {
-		a.expand(t)
+		a.expand(&dstTile)
 	}
 
 	return err

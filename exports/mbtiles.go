@@ -46,25 +46,34 @@ func (a *MBTilesExport) GetTileFormat() tile.TileFormat {
 	return a.optios.GetFormat()
 }
 
-func (a *MBTilesExport) StoreTile(t *cache.Tile) error {
-	data, err := cache.EncodeTile(a.optios, t.Coord, t.Source)
+func (a *MBTilesExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
+	dc, err := cache.TransformCoord(t.Coord, srcGrid, a.grid)
 
 	if err != nil {
 		return err
 	}
 
-	if err := a.db.StoreTile(uint8(t.Coord[2]), uint64(t.Coord[0]), uint64(t.Coord[1]), data); err != nil {
+	dstTile := *t
+	dstTile.Coord = dc
+
+	data, err := cache.EncodeTile(a.optios, dstTile.Coord, dstTile.Source)
+
+	if err != nil {
+		return err
+	}
+
+	if err := a.db.StoreTile(uint8(dc[2]), uint64(dc[0]), uint64(dc[1]), data); err != nil {
 		return err
 	} else {
-		a.expand(t)
+		a.expand(&dstTile)
 	}
 
 	return nil
 }
 
-func (a *MBTilesExport) StoreTileCollection(ts *cache.TileCollection) error {
+func (a *MBTilesExport) StoreTileCollection(ts *cache.TileCollection, srcGrid *geo.TileGrid) error {
 	for _, t := range ts.GetSlice() {
-		if err := a.StoreTile(t); err != nil {
+		if err := a.StoreTile(t, srcGrid); err != nil {
 			return err
 		}
 	}

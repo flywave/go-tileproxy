@@ -27,10 +27,10 @@ func TestArchiveExport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile := cache.NewTile([3]int{1, 1, 1})
+	tile := cache.NewTile([3]int{0, 0, 2})
 	tile.Source = cache.GetEmptyTile([2]uint32{256, 256}, imageopts)
 
-	export.StoreTile(tile)
+	export.StoreTile(tile, grid)
 
 	export.Close()
 
@@ -53,10 +53,10 @@ func TestGeoPackageExport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile := cache.NewTile([3]int{1, 1, 1})
+	tile := cache.NewTile([3]int{0, 0, 2})
 	tile.Source = cache.GetEmptyTile([2]uint32{256, 256}, imageopts)
 
-	export.StoreTile(tile)
+	export.StoreTile(tile, grid)
 
 	export.Close()
 
@@ -78,10 +78,10 @@ func TestMBTilesExport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile := cache.NewTile([3]int{1, 1, 1})
+	tile := cache.NewTile([3]int{0, 0, 2})
 	tile.Source = cache.GetEmptyTile([2]uint32{256, 256}, imageopts)
 
-	export.StoreTile(tile)
+	export.StoreTile(tile, grid)
 
 	export.Close()
 

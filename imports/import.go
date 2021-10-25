@@ -15,8 +15,8 @@ type Import interface {
 	GetGrid() *geo.TileGrid
 	GetZoomLevels() []int
 	GetCoverage() geo.Coverage
-	LoadTileCoord(t [3]int) (*cache.Tile, error)
-	LoadTileCoords(t [][3]int) (*cache.TileCollection, error)
+	LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile, error)
+	LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error)
 	Close() error
 }
 

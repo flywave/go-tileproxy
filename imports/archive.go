@@ -139,23 +139,30 @@ func (a *ArchiveImport) GetZoomLevels() []int {
 	return rets
 }
 
-func (a *ArchiveImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
-	tile := cache.NewTile(t)
+func (a *ArchiveImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile, error) {
+	dc, err := cache.TransformCoord(t, grid, a.grid)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tile := cache.NewTile(dc)
 	location := a.TileLocation(tile)
 
 	if utils.FileExists(location) {
 		data, _ := os.ReadFile(location)
 		tile.Source = a.creater.Create(data, tile.Coord)
+		tile.Coord = t
 		return tile, nil
 	}
 	return nil, errors.New("file not found")
 }
 
-func (a *ArchiveImport) LoadTileCoords(t [][3]int) (*cache.TileCollection, error) {
+func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error) {
 	var errs error
 	tiles := cache.NewTileCollection(nil)
 	for _, tc := range t {
-		if t, err := a.LoadTileCoord(tc); err != nil {
+		if t, err := a.LoadTileCoord(tc, grid); err != nil {
 			errs = err
 		} else if t != nil {
 			tiles.SetItem(t)

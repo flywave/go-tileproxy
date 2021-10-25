@@ -1,9 +1,11 @@
 package cache
 
 import (
+	"errors"
 	"image"
 	"time"
 
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -62,4 +64,20 @@ func (t *Tile) Eq(o *Tile) bool {
 		return false
 	}
 	return true
+}
+
+func TransformCoord(coord [3]int, src *geo.TileGrid, dst *geo.TileGrid) ([3]int, error) {
+	if src == dst || dst == nil || src == nil {
+		return coord, nil
+	}
+	bbox := src.TileBBox(coord, false)
+	_, grids, tiles, _ := dst.GetAffectedTiles(bbox, [2]uint32{dst.TileSize[0], dst.TileSize[1]}, src.Srs)
+
+	if grids != [2]int{1, 1} {
+		return [3]int{}, errors.New("BBOX does not align to tile")
+	}
+
+	x, y, z, _ := tiles.Next()
+
+	return [3]int{x, y, z}, nil
 }

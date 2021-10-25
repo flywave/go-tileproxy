@@ -74,6 +74,7 @@ func NewWMSService(rootLayer *WMSGroupLayer, layers map[string]WMSLayer, metadat
 			return ret.Legendgraphic(r)
 		},
 	}
+
 	ret.requestParser = func(r *http.Request) request.Request {
 		return request.MakeWMSRequest(r, false)
 	}

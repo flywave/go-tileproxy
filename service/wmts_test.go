@@ -16,7 +16,6 @@ import (
 )
 
 func TestWMTSCapabilities(t *testing.T) {
-
 	service := &WMTSMetadata{}
 	service.URL = "http://flywave.net"
 	service.Title = "flywave"

@@ -17,7 +17,7 @@ func TestArchiveImport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile, err := import_.LoadTileCoord([3]int{1, 1, 1})
+	tile, err := import_.LoadTileCoord([3]int{0, 0, 2}, nil)
 
 	if err != nil {
 		t.FailNow()
@@ -39,7 +39,7 @@ func TestGeoPackageImport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile, err := import_.LoadTileCoord([3]int{1, 1, 1})
+	tile, err := import_.LoadTileCoord([3]int{0, 0, 2}, nil)
 
 	if err != nil {
 		t.FailNow()
@@ -61,7 +61,7 @@ func TestMBTilesImport(t *testing.T) {
 		t.FailNow()
 	}
 
-	tile, err := import_.LoadTileCoord([3]int{1, 1, 1})
+	tile, err := import_.LoadTileCoord([3]int{0, 0, 2}, nil)
 
 	if err != nil {
 		t.FailNow()

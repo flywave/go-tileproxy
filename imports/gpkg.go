@@ -16,6 +16,7 @@ type GeoPackageImport struct {
 	options   tile.TileOptions
 	creater   tile.SourceCreater
 	db        *gpkg.GeoPackage
+	grid      *geo.TileGrid
 	tableName string
 }
 
@@ -66,6 +67,8 @@ func (a *GeoPackageImport) Open() error {
 		return errors.New("format not found")
 	}
 
+	a.grid = a.GetGrid()
+
 	return nil
 }
 
@@ -106,8 +109,14 @@ func (a *GeoPackageImport) GetZoomLevels() []int {
 	return levels
 }
 
-func (a *GeoPackageImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
-	data, err := a.db.GetTile(a.tableName, t[2], t[0], t[1])
+func (a *GeoPackageImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile, error) {
+	dc, err := cache.TransformCoord(t, grid, a.grid)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := a.db.GetTile(a.tableName, dc[2], dc[0], dc[1])
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +125,11 @@ func (a *GeoPackageImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
 	return tile, nil
 }
 
-func (a *GeoPackageImport) LoadTileCoords(t [][3]int) (*cache.TileCollection, error) {
+func (a *GeoPackageImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error) {
 	var errs error
 	tiles := cache.NewTileCollection(nil)
 	for _, tc := range t {
-		if t, err := a.LoadTileCoord(tc); err != nil {
+		if t, err := a.LoadTileCoord(tc, grid); err != nil {
 			errs = err
 		} else if t != nil {
 			tiles.SetItem(t)

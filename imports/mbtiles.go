@@ -87,9 +87,15 @@ func (a *MBTilesImport) GetZoomLevels() []int {
 	return rets
 }
 
-func (a *MBTilesImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
+func (a *MBTilesImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile, error) {
+	dc, err := cache.TransformCoord(t, grid, a.grid)
+
+	if err != nil {
+		return nil, err
+	}
+
 	var data []byte
-	err := a.db.ReadTile(uint8(t[2]), uint64(t[0]), uint64(t[1]), &data)
+	err = a.db.ReadTile(uint8(dc[2]), uint64(dc[0]), uint64(dc[1]), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +104,11 @@ func (a *MBTilesImport) LoadTileCoord(t [3]int) (*cache.Tile, error) {
 	return tile, nil
 }
 
-func (a *MBTilesImport) LoadTileCoords(t [][3]int) (*cache.TileCollection, error) {
+func (a *MBTilesImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error) {
 	var errs error
 	tiles := cache.NewTileCollection(nil)
 	for _, tc := range t {
-		if t, err := a.LoadTileCoord(tc); err != nil {
+		if t, err := a.LoadTileCoord(tc, grid); err != nil {
 			errs = err
 		} else if t != nil {
 			tiles.SetItem(t)

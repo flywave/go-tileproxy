@@ -13,8 +13,8 @@ import (
 
 type Export interface {
 	GetTileFormat() tile.TileFormat
-	StoreTile(t *cache.Tile) error
-	StoreTileCollection(ts *cache.TileCollection) error
+	StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error
+	StoreTileCollection(ts *cache.TileCollection, srcGrid *geo.TileGrid) error
 	Close() error
 }
 

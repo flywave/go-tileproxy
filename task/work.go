@@ -59,7 +59,7 @@ func (w *ExportWorker) Run() {
 		return
 	}
 
-	err = w.io.StoreTileCollection(tc)
+	err = w.io.StoreTileCollection(tc, w.manager.GetGrid())
 
 	if err != nil {
 		w.err = err
@@ -77,7 +77,7 @@ type ImportWorker struct {
 }
 
 func (w *ImportWorker) Run() {
-	tc, err := w.io.LoadTileCoords(w.tiles)
+	tc, err := w.io.LoadTileCoords(w.tiles, w.manager.GetGrid())
 
 	if err != nil {
 		w.err = err

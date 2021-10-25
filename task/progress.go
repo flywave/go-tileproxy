@@ -65,6 +65,10 @@ func (p *TaskProgress) Running() bool {
 	return true
 }
 
+func (p *TaskProgress) Progress() float32 {
+	return p.progress
+}
+
 func (p *TaskProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }

@@ -18,11 +18,12 @@ func importTask(task *TileImportTask, concurrency int, skipGeomsForLastLevels in
 	return nil
 }
 
-func Import(io imports.Import, tasks []*TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore, cache_locker CacheLocker) {
+func Import(io imports.Import, tasks []*TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
 
+	progress_store := progress_logger.GetStore()
 	active_tasks := tasks[:]
 	active_tasks = reverse(active_tasks).([]*TileImportTask)
 	for len(active_tasks) > 0 {

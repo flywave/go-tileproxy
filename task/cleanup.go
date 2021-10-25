@@ -1,6 +1,7 @@
 package task
 
-func Cleanup(tasks []*TileCleanupTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, progress_store ProgressStore) {
+func Cleanup(tasks []*TileCleanupTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger) {
+	progress_store := progress_logger.GetStore()
 	for _, task := range tasks {
 		if task.GetCoverage() == nil {
 			continue

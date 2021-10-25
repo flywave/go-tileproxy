@@ -151,6 +151,13 @@ func (s *LocalProgressStore) Get(id string) interface{} {
 	return nil
 }
 
+func (s *LocalProgressStore) Remove(id string) {
+	if _, ok := s.status[id]; ok {
+		delete(s.status, id)
+		s.flush()
+	}
+}
+
 func (s *LocalProgressStore) load() map[string]interface{} {
 	if !utils.FileExists(s.filename) {
 		return nil

@@ -5,6 +5,7 @@ import vec2d "github.com/flywave/go3d/float64/vec2"
 type ProgressStore interface {
 	Store(id string, progress interface{})
 	Get(id string) interface{}
+	Remove(id string)
 }
 
 type ProgressLogger interface {

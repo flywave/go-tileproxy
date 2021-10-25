@@ -1,7 +1,10 @@
 package imports
 
 import (
+	"bytes"
+	"compress/gzip"
 	"errors"
+	"io/ioutil"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -99,6 +102,17 @@ func (a *MBTilesImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile
 	if err != nil {
 		return nil, err
 	}
+
+	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
+		gzipFile := bytes.NewBuffer(data)
+		gzipReader, _ := gzip.NewReader(gzipFile)
+		defer gzipReader.Close()
+		data, err = ioutil.ReadAll(gzipReader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tile := cache.NewTile(t)
 	tile.Source = a.creater.Create(data, tile.Coord)
 	return tile, nil

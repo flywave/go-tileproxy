@@ -1,7 +1,10 @@
 package imports
 
 import (
+	"bytes"
+	"compress/gzip"
 	"errors"
+	"io/ioutil"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpkg"
@@ -83,6 +86,11 @@ func (a *GeoPackageImport) GetTileFormat() tile.TileFormat {
 	return a.options.GetFormat()
 }
 
+func (a *GeoPackageImport) GetExtension() string {
+	format := a.GetTileFormat()
+	return format.Extension()
+}
+
 func (a *GeoPackageImport) GetGrid() *geo.TileGrid {
 	grid, err := a.db.GetTileGrid(a.tableName)
 	if err != nil {
@@ -120,6 +128,17 @@ func (a *GeoPackageImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.T
 	if err != nil {
 		return nil, err
 	}
+
+	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
+		gzipFile := bytes.NewBuffer(data)
+		gzipReader, _ := gzip.NewReader(gzipFile)
+		defer gzipReader.Close()
+		data, err = ioutil.ReadAll(gzipReader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tile := cache.NewTile(t)
 	tile.Source = a.creater.Create(data, tile.Coord)
 	return tile, nil

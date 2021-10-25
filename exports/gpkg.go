@@ -1,6 +1,8 @@
 package exports
 
 import (
+	"bytes"
+	"compress/gzip"
 	"errors"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -47,6 +49,11 @@ func (a *GeoPackageExport) GetTileFormat() tile.TileFormat {
 	return a.optios.GetFormat()
 }
 
+func (a *GeoPackageExport) GetExtension() string {
+	format := a.GetTileFormat()
+	return format.Extension()
+}
+
 func (a *GeoPackageExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
 	dc, err := cache.TransformCoord(t.Coord, srcGrid, a.grid)
 
@@ -61,6 +68,14 @@ func (a *GeoPackageExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error
 
 	if err != nil {
 		return err
+	}
+
+	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
+		var in bytes.Buffer
+		w := gzip.NewWriter(&in)
+		w.Write(data)
+		w.Close()
+		data = in.Bytes()
 	}
 
 	if err := a.db.StoreTile(a.Name, dc[2], dc[0], dc[1], data); err != nil {

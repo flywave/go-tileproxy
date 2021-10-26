@@ -8,13 +8,13 @@ import (
 type TaskProgress struct {
 	progress                 float32
 	levelProgressPercentages []float32
-	levelProgresses          []interface{}
+	levelProgresses          [][2]int
 	levelProgressesLevel     int
 	progressStrParts         []string
-	oldLevelProgresses       []interface{}
+	oldLevelProgresses       [][2]int
 }
 
-func NewTaskProgress(oldLevelProgresses []interface{}) *TaskProgress {
+func NewTaskProgress(oldLevelProgresses [][2]int) *TaskProgress {
 	return &TaskProgress{
 		progress:                 0.0,
 		levelProgressPercentages: []float32{1.0},
@@ -45,7 +45,7 @@ func statusSymbol(i, total int) string {
 
 func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 	if p.levelProgresses == nil {
-		p.levelProgresses = []interface{}{}
+		p.levelProgresses = [][2]int{}
 	}
 	p.levelProgresses = p.levelProgresses[:p.levelProgressesLevel]
 	p.levelProgresses = append(p.levelProgresses, [2]int{i, subtiles})
@@ -62,7 +62,7 @@ func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 
 	p.levelProgressesLevel -= 1
 	if p.levelProgressesLevel == 0 {
-		p.levelProgresses = []interface{}{}
+		p.levelProgresses = [][2]int{}
 	}
 	return true
 }
@@ -79,14 +79,14 @@ func (p *TaskProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }
 
-func (p *TaskProgress) CurrentProgressIdentifier() interface{} {
+func (p *TaskProgress) CurrentProgressIdentifier() [2]int {
 	if p.AlreadyProcessed() || p.levelProgresses == nil {
 		return p.oldLevelProgresses
 	}
 	return p.levelProgresses[:]
 }
 
-func (p *TaskProgress) canSkip(old_progress, current_progress []interface{}) bool {
+func (p *TaskProgress) canSkip(old_progress, current_progress [][2]int) bool {
 	if current_progress == nil {
 		return false
 	}

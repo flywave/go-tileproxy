@@ -65,11 +65,20 @@ type TileSeedTask struct {
 }
 
 func (t *TileSeedTask) NewWork(handle_tiles [][3]int) Work {
-	return &SeedWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+	return &SeedWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
 func NewTileSeedTask(md map[string]string, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
-	return &TileSeedTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RefreshTimestamp: refresh_timestamp}
+	return &TileSeedTask{
+		BaseTask: BaseTask{
+			Metadata: md,
+			Manager:  manager,
+			Coverage: coverage,
+			Grid:     manager.GetGrid(),
+			Levels:   levels,
+		},
+		RefreshTimestamp: refresh_timestamp,
+	}
 }
 
 func (t *TileSeedTask) GetID() string {
@@ -86,11 +95,20 @@ type TileCleanupTask struct {
 }
 
 func (t *TileCleanupTask) NewWork(handle_tiles [][3]int) Work {
-	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
 func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
-	return &TileCleanupTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}, RemoveTimestamp: remove_timestamp}
+	return &TileCleanupTask{
+		BaseTask: BaseTask{
+			Metadata: md,
+			Manager:  manager,
+			Coverage: coverage,
+			Grid:     manager.GetGrid(),
+			Levels:   levels,
+		},
+		RemoveTimestamp: remove_timestamp,
+	}
 }
 
 func (t *TileCleanupTask) GetID() string {
@@ -102,11 +120,18 @@ type TileExportTask struct {
 }
 
 func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
-	return &ExportWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+	return &ExportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
 func NewTileExportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
-	return &TileExportTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}}
+	return &TileExportTask{
+		BaseTask: BaseTask{
+			Metadata: md,
+			Manager:  manager,
+			Coverage: coverage,
+			Grid:     manager.GetGrid(),
+			Levels:   levels},
+	}
 }
 
 func (t *TileExportTask) GetID() string {
@@ -118,11 +143,19 @@ type TileImportTask struct {
 }
 
 func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
-	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles}
+	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
 func NewTileImportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
-	return &TileImportTask{BaseTask: BaseTask{Metadata: md, Manager: manager, Coverage: coverage, Grid: manager.GetGrid(), Levels: levels}}
+	return &TileImportTask{
+		BaseTask: BaseTask{
+			Metadata: md,
+			Manager:  manager,
+			Coverage: coverage,
+			Grid:     manager.GetGrid(),
+			Levels:   levels,
+		},
+	}
 }
 
 func (t *TileImportTask) GetID() string {

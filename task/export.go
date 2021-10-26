@@ -1,12 +1,14 @@
 package task
 
 import (
+	"context"
 	"errors"
+	"sync"
 
 	"github.com/flywave/go-tileproxy/exports"
 )
 
-func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
+func exportTask(ctx context.Context, task *TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null")
 	}
@@ -18,14 +20,32 @@ func exportTask(task *TileExportTask, concurrency int, skipGeomsForLastLevels in
 		work_on_metatiles = false
 	}
 
-	tile_worker_pool := NewTileWorkerPool(concurrency, task, progress_logger)
+	tile_worker_pool := NewTileWorkerPool(ctx, concurrency, task, progress_logger)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+
+	var err error
+
+	go func() {
+		err = tile_worker_pool.Queue.Run()
+		wg.Done()
+	}()
+
 	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
-	return nil
+	if tile_worker_pool.Queue.IsRuning() {
+		tile_worker_pool.Queue.Stop()
+	}
+
+	wg.Wait()
+
+	return err
 }
 
-func Export(io exports.Export, tasks []*TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -45,7 +65,7 @@ func Export(io exports.Export, tasks []*TileExportTask, concurrency int, skipGeo
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return exportTask(task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
+			return exportTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileExportTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

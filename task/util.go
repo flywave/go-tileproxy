@@ -46,7 +46,14 @@ func NewDefaultProgressLogger(out LogWriter, silent bool, verbose bool, progress
 	if out == nil {
 		out = &StdoutLogWriter{}
 	}
-	return &DefaultProgressLogger{Out: out, Silent: silent, Verbose: verbose, ProgressStore: progress_store, LastStep: time.Now(), LastProgress: time.Time{}}
+	return &DefaultProgressLogger{
+		Out:           out,
+		Silent:        silent,
+		Verbose:       verbose,
+		ProgressStore: progress_store,
+		LastStep:      time.Now(),
+		LastProgress:  time.Time{},
+	}
 }
 
 func (p *DefaultProgressLogger) GetStore() ProgressStore {

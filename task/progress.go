@@ -15,7 +15,13 @@ type TaskProgress struct {
 }
 
 func NewTaskProgress(oldLevelProgresses []interface{}) *TaskProgress {
-	return &TaskProgress{progress: 0.0, levelProgressPercentages: []float32{1.0}, levelProgressesLevel: 0, progressStrParts: []string{}, oldLevelProgresses: oldLevelProgresses}
+	return &TaskProgress{
+		progress:                 0.0,
+		levelProgressPercentages: []float32{1.0},
+		levelProgressesLevel:     0,
+		progressStrParts:         []string{},
+		oldLevelProgresses:       oldLevelProgresses,
+	}
 }
 
 func (p *TaskProgress) StepForward(subtiles int) {

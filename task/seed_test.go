@@ -72,7 +72,7 @@ type mockWorkerPool struct {
 	seedTiles map[int][][2]int
 }
 
-func (p *mockWorkerPool) Process(work Work, progress *TaskProgress) {
+func (p *mockWorkerPool) Process(work Work, progress *TaskProgress) bool {
 	if p.seedTiles == nil {
 		p.seedTiles = make(map[int][][2]int)
 	}
@@ -83,6 +83,7 @@ func (p *mockWorkerPool) Process(work Work, progress *TaskProgress) {
 		}
 		p.seedTiles[tiles[j][2]] = append(p.seedTiles[tiles[j][2]], [2]int{tiles[j][0], tiles[j][1]})
 	}
+	return true
 }
 
 type mockMVTSourceCreater struct {

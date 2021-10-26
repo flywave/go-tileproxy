@@ -1,6 +1,7 @@
 package task
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -8,6 +9,7 @@ import (
 )
 
 type workerQueue struct {
+	ctx     context.Context
 	Threads int
 	wake    chan struct{}
 	mut     sync.Mutex
@@ -15,8 +17,9 @@ type workerQueue struct {
 	storage *utils.Deque
 }
 
-func newWorkerQueue(threads int) *workerQueue {
+func newWorkerQueue(ctx context.Context, threads int) *workerQueue {
 	return &workerQueue{
+		ctx:     ctx,
 		Threads: threads,
 		running: true,
 		storage: utils.NewDeque(20),
@@ -64,6 +67,7 @@ func (q *workerQueue) Run() error {
 		panic("cannot call duplicate Queue.Run")
 	}
 	q.wake = make(chan struct{})
+
 	q.running = true
 	q.mut.Unlock()
 
@@ -117,6 +121,12 @@ func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}, errc 
 				if sent == nil && active == 0 {
 					break Sent
 				}
+			case <-q.ctx.Done():
+				q.mut.Lock()
+				q.running = false
+				q.mut.Unlock()
+				errc <- q.ctx.Err()
+				break
 			}
 		}
 	}
@@ -138,7 +148,7 @@ func (q *workerQueue) loadRequest() (Work, error) {
 }
 
 type WorkerPool interface {
-	Process(tiles Work, progress *TaskProgress)
+	Process(tiles Work, progress *TaskProgress) bool
 }
 
 type TileWorkerPool struct {
@@ -148,16 +158,21 @@ type TileWorkerPool struct {
 	Task   Task
 }
 
-func NewTileWorkerPool(threads int, task Task, logger ProgressLogger) *TileWorkerPool {
-	queue := newWorkerQueue(threads)
-	go queue.Run()
+func NewTileWorkerPool(ctx context.Context, threads int, task Task, logger ProgressLogger) *TileWorkerPool {
+	queue := newWorkerQueue(ctx, threads)
 	return &TileWorkerPool{Queue: queue, Logger: logger, Task: task}
 }
 
-func (p *TileWorkerPool) Process(tiles Work, progress *TaskProgress) {
+func (p *TileWorkerPool) Process(tiles Work, progress *TaskProgress) bool {
+	if !p.Queue.IsRuning() {
+		return false
+	}
 	p.Queue.AddRequest(tiles)
+
+	<-tiles.Done()
 
 	if p.Logger != nil {
 		p.Logger.LogStep(progress)
 	}
+	return true
 }

@@ -54,5 +54,11 @@ func (it *TileIterator) Next() (index int, rsubtile []int, rsub_bbox *vec2d.Rect
 }
 
 func (t *TileWalker) filterSubtiles(subtiles [][3]int, all_subtiles bool) *TileIterator {
-	return &TileIterator{Subtiles: subtiles, AllSubtiles: all_subtiles, current: 0, grid: t.grid, task: t.task}
+	return &TileIterator{
+		Subtiles:    subtiles,
+		AllSubtiles: all_subtiles,
+		current:     0,
+		grid:        t.grid,
+		task:        t.task,
+	}
 }

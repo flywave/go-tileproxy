@@ -8,6 +8,7 @@ import (
 
 type Work interface {
 	Run()
+	Done() <-chan struct{}
 }
 
 type SeedWorker struct {
@@ -16,6 +17,11 @@ type SeedWorker struct {
 	manager cache.Manager
 	tiles   [][3]int
 	err     error
+	done    chan struct{}
+}
+
+func (w *SeedWorker) Done() <-chan struct{} {
+	return w.done
 }
 
 func (w *SeedWorker) Run() {
@@ -24,6 +30,8 @@ func (w *SeedWorker) Run() {
 	if err != nil {
 		w.err = err
 	}
+
+	close(w.done)
 }
 
 type CleanupWorker struct {
@@ -32,6 +40,11 @@ type CleanupWorker struct {
 	manager cache.Manager
 	tiles   [][3]int
 	err     error
+	done    chan struct{}
+}
+
+func (w *CleanupWorker) Done() <-chan struct{} {
+	return w.done
 }
 
 func (w *CleanupWorker) Run() {
@@ -40,6 +53,8 @@ func (w *CleanupWorker) Run() {
 	if err != nil {
 		w.err = err
 	}
+
+	close(w.done)
 }
 
 type ExportWorker struct {
@@ -49,6 +64,11 @@ type ExportWorker struct {
 	manager cache.Manager
 	tiles   [][3]int
 	err     error
+	done    chan struct{}
+}
+
+func (w *ExportWorker) Done() <-chan struct{} {
+	return w.done
 }
 
 func (w *ExportWorker) Run() {
@@ -65,6 +85,8 @@ func (w *ExportWorker) Run() {
 		w.err = err
 		return
 	}
+
+	close(w.done)
 }
 
 type ImportWorker struct {
@@ -74,6 +96,11 @@ type ImportWorker struct {
 	manager cache.Manager
 	tiles   [][3]int
 	err     error
+	done    chan struct{}
+}
+
+func (w *ImportWorker) Done() <-chan struct{} {
+	return w.done
 }
 
 func (w *ImportWorker) Run() {
@@ -93,4 +120,6 @@ func (w *ImportWorker) Run() {
 	if err != nil {
 		w.err = err
 	}
+
+	close(w.done)
 }

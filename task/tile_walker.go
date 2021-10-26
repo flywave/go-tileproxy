@@ -17,19 +17,28 @@ type TileWalker struct {
 	skipGeomsForLastLevels int
 	reportTillLevel        int
 	tilesPerMetatile       int
-	seedProgress           *TaskProgress
+	taskProgress           *TaskProgress
 	grid                   *geo.MetaGrid
 	count                  int
-	seededTiles            map[int]*utils.Deque
+	processedTiles         map[int]*utils.Deque
 	progressLogger         ProgressLogger
 	handleStale            bool
 	handleUncached         bool
 	pool                   WorkerPool
 }
 
-func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, skipGeomsForLastLevels int, progressLogger ProgressLogger, seedProgress *TaskProgress, handleStale, handleUNCached bool) *TileWalker {
-	ret := &TileWalker{pool: tileWorkerPool, task: task, manager: task.GetManager(), workOnMetatiles: workOnMetatiles,
-		skipGeomsForLastLevels: skipGeomsForLastLevels, seedProgress: seedProgress, progressLogger: progressLogger, handleStale: handleStale, handleUncached: handleUNCached}
+func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, skipGeomsForLastLevels int, progressLogger ProgressLogger, taskProgress *TaskProgress, handleStale, handleUNCached bool) *TileWalker {
+	ret := &TileWalker{
+		pool:                   tileWorkerPool,
+		task:                   task,
+		manager:                task.GetManager(),
+		workOnMetatiles:        workOnMetatiles,
+		skipGeomsForLastLevels: skipGeomsForLastLevels,
+		taskProgress:           taskProgress,
+		progressLogger:         progressLogger,
+		handleStale:            handleStale,
+		handleUncached:         handleUNCached,
+	}
 
 	num_seed_levels := len(task.GetLevels())
 	if num_seed_levels >= 4 {
@@ -46,16 +55,16 @@ func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, s
 	ret.tilesPerMetatile = int(metaSize[0] * metaSize[1])
 	ret.grid = &geo.MetaGrid{TileGrid: *ret.manager.GetGrid(), MetaSize: metaSize, MetaBuffer: 0}
 	ret.count = 0
-	if seedProgress != nil {
-		ret.seedProgress = seedProgress
+	if taskProgress != nil {
+		ret.taskProgress = taskProgress
 	} else {
-		ret.seedProgress = NewTaskProgress(nil)
+		ret.taskProgress = NewTaskProgress(nil)
 	}
 
-	ret.seededTiles = make(map[int]*utils.Deque)
+	ret.processedTiles = make(map[int]*utils.Deque)
 
 	for _, l := range ret.task.GetLevels() {
-		ret.seededTiles[l] = utils.NewDeque(64)
+		ret.processedTiles[l] = utils.NewDeque(64)
 	}
 
 	return ret
@@ -63,8 +72,8 @@ func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, s
 
 func (t *TileWalker) Walk() {
 	bbox := t.task.GetCoverage().GetExtent().BBoxFor(t.manager.GetGrid().Srs)
-	if t.seedProgress.AlreadyProcessed() {
-		t.seedProgress.StepForward(1)
+	if t.taskProgress.AlreadyProcessed() {
+		t.taskProgress.StepForward(1)
 	} else {
 		t.walk(bbox, t.task.GetLevels(), 0, false)
 	}
@@ -120,7 +129,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 		t.reportProgress(currentLevel, cur_bbox)
 	}
 
-	if !t.seedProgress.Running() {
+	if !t.taskProgress.Running() {
 		if levelInLevels(currentLevel, levels) {
 			t.reportProgress(currentLevel, cur_bbox)
 		}
@@ -138,7 +147,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 		i, subtile, sub_bbox, intersection := subtilesIt.Next()
 
 		if len(subtile) == 0 {
-			t.seedProgress.StepForward(totalSubtiles)
+			t.taskProgress.StepForward(totalSubtiles)
 			continue
 		}
 
@@ -150,9 +159,9 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 				allSubtiles = false
 			}
 
-			if !t.seedProgress.StepDown(i, totalSubtiles, func() bool {
-				if t.seedProgress.AlreadyProcessed() {
-					t.seedProgress.StepForward(1)
+			if !t.taskProgress.StepDown(i, totalSubtiles, func() bool {
+				if t.taskProgress.AlreadyProcessed() {
+					t.taskProgress.StepForward(1)
 				} else {
 					if !t.walk(*sub_bbox, levels, currentLevel+1, allSubtiles) {
 						return false
@@ -168,7 +177,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 			continue
 		}
 
-		if t.seededTiles[currentLevel].Contains(subtile, func(a, b interface{}) bool {
+		if t.processedTiles[currentLevel].Contains(subtile, func(a, b interface{}) bool {
 			aa := a.([]int)
 			bb := b.([]int)
 			if aa[0] == bb[0] && aa[1] == bb[1] && aa[2] == bb[2] {
@@ -177,11 +186,11 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 			return false
 		}) {
 			if len(levels) == 0 {
-				t.seedProgress.StepForward(totalSubtiles)
+				t.taskProgress.StepForward(totalSubtiles)
 			}
 			continue
 		}
-		t.seededTiles[currentLevel].PushFront(subtile)
+		t.processedTiles[currentLevel].PushFront(subtile)
 
 		var handleTiles [][3]int
 
@@ -199,11 +208,13 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 
 		if handleTiles != nil {
 			t.count += 1
-			t.pool.Process(t.task.NewWork(handleTiles), t.seedProgress)
+			if !t.pool.Process(t.task.NewWork(handleTiles), t.taskProgress) {
+				return false
+			}
 		}
 
-		if levels == nil {
-			t.seedProgress.StepForward(totalSubtiles)
+		if len(levels) == 0 {
+			t.taskProgress.StepForward(totalSubtiles)
 		}
 	}
 
@@ -215,6 +226,6 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 
 func (t *TileWalker) reportProgress(level int, bbox vec2d.Rect) {
 	if t.progressLogger != nil {
-		t.progressLogger.LogProgress(t.seedProgress, level, bbox, t.count*t.tilesPerMetatile)
+		t.progressLogger.LogProgress(t.taskProgress, level, bbox, t.count*t.tilesPerMetatile)
 	}
 }

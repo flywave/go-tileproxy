@@ -91,12 +91,13 @@ func (w *ExportWorker) Run() {
 
 type ImportWorker struct {
 	Work
-	task    Task
-	io      imports.Import
-	manager cache.Manager
-	tiles   [][3]int
-	err     error
-	done    chan struct{}
+	task            Task
+	io              imports.Import
+	manager         cache.Manager
+	tiles           [][3]int
+	err             error
+	done            chan struct{}
+	force_overwrite bool
 }
 
 func (w *ImportWorker) Done() <-chan struct{} {
@@ -115,10 +116,22 @@ func (w *ImportWorker) Run() {
 		return
 	}
 
-	err = w.manager.StoreTiles(tc)
+	if w.force_overwrite {
+		err = w.manager.StoreTiles(tc)
 
-	if err != nil {
-		w.err = err
+		if err != nil {
+			w.err = err
+		}
+	} else {
+		for _, t := range tc.GetSlice() {
+			if !w.manager.IsCached(t.Coord, nil) {
+				err = w.manager.StoreTile(t)
+				if err != nil {
+					w.err = err
+					break
+				}
+			}
+		}
 	}
 
 	close(w.done)

@@ -117,6 +117,7 @@ func (t *TileCleanupTask) GetID() string {
 
 type TileExportTask struct {
 	BaseTask
+	RefreshTimestamp *time.Time
 }
 
 func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
@@ -140,10 +141,11 @@ func (t *TileExportTask) GetID() string {
 
 type TileImportTask struct {
 	BaseTask
+	ForceOverwrite bool
 }
 
 func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
-	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
+	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{}), force_overwrite: t.ForceOverwrite}
 }
 
 func NewTileImportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {

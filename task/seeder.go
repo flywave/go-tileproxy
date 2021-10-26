@@ -10,6 +10,9 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, skipGeom
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null")
 	}
+	if task.RefreshTimestamp != nil {
+		task.GetManager().SetExpireTimestamp(task.RefreshTimestamp)
+	}
 
 	task.GetManager().SetMinimizeMetaRequests(false)
 

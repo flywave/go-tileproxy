@@ -12,6 +12,9 @@ func exportTask(ctx context.Context, task *TileExportTask, concurrency int, skip
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null")
 	}
+	if task.RefreshTimestamp != nil {
+		task.GetManager().SetExpireTimestamp(task.RefreshTimestamp)
+	}
 
 	task.GetManager().SetMinimizeMetaRequests(false)
 

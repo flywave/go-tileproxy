@@ -79,7 +79,7 @@ func (p *TaskProgress) AlreadyProcessed() bool {
 	return p.canSkip(p.oldLevelProgresses, p.levelProgresses)
 }
 
-func (p *TaskProgress) CurrentProgressIdentifier() [2]int {
+func (p *TaskProgress) CurrentProgressIdentifier() [][2]int {
 	if p.AlreadyProcessed() || p.levelProgresses == nil {
 		return p.oldLevelProgresses
 	}

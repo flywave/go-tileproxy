@@ -276,7 +276,7 @@ func TestSeederGeom(t *testing.T) {
 }
 
 func TestSeederFullBBoxContinue(t *testing.T) {
-	seedProgress := NewTaskProgress([]interface{}{[2]int{0, 1}, [2]int{1, 2}})
+	seedProgress := NewTaskProgress([][2]int{{0, 1}, {1, 2}})
 	seeded_tiles := seeder(vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, []int{0, 1, 2}, seedProgress, t)
 
 	if len(seeded_tiles) != 3 {

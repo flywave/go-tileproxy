@@ -60,10 +60,10 @@ func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, con
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
 		if err := cache_locker.Lock(md["cache_name"], func() error {
-			var start_progress []interface{}
+			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())
-				start_progress = progress_store.Get(task.GetID()).([]interface{})
+				start_progress = progress_store.Get(task.GetID()).([][2]int)
 			} else {
 				start_progress = nil
 			}

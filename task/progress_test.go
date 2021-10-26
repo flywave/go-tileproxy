@@ -5,7 +5,7 @@ import (
 )
 
 func TestTaskProgressCanSkip(t *testing.T) {
-	test_old_progress := [][]interface{}{
+	test_old_progress := [][][2]int{
 		nil,
 		{},
 		{[2]int{0, 4}},
@@ -19,7 +19,7 @@ func TestTaskProgressCanSkip(t *testing.T) {
 		{[2]int{0, 4}, [2]int{0, 4}, [2]int{2, 4}},
 		{[2]int{0, 4}, [2]int{0, 4}, [2]int{2, 4}},
 	}
-	test_current_progress := [][]interface{}{
+	test_current_progress := [][][2]int{
 		{[2]int{0, 4}},
 		{[2]int{0, 4}},
 		nil,
@@ -60,12 +60,12 @@ func TestTaskProgressCanSkip(t *testing.T) {
 	}
 }
 
-func assert(a []interface{}, b [][2]int, t *testing.T) {
+func assert(a [][2]int, b [][2]int, t *testing.T) {
 	if len(a) != len(b) {
 		t.FailNow()
 	}
 	for i := range a {
-		aa := a[i].([2]int)
+		aa := a[i]
 		bb := b[i]
 
 		if aa[0] != bb[0] || aa[1] != bb[1] {
@@ -79,31 +79,31 @@ func TestTaskProgress(t *testing.T) {
 
 	old.StepDown(0, 2, func() bool {
 		old.StepDown(0, 4, func() bool {
-			r1 := old.CurrentProgressIdentifier().([]interface{})
+			r1 := old.CurrentProgressIdentifier()
 			assert(r1, [][2]int{{0, 2}, {0, 4}}, t)
 			return true
 		})
-		r2 := old.CurrentProgressIdentifier().([]interface{})
+		r2 := old.CurrentProgressIdentifier()
 		assert(r2, [][2]int{{0, 2}, {0, 4}}, t)
 		old.StepDown(1, 4, func() bool {
-			r3 := old.CurrentProgressIdentifier().([]interface{})
+			r3 := old.CurrentProgressIdentifier()
 			assert(r3, [][2]int{{0, 2}, {1, 4}}, t)
 			return true
 		})
-		r4 := old.CurrentProgressIdentifier().([]interface{})
+		r4 := old.CurrentProgressIdentifier()
 		assert(r4, [][2]int{{0, 2}, {1, 4}}, t)
 		return true
 	})
 
-	r5 := old.CurrentProgressIdentifier().([]interface{})
+	r5 := old.CurrentProgressIdentifier()
 	assert(r5, [][2]int{}, t)
 
 	old.StepDown(1, 2, func() bool {
-		r6 := old.CurrentProgressIdentifier().([]interface{})
+		r6 := old.CurrentProgressIdentifier()
 		assert(r6, [][2]int{{1, 2}}, t)
 		old.StepDown(0, 4, func() bool {
 			old.StepDown(1, 4, func() bool {
-				r7 := old.CurrentProgressIdentifier().([]interface{})
+				r7 := old.CurrentProgressIdentifier()
 				assert(r7, [][2]int{{1, 2}, {0, 4}, {1, 4}}, t)
 				return true
 			})
@@ -114,7 +114,7 @@ func TestTaskProgress(t *testing.T) {
 }
 
 func TestTaskProgressAlreadyProcessed(t *testing.T) {
-	new := NewTaskProgress([]interface{}{[2]int{0, 2}})
+	new := NewTaskProgress([][2]int{{0, 2}})
 	new.StepDown(0, 2, func() bool {
 		if new.AlreadyProcessed() {
 			t.FailNow()
@@ -128,7 +128,7 @@ func TestTaskProgressAlreadyProcessed(t *testing.T) {
 		return true
 	})
 
-	new = NewTaskProgress([]interface{}{[2]int{1, 2}})
+	new = NewTaskProgress([][2]int{{1, 2}})
 	new.StepDown(0, 2, func() bool {
 		if !new.AlreadyProcessed() {
 			t.FailNow()
@@ -142,7 +142,7 @@ func TestTaskProgressAlreadyProcessed(t *testing.T) {
 		return true
 	})
 
-	new = NewTaskProgress([]interface{}{[2]int{0, 2}, [2]int{1, 4}, [2]int{2, 4}})
+	new = NewTaskProgress([][2]int{{0, 2}, {1, 4}, {2, 4}})
 	new.StepDown(0, 2, func() bool {
 		if new.AlreadyProcessed() {
 			t.FailNow()

@@ -14,7 +14,7 @@ require (
 	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
 	github.com/flywave/go-gpkg v0.0.0-20211025142153-9080404ca13b
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20211025141658-6a47de7aa888
+	github.com/flywave/go-mapbox v0.0.0-20211025142134-6903b71f3466
 	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
 	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
 	github.com/flywave/go-tin v0.0.0-20210814015358-bf6f824e615b
@@ -38,6 +38,6 @@ require (
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/sys v0.0.0-20211020064051-0ec99a608a1b
+	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )

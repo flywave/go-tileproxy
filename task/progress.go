@@ -1,7 +1,7 @@
 package task
 
 type TaskProgress struct {
-	currertTiles         int
+	completedTiles       int
 	totalTiles           int
 	levelProgresses      [][2]int
 	levelProgressesLevel int
@@ -10,7 +10,7 @@ type TaskProgress struct {
 
 func NewTaskProgress(oldLevelProgresses [][2]int) *TaskProgress {
 	return &TaskProgress{
-		currertTiles:         0,
+		completedTiles:       0,
 		totalTiles:           0,
 		levelProgressesLevel: 0,
 		oldLevelProgresses:   oldLevelProgresses,
@@ -37,19 +37,19 @@ func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 }
 
 func (p *TaskProgress) Update(tiles int) {
-	p.currertTiles += tiles
+	p.completedTiles += tiles
 }
 
 func (p *TaskProgress) TotalTiles() int {
 	return p.totalTiles
 }
 
-func (p *TaskProgress) CurrertTiles() int {
-	return p.currertTiles
+func (p *TaskProgress) CompletedTiles() int {
+	return p.completedTiles
 }
 
 func (p *TaskProgress) Progress() float32 {
-	return float32(p.currertTiles) / float32(p.totalTiles)
+	return float32(p.completedTiles) / float32(p.totalTiles)
 }
 
 func (p *TaskProgress) AlreadyProcessed() bool {

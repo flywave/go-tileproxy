@@ -40,6 +40,14 @@ func (p *TaskProgress) Update(tiles int) {
 	p.currertTiles += tiles
 }
 
+func (p *TaskProgress) TotalTiles() int {
+	return p.totalTiles
+}
+
+func (p *TaskProgress) CurrertTiles() int {
+	return p.currertTiles
+}
+
 func (p *TaskProgress) Progress() float32 {
 	return float32(p.currertTiles) / float32(p.totalTiles)
 }

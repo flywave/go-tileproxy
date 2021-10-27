@@ -2,6 +2,7 @@ package task
 
 import (
 	"math"
+	"sort"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -70,14 +71,82 @@ func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, s
 	return ret
 }
 
-func (t *TileWalker) Walk() {
+func (t *TileWalker) Analytic() int {
 	bbox := t.task.GetCoverage().GetExtent().BBoxFor(t.manager.GetGrid().Srs)
-	if t.taskProgress.AlreadyProcessed() {
-		t.taskProgress.StepForward(1)
-	} else {
-		t.walk(bbox, t.task.GetLevels(), 0, false)
+	levels := t.task.GetLevels()
+	sort.Ints(levels)
+	_, _, totalTiles := t.analytic(bbox, levels, 0, false)
+	return totalTiles
+}
+
+func (t *TileWalker) analytic(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) (bool, []int, int) {
+	_, _, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, currentLevel)
+	if len(levels) < t.skipGeomsForLastLevels {
+		allSubtiles = true
 	}
-	t.reportProgress(t.task.GetLevels()[0], t.task.GetCoverage().GetBBox())
+	subtilesIt := t.filterSubtiles(subtiles, allSubtiles)
+
+	total := 0
+
+	process := false
+	if levelInLevels(currentLevel, levels) {
+		levels = levels[1:]
+		process = true
+	}
+
+	currentLevels := levels
+
+	for subtilesIt.HasNext() {
+		_, subtile, sub_bbox, intersection := subtilesIt.Next()
+
+		if len(subtile) == 0 {
+			continue
+		}
+
+		if len(currentLevels) > 0 {
+			sub_bbox = limitSubBBox(cur_bbox, *sub_bbox)
+			if intersection == CONTAINS {
+				allSubtiles = true
+			} else {
+				allSubtiles = false
+			}
+			var ok bool
+			var subTotalTiles int
+			if ok, levels, subTotalTiles = t.analytic(*sub_bbox, currentLevels, currentLevel+1, allSubtiles); !ok {
+				return false, nil, 0
+			}
+
+			total += subTotalTiles
+		}
+
+		if !process {
+			continue
+		}
+
+		if len(levels) == 0 {
+			if !t.workOnMetatiles {
+				handleTiles := t.grid.TileList([3]int{subtile[0], subtile[1], subtile[2]})
+				total += len(handleTiles)
+			} else {
+				total += 1
+			}
+		}
+	}
+
+	return true, levels, total
+}
+
+func (t *TileWalker) Walk() {
+	if t.taskProgress != nil {
+		t.taskProgress.totalTiles = t.Analytic()
+	}
+	bbox := t.task.GetCoverage().GetExtent().BBoxFor(t.manager.GetGrid().Srs)
+	levels := t.task.GetLevels()
+	sort.Ints(levels)
+	if !t.taskProgress.AlreadyProcessed() {
+		t.walk(bbox, levels, 0, false)
+	}
+	t.reportProgress(levels[0], t.task.GetCoverage().GetBBox())
 }
 
 func levelInLevels(level int, levels []int) bool {
@@ -117,7 +186,7 @@ func filterIsStale(manager cache.Manager, handle_tiles [][3]int) [][3]int {
 	return ret
 }
 
-func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) bool {
+func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) ([]int, bool) {
 	_, tiles, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, currentLevel)
 	totalSubtiles := int(tiles[0] * tiles[1])
 	if len(levels) < t.skipGeomsForLastLevels {
@@ -129,29 +198,21 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 		t.reportProgress(currentLevel, cur_bbox)
 	}
 
-	if !t.taskProgress.Running() {
-		if levelInLevels(currentLevel, levels) {
-			t.reportProgress(currentLevel, cur_bbox)
-		}
-		t.manager.Cleanup()
-		return false
-	}
-
 	process := false
 	if levelInLevels(currentLevel, levels) {
 		levels = levels[1:]
 		process = true
 	}
+	currentLevels := levels
 
 	for subtilesIt.HasNext() {
 		i, subtile, sub_bbox, intersection := subtilesIt.Next()
 
 		if len(subtile) == 0 {
-			t.taskProgress.StepForward(totalSubtiles)
 			continue
 		}
 
-		if len(levels) > 0 {
+		if len(currentLevels) > 0 {
 			sub_bbox = limitSubBBox(cur_bbox, *sub_bbox)
 			if intersection == CONTAINS {
 				allSubtiles = true
@@ -160,16 +221,15 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 			}
 
 			if !t.taskProgress.StepDown(i, totalSubtiles, func() bool {
-				if t.taskProgress.AlreadyProcessed() {
-					t.taskProgress.StepForward(1)
-				} else {
-					if !t.walk(*sub_bbox, levels, currentLevel+1, allSubtiles) {
+				if !t.taskProgress.AlreadyProcessed() {
+					var ok bool
+					if levels, ok = t.walk(*sub_bbox, currentLevels, currentLevel+1, allSubtiles); !ok {
 						return false
 					}
 				}
 				return true
 			}) {
-				return false
+				return nil, false
 			}
 		}
 
@@ -185,9 +245,6 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 			}
 			return false
 		}) {
-			if len(levels) == 0 {
-				t.taskProgress.StepForward(totalSubtiles)
-			}
 			continue
 		}
 		t.processedTiles[currentLevel].PushFront(subtile)
@@ -209,19 +266,17 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 		if handleTiles != nil {
 			t.count += 1
 			if !t.pool.Process(t.task.NewWork(handleTiles), t.taskProgress) {
-				return false
+				return nil, false
+			} else {
+				t.taskProgress.Update(len(handleTiles))
 			}
-		}
-
-		if len(levels) == 0 {
-			t.taskProgress.StepForward(totalSubtiles)
 		}
 	}
 
 	if len(levels) >= 4 {
 		t.manager.Cleanup()
 	}
-	return true
+	return levels, true
 }
 
 func (t *TileWalker) reportProgress(level int, bbox vec2d.Rect) {

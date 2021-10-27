@@ -1,45 +1,19 @@
 package task
 
-import (
-	"math"
-	"strings"
-)
-
 type TaskProgress struct {
-	progress                 float32
-	levelProgressPercentages []float32
-	levelProgresses          [][2]int
-	levelProgressesLevel     int
-	progressStrParts         []string
-	oldLevelProgresses       [][2]int
+	currertTiles         int
+	totalTiles           int
+	levelProgresses      [][2]int
+	levelProgressesLevel int
+	oldLevelProgresses   [][2]int
 }
 
 func NewTaskProgress(oldLevelProgresses [][2]int) *TaskProgress {
 	return &TaskProgress{
-		progress:                 0.0,
-		levelProgressPercentages: []float32{1.0},
-		levelProgressesLevel:     0,
-		progressStrParts:         []string{},
-		oldLevelProgresses:       oldLevelProgresses,
-	}
-}
-
-func (p *TaskProgress) StepForward(subtiles int) {
-	p.progress += float32(p.levelProgressPercentages[len(p.levelProgressPercentages)-1]) / float32(subtiles)
-}
-
-func (p *TaskProgress) ToString() string {
-	return strings.Join(p.progressStrParts, "")
-}
-
-func statusSymbol(i, total int) string {
-	symbols := string(" .oO0")
-	i += 1
-	if 0 < i && i > total {
-		return "X"
-	} else {
-		x := uint32(math.Ceil(float64(i) / float64(total/4)))
-		return string(symbols[x])
+		currertTiles:         0,
+		totalTiles:           0,
+		levelProgressesLevel: 0,
+		oldLevelProgresses:   oldLevelProgresses,
 	}
 }
 
@@ -50,15 +24,10 @@ func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 	p.levelProgresses = p.levelProgresses[:p.levelProgressesLevel]
 	p.levelProgresses = append(p.levelProgresses, [2]int{i, subtiles})
 	p.levelProgressesLevel += 1
-	p.progressStrParts = append(p.progressStrParts, statusSymbol(i, subtiles))
-	p.levelProgressPercentages = append(p.levelProgressPercentages, p.levelProgressPercentages[len(p.levelProgressPercentages)-1]/float32(subtiles))
 
 	if !task() {
 		return false
 	}
-
-	p.levelProgressPercentages = p.levelProgressPercentages[1:]
-	p.progressStrParts = p.progressStrParts[1:]
 
 	p.levelProgressesLevel -= 1
 	if p.levelProgressesLevel == 0 {
@@ -67,12 +36,12 @@ func (p *TaskProgress) StepDown(i, subtiles int, task func() bool) bool {
 	return true
 }
 
-func (p *TaskProgress) Running() bool {
-	return true
+func (p *TaskProgress) Update(tiles int) {
+	p.currertTiles += tiles
 }
 
 func (p *TaskProgress) Progress() float32 {
-	return p.progress
+	return float32(p.currertTiles) / float32(p.totalTiles)
 }
 
 func (p *TaskProgress) AlreadyProcessed() bool {

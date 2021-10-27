@@ -181,6 +181,44 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 	return tile_worker_pool.seedTiles
 }
 
+func analytic(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *testing.T) int {
+	mock := &mockClient{code: 200, body: []byte{0}}
+	ctx := &mockContext{c: mock}
+
+	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
+
+	opts := geo.DefaultTileGridOptions()
+	opts[geo.TILEGRID_SRS] = "EPSG:4326"
+	opts[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
+	grid := geo.NewTileGrid(opts)
+
+	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
+
+	client := client.NewTileClient(grid, urlTemplate, ctx)
+
+	ccreater := &mockMVTSourceCreater{}
+
+	source := &sources.TileSource{Grid: grid, Client: client, SourceCreater: ccreater}
+
+	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
+
+	locker := &cache.DummyTileLocker{}
+
+	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+
+	seedTask := makeBBoxTask(manager, bbox, geo.NewProj(4326), levels)
+
+	local := NewLocalProgressStore("./test.task", false)
+
+	logger := NewDefaultProgressLogger(&MockLogWriter{}, false, true, local)
+
+	tile_worker_pool := &mockWorkerPool{}
+
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, seedProgress, false, true)
+
+	return seeder.Analytic()
+}
+
 func assertTileInTiles(aa [2]int, b [][2]int, t *testing.T) {
 	flag := false
 	for i := range b {
@@ -203,6 +241,32 @@ func assertTiles(a [][2]int, b [][2]int, t *testing.T) {
 	for i := range a {
 		aa := a[i]
 		assertTileInTiles(aa, b, t)
+	}
+}
+
+func TestAnalyticBBox(t *testing.T) {
+	seederLevelsCounts := []int{3, 3, 2}
+	seederLevelsBBox := []vec2d.Rect{
+		{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}},
+		{Min: vec2d.T{-45, 0}, Max: vec2d.T{180, 90}},
+		{Min: vec2d.T{-45, 0}, Max: vec2d.T{180, 90}},
+	}
+	seederLevelsLevels := [][]int{
+		{0, 1, 2},
+		{0, 1, 2},
+		{0, 2},
+	}
+
+	seederLevelsResults := []int{
+		11, 6, 4,
+	}
+
+	for i := range seederLevelsCounts {
+		seeded_tiles := analytic(seederLevelsBBox[i], seederLevelsLevels[i], nil, t)
+
+		if seeded_tiles != seederLevelsResults[i] {
+			t.FailNow()
+		}
 	}
 }
 

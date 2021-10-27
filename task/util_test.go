@@ -2,6 +2,7 @@ package task
 
 import (
 	"os"
+	"sort"
 	"testing"
 )
 
@@ -49,4 +50,20 @@ func TestIziplongest(t *testing.T) {
 			t.FailNow()
 		}
 	}
+}
+
+func TestLevels(t *testing.T) {
+	levels := []int{4, 2, 3, 1, 0, 5}
+	sort.Ints(levels)
+
+	if levels[0] != 0 {
+		t.FailNow()
+	}
+
+	levels = levels[1:]
+
+	if levels[0] != 1 {
+		t.FailNow()
+	}
+
 }

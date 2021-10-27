@@ -84,7 +84,7 @@ func (p *DefaultProgressLogger) LogStep(progress *TaskProgress) {
 		return
 	}
 	if p.LastStep.Add(time.Nanosecond).Before(time.Now()) && p.Out != nil {
-		p.Out.WriteString(fmt.Sprintf("[%s] %6.2f%%\t%-20s \r", timestamp(), progress.progress*100, progress.ToString()))
+		p.Out.WriteString(fmt.Sprintf("[%s] %6.2f%% \r", timestamp(), progress.Progress()*100))
 		p.Out.Flush()
 		p.LastStep = time.Now()
 	}
@@ -97,7 +97,7 @@ func (p *DefaultProgressLogger) LogProgress(progress *TaskProgress, level int, b
 	}
 
 	logProgess := false
-	if progress.progress == 1.0 || (p.LastProgress.Add(time.Duration(progressInterval)).Before(time.Now())) {
+	if progress.Progress() == 1.0 || (p.LastProgress.Add(time.Duration(progressInterval)).Before(time.Now())) {
 		p.LastProgress = time.Now()
 		logProgess = true
 	}
@@ -113,7 +113,7 @@ func (p *DefaultProgressLogger) LogProgress(progress *TaskProgress, level int, b
 	}
 
 	if logProgess && p.Out != nil {
-		p.Out.WriteString(fmt.Sprintf("[%s] %d %6.2f%% %s (%d tiles)\n", timestamp(), level, progress.progress*100, formatBBox(bbox), tiles))
+		p.Out.WriteString(fmt.Sprintf("[%s] %d %6.2f%% %s (%d tiles)\n", timestamp(), level, progress.Progress()*100, formatBBox(bbox), tiles))
 		p.Out.Flush()
 	}
 }

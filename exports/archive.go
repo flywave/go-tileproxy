@@ -129,6 +129,8 @@ func (a *ArchiveExport) Close() error {
 
 	p.Write(data)
 
+	p.Sync()
+
 	info, err := p.Stat()
 
 	if err != nil {
@@ -241,6 +243,8 @@ func (a *ArchiveExport) writeTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
 	}()
 
 	p.Write(data)
+
+	p.Sync()
 
 	info, err := p.Stat()
 

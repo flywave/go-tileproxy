@@ -27,10 +27,12 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 	}
 
 	layerMetadata := &WMSLayerMetadata{}
+	layerMetadata.AuthorityURL = &wms130.AuthorityURL{}
 	layerMetadata.AuthorityURL.Name = "flywave"
 	layerMetadata.AuthorityURL.OnlineResource.Xlink = newString("http://flywave.net")
 	layerMetadata.AuthorityURL.OnlineResource.Type = newString("simple")
 	layerMetadata.AuthorityURL.OnlineResource.Href = newString("http://flywave.net")
+	layerMetadata.Identifier = &wms130.Identifier{}
 	layerMetadata.Identifier.Authority = "flywave"
 	layerMetadata.Identifier.Value = "flywave"
 	layerMetadata.Style = append(layerMetadata.Style, &wms130.Style{Name: "flywave"})
@@ -62,4 +64,6 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 	if xml == nil {
 		t.FailNow()
 	}
+
+	os.Remove("./test.xml")
 }

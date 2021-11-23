@@ -425,6 +425,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	if md.FillZoom != nil {
 		tilejson.FillZoom = *md.FillZoom
 	}
+
 	tilejson.Scheme = "xyz"
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
@@ -434,6 +435,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.VectorLayers = c.vectorLayers[:]
 
 	tilejson.Tiles = append(tilejson.Tiles, url)
+
 	return tilejson.ToJson()
 }
 

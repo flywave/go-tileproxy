@@ -25,7 +25,16 @@ type TileCreator struct {
 }
 
 func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
-	return &TileCreator{Manager: m, Sources: m.GetSources(), Grid: m.GetGrid(), Cache: m.GetCache(), MetaGrid: m.GetMetaGrid(), Dimensions: dimensions, TileMerger: merger, BulkMetaTiles: bulk_meta_tiles}
+	return &TileCreator{
+		Manager:       m,
+		Sources:       m.GetSources(),
+		Grid:          m.GetGrid(),
+		Cache:         m.GetCache(),
+		MetaGrid:      m.GetMetaGrid(),
+		Dimensions:    dimensions,
+		TileMerger:    merger,
+		BulkMetaTiles: bulk_meta_tiles,
+	}
 }
 
 func (c *TileCreator) IsCached(tile [3]int) bool {
@@ -72,8 +81,13 @@ func (c *TileCreator) createSingleTiles(tiles []*Tile) []*Tile {
 
 func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 	tile_bbox := c.Grid.TileBBox(t.Coord, false)
-	query := &layer.MapQuery{BBox: tile_bbox, Size: [2]uint32{c.Grid.TileSize[0], c.Grid.TileSize[1]}, Srs: c.Grid.Srs,
-		Format: tile.TileFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
+	query := &layer.MapQuery{
+		BBox:       tile_bbox,
+		Size:       [2]uint32{c.Grid.TileSize[0], c.Grid.TileSize[1]},
+		Srs:        c.Grid.Srs,
+		Format:     tile.TileFormat(c.Manager.GetRequestFormat()),
+		Dimensions: c.Dimensions,
+	}
 
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -142,7 +156,13 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
 
 func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	tile_size := c.Grid.TileSize
-	query := &layer.MapQuery{BBox: meta_tile.GetBBox(), Size: meta_tile.GetSize(), Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()), Dimensions: c.Dimensions}
+	query := &layer.MapQuery{
+		BBox:       meta_tile.GetBBox(),
+		Size:       meta_tile.GetSize(),
+		Srs:        c.Grid.Srs,
+		Format:     tile.TileFormat(c.Manager.GetRequestFormat()),
+		Dimensions: c.Dimensions,
+	}
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
 	var splittedTiles *TileCollection
 
@@ -183,8 +203,13 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 }
 
 func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) *Tile {
-	query := &layer.MapQuery{BBox: c.Grid.TileBBox(coord, false), Size: [2]uint32{tile_size[0], tile_size[1]}, Srs: c.Grid.Srs, Format: tile.TileFormat(c.Manager.GetRequestFormat()),
-		Dimensions: c.Dimensions}
+	query := &layer.MapQuery{
+		BBox:       c.Grid.TileBBox(coord, false),
+		Size:       [2]uint32{tile_size[0], tile_size[1]},
+		Srs:        c.Grid.Srs,
+		Format:     tile.TileFormat(c.Manager.GetRequestFormat()),
+		Dimensions: c.Dimensions,
+	}
 	tile_data, err := c.querySources(query)
 	if tile_data == nil || err != nil {
 		return nil

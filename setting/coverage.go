@@ -57,7 +57,10 @@ func LoadCoverage(cov *Coverage) geo.Coverage {
 		geom := general.GeometryDataAsGeometry(geomdata)
 		return geo.NewGeomCoverage(geom, geo.NewProj(cov.PolygonsSrs), clip)
 	} else if cov.BBox != nil {
-		return geo.NewBBoxCoverage(vec2.Rect{Min: vec2.T{cov.BBox[0], cov.BBox[1]}, Max: vec2.T{cov.BBox[2], cov.BBox[3]}}, geo.NewProj(cov.BBoxSrs), clip)
+		return geo.NewBBoxCoverage(vec2.Rect{
+			Min: vec2.T{cov.BBox[0], cov.BBox[1]},
+			Max: vec2.T{cov.BBox[2], cov.BBox[3]},
+		}, geo.NewProj(cov.BBoxSrs), clip)
 	} else if cov.ExpireTiles != nil {
 		geoms := loadExpireTiles(cov.ExpireTiles, nil)
 		multipolygon := geos.CreateEmptyPolygon()

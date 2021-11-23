@@ -3,7 +3,6 @@ package service
 import (
 	"net/http"
 	"net/url"
-	"os"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -100,5 +99,5 @@ func TestMapboxServiceGetTile(t *testing.T) {
 		t.FailNow()
 	}
 
-	os.RemoveAll("./test_cache")
+	//os.RemoveAll("./test_cache")
 }

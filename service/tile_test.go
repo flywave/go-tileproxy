@@ -92,7 +92,7 @@ func TestTileProvider(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := &mockImageSourceCreater{}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
@@ -149,7 +149,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png"), Resampling: "nearest"}
 
-	ccreater := &mockImageSourceCreater{}
+	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 

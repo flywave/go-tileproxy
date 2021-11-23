@@ -15,7 +15,19 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
-	ret := &CacheSource{CacheMapLayer: CacheMapLayer{MapLayer: layer.MapLayer{SupportMetaTiles: !tiled_only, Extent: ext, Options: image_opts}, tileManager: tm, grid: tm.GetGrid(), maxTileLimit: maxTileLimit}, TiledOnly: tiled_only}
+	ret := &CacheSource{
+		CacheMapLayer: CacheMapLayer{
+			MapLayer: layer.MapLayer{
+				SupportMetaTiles: !tiled_only,
+				Extent:           ext,
+				Options:          image_opts,
+			},
+			tileManager:  tm,
+			grid:         tm.GetGrid(),
+			maxTileLimit: maxTileLimit,
+		},
+		TiledOnly: tiled_only,
+	}
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
 		ret.ResRange = layer.MergeLayerResRanges(tm.GetSources())

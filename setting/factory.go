@@ -636,9 +636,13 @@ func LoadTileSource(s *TileSource, globals *GlobalsSetting, instance ProxyInstan
 	} else {
 		http = &globals.Http.HttpSetting
 	}
+
 	creater := cache.GetSourceCreater(opts)
+
 	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat, s.Subdomains)
+
 	c := client.NewTileClient(grid.(*geo.TileGrid), tpl, newCollectorContext(http))
+
 	return sources.NewTileSource(grid.(*geo.TileGrid), c, coverage, opts, res_range, creater)
 }
 
@@ -674,6 +678,7 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 		accessTokenName = s.AccessTokenName
 	}
 	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.AccessToken, accessTokenName, newCollectorContext(http))
+
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }
 
@@ -731,6 +736,7 @@ func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsS
 
 	req := request.NewArcGISRequest(params, url)
 	c := client.NewArcGISClient(req, newCollectorContext(http))
+
 	return sources.NewArcGISSource(c, image_opts, coverage, res_range, supported_srs, s.SupportedFormats)
 }
 
@@ -964,11 +970,22 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 }
 
 func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetting, basePath string) *service.WMSService {
-	md := &service.WMSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, OnlineResource: struct {
-		Xlink *string
-		Type  *string
-		Href  *string
-	}{Xlink: s.OnlineResource.Xlink, Type: s.OnlineResource.Type, Href: s.OnlineResource.Href}, Fees: s.Fees, AccessConstraints: s.AccessConstraints}
+	md := &service.WMSMetadata{
+		Title:       s.Title,
+		Abstract:    s.Abstract,
+		KeywordList: s.KeywordList,
+		OnlineResource: struct {
+			Xlink *string
+			Type  *string
+			Href  *string
+		}{
+			Xlink: s.OnlineResource.Xlink,
+			Type:  s.OnlineResource.Type,
+			Href:  s.OnlineResource.Href,
+		},
+		Fees:              s.Fees,
+		AccessConstraints: s.AccessConstraints,
+	}
 
 	var rootLayer *service.WMSGroupLayer
 	var layers map[string]service.WMSLayer

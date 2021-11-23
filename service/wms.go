@@ -53,7 +53,17 @@ type WMSService struct {
 }
 
 func NewWMSService(rootLayer *WMSGroupLayer, layers map[string]WMSLayer, metadata *WMSMetadata, srs *geo.SupportedSRS, imageFormats map[string]*imagery.ImageOptions, infoFormats map[string]string, srsExtents map[string]*geo.MapExtent, maxOutputPixels int, maxTileAge *time.Duration, strict bool, ftransformers map[string]*resource.XSLTransformer) *WMSService {
-	ret := &WMSService{RootLayer: rootLayer, Strict: strict, ImageFormats: imageFormats, Metadata: metadata, InfoFormats: infoFormats, Srs: srs, SrsExtents: srsExtents, MaxOutputPixels: maxOutputPixels, MaxTileAge: maxTileAge, FeatureTransformers: ftransformers}
+	ret := &WMSService{
+		RootLayer:       rootLayer,
+		Strict:          strict,
+		ImageFormats:    imageFormats,
+		Metadata:        metadata,
+		InfoFormats:     infoFormats,
+		Srs:             srs,
+		SrsExtents:      srsExtents,
+		MaxOutputPixels: maxOutputPixels,
+		MaxTileAge:      maxTileAge,
+	}
 	if rootLayer == nil {
 		ret.Layers = layers
 	} else {

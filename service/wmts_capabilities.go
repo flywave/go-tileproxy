@@ -69,6 +69,10 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 
 	url := c.Service.URL
 
+	if resp.OperationsMetadata == nil {
+		resp.OperationsMetadata = &wmts100.OperationsMetadata{}
+	}
+
 	op := wmts100.Operation{}
 	op.Name = "GetCapabilities"
 	get := &wmts100.Get{}
@@ -134,6 +138,10 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 			tms.TileMatrix = append(tms.TileMatrix, tt)
 		}
 		contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
+	}
+
+	if resp.ServiceMetadataURL == nil {
+		resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 	}
 
 	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"

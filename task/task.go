@@ -9,6 +9,8 @@ import (
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
+	"github.com/flywave/go-tileproxy/exports"
+	"github.com/flywave/go-tileproxy/imports"
 )
 
 type Task interface {
@@ -25,7 +27,6 @@ type BaseTask struct {
 	Metadata map[string]interface{}
 	Manager  cache.Manager
 	Coverage geo.Coverage
-	Grid     *geo.TileGrid
 	Levels   []int
 }
 
@@ -39,10 +40,6 @@ func (t *BaseTask) GetManager() cache.Manager {
 
 func (t *BaseTask) GetLevels() []int {
 	return t.Levels
-}
-
-func (t *BaseTask) GetGrid() *geo.TileGrid {
-	return t.Grid
 }
 
 func (t *BaseTask) GetCoverage() geo.Coverage {
@@ -118,10 +115,11 @@ func (t *TileCleanupTask) GetID() string {
 type TileExportTask struct {
 	BaseTask
 	RefreshTimestamp *time.Time
+	io               exports.Export
 }
 
 func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
-	return &ExportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
+	return &ExportWorker{task: t, manager: t.Manager, io: t.io, tiles: handle_tiles, done: make(chan struct{})}
 }
 
 func NewTileExportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
@@ -131,7 +129,8 @@ func NewTileExportTask(md map[string]interface{}, manager cache.Manager, levels 
 			Manager:  manager,
 			Coverage: coverage,
 			Grid:     manager.GetGrid(),
-			Levels:   levels},
+			Levels:   levels,
+		},
 	}
 }
 
@@ -142,10 +141,11 @@ func (t *TileExportTask) GetID() string {
 type TileImportTask struct {
 	BaseTask
 	ForceOverwrite bool
+	io             imports.Import
 }
 
 func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
-	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{}), force_overwrite: t.ForceOverwrite}
+	return &ImportWorker{task: t, manager: t.Manager, io: t.io, tiles: handle_tiles, done: make(chan struct{}), force_overwrite: t.ForceOverwrite}
 }
 
 func NewTileImportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {

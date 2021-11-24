@@ -63,6 +63,7 @@ func Import(ctx context.Context, io imports.Import, tasks []*TileImportTask, con
 			} else {
 				start_progress = nil
 			}
+			task.io = io
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
 			return importTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {

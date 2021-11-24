@@ -74,6 +74,7 @@ func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, con
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
+			task.io = io
 			return exportTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileExportTask{task}, active_tasks[:len(active_tasks)-1]...)

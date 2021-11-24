@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
+func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null")
 	}
@@ -34,7 +34,7 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, skipGeom
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
+	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {
@@ -46,7 +46,7 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, skipGeom
 	return err
 }
 
-func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -72,7 +72,7 @@ func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, skipGeoms
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return seedTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
+			return seedTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

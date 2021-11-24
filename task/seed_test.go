@@ -136,7 +136,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *testin
 
 	tile_worker_pool := &mockWorkerPool{}
 
-	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, seedProgress, false, true)
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, logger, seedProgress, false, true)
 	seeder.Walk()
 
 	return tile_worker_pool.seedTiles
@@ -175,7 +175,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	tile_worker_pool := &mockWorkerPool{}
 
-	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, nil, false, true)
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, logger, nil, false, true)
 	seeder.Walk()
 
 	return tile_worker_pool.seedTiles
@@ -214,7 +214,7 @@ func analytic(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *test
 
 	tile_worker_pool := &mockWorkerPool{}
 
-	seeder := NewTileWalker(seedTask, tile_worker_pool, false, 0, logger, seedProgress, false, true)
+	seeder := NewTileWalker(seedTask, tile_worker_pool, false, logger, seedProgress, false, true)
 
 	return seeder.Analytic()
 }

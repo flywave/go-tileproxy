@@ -27,6 +27,7 @@ type BaseTask struct {
 	Metadata map[string]interface{}
 	Manager  cache.Manager
 	Coverage geo.Coverage
+	Grid     *geo.TileGrid
 	Levels   []int
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/imports"
 )
 
-func importTask(ctx context.Context, task *TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
+func importTask(ctx context.Context, task *TileImportTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
 	if task.GetCoverage() == nil {
 		return errors.New("task coverage is null")
 	}
@@ -26,7 +26,7 @@ func importTask(ctx context.Context, task *TileImportTask, concurrency int, skip
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, false, skipGeomsForLastLevels, progress_logger, seedProgress, false, true)
+	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seedProgress, false, true)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {
@@ -38,7 +38,7 @@ func importTask(ctx context.Context, task *TileImportTask, concurrency int, skip
 	return err
 }
 
-func Import(ctx context.Context, io imports.Import, tasks []*TileImportTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Import(ctx context.Context, io imports.Import, tasks []*TileImportTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -65,7 +65,7 @@ func Import(ctx context.Context, io imports.Import, tasks []*TileImportTask, con
 			}
 			task.io = io
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return importTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
+			return importTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileImportTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

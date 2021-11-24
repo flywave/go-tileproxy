@@ -12,33 +12,31 @@ import (
 )
 
 type TileWalker struct {
-	manager                cache.Manager
-	task                   Task
-	workOnMetatiles        bool
-	skipGeomsForLastLevels int
-	reportTillLevel        int
-	tilesPerMetatile       int
-	taskProgress           *TaskProgress
-	grid                   *geo.MetaGrid
-	count                  int
-	processedTiles         map[int]*utils.Deque
-	progressLogger         ProgressLogger
-	handleStale            bool
-	handleUncached         bool
-	pool                   WorkerPool
+	manager          cache.Manager
+	task             Task
+	workOnMetatiles  bool
+	reportTillLevel  int
+	tilesPerMetatile int
+	taskProgress     *TaskProgress
+	grid             *geo.MetaGrid
+	count            int
+	processedTiles   map[int]*utils.Deque
+	progressLogger   ProgressLogger
+	handleStale      bool
+	handleUncached   bool
+	pool             WorkerPool
 }
 
-func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, skipGeomsForLastLevels int, progressLogger ProgressLogger, taskProgress *TaskProgress, handleStale, handleUNCached bool) *TileWalker {
+func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, progressLogger ProgressLogger, taskProgress *TaskProgress, handleStale, handleUNCached bool) *TileWalker {
 	ret := &TileWalker{
-		pool:                   tileWorkerPool,
-		task:                   task,
-		manager:                task.GetManager(),
-		workOnMetatiles:        workOnMetatiles,
-		skipGeomsForLastLevels: skipGeomsForLastLevels,
-		taskProgress:           taskProgress,
-		progressLogger:         progressLogger,
-		handleStale:            handleStale,
-		handleUncached:         handleUNCached,
+		pool:            tileWorkerPool,
+		task:            task,
+		manager:         task.GetManager(),
+		workOnMetatiles: workOnMetatiles,
+		taskProgress:    taskProgress,
+		progressLogger:  progressLogger,
+		handleStale:     handleStale,
+		handleUncached:  handleUNCached,
 	}
 
 	num_seed_levels := len(task.GetLevels())
@@ -81,9 +79,7 @@ func (t *TileWalker) Analytic() int {
 
 func (t *TileWalker) analytic(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) (bool, []int, int) {
 	_, _, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, currentLevel)
-	if len(levels) < t.skipGeomsForLastLevels {
-		allSubtiles = true
-	}
+	allSubtiles = true
 	subtilesIt := t.filterSubtiles(subtiles, allSubtiles)
 
 	total := 0
@@ -189,9 +185,7 @@ func filterIsStale(manager cache.Manager, handle_tiles [][3]int) [][3]int {
 func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) ([]int, bool) {
 	_, tiles, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, currentLevel)
 	totalSubtiles := int(tiles[0] * tiles[1])
-	if len(levels) < t.skipGeomsForLastLevels {
-		allSubtiles = true
-	}
+	allSubtiles = true
 	subtilesIt := t.filterSubtiles(subtiles, allSubtiles)
 
 	if levelInLevels(currentLevel, levels) && currentLevel <= t.reportTillLevel {

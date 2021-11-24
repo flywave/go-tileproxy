@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -32,7 +32,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, ski
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return cleanupTask(ctx, task, concurrency, skipGeomsForLastLevels, progress_logger, seed_progress)
+			return cleanupTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileCleanupTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
@@ -43,7 +43,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, ski
 	}
 }
 
-func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, skipGeomsForLastLevels int, progress_logger ProgressLogger, seed_progress *TaskProgress) error {
+func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, progress_logger ProgressLogger, seed_progress *TaskProgress) error {
 	task.GetManager().SetExpireTimestamp(&task.RemoveTimestamp)
 	task.GetManager().SetMinimizeMetaRequests(false)
 
@@ -58,7 +58,7 @@ func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, sk
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, false, skipGeomsForLastLevels, progress_logger, seed_progress, true, false)
+	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seed_progress, true, false)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {

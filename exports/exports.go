@@ -11,6 +11,11 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+const (
+	EXPORT_DIRECTORY_LAYOUT = "directory_layout"
+	EXPORT_TABLE_NAME       = "table_name"
+)
+
 type Export interface {
 	GetTileFormat() tile.TileFormat
 	StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error
@@ -20,12 +25,12 @@ type Export interface {
 
 func New(fileName string, g *geo.TileGrid, optios tile.TileOptions, settings map[string]interface{}) (Export, error) {
 	if strings.HasSuffix(fileName, ".tar.gz") || strings.HasSuffix(fileName, ".zip") {
-		if dl, ok := settings["directory_layout"]; ok {
+		if dl, ok := settings[EXPORT_DIRECTORY_LAYOUT]; ok {
 			return NewArchiveExport(fileName, g, optios, dl.(string))
 		}
 		return NewArchiveExport(fileName, g, optios, mbtiles.DEFAULT_DIRECTORY_LAYOUT)
 	} else if strings.HasSuffix(fileName, ".gpkg") {
-		if tname, ok := settings["table_name"]; ok {
+		if tname, ok := settings[EXPORT_TABLE_NAME]; ok {
 			return NewArchiveExport(fileName, g, optios, tname.(string))
 		}
 		tableName := path.Base(fileName)

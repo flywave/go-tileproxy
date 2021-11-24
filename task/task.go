@@ -13,7 +13,7 @@ import (
 
 type Task interface {
 	GetID() string
-	GetMetadata() map[string]string
+	GetMetadata() map[string]interface{}
 	GetManager() cache.Manager
 	GetLevels() []int
 	GetCoverage() geo.Coverage
@@ -22,14 +22,14 @@ type Task interface {
 }
 
 type BaseTask struct {
-	Metadata map[string]string
+	Metadata map[string]interface{}
 	Manager  cache.Manager
 	Coverage geo.Coverage
 	Grid     *geo.TileGrid
 	Levels   []int
 }
 
-func (t *BaseTask) GetMetadata() map[string]string {
+func (t *BaseTask) GetMetadata() map[string]interface{} {
 	return t.Metadata
 }
 
@@ -68,7 +68,7 @@ func (t *TileSeedTask) NewWork(handle_tiles [][3]int) Work {
 	return &SeedWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileSeedTask(md map[string]string, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
+func NewTileSeedTask(md map[string]interface{}, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
 	return &TileSeedTask{
 		BaseTask: BaseTask{
 			Metadata: md,
@@ -98,7 +98,7 @@ func (t *TileCleanupTask) NewWork(handle_tiles [][3]int) Work {
 	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileCleanupTask(md map[string]string, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
+func NewTileCleanupTask(md map[string]interface{}, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
 	return &TileCleanupTask{
 		BaseTask: BaseTask{
 			Metadata: md,
@@ -124,7 +124,7 @@ func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
 	return &ExportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileExportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
+func NewTileExportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
 	return &TileExportTask{
 		BaseTask: BaseTask{
 			Metadata: md,
@@ -148,7 +148,7 @@ func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
 	return &ImportWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{}), force_overwrite: t.ForceOverwrite}
 }
 
-func NewTileImportTask(md map[string]string, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
+func NewTileImportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
 	return &TileImportTask{
 		BaseTask: BaseTask{
 			Metadata: md,

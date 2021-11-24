@@ -16,7 +16,14 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, ski
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
 		md := task.GetMetadata()
-		if err := cache_locker.Lock(md["cache_name"], func() error {
+		var cacheName string
+		if cn, ok := md["cache_name"]; ok {
+			cacheName = cn.(string)
+		} else {
+			cacheName = "default"
+		}
+
+		if err := cache_locker.Lock(cacheName, func() error {
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())

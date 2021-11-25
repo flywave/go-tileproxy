@@ -2,15 +2,14 @@ package task
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/flywave/go-tileproxy/exports"
 )
 
-func exportTask(ctx context.Context, task *TileExportTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
+func exportTask(ctx context.Context, task *TileExportTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) {
 	if task.GetCoverage() == nil {
-		return errors.New("task coverage is null")
+		return
 	}
 	if task.RefreshTimestamp != nil {
 		task.GetManager().SetExpireTimestamp(task.RefreshTimestamp)
@@ -29,10 +28,8 @@ func exportTask(ctx context.Context, task *TileExportTask, concurrency int, prog
 
 	wg.Add(1)
 
-	var err error
-
 	go func() {
-		err = tile_worker_pool.Queue.Run()
+		tile_worker_pool.Queue.Run()
 		wg.Done()
 	}()
 
@@ -44,8 +41,6 @@ func exportTask(ctx context.Context, task *TileExportTask, concurrency int, prog
 	}
 
 	wg.Wait()
-
-	return err
 }
 
 func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
@@ -65,7 +60,7 @@ func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, con
 		} else {
 			cacheName = "default"
 		}
-		if err := cache_locker.Lock(cacheName, func() error {
+		if err := cache_locker.Lock(cacheName, func() {
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())
@@ -75,7 +70,7 @@ func Export(ctx context.Context, io exports.Export, tasks []*TileExportTask, con
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
 			task.io = io
-			return exportTask(ctx, task, concurrency, progress_logger, seed_progress)
+			exportTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileExportTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

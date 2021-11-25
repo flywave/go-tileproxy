@@ -23,7 +23,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, pro
 			cacheName = "default"
 		}
 
-		if err := cache_locker.Lock(cacheName, func() error {
+		if err := cache_locker.Lock(cacheName, func() {
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())
@@ -32,7 +32,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, pro
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return cleanupTask(ctx, task, concurrency, progress_logger, seed_progress)
+			cleanupTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileCleanupTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
@@ -43,7 +43,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, pro
 	}
 }
 
-func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, progress_logger ProgressLogger, seed_progress *TaskProgress) error {
+func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, progress_logger ProgressLogger, seed_progress *TaskProgress) {
 	task.GetManager().SetExpireTimestamp(&task.RemoveTimestamp)
 	task.GetManager().SetMinimizeMetaRequests(false)
 
@@ -52,9 +52,9 @@ func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, pr
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-	var err error
+
 	go func() {
-		err = tile_worker_pool.Queue.Run()
+		tile_worker_pool.Queue.Run()
 		wg.Done()
 	}()
 
@@ -66,6 +66,4 @@ func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, pr
 	}
 
 	wg.Wait()
-
-	return err
 }

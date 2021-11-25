@@ -60,7 +60,7 @@ func (q *workerQueue) IsRuning() bool {
 	return q.running
 }
 
-func (q *workerQueue) Run() error {
+func (q *workerQueue) Run() {
 	q.mut.Lock()
 	if q.wake != nil && q.running {
 		q.mut.Unlock()
@@ -72,13 +72,12 @@ func (q *workerQueue) Run() error {
 	q.mut.Unlock()
 
 	requestc := make(chan Work)
-	complete, errc := make(chan struct{}), make(chan error, 1)
+	complete := make(chan struct{})
 	for i := 0; i < q.Threads; i++ {
 		go independentRunner(requestc, complete)
 	}
-	go q.loop(requestc, complete, errc)
+	go q.loop(requestc, complete)
 	defer close(requestc)
-	return <-errc
 }
 
 func (q *workerQueue) Stop() {
@@ -87,12 +86,11 @@ func (q *workerQueue) Stop() {
 	q.mut.Unlock()
 }
 
-func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}, errc chan<- error) {
+func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}) {
 	var active int
 	for {
 		size := q.storage.Len()
 		if size == 0 && active == 0 || !q.running {
-			errc <- nil
 			break
 		}
 		sent := requestc
@@ -125,7 +123,6 @@ func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}, errc 
 				q.mut.Lock()
 				q.running = false
 				q.mut.Unlock()
-				errc <- q.ctx.Err()
 				break
 			}
 		}

@@ -2,13 +2,12 @@ package task
 
 import (
 	"context"
-	"errors"
 	"sync"
 )
 
-func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) error {
+func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) {
 	if task.GetCoverage() == nil {
-		return errors.New("task coverage is null")
+		return
 	}
 	if task.RefreshTimestamp != nil {
 		task.GetManager().SetExpireTimestamp(task.RefreshTimestamp)
@@ -27,10 +26,8 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress
 
 	wg.Add(1)
 
-	var err error
-
 	go func() {
-		err = tile_worker_pool.Queue.Run()
+		tile_worker_pool.Queue.Run()
 		wg.Done()
 	}()
 
@@ -42,8 +39,6 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress
 	}
 
 	wg.Wait()
-
-	return err
 }
 
 func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
@@ -63,7 +58,7 @@ func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_
 		} else {
 			cacheName = "default"
 		}
-		if err := cache_locker.Lock(cacheName, func() error {
+		if err := cache_locker.Lock(cacheName, func() {
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())
@@ -72,7 +67,7 @@ func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			return seedTask(ctx, task, concurrency, progress_logger, seed_progress)
+			seedTask(ctx, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

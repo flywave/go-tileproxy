@@ -179,7 +179,7 @@ type CacheSource struct {
 	UpscaleTiles         *int          `json:"upscale_tiles,omitempty"`
 	DownscaleTiles       *int          `json:"downscale_tiles,omitempty"`
 	Filters              []interface{} `json:"filters,omitempty"`
-	CacheInfo            interface{}   `json:"cache,omitempty"`
+	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
 }
 
 type WMSSourceOpts struct {
@@ -219,7 +219,7 @@ type WMSSource struct {
 	Layers           []string          `json:"layers"`
 	Transparent      *bool             `json:"transparent,omitempty"`
 	Format           string            `json:"format,omitempty"`
-	Store            interface{}       `json:"store"`
+	Store            *StoreInfo        `json:"store"`
 }
 
 type TileSource struct {
@@ -245,7 +245,7 @@ type MapboxTileSource struct {
 	Grid            string       `json:"grid,omitempty"`
 	Http            *HttpSetting `json:"http,omitempty"`
 	TilejsonUrl     string       `json:"tilejson_url,omitempty"`
-	TilejsonStore   interface{}  `json:"tilejson_store"`
+	TilejsonStore   *StoreInfo   `json:"tilejson_store"`
 }
 
 type ArcGISSourceOpts struct {
@@ -301,11 +301,11 @@ type MapboxStyleLayer struct {
 	AccessToken      string       `json:"access_token,omitempty"`
 	AccessTokenName  string       `json:"access_token_name,omitempty"`
 	StyleID          string       `json:"style_id,omitempty"`
-	Store            interface{}  `json:"store"`
+	Store            *StoreInfo   `json:"store"`
 	Http             *HttpSetting `json:"http,omitempty"`
 	Sprite           string       `json:"sprite"`
 	Glyphs           string       `json:"glyphs"`
-	GlyphsStore      interface{}  `json:"glyphs_store"`
+	GlyphsStore      *StoreInfo   `json:"glyphs_store"`
 	Fonts            []string     `json:"fonts,omitempty"`
 	StyleContentAttr *string      `json:"style_content,omitempty"`
 }

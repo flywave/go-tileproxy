@@ -249,13 +249,10 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 
 	var cacheB cache.Cache
 
-	switch cinfo := c.CacheInfo.(type) {
-	case *CacheInfo:
-		if fac != nil {
-			cacheB = fac.CreateCache(cinfo, tile_opts)
-		} else {
-			cacheB = ConvertLocalCache(cinfo, tile_opts)
-		}
+	if fac != nil {
+		cacheB = fac.CreateCache(c.CacheInfo, tile_opts)
+	} else {
+		cacheB = ConvertLocalCache(c.CacheInfo, tile_opts)
 	}
 
 	var locker cache.TileLocker
@@ -528,14 +525,12 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting, fac CacheFactor
 	}
 
 	var cache *resource.LegendCache
-	switch s := s.Store.(type) {
-	case *StoreInfo:
-		if fac != nil {
-			cache = resource.NewLegendCache(fac.CreateStore(s))
-		} else {
-			cache = resource.NewLegendCache(ConvertLocalStore(s))
-		}
+	if fac != nil {
+		cache = resource.NewLegendCache(fac.CreateStore(s.Store))
+	} else {
+		cache = resource.NewLegendCache(ConvertLocalStore(s.Store))
 	}
+
 	return sources.NewWMSLegendSource(s.Opts.LegendID, lg_clients, cache)
 }
 
@@ -680,13 +675,10 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	}
 
 	var tcache *resource.TileJSONCache
-	switch s := s.TilejsonStore.(type) {
-	case *StoreInfo:
-		if fac != nil {
-			tcache = resource.NewTileJSONCache(fac.CreateStore(s))
-		} else {
-			tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
-		}
+	if fac != nil {
+		tcache = resource.NewTileJSONCache(fac.CreateStore(s.TilejsonStore))
+	} else {
+		tcache = resource.NewTileJSONCache(ConvertLocalStore(s.TilejsonStore))
 	}
 
 	creater := cache.GetSourceCreater(opts)
@@ -830,23 +822,17 @@ func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting, fac CacheFact
 	cglyphs := client.NewMapboxStyleClient(s.Glyphs, s.AccessToken, accessTokenName, newCollectorContext(http))
 
 	var cache *resource.StyleCache
-	switch s := s.Store.(type) {
-	case *StoreInfo:
-		if fac != nil {
-			cache = resource.NewStyleCache(fac.CreateStore(s))
-		} else {
-			cache = resource.NewStyleCache(ConvertLocalStore(s))
-		}
+	if fac != nil {
+		cache = resource.NewStyleCache(fac.CreateStore(s.Store))
+	} else {
+		cache = resource.NewStyleCache(ConvertLocalStore(s.Store))
 	}
 
 	var gcache *resource.GlyphsCache
-	switch s := s.GlyphsStore.(type) {
-	case *StoreInfo:
-		if fac != nil {
-			gcache = resource.NewGlyphsCache(fac.CreateStore(s))
-		} else {
-			gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
-		}
+	if fac != nil {
+		gcache = resource.NewGlyphsCache(fac.CreateStore(s.GlyphsStore))
+	} else {
+		gcache = resource.NewGlyphsCache(ConvertLocalStore(s.GlyphsStore))
 	}
 	return sources.NewMapboxStyleSource(c, csprite, cache), sources.NewMapboxGlyphsSource(cglyphs, s.Fonts, gcache)
 }

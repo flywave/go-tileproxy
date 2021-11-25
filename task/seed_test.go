@@ -33,13 +33,13 @@ func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte)
 func makeBBoxTask(tile_mgr cache.Manager, bbox vec2d.Rect, srs geo.Proj, levels []int) *TileSeedTask {
 	md := map[string]interface{}{"name": "", "cache_name": "", "grid_name": ""}
 	coverage := geo.NewBBoxCoverage(bbox, srs, false)
-	return NewTileSeedTask(md, tile_mgr, levels, nil, coverage)
+	return NewTileSeedTask("1", md, tile_mgr, levels, nil, coverage)
 }
 
 func makeGeomTask(tile_mgr cache.Manager, geom *geos.Geometry, srs geo.Proj, levels []int) *TileSeedTask {
 	md := map[string]interface{}{"name": "", "cache_name": "", "grid_name": ""}
 	coverage := geo.NewGeosCoverage(geom, srs, false)
-	return NewTileSeedTask(md, tile_mgr, levels, nil, coverage)
+	return NewTileSeedTask("1", md, tile_mgr, levels, nil, coverage)
 }
 
 type MockLogWriter struct {

@@ -1,8 +1,6 @@
 package task
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -24,6 +22,7 @@ type Task interface {
 }
 
 type BaseTask struct {
+	JobId    string
 	Metadata map[string]interface{}
 	Manager  cache.Manager
 	Coverage geo.Coverage
@@ -66,9 +65,10 @@ func (t *TileSeedTask) NewWork(handle_tiles [][3]int) Work {
 	return &SeedWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileSeedTask(md map[string]interface{}, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
+func NewTileSeedTask(jobid string, md map[string]interface{}, manager cache.Manager, levels []int, refresh_timestamp *time.Time, coverage geo.Coverage) *TileSeedTask {
 	return &TileSeedTask{
 		BaseTask: BaseTask{
+			JobId:    jobid,
 			Metadata: md,
 			Manager:  manager,
 			Coverage: coverage,
@@ -80,11 +80,7 @@ func NewTileSeedTask(md map[string]interface{}, manager cache.Manager, levels []
 }
 
 func (t *TileSeedTask) GetID() string {
-	l := "level"
-	for _, level := range t.Levels {
-		l += "-" + strconv.Itoa(level)
-	}
-	return fmt.Sprintf("%s %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"], l)
+	return t.JobId
 }
 
 type TileCleanupTask struct {
@@ -96,9 +92,10 @@ func (t *TileCleanupTask) NewWork(handle_tiles [][3]int) Work {
 	return &CleanupWorker{task: t, manager: t.Manager, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileCleanupTask(md map[string]interface{}, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
+func NewTileCleanupTask(jobid string, md map[string]interface{}, manager cache.Manager, levels []int, remove_timestamp time.Time, coverage geo.Coverage) *TileCleanupTask {
 	return &TileCleanupTask{
 		BaseTask: BaseTask{
+			JobId:    jobid,
 			Metadata: md,
 			Manager:  manager,
 			Coverage: coverage,
@@ -110,7 +107,7 @@ func NewTileCleanupTask(md map[string]interface{}, manager cache.Manager, levels
 }
 
 func (t *TileCleanupTask) GetID() string {
-	return fmt.Sprintf("cleanup %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
+	return t.JobId
 }
 
 type TileExportTask struct {
@@ -123,9 +120,10 @@ func (t *TileExportTask) NewWork(handle_tiles [][3]int) Work {
 	return &ExportWorker{task: t, manager: t.Manager, io: t.io, tiles: handle_tiles, done: make(chan struct{})}
 }
 
-func NewTileExportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
+func NewTileExportTask(jobid string, md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileExportTask {
 	return &TileExportTask{
 		BaseTask: BaseTask{
+			JobId:    jobid,
 			Metadata: md,
 			Manager:  manager,
 			Coverage: coverage,
@@ -136,7 +134,7 @@ func NewTileExportTask(md map[string]interface{}, manager cache.Manager, levels 
 }
 
 func (t *TileExportTask) GetID() string {
-	return fmt.Sprintf("export %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
+	return t.JobId
 }
 
 type TileImportTask struct {
@@ -149,9 +147,10 @@ func (t *TileImportTask) NewWork(handle_tiles [][3]int) Work {
 	return &ImportWorker{task: t, manager: t.Manager, io: t.io, tiles: handle_tiles, done: make(chan struct{}), force_overwrite: t.ForceOverwrite}
 }
 
-func NewTileImportTask(md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
+func NewTileImportTask(jobid string, md map[string]interface{}, manager cache.Manager, levels []int, coverage geo.Coverage) *TileImportTask {
 	return &TileImportTask{
 		BaseTask: BaseTask{
+			JobId:    jobid,
 			Metadata: md,
 			Manager:  manager,
 			Coverage: coverage,
@@ -162,5 +161,5 @@ func NewTileImportTask(md map[string]interface{}, manager cache.Manager, levels 
 }
 
 func (t *TileImportTask) GetID() string {
-	return fmt.Sprintf("import %s %s %s", t.Metadata["name"], t.Metadata["cache_name"], t.Metadata["grid_name"])
+	return t.JobId
 }

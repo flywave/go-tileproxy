@@ -10,15 +10,16 @@ import (
 )
 
 type CacheLocker interface {
-	Lock(name string, run func() error) error
+	Lock(name string, runf func()) error
 }
 
 type DummyCacheLocker struct {
 	CacheLocker
 }
 
-func (l *DummyCacheLocker) Lock(name string, run func() error) error {
-	return run()
+func (l *DummyCacheLocker) Lock(name string, runf func()) error {
+	runf()
+	return nil
 }
 
 type LocalCacheLocker struct {
@@ -35,7 +36,7 @@ func (l *LocalCacheLocker) getTempFileName(name string) string {
 	return tmpFile
 }
 
-func (l *LocalCacheLocker) Lock(name string, run func() error) error {
+func (l *LocalCacheLocker) Lock(name string, runf func()) error {
 	l.m.RLock()
 	var lock *flock.Flock
 	if lock_, ok := l.locks[name]; !ok {
@@ -47,7 +48,11 @@ func (l *LocalCacheLocker) Lock(name string, run func() error) error {
 	}
 	l.m.RUnlock()
 
-	lock.Lock()
+	err := lock.Lock()
+	if err != nil {
+		return err
+	}
 	defer lock.Unlock()
-	return run()
+	runf()
+	return nil
 }

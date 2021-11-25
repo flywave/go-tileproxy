@@ -123,7 +123,7 @@ func getProxyService() *setting.ProxyService {
 }
 
 func getService() *tileproxy.Service {
-	return tileproxy.NewService(getProxyService(), "../", &demo.Globals)
+	return tileproxy.NewService(getProxyService(), "../", &demo.Globals, nil)
 }
 
 var dataset *tileproxy.Service

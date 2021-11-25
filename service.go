@@ -32,7 +32,7 @@ type Service struct {
 	Caches        map[string]cache.Manager
 }
 
-func NewService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) *Service {
+func NewService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
 	ret := &Service{
 		UUID:          dataset.UUID,
 		Grids:         make(map[string]geo.Grid),
@@ -41,15 +41,15 @@ func NewService(dataset *setting.ProxyService, basePath string, globals *setting
 		InfoSources:   make(map[string]layer.InfoLayer),
 		LegendSources: make(map[string]layer.LegendLayer),
 	}
-	ret.load(dataset, basePath, globals)
+	ret.load(dataset, basePath, globals, fac)
 	return ret
 }
 
-func (s *Service) load(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) load(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	s.loadGrids(dataset, basePath, globals)
-	s.loadSources(dataset, basePath, globals)
-	s.loadCaches(dataset, basePath, globals)
-	s.loadService(dataset, basePath, globals)
+	s.loadSources(dataset, basePath, globals, fac)
+	s.loadCaches(dataset, basePath, globals, fac)
+	s.loadService(dataset, basePath, globals, fac)
 }
 
 func (s *Service) loadGrids(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
@@ -58,21 +58,21 @@ func (s *Service) loadGrids(dataset *setting.ProxyService, basePath string, glob
 	}
 }
 
-func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	for k, src := range dataset.Sources {
 		switch source := src.(type) {
 		case *setting.WMSSource:
 			if source.Opts.FeatureInfo != nil && *source.Opts.FeatureInfo {
 				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, globals)
 			} else if source.Opts.LegendGraphic != nil && *source.Opts.LegendGraphic {
-				s.LegendSources[k] = setting.LoadWMSLegendsSource(source, globals)
+				s.LegendSources[k] = setting.LoadWMSLegendsSource(source, globals, fac)
 			} else {
 				s.Sources[k] = setting.LoadWMSMapSource(source, s, globals)
 			}
 		case *setting.TileSource:
 			s.Sources[k] = setting.LoadTileSource(source, globals, s)
 		case *setting.MapboxTileSource:
-			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s)
+			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s, fac)
 		case *setting.ArcGISSource:
 			if source.Opts.Featureinfo != nil && *source.Opts.Featureinfo {
 				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals)
@@ -83,23 +83,23 @@ func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, gl
 	}
 }
 
-func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
 		case *setting.CacheSource:
-			s.Caches[k] = setting.LoadCacheManager(cache, globals, s)
+			s.Caches[k] = setting.LoadCacheManager(cache, globals, s, fac)
 		}
 	}
 }
 
-func (s *Service) loadService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	switch srv := dataset.Service.(type) {
 	case *setting.TMSService:
 		s.Service = setting.LoadTMSService(srv, s)
 	case *setting.WMSService:
 		s.Service = setting.LoadWMSService(srv, s, globals, basePath)
 	case *setting.MapboxService:
-		s.Service = setting.LoadMapboxService(srv, globals, s)
+		s.Service = setting.LoadMapboxService(srv, globals, s, fac)
 	case *setting.WMTSService:
 		if srv.Restful != nil && *srv.Restful {
 			s.Service = setting.LoadWMTSRestfulService(srv, s)

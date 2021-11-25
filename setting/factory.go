@@ -27,6 +27,11 @@ import (
 	"github.com/flywave/go-tileproxy/vector"
 )
 
+type CacheFactory interface {
+	CreateCache(cache interface{}, opts tile.TileOptions) cache.Cache
+	CreateStore(cache interface{}) resource.Store
+}
+
 func GetPreferredSrcSRS(srs *Srs) geo.PreferredSrcSRS {
 	ret := make(geo.PreferredSrcSRS)
 	for k, ss := range srs.PreferredSrcProj {
@@ -154,7 +159,7 @@ func LoadFilter(f interface{}) cache.Filter {
 	return nil
 }
 
-func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance) cache.Manager {
+func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) cache.Manager {
 	opts := []tile.TileOptions{}
 	layers := []layer.Layer{}
 
@@ -247,6 +252,10 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	switch cinfo := c.CacheInfo.(type) {
 	case *LocalCache:
 		cacheB = ConvertLocalCache(cinfo, tile_opts)
+	default:
+		if fac != nil {
+			cacheB = fac.CreateCache(cinfo, tile_opts)
+		}
 	}
 
 	var locker cache.TileLocker
@@ -489,7 +498,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting) *
 	return sources.NewWMSInfoSource(c, coverage, transformer)
 }
 
-func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLegendSource {
+func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting, fac CacheFactory) *sources.WMSLegendSource {
 	if s.Opts.LegendGraphic == nil || !*s.Opts.LegendGraphic {
 		return nil
 	}
@@ -522,6 +531,10 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSLeg
 	switch s := s.Store.(type) {
 	case *LocalStore:
 		cache = resource.NewLegendCache(ConvertLocalStore(s))
+	default:
+		if fac != nil {
+			cache = resource.NewLegendCache(fac.CreateStore(s))
+		}
 	}
 	return sources.NewWMSLegendSource(s.Opts.LegendID, lg_clients, cache)
 }
@@ -646,7 +659,7 @@ func LoadTileSource(s *TileSource, globals *GlobalsSetting, instance ProxyInstan
 	return sources.NewTileSource(grid.(*geo.TileGrid), c, coverage, opts, res_range, creater)
 }
 
-func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance ProxyInstance) *sources.MapboxTileSource {
+func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *sources.MapboxTileSource {
 	var opts tile.TileOptions
 	switch o := s.Options.(type) {
 	case *ImageOpts:
@@ -670,6 +683,10 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	switch s := s.TilejsonStore.(type) {
 	case *LocalStore:
 		tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
+	default:
+		if fac != nil {
+			tcache = resource.NewTileJSONCache(fac.CreateStore(s))
+		}
 	}
 
 	creater := cache.GetSourceCreater(opts)
@@ -792,7 +809,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting) *sources.Arc
 	return sources.NewArcGISInfoSource(c)
 }
 
-func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
+func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting, fac CacheFactory) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
 	var http *HttpSetting
 	if s.Http != nil {
 		http = s.Http
@@ -816,17 +833,25 @@ func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting) (style *sourc
 	switch s := s.Store.(type) {
 	case *LocalStore:
 		cache = resource.NewStyleCache(ConvertLocalStore(s))
+	default:
+		if fac != nil {
+			cache = resource.NewStyleCache(fac.CreateStore(s))
+		}
 	}
 
 	var gcache *resource.GlyphsCache
 	switch s := s.GlyphsStore.(type) {
 	case *LocalStore:
 		gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
+	default:
+		if fac != nil {
+			gcache = resource.NewGlyphsCache(fac.CreateStore(s))
+		}
 	}
 	return sources.NewMapboxStyleSource(c, csprite, cache), sources.NewMapboxGlyphsSource(cglyphs, s.Fonts, gcache)
 }
 
-func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance) *service.MapboxService {
+func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *service.MapboxService {
 	layers := make(map[string]service.Provider)
 	styles := make(map[string]*service.StyleProvider)
 	metadata := &service.MapboxMetadata{Name: s.Name}
@@ -836,7 +861,7 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 	}
 
 	for _, st := range s.Styles {
-		sts, glys := LoadStyleSource(&st, globals)
+		sts, glys := LoadStyleSource(&st, globals, fac)
 		styles[st.StyleID] = service.NewStyleProvider(sts, glys)
 	}
 

@@ -22,7 +22,7 @@ var (
 		Options:       &setting.VectorOpts{Format: "mvt", Extent: 4096},
 		Grid:          "global_webmercator",
 		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
-		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxRasterSource = setting.MapboxTileSource{
 		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite/{z}/{x}/{y}.png",
@@ -30,7 +30,7 @@ var (
 		Options:       &setting.ImageOpts{Format: "png"},
 		Grid:          "global_webmercator",
 		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
-		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxRasterDemSource = setting.MapboxTileSource{
 		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
@@ -38,7 +38,7 @@ var (
 		Options:       &setting.ImageOpts{Format: "webp"},
 		Grid:          "global_webmercator",
 		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
-		TilejsonStore: &setting.LocalStore{Directory: "./cache_data/tilejson/"},
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"mvt"},
@@ -46,7 +46,7 @@ var (
 		Grid:          "global_webmercator",
 		Format:        "mvt",
 		RequestFormat: "mvt",
-		CacheInfo: &setting.LocalCache{
+		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/mvt",
 			DirectoryLayout: "tms",
 		},
@@ -57,7 +57,7 @@ var (
 		Grid:          "global_webmercator",
 		Format:        "png",
 		RequestFormat: "png",
-		CacheInfo: &setting.LocalCache{
+		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/raster/",
 			DirectoryLayout: "tms",
 		},
@@ -68,7 +68,7 @@ var (
 		Grid:          "global_webmercator",
 		Format:        "webp",
 		RequestFormat: "webp",
-		CacheInfo: &setting.LocalCache{
+		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/rasterdem/",
 			DirectoryLayout: "tms",
 		},
@@ -96,10 +96,10 @@ var (
 				Url:         MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7",
 				StyleID:     "style",
 				AccessToken: MAPBOX_ACCESSTOKEN,
-				Store:       &setting.LocalStore{Directory: "./cache_data/style/"},
+				Store:       &setting.StoreInfo{Directory: "./cache_data/style/"},
 				Sprite:      MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite",
 				Glyphs:      MAPBOX_API_URL + "/fonts/v1/examples/{fontstack}/{range}.pbf",
-				GlyphsStore: &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				GlyphsStore: &setting.StoreInfo{Directory: "./cache_data/glyphs/"},
 				Fonts:       []string{"Arial Unicode MS Regular"},
 			},
 		},

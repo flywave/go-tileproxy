@@ -35,7 +35,7 @@ var (
 		Grid:          "global_webmercator",
 		Format:        "png",
 		RequestFormat: "png",
-		CacheInfo: &setting.LocalCache{
+		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/wmts",
 			DirectoryLayout: "tms",
 		},

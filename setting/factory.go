@@ -28,8 +28,8 @@ import (
 )
 
 type CacheFactory interface {
-	CreateCache(cache interface{}, opts tile.TileOptions) cache.Cache
-	CreateStore(cache interface{}) resource.Store
+	CreateCache(cache *CacheInfo, opts tile.TileOptions) cache.Cache
+	CreateStore(cache *StoreInfo) resource.Store
 }
 
 func GetPreferredSrcSRS(srs *Srs) geo.PreferredSrcSRS {
@@ -250,11 +250,11 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	var cacheB cache.Cache
 
 	switch cinfo := c.CacheInfo.(type) {
-	case *LocalCache:
-		cacheB = ConvertLocalCache(cinfo, tile_opts)
-	default:
+	case *CacheInfo:
 		if fac != nil {
 			cacheB = fac.CreateCache(cinfo, tile_opts)
+		} else {
+			cacheB = ConvertLocalCache(cinfo, tile_opts)
 		}
 	}
 
@@ -289,11 +289,11 @@ func NewResolutionRange(conf *ScaleHints) *geo.ResolutionRange {
 	return nil
 }
 
-func ConvertLocalCache(opt *LocalCache, opts tile.TileOptions) *cache.LocalCache {
+func ConvertLocalCache(opt *CacheInfo, opts tile.TileOptions) *cache.LocalCache {
 	return cache.NewLocalCache(opt.Directory, opt.DirectoryLayout, cache.GetSourceCreater(opts))
 }
 
-func ConvertLocalStore(opt *LocalStore) *resource.LocalStore {
+func ConvertLocalStore(opt *StoreInfo) *resource.LocalStore {
 	return resource.NewLocalStore(opt.Directory)
 }
 
@@ -529,11 +529,11 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting, fac CacheFactor
 
 	var cache *resource.LegendCache
 	switch s := s.Store.(type) {
-	case *LocalStore:
-		cache = resource.NewLegendCache(ConvertLocalStore(s))
-	default:
+	case *StoreInfo:
 		if fac != nil {
 			cache = resource.NewLegendCache(fac.CreateStore(s))
+		} else {
+			cache = resource.NewLegendCache(ConvertLocalStore(s))
 		}
 	}
 	return sources.NewWMSLegendSource(s.Opts.LegendID, lg_clients, cache)
@@ -681,11 +681,11 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 
 	var tcache *resource.TileJSONCache
 	switch s := s.TilejsonStore.(type) {
-	case *LocalStore:
-		tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
-	default:
+	case *StoreInfo:
 		if fac != nil {
 			tcache = resource.NewTileJSONCache(fac.CreateStore(s))
+		} else {
+			tcache = resource.NewTileJSONCache(ConvertLocalStore(s))
 		}
 	}
 
@@ -831,21 +831,21 @@ func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting, fac CacheFact
 
 	var cache *resource.StyleCache
 	switch s := s.Store.(type) {
-	case *LocalStore:
-		cache = resource.NewStyleCache(ConvertLocalStore(s))
-	default:
+	case *StoreInfo:
 		if fac != nil {
 			cache = resource.NewStyleCache(fac.CreateStore(s))
+		} else {
+			cache = resource.NewStyleCache(ConvertLocalStore(s))
 		}
 	}
 
 	var gcache *resource.GlyphsCache
 	switch s := s.GlyphsStore.(type) {
-	case *LocalStore:
-		gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
-	default:
+	case *StoreInfo:
 		if fac != nil {
 			gcache = resource.NewGlyphsCache(fac.CreateStore(s))
+		} else {
+			gcache = resource.NewGlyphsCache(ConvertLocalStore(s))
 		}
 	}
 	return sources.NewMapboxStyleSource(c, csprite, cache), sources.NewMapboxGlyphsSource(cglyphs, s.Fonts, gcache)

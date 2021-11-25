@@ -22,7 +22,7 @@ var (
 		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096},
 		Grid:            "global_webmercator",
 		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
-		TilejsonStore:   &setting.LocalStore{Directory: "./cache_data/tilejson/"},
+		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"mvt"},
@@ -30,7 +30,7 @@ var (
 		Grid:          "global_webmercator",
 		Format:        "mvt",
 		RequestFormat: "mvt",
-		CacheInfo: &setting.LocalCache{
+		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/mvt",
 			DirectoryLayout: "tms",
 		},
@@ -49,10 +49,10 @@ var (
 				StyleID:          "standard",
 				AccessTokenName:  "AK",
 				AccessToken:      LK_ACCESSTOKEN,
-				Store:            &setting.LocalStore{Directory: "./cache_data/style/"},
+				Store:            &setting.StoreInfo{Directory: "./cache_data/style/"},
 				Sprite:           LK_API_URL + "/emg/static/sprites/sprite",
 				Glyphs:           LK_API_URL + "/emg/fonts/{fontstack}/{range}.pbf",
-				GlyphsStore:      &setting.LocalStore{Directory: "./cache_data/glyphs/"},
+				GlyphsStore:      &setting.StoreInfo{Directory: "./cache_data/glyphs/"},
 				Fonts:            []string{"Noto Sans CJK SC DemiLight"},
 				StyleContentAttr: setting.NewString("data.styleContent"),
 			},

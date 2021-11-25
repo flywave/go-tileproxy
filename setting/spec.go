@@ -30,7 +30,8 @@ const (
 type CacheType string
 
 const (
-	CACHE_TYPE_FILE CacheType = "local"
+	CACHE_TYPE_FILE   CacheType = "local"
+	CACHE_TYPE_CUSTOM CacheType = "custom"
 )
 
 type ImageSetting struct {
@@ -152,7 +153,7 @@ type Srs struct {
 	PreferredSrcProj map[string][]string `json:"preferred_src_proj,omitempty"`
 }
 
-type LocalCache struct {
+type CacheInfo struct {
 	Type            CacheType `json:"type,omitempty"`
 	DirectoryLayout string    `json:"directory_layout,omitempty"`
 	Directory       string    `json:"directory,omitempty"`
@@ -526,7 +527,7 @@ type WMSLayer struct {
 	LegendStore        interface{}              `json:"legendstore"`
 }
 
-type LocalStore struct {
+type StoreInfo struct {
 	Type      CacheType `json:"type,omitempty"`
 	Directory string    `json:"directory,omitempty"`
 }

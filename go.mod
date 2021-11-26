@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/andybalholm/brotli v1.0.3 // indirect
 	github.com/beevik/etree v1.1.0
-	github.com/chai2010/webp v1.1.0
 	github.com/deckarep/golang-set v1.7.1
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-geo v0.0.0-20211015074126-1d829acc3378
@@ -22,6 +21,7 @@ require (
 	github.com/flywave/go3d v0.0.0-20211005091456-f6cf94b6f807
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322
+	github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.1.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -36,7 +36,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.8 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c

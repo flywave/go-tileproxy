@@ -14,7 +14,7 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	webp "github.com/chai2010/webp"
+	webp "github.com/flywave/webp"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"

@@ -38,7 +38,10 @@ func (l *LayerMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rec
 			layer_coverage = l.Coverages[0]
 		}
 		layer_opts := layer_img.GetTileOptions().(*ImageOptions)
-		if ((layer_opts != nil && layer_opts.Transparent != nil && !*layer_opts.Transparent) || (layer_opts.Transparent != nil && *image_opts.Transparent)) && (size != nil || (size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1])) && (layer_coverage != nil || !layer_coverage.IsClip()) && coverage != nil {
+		if ((layer_opts != nil && layer_opts.Transparent != nil && !*layer_opts.Transparent) ||
+			(layer_opts.Transparent != nil && *image_opts.Transparent)) &&
+			(size != nil || (size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1])) &&
+			(layer_coverage != nil || !layer_coverage.IsClip()) && coverage != nil {
 			return layer_img
 		}
 	}

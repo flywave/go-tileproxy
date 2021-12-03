@@ -322,9 +322,23 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 
 	tilejsonSource, ok := tilesource.(layer.MapboxTileJSONLayer)
 
-	metadata := &service.MapboxLayerMetadata{Name: l.Name, Attribution: l.Attribution, Description: l.Description, Legend: l.Legend, FillZoom: l.FillZoom}
+	metadata := &service.MapboxLayerMetadata{
+		Name:        l.Name,
+		Attribution: l.Attribution,
+		Description: l.Description,
+		Legend:      l.Legend,
+		FillZoom:    l.FillZoom,
+	}
 
-	topts := &service.MapboxTileOptions{Name: l.Name, Type: tp, Metadata: metadata, TileManager: tileManager, TilejsonSource: nil, VectorLayers: l.VectorLayers, ZoomRange: l.ZoomRange}
+	topts := &service.MapboxTileOptions{
+		Name:           l.Name,
+		Type:           tp,
+		Metadata:       metadata,
+		TileManager:    tileManager,
+		TilejsonSource: nil,
+		VectorLayers:   l.VectorLayers,
+		ZoomRange:      l.ZoomRange,
+	}
 
 	if ok {
 		topts.TilejsonSource = tilejsonSource
@@ -346,7 +360,15 @@ func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvide
 
 	metadata := &service.TileProviderMetadata{Name: l.Name, Title: l.Title}
 
-	tpopts := &service.TileProviderOptions{Name: l.Name, Title: l.Title, Metadata: metadata, TileManager: tileManager, InfoSources: infoSources, Dimensions: dimensions, ErrorHandler: &service.TMSExceptionHandler{}}
+	tpopts := &service.TileProviderOptions{
+		Name:         l.Name,
+		Title:        l.Title,
+		Metadata:     metadata,
+		TileManager:  tileManager,
+		InfoSources:  infoSources,
+		Dimensions:   dimensions,
+		ErrorHandler: &service.TMSExceptionHandler{},
+	}
 
 	return service.NewTileProvider(tpopts)
 }
@@ -450,7 +472,15 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 		legends = append(legends, instance.GetLegendSource(name))
 	}
 
-	nopts := &service.WMSNodeLayerOptions{Name: l.Name, Title: l.Title, MapLayers: mapLayers, Infos: infos, Legends: legends, ResRange: _range, Metadata: ConvertWMSLayerMetadata(l.Metadata)}
+	nopts := &service.WMSNodeLayerOptions{
+		Name:      l.Name,
+		Title:     l.Title,
+		MapLayers: mapLayers,
+		Infos:     infos,
+		Legends:   legends,
+		ResRange:  _range,
+		Metadata:  ConvertWMSLayerMetadata(l.Metadata),
+	}
 
 	return service.NewWMSNodeLayer(nopts)
 }
@@ -462,7 +492,13 @@ func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLaye
 		layers[l.Layers[i].Name] = ConvertWMSLayer(&l.Layers[i], instance)
 	}
 
-	nopts := &service.WMSGroupLayerOptions{Name: l.Name, Title: l.Title, This: thisLayer, Layers: layers, Metadata: ConvertWMSLayerMetadata(l.Metadata)}
+	nopts := &service.WMSGroupLayerOptions{
+		Name:     l.Name,
+		Title:    l.Title,
+		This:     thisLayer,
+		Layers:   layers,
+		Metadata: ConvertWMSLayerMetadata(l.Metadata),
+	}
 
 	return service.NewWMSGroupLayer(nopts)
 }
@@ -945,7 +981,14 @@ func ConvertWMTSServiceProvider(provider *WMTSServiceProvider) *wsc110.ServicePr
 
 func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSService {
 	layers := make(map[string]service.Provider)
-	metadata := &service.WMTSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, Fees: s.Fees, AccessConstraints: s.AccessConstraints, Provider: ConvertWMTSServiceProvider(s.Provider)}
+	metadata := &service.WMTSMetadata{
+		Title:             s.Title,
+		Abstract:          s.Abstract,
+		KeywordList:       s.KeywordList,
+		Fees:              s.Fees,
+		AccessConstraints: s.AccessConstraints,
+		Provider:          ConvertWMTSServiceProvider(s.Provider),
+	}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
@@ -975,7 +1018,14 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 
 	layers := make(map[string]service.Provider)
 
-	metadata := &service.WMTSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, Fees: s.Fees, AccessConstraints: s.AccessConstraints, Provider: ConvertWMTSServiceProvider(s.Provider)}
+	metadata := &service.WMTSMetadata{
+		Title:             s.Title,
+		Abstract:          s.Abstract,
+		KeywordList:       s.KeywordList,
+		Fees:              s.Fees,
+		AccessConstraints: s.AccessConstraints,
+		Provider:          ConvertWMTSServiceProvider(s.Provider),
+	}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertTileLayer(&tl, instance)
@@ -993,7 +1043,14 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	wopts := &service.WMTSRestServiceOptions{Layers: layers, Metadata: metadata, MaxTileAge: maxTileAge, RestfulTemplate: s.RestfulTemplate, RestfulFeatureinfoTemplate: s.RestfulFeatureinfoTemplate, InfoFormats: info_formats}
+	wopts := &service.WMTSRestServiceOptions{
+		Layers:                     layers,
+		Metadata:                   metadata,
+		MaxTileAge:                 maxTileAge,
+		RestfulTemplate:            s.RestfulTemplate,
+		RestfulFeatureinfoTemplate: s.RestfulFeatureinfoTemplate,
+		InfoFormats:                info_formats,
+	}
 
 	return service.NewWMTSRestService(wopts)
 }

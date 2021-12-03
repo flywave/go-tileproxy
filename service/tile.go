@@ -41,8 +41,16 @@ type TileService struct {
 	Origin             string
 }
 
-func NewTileService(layers map[string]Provider, md *TileMetadata, max_tile_age *time.Duration, use_dimension_layers bool, origin string) *TileService {
-	s := &TileService{Layers: layers, Metadata: md, MaxTileAge: max_tile_age, UseDimensionLayers: use_dimension_layers, Origin: origin}
+type TileServiceOptions struct {
+	Layers             map[string]Provider
+	Metadata           *TileMetadata
+	MaxTileAge         *time.Duration
+	UseDimensionLayers bool
+	Origin             string
+}
+
+func NewTileService(opts *TileServiceOptions) *TileService {
+	s := &TileService{Layers: opts.Layers, Metadata: opts.Metadata, MaxTileAge: opts.MaxTileAge, UseDimensionLayers: opts.UseDimensionLayers, Origin: opts.Origin}
 	s.router = map[string]func(r request.Request) *Response{
 		"map": func(r request.Request) *Response {
 			return s.GetMap(r)
@@ -489,8 +497,26 @@ type TileProvider struct {
 	errorHandler ExceptionHandler
 }
 
-func NewTileProvider(name string, title string, md *TileProviderMetadata, tileManager cache.Manager, infoSources []layer.InfoLayer, dimensions utils.Dimensions, errorHandler ExceptionHandler) *TileProvider {
-	ret := &TileProvider{metadata: md, tileManager: tileManager, infoSources: infoSources, dimensions: dimensions, grid: NewTileServiceGrid(tileManager.GetGrid()), extent: geo.MapExtentFromGrid(tileManager.GetGrid()), errorHandler: errorHandler}
+type TileProviderOptions struct {
+	Name         string
+	Title        string
+	Metadata     *TileProviderMetadata
+	TileManager  cache.Manager
+	InfoSources  []layer.InfoLayer
+	Dimensions   utils.Dimensions
+	ErrorHandler ExceptionHandler
+}
+
+func NewTileProvider(opts *TileProviderOptions) *TileProvider {
+	ret := &TileProvider{
+		metadata:     opts.Metadata,
+		tileManager:  opts.TileManager,
+		infoSources:  opts.InfoSources,
+		dimensions:   opts.Dimensions,
+		grid:         NewTileServiceGrid(opts.TileManager.GetGrid()),
+		extent:       geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
+		errorHandler: opts.ErrorHandler,
+	}
 	return ret
 }
 

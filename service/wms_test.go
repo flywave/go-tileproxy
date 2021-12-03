@@ -41,9 +41,13 @@ func TestWMSServiceGetCapabilities(t *testing.T) {
 
 	source := sources.NewWMSSource(nil, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
-	testLayer := NewWMSNodeLayer("test", "hhh", map[string]layer.Layer{"yy": source}, nil, nil, nil, layerMetadata)
+	nopts := &WMSNodeLayerOptions{Name: "test", Title: "hhh", MapLayers: map[string]layer.Layer{"yy": source}, Infos: nil, Metadata: layerMetadata}
 
-	rootLayer := NewWMSGroupLayer("test", "hhh", testLayer, nil, layerMetadata)
+	testLayer := NewWMSNodeLayer(nopts)
+
+	ropts := &WMSGroupLayerOptions{Name: "test", Title: "hhh", This: testLayer, Layers: nil, Metadata: layerMetadata}
+
+	rootLayer := NewWMSGroupLayer(ropts)
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(4326)}}
 

@@ -107,7 +107,24 @@ func TestTileProvider(t *testing.T) {
 
 	locker := &cache.DummyTileLocker{}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{1, 1},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	md := &TileProviderMetadata{}
 
@@ -115,7 +132,9 @@ func TestTileProvider(t *testing.T) {
 
 	dimensions := make(utils.Dimensions)
 
-	tp := NewTileProvider("test", "test", md, manager, info, dimensions, &TMSExceptionHandler{})
+	tpopts := &TileProviderOptions{Name: "test", Title: "test", Metadata: md, TileManager: manager, InfoSources: info, Dimensions: dimensions, ErrorHandler: &TMSExceptionHandler{}}
+
+	tp := NewTileProvider(tpopts)
 
 	if tp == nil {
 		t.FailNow()
@@ -164,7 +183,24 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	locker := &cache.DummyTileLocker{}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{1, 1},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	md := &TileProviderMetadata{Name: "test"}
 
@@ -172,7 +208,9 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	dimensions := make(utils.Dimensions)
 
-	tp := NewTileProvider("test", "test", md, manager, info, dimensions, &TMSExceptionHandler{})
+	tpopts := &TileProviderOptions{Name: "test", Title: "test", Metadata: md, TileManager: manager, InfoSources: info, Dimensions: dimensions, ErrorHandler: &TMSExceptionHandler{}}
+
+	tp := NewTileProvider(tpopts)
 
 	if tp == nil {
 		t.FailNow()
@@ -180,7 +218,10 @@ func TestTileServiceGetMap(t *testing.T) {
 
 	layers := map[string]Provider{"landsat2000": tp}
 	metadata := &TileMetadata{}
-	service := NewTileService(layers, metadata, nil, false, "ul")
+
+	tsopts := &TileServiceOptions{Layers: layers, Metadata: metadata, MaxTileAge: nil, UseDimensionLayers: false, Origin: "ul"}
+
+	service := NewTileService(tsopts)
 
 	hreq := &http.Request{}
 	hreq.URL, _ = url.Parse("http://tms.osgeo.org/tiles/1.0.0/landsat2000/16/53958/24829.png")

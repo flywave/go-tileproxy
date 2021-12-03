@@ -38,9 +38,16 @@ type WMTSService struct {
 	InfoFormats map[string]string
 }
 
-func NewWMTSService(layers map[string]Provider, md *WMTSMetadata, MaxTileAge *time.Duration, info_formats map[string]string) *WMTSService {
-	ret := &WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}
-	layer, ms := ret.getMatrixSets(layers)
+type WMTSServiceOptions struct {
+	Layers      map[string]Provider
+	Metadata    *WMTSMetadata
+	MaxTileAge  *time.Duration
+	InfoFormats map[string]string
+}
+
+func NewWMTSService(opts *WMTSServiceOptions) *WMTSService {
+	ret := &WMTSService{InfoFormats: opts.InfoFormats, MaxTileAge: opts.MaxTileAge, Metadata: opts.Metadata}
+	layer, ms := ret.getMatrixSets(opts.Layers)
 	ret.Layers = layer
 	ret.MatrixSets = ms
 	ret.router = map[string]func(r request.Request) *Response{
@@ -311,13 +318,41 @@ type WMTSRestService struct {
 	infoUrlConverter *request.URLTemplateConverter
 }
 
-func NewWMTSRestService(layers map[string]Provider, md *WMTSMetadata, MaxTileAge *time.Duration, template string, fi_template string, info_formats map[string]string) *WMTSRestService {
-	ret := &WMTSRestService{names: []string{"wmts"}, requestMethods: []string{"tile", "capabilities"}, WMTSService: WMTSService{InfoFormats: info_formats, MaxTileAge: MaxTileAge, Metadata: md}}
-	lay, ms := ret.getMatrixSets(layers)
+type WMTSRestServiceOptions struct {
+	Layers                     map[string]Provider
+	Metadata                   *WMTSMetadata
+	MaxTileAge                 *time.Duration
+	InfoFormats                map[string]string
+	RestfulTemplate            string
+	RestfulFeatureinfoTemplate string
+}
+
+func NewWMTSRestService(opts *WMTSRestServiceOptions) *WMTSRestService {
+	ret := &WMTSRestService{
+		names:          []string{"wmts"},
+		requestMethods: []string{"tile", "capabilities"},
+		WMTSService: WMTSService{
+			InfoFormats: opts.InfoFormats,
+			MaxTileAge:  opts.MaxTileAge,
+			Metadata:    opts.Metadata,
+		},
+	}
+	lay, ms := ret.getMatrixSets(opts.Layers)
 	ret.Layers = lay
 	ret.MatrixSets = ms
-	ret.template = DEFAULT_WMTS_TEMPLATE
-	ret.infoTemplate = DEFAULT_WMTS_INFO_TEMPLATE
+
+	if opts.RestfulTemplate == "" {
+		ret.template = DEFAULT_WMTS_TEMPLATE
+	} else {
+		ret.template = opts.RestfulTemplate
+	}
+
+	if opts.RestfulFeatureinfoTemplate == "" {
+		ret.infoTemplate = DEFAULT_WMTS_INFO_TEMPLATE
+	} else {
+		ret.infoTemplate = opts.RestfulFeatureinfoTemplate
+	}
+
 	ret.urlConverter = request.NewURLTemplateConverter(ret.template)
 	ret.infoUrlConverter = request.NewFeatureInfoURLTemplateConverter(ret.infoTemplate)
 	ret.router = map[string]func(r request.Request) *Response{

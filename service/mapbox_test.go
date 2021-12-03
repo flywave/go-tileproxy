@@ -63,11 +63,30 @@ func TestMapboxServiceGetTile(t *testing.T) {
 	stylesCache := resource.NewStyleCache(resource.NewLocalStore("./test_styles_cache"))
 	styleProvider := &StyleProvider{styleSource: sources.NewMapboxStyleSource(mockStyleClient, nil, stylesCache), glyphsSource: sources.NewMapboxGlyphsSource(mockGlyphsClient, []string{"mock"}, glyphsCache)}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	lmd := &MapboxLayerMetadata{}
 
-	tp := NewMapboxTileProvider("test", MapboxVector, lmd, manager, nil, nil, nil)
+	tiopts := &MapboxTileOptions{Name: "test", Type: MapboxVector, Metadata: lmd, TileManager: manager}
+
+	tp := NewMapboxTileProvider(tiopts)
 
 	if tp == nil {
 		t.FailNow()
@@ -75,7 +94,9 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	md := &MapboxMetadata{}
 
-	service := NewMapboxService(map[string]Provider{"mapbox.mapbox-streets-v8": tp}, map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, md, nil)
+	sopts := &MapboxServiceOptions{Tilesets: map[string]Provider{"mapbox.mapbox-streets-v8": tp}, Styles: map[string]*StyleProvider{"cjikt35x83t1z2rnxpdmjs7y7": styleProvider}, Metadata: md, MaxTileAge: nil}
+
+	service := NewMapboxService(sopts)
 
 	hreq := &http.Request{}
 	hreq.URL, _ = url.Parse("https://127.0.0.1/v4/mapbox.mapbox-streets-v8/14/13515/6392.mvt")

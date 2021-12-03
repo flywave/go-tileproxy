@@ -30,33 +30,50 @@ type TileManager struct {
 	bulkMetaTiles        bool
 }
 
-func NewTileManager(sources []layer.Layer, grid *geo.TileGrid, cache Cache, locker TileLocker, identifier string, format string, opts tile.TileOptions, minimize_meta_requests bool, bulkMetaTiles bool, pre_store_filter []Filter, rescale_tiles int, cache_rescaled_tiles bool, metaBuffer int, metaSize [2]uint32) *TileManager {
+type TileManagerOptions struct {
+	Sources              []layer.Layer
+	Grid                 *geo.TileGrid
+	Cache                Cache
+	Locker               TileLocker
+	Identifier           string
+	Format               string
+	Options              tile.TileOptions
+	MinimizeMetaRequests bool
+	BulkMetaTiles        bool
+	PreStoreFilter       []Filter
+	RescaleTiles         int
+	CacheRescaledTiles   bool
+	MetaBuffer           int
+	MetaSize             [2]uint32
+}
+
+func NewTileManager(opts *TileManagerOptions) *TileManager {
 	ret := &TileManager{}
-	ret.grid = grid
-	ret.cache = cache
-	ret.identifier = identifier
-	ret.format = format
-	ret.tileOpts = opts
-	ret.requestFormat = format
-	ret.sources = sources
-	ret.minimizeMetaRequests = minimize_meta_requests
-	ret.preStoreFilter = pre_store_filter
-	ret.rescaleTiles = rescale_tiles
-	ret.cacheRescaledTiles = cache_rescaled_tiles
-	ret.locker = locker
+	ret.grid = opts.Grid
+	ret.cache = opts.Cache
+	ret.identifier = opts.Identifier
+	ret.format = opts.Format
+	ret.tileOpts = opts.Options
+	ret.requestFormat = opts.Format
+	ret.sources = opts.Sources
+	ret.minimizeMetaRequests = opts.MinimizeMetaRequests
+	ret.preStoreFilter = opts.PreStoreFilter
+	ret.rescaleTiles = opts.RescaleTiles
+	ret.cacheRescaledTiles = opts.CacheRescaledTiles
+	ret.locker = opts.Locker
 	ret.bulkMetaTiles = false
 
-	if metaBuffer != -1 || (metaSize != [2]uint32{1, 1}) {
+	if opts.MetaBuffer != -1 || (opts.MetaSize != [2]uint32{1, 1}) {
 		allsm := true
-		for i := range sources {
-			if !sources[i].IsSupportMetaTiles() {
+		for i := range opts.Sources {
+			if !opts.Sources[i].IsSupportMetaTiles() {
 				allsm = false
 			}
 		}
 		if allsm {
-			ret.metaGrid = geo.NewMetaGrid(ret.grid, metaSize, metaBuffer)
-		} else if metaSize != [2]uint32{1, 1} && bulkMetaTiles {
-			ret.metaGrid = geo.NewMetaGrid(ret.grid, metaSize, 0)
+			ret.metaGrid = geo.NewMetaGrid(ret.grid, opts.MetaSize, opts.MetaBuffer)
+		} else if opts.MetaSize != [2]uint32{1, 1} && opts.BulkMetaTiles {
+			ret.metaGrid = geo.NewMetaGrid(ret.grid, opts.MetaSize, 0)
 			ret.bulkMetaTiles = true
 		}
 	}

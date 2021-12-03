@@ -126,7 +126,24 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *testin
 
 	locker := &cache.DummyTileLocker{}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         0,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	seedTask := makeBBoxTask(manager, bbox, geo.NewProj(4326), levels)
 
@@ -165,7 +182,24 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	locker := &cache.DummyTileLocker{}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         0,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	seedTask := makeGeomTask(manager, geom, geo.NewProj(4326), levels)
 
@@ -204,7 +238,24 @@ func analytic(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *test
 
 	locker := &cache.DummyTileLocker{}
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         0,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := cache.NewTileManager(topts)
 
 	seedTask := makeBBoxTask(manager, bbox, geo.NewProj(4326), levels)
 

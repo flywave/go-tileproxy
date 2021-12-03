@@ -42,9 +42,28 @@ func TestWMTSCapabilities(t *testing.T) {
 	locker := &cache.DummyTileLocker{}
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
-	manager := cache.NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
+	topts := &cache.TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{1, 1},
+	}
 
-	tp := NewTileProvider("test", "test", layerMetadata, manager, info, dimensions, &WMTS100ExceptionHandler{})
+	manager := cache.NewTileManager(topts)
+
+	tpopts := &TileProviderOptions{Name: "test", Title: "test", Metadata: layerMetadata, TileManager: manager, InfoSources: info, Dimensions: dimensions, ErrorHandler: &WMTS100ExceptionHandler{}}
+
+	tp := NewTileProvider(tpopts)
 
 	if tp == nil {
 		t.FailNow()

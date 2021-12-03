@@ -273,7 +273,24 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 
 	tilegrid := grid.(*geo.TileGrid)
 
-	return cache.NewTileManager(layers, tilegrid, cacheB, locker, name, request_format_ext, tile_opts, minimize_meta_requests, bulk_meta_tiles, pre_store_filter, rescale_tiles, cache_rescaled_tiles, meta_buffer, meta_size)
+	topts := &cache.TileManagerOptions{
+		Sources:              layers,
+		Grid:                 tilegrid,
+		Cache:                cacheB,
+		Locker:               locker,
+		Identifier:           name,
+		Format:               request_format_ext,
+		Options:              tile_opts,
+		MinimizeMetaRequests: minimize_meta_requests,
+		BulkMetaTiles:        bulk_meta_tiles,
+		PreStoreFilter:       pre_store_filter,
+		RescaleTiles:         rescale_tiles,
+		CacheRescaledTiles:   cache_rescaled_tiles,
+		MetaBuffer:           meta_buffer,
+		MetaSize:             meta_size,
+	}
+
+	return cache.NewTileManager(topts)
 }
 
 func NewResolutionRange(conf *ScaleHints) *geo.ResolutionRange {
@@ -307,11 +324,14 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 
 	metadata := &service.MapboxLayerMetadata{Name: l.Name, Attribution: l.Attribution, Description: l.Description, Legend: l.Legend, FillZoom: l.FillZoom}
 
+	topts := &service.MapboxTileOptions{Name: l.Name, Type: tp, Metadata: metadata, TileManager: tileManager, TilejsonSource: nil, VectorLayers: l.VectorLayers, ZoomRange: l.ZoomRange}
+
 	if ok {
-		return service.NewMapboxTileProvider(l.Name, tp, metadata, tileManager, tilejsonSource, l.VectorLayers, l.ZoomRange)
+		topts.TilejsonSource = tilejsonSource
+		return service.NewMapboxTileProvider(topts)
 	}
 
-	return service.NewMapboxTileProvider(l.Name, tp, metadata, tileManager, nil, l.VectorLayers, l.ZoomRange)
+	return service.NewMapboxTileProvider(topts)
 }
 
 func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
@@ -326,7 +346,9 @@ func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvide
 
 	metadata := &service.TileProviderMetadata{Name: l.Name, Title: l.Title}
 
-	return service.NewTileProvider(l.Name, l.Title, metadata, tileManager, infoSources, dimensions, &service.TMSExceptionHandler{})
+	tpopts := &service.TileProviderOptions{Name: l.Name, Title: l.Title, Metadata: metadata, TileManager: tileManager, InfoSources: infoSources, Dimensions: dimensions, ErrorHandler: &service.TMSExceptionHandler{}}
+
+	return service.NewTileProvider(tpopts)
 }
 
 func ConvertWMSLayerMetadata(metadata *WMSLayerMetadata) *service.WMSLayerMetadata {
@@ -428,7 +450,9 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 		legends = append(legends, instance.GetLegendSource(name))
 	}
 
-	return service.NewWMSNodeLayer(l.Name, l.Title, mapLayers, infos, legends, _range, ConvertWMSLayerMetadata(l.Metadata))
+	nopts := &service.WMSNodeLayerOptions{Name: l.Name, Title: l.Title, MapLayers: mapLayers, Infos: infos, Legends: legends, ResRange: _range, Metadata: ConvertWMSLayerMetadata(l.Metadata)}
+
+	return service.NewWMSNodeLayer(nopts)
 }
 
 func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLayer {
@@ -437,7 +461,10 @@ func loadWMSRootLayer(l *WMSLayer, instance ProxyInstance) *service.WMSGroupLaye
 	for i := range l.Layers {
 		layers[l.Layers[i].Name] = ConvertWMSLayer(&l.Layers[i], instance)
 	}
-	return service.NewWMSGroupLayer(l.Name, l.Title, thisLayer, layers, ConvertWMSLayerMetadata(l.Metadata))
+
+	nopts := &service.WMSGroupLayerOptions{Name: l.Name, Title: l.Title, This: thisLayer, Layers: layers, Metadata: ConvertWMSLayerMetadata(l.Metadata)}
+
+	return service.NewWMSGroupLayer(nopts)
 }
 
 func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.SupportedSRS {
@@ -858,7 +885,9 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 		maxTileAge = &d
 	}
 
-	return service.NewMapboxService(layers, styles, metadata, maxTileAge)
+	sopts := &service.MapboxServiceOptions{Tilesets: layers, Styles: styles, Metadata: metadata, MaxTileAge: maxTileAge}
+
+	return service.NewMapboxService(sopts)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {
@@ -877,7 +906,9 @@ func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService 
 	}
 	origin := s.Origin
 
-	return service.NewTileService(layers, metadata, maxTileAge, false, origin)
+	tsopts := &service.TileServiceOptions{Layers: layers, Metadata: metadata, MaxTileAge: maxTileAge, UseDimensionLayers: false, Origin: origin}
+
+	return service.NewTileService(tsopts)
 }
 
 func ConvertWMTSServiceProvider(provider *WMTSServiceProvider) *wsc110.ServiceProvider {
@@ -932,7 +963,9 @@ func LoadWMTSService(s *WMTSService, instance ProxyInstance) *service.WMTSServic
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSService(layers, metadata, maxTileAge, info_formats)
+	wopts := &service.WMTSServiceOptions{Layers: layers, Metadata: metadata, MaxTileAge: maxTileAge, InfoFormats: info_formats}
+
+	return service.NewWMTSService(wopts)
 }
 
 func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMTSRestService {
@@ -941,6 +974,7 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 	}
 
 	layers := make(map[string]service.Provider)
+
 	metadata := &service.WMTSMetadata{Title: s.Title, Abstract: s.Abstract, KeywordList: s.KeywordList, Fees: s.Fees, AccessConstraints: s.AccessConstraints, Provider: ConvertWMTSServiceProvider(s.Provider)}
 
 	for _, tl := range s.Layers {
@@ -959,7 +993,9 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 		info_formats[info.Suffix] = info.MimeType
 	}
 
-	return service.NewWMTSRestService(layers, metadata, maxTileAge, s.RestfulTemplate, s.RestfulFeatureinfoTemplate, info_formats)
+	wopts := &service.WMTSRestServiceOptions{Layers: layers, Metadata: metadata, MaxTileAge: maxTileAge, RestfulTemplate: s.RestfulTemplate, RestfulFeatureinfoTemplate: s.RestfulFeatureinfoTemplate, InfoFormats: info_formats}
+
+	return service.NewWMTSRestService(wopts)
 }
 
 func loadXSLTransformer(featureinfoXslt map[string]string, basePath string) map[string]*resource.XSLTransformer {
@@ -1043,7 +1079,21 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetti
 	md.Extended = ConvertExtendedCapabilities(s.ExtendedCapabilities)
 	md.Contact = ConvertContactInformation(s.ContactInformation)
 
-	return service.NewWMSService(rootLayer, layers, md, supportedSrs, imageFormats, infoFormats, extents, maxOutputPixels, maxTileAge, strict, ftransformers)
+	wopts := &service.WMSServiceOptions{
+		RootLayer:       rootLayer,
+		Layers:          layers,
+		Metadata:        md,
+		Srs:             supportedSrs,
+		SrsExtents:      extents,
+		ImageFormats:    imageFormats,
+		InfoFormats:     infoFormats,
+		MaxOutputPixels: maxOutputPixels,
+		MaxTileAge:      maxTileAge,
+		Strict:          strict,
+		Transformers:    ftransformers,
+	}
+
+	return service.NewWMSService(wopts)
 }
 
 func ConvertExtendedCapabilities(extendedCapabilities *WMSExtendedCapabilities) *wms130.ExtendedCapabilities {

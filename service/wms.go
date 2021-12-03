@@ -52,21 +52,35 @@ type WMSService struct {
 	FeatureTransformers map[string]*resource.XSLTransformer
 }
 
-func NewWMSService(rootLayer *WMSGroupLayer, layers map[string]WMSLayer, metadata *WMSMetadata, srs *geo.SupportedSRS, imageFormats map[string]*imagery.ImageOptions, infoFormats map[string]string, srsExtents map[string]*geo.MapExtent, maxOutputPixels int, maxTileAge *time.Duration, strict bool, ftransformers map[string]*resource.XSLTransformer) *WMSService {
+type WMSServiceOptions struct {
+	RootLayer       *WMSGroupLayer
+	Layers          map[string]WMSLayer
+	Metadata        *WMSMetadata
+	Srs             *geo.SupportedSRS
+	ImageFormats    map[string]*imagery.ImageOptions
+	InfoFormats     map[string]string
+	SrsExtents      map[string]*geo.MapExtent
+	MaxOutputPixels int
+	MaxTileAge      *time.Duration
+	Strict          bool
+	Transformers    map[string]*resource.XSLTransformer
+}
+
+func NewWMSService(opts *WMSServiceOptions) *WMSService {
 	ret := &WMSService{
-		RootLayer:           rootLayer,
-		Strict:              strict,
-		ImageFormats:        imageFormats,
-		Metadata:            metadata,
-		InfoFormats:         infoFormats,
-		Srs:                 srs,
-		SrsExtents:          srsExtents,
-		MaxOutputPixels:     maxOutputPixels,
-		MaxTileAge:          maxTileAge,
-		FeatureTransformers: ftransformers,
+		RootLayer:           opts.RootLayer,
+		Strict:              opts.Strict,
+		ImageFormats:        opts.ImageFormats,
+		Metadata:            opts.Metadata,
+		InfoFormats:         opts.InfoFormats,
+		Srs:                 opts.Srs,
+		SrsExtents:          opts.SrsExtents,
+		MaxOutputPixels:     opts.MaxOutputPixels,
+		MaxTileAge:          opts.MaxTileAge,
+		FeatureTransformers: opts.Transformers,
 	}
-	if rootLayer == nil {
-		ret.Layers = layers
+	if opts.RootLayer == nil {
+		ret.Layers = opts.Layers
 	} else {
 		ret.Layers = ret.RootLayer.layers
 	}
@@ -565,24 +579,47 @@ type WMSNodeLayer struct {
 	legendLayers []layer.LegendLayer
 }
 
-func NewWMSNodeLayer(name string, title string, map_layers map[string]layer.Layer, infos map[string]layer.InfoLayer, legends []layer.LegendLayer, res_range *geo.ResolutionRange, md *WMSLayerMetadata) *WMSNodeLayer {
+type WMSNodeLayerOptions struct {
+	Name      string
+	Title     string
+	MapLayers map[string]layer.Layer
+	Infos     map[string]layer.InfoLayer
+	Legends   []layer.LegendLayer
+	ResRange  *geo.ResolutionRange
+	Metadata  *WMSLayerMetadata
+}
+
+func NewWMSNodeLayer(opts *WMSNodeLayerOptions) *WMSNodeLayer {
 	queryable := false
-	if len(infos) > 0 {
+	if len(opts.Infos) > 0 {
 		queryable = true
 	}
 
 	has_legend := false
-	if len(legends) > 0 {
+	if len(opts.Legends) > 0 {
 		has_legend = true
 	}
 
-	ret := &WMSNodeLayer{WMSLayerBase: WMSLayerBase{name: name, title: title, metadata: md, isActive: false, layers: nil, hasLegend: has_legend, queryable: queryable}, mapLayers: map_layers, infoLayers: infos, legendLayers: legends}
+	ret := &WMSNodeLayer{
+		WMSLayerBase: WMSLayerBase{
+			name:      opts.Name,
+			title:     opts.Title,
+			metadata:  opts.Metadata,
+			isActive:  false,
+			layers:    nil,
+			hasLegend: has_legend,
+			queryable: queryable,
+		},
+		mapLayers:    opts.MapLayers,
+		infoLayers:   opts.Infos,
+		legendLayers: opts.Legends,
+	}
 
-	ret.extent = mergeLayerExtents(map_layers)
-	if res_range == nil {
-		ret.resRange = mergeLayerResRanges(map_layers)
+	ret.extent = mergeLayerExtents(opts.MapLayers)
+	if opts.ResRange == nil {
+		ret.resRange = mergeLayerResRanges(opts.MapLayers)
 	} else {
-		ret.resRange = res_range
+		ret.resRange = opts.ResRange
 	}
 
 	return ret
@@ -621,6 +658,14 @@ func (l *WMSNodeLayer) legend(query *layer.LegendQuery) []tile.Source {
 type WMSGroupLayer struct {
 	WMSLayerBase
 	this WMSLayer
+}
+
+type WMSGroupLayerOptions struct {
+	Name     string
+	Title    string
+	This     WMSLayer
+	Layers   map[string]WMSLayer
+	Metadata *WMSLayerMetadata
 }
 
 func mergeLayerResRanges(layers map[string]layer.Layer) *geo.ResolutionRange {
@@ -662,36 +707,36 @@ func cloneLayers(tags map[string]WMSLayer) map[string]layer.Layer {
 	return cloneTags
 }
 
-func NewWMSGroupLayer(name string, title string, this WMSLayer, layers map[string]WMSLayer, md *WMSLayerMetadata) *WMSGroupLayer {
+func NewWMSGroupLayer(opts *WMSGroupLayerOptions) *WMSGroupLayer {
 	is_active := false
-	if this != nil {
+	if opts.This != nil {
 		is_active = true
 	}
 	has_legend := false
-	if this != nil && this.HasLegend() {
+	if opts.This != nil && opts.This.HasLegend() {
 		has_legend = true
 	} else {
-		for _, l := range layers {
+		for _, l := range opts.Layers {
 			if l.HasLegend() {
 				has_legend = true
 			}
 		}
 	}
 	queryable := false
-	if this != nil && this.Queryable() {
+	if opts.This != nil && opts.This.Queryable() {
 		queryable = true
 	} else {
-		for _, l := range layers {
+		for _, l := range opts.Layers {
 			if l.Queryable() {
 				queryable = true
 			}
 		}
 	}
 
-	ret := &WMSGroupLayer{WMSLayerBase: WMSLayerBase{name: name, title: title, metadata: md, isActive: is_active, layers: layers, hasLegend: has_legend, queryable: queryable}, this: this}
+	ret := &WMSGroupLayer{WMSLayerBase: WMSLayerBase{name: opts.Name, title: opts.Title, metadata: opts.Metadata, isActive: is_active, layers: opts.Layers, hasLegend: has_legend, queryable: queryable}, this: opts.This}
 
-	all_layers := cloneLayers(layers)
-	all_layers[this.GetName()] = this
+	all_layers := cloneLayers(opts.Layers)
+	all_layers[opts.This.GetName()] = opts.This
 
 	ret.extent = mergeLayerExtents(all_layers)
 	ret.resRange = mergeLayerResRanges(all_layers)

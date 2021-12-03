@@ -87,7 +87,24 @@ func TestTileManager(t *testing.T) {
 
 	locker := &DummyTileLocker{}
 
-	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, 0, false, 0, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	if manager.IsStale([3]int{0, 0, 1}, nil) {
 		t.FailNow()
@@ -153,7 +170,24 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 
 	locker := &DummyTileLocker{}
 
-	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, true, false, nil, -1, false, 10, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: true,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           10,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
 
@@ -202,7 +236,24 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	source_base := &mockSource{}
 	source_overlay := &mockSource{}
 
-	manager := NewTileManager([]layer.Layer{source_base, source_overlay}, grid, c, locker, "test", "png", imageopts, true, false, nil, -1, false, 10, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source_base, source_overlay},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        true,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           10,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
 
@@ -228,7 +279,24 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	source_base := &mockSource{MapLayer: layer.MapLayer{SupportMetaTiles: true}}
 	source_overlay := &mockSource{MapLayer: layer.MapLayer{SupportMetaTiles: true}}
 
-	manager := NewTileManager([]layer.Layer{source_base, source_overlay}, grid, c, locker, "test", "png", imageopts, true, false, nil, -1, false, 0, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source_base, source_overlay},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        true,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 1}, {1, 0, 1}}, nil, false)
 
@@ -254,7 +322,24 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	source_base := &mockSource{MapLayer: layer.MapLayer{SupportMetaTiles: false}}
 	source_overlay := &mockSource{MapLayer: layer.MapLayer{SupportMetaTiles: true}}
 
-	manager := NewTileManager([]layer.Layer{source_base, source_overlay}, grid, c, locker, "test", "png", imageopts, false, true, nil, -1, false, 0, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source_base, source_overlay},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        true,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	err, tiles := manager.LoadTileCoords([][3]int{{1, 0, 2}, {2, 0, 2}}, nil, false)
 

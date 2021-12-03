@@ -35,8 +35,15 @@ type MapboxService struct {
 	MaxTileAge *time.Duration
 }
 
-func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvider, md *MapboxMetadata, max_tile_age *time.Duration) *MapboxService {
-	s := &MapboxService{Tilesets: layers, Styles: styles, Fonts: make(map[string]*StyleProvider), Metadata: md, MaxTileAge: max_tile_age}
+type MapboxServiceOptions struct {
+	Tilesets   map[string]Provider
+	Styles     map[string]*StyleProvider
+	Metadata   *MapboxMetadata
+	MaxTileAge *time.Duration
+}
+
+func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
+	s := &MapboxService{Tilesets: opts.Tilesets, Styles: opts.Styles, Fonts: make(map[string]*StyleProvider), Metadata: opts.Metadata, MaxTileAge: opts.MaxTileAge}
 	s.router = map[string]func(r request.Request) *Response{
 		"tilejson": func(r request.Request) *Response {
 			return s.GetTileJSON(r)
@@ -54,11 +61,11 @@ func NewMapboxService(layers map[string]Provider, styles map[string]*StyleProvid
 			return s.GetGlyphs(r)
 		},
 	}
-	for _, sty := range styles {
+	for _, sty := range opts.Styles {
 		for _, fontId := range sty.getFonts() {
 			s.Fonts[fontId] = sty
 		}
-		sty.metadata = md
+		sty.metadata = opts.Metadata
 	}
 	s.requestParser = func(r *http.Request) request.Request {
 		return request.MakeMapboxRequest(r, false)
@@ -282,10 +289,28 @@ func GetMapboxTileType(tp string) MapboxTileType {
 	return MapboxVector
 }
 
-func NewMapboxTileProvider(name string, tp MapboxTileType, md *MapboxLayerMetadata, tileManager cache.Manager, tilejsonSource layer.MapboxTileJSONLayer, vectorLayers []*resource.VectorLayer, zoomRange *[2]int) *MapboxTileProvider {
-	ret := &MapboxTileProvider{name: name, type_: tp, metadata: md, tileManager: tileManager, extent: geo.MapExtentFromGrid(tileManager.GetGrid()), tilejsonSource: tilejsonSource, vectorLayers: vectorLayers}
-	if zoomRange != nil {
-		ret.zoomRange = *zoomRange
+type MapboxTileOptions struct {
+	Name           string
+	Type           MapboxTileType
+	Metadata       *MapboxLayerMetadata
+	TileManager    cache.Manager
+	TilejsonSource layer.MapboxTileJSONLayer
+	VectorLayers   []*resource.VectorLayer
+	ZoomRange      *[2]int
+}
+
+func NewMapboxTileProvider(opts *MapboxTileOptions) *MapboxTileProvider {
+	ret := &MapboxTileProvider{
+		name:           opts.Name,
+		type_:          opts.Type,
+		metadata:       opts.Metadata,
+		tileManager:    opts.TileManager,
+		extent:         geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
+		tilejsonSource: opts.TilejsonSource,
+		vectorLayers:   opts.VectorLayers,
+	}
+	if opts.ZoomRange != nil {
+		ret.zoomRange = *opts.ZoomRange
 	}
 	return ret
 }

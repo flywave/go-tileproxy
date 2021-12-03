@@ -65,7 +65,24 @@ func TestCacheMapLayer(t *testing.T) {
 
 	locker := &DummyTileLocker{}
 
-	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, true, false, nil, -1, false, 10, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: true,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           10,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
 
@@ -109,7 +126,24 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 
 	locker := &DummyTileLocker{}
 
-	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, true, false, nil, -1, false, 10, [2]uint32{2, 2})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: true,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           10,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
 
@@ -153,7 +187,24 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 
 	locker := &DummyTileLocker{}
 
-	manager := NewTileManager([]layer.Layer{source}, grid, c, locker, "test", "png", imageopts, false, false, nil, -1, false, 0, [2]uint32{1, 1})
+	topts := &TileManagerOptions{
+		Sources:              []layer.Layer{source},
+		Grid:                 grid,
+		Cache:                c,
+		Locker:               locker,
+		Identifier:           "test",
+		Format:               "png",
+		Options:              imageopts,
+		MinimizeMetaRequests: false,
+		BulkMetaTiles:        false,
+		PreStoreFilter:       nil,
+		RescaleTiles:         -1,
+		CacheRescaledTiles:   false,
+		MetaBuffer:           0,
+		MetaSize:             [2]uint32{2, 2},
+	}
+
+	manager := NewTileManager(topts)
 
 	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
 	cov := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{90, 45}}, geo.NewProj(4326), false)

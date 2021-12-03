@@ -35,7 +35,15 @@ type MapboxTileClient struct {
 }
 
 func NewMapboxTileClient(urlTemplate string, tilejsonUrl string, token string, tokenName string, ctx Context) *MapboxTileClient {
-	return &MapboxTileClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: urlTemplate, TilejsonURL: tilejsonUrl, AccessToken: token, AccessTokenName: tokenName}}
+	return &MapboxTileClient{
+		MapboxClient: MapboxClient{
+			BaseClient:      BaseClient{ctx: ctx},
+			BaseURL:         urlTemplate,
+			TilejsonURL:     tilejsonUrl,
+			AccessToken:     token,
+			AccessTokenName: tokenName,
+		},
+	}
 }
 
 func (c *MapboxTileClient) GetTile(tile_coord [3]int) []byte {
@@ -81,7 +89,14 @@ type MapboxStyleClient struct {
 }
 
 func NewMapboxStyleClient(url string, token string, tokenName string, ctx Context) *MapboxStyleClient {
-	return &MapboxStyleClient{MapboxClient: MapboxClient{BaseClient: BaseClient{ctx: ctx}, BaseURL: url, AccessToken: token, AccessTokenName: tokenName}}
+	return &MapboxStyleClient{
+		MapboxClient: MapboxClient{
+			BaseClient:      BaseClient{ctx: ctx},
+			BaseURL:         url,
+			AccessToken:     token,
+			AccessTokenName: tokenName,
+		},
+	}
 }
 
 func (c *MapboxStyleClient) GetSpriteJSON() *resource.SpriteJSON {

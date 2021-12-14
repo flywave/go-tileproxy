@@ -67,7 +67,7 @@ func TestHttpFetch(t *testing.T) {
 
 func Get(url string) []byte {
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: 20 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
 		panic(err)

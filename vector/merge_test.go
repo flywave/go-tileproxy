@@ -137,9 +137,9 @@ func TestMergeLK(t *testing.T) {
 }
 
 func TestLK(t *testing.T) {
-	tileid := m.TileID{X: 53958, Y: 24829, Z: 16}
+	tileid := m.TileID{X: 105, Y: 50, Z: 7}
 
-	name := fmt.Sprintf("../data/%d_%d_%d.pbf", 16, 53958, 24829)
+	name := fmt.Sprintf("../data/bug.pbf")
 	f, _ := os.Open(name)
 	ddd, _ := ioutil.ReadAll(f)
 	data := []byte{}
@@ -161,5 +161,4 @@ func TestLK(t *testing.T) {
 	f2.Write(data)
 	f2.Close()
 
-	os.Remove("./test1.mvt")
 }

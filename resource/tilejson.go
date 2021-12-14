@@ -103,7 +103,13 @@ func (r *TileJSON) SetData(content []byte) {
 }
 
 func NewTileJSON(id, name string) *TileJSON {
-	att := &TileJSON{StoreID: id, Name: name, Bounds: [4]float32{-180, -85, 180, 85}, Center: [3]float32{0, 0, 0}, Scheme: "xyz"}
+	att := &TileJSON{
+		StoreID: id,
+		Name:    name,
+		Bounds:  [4]float32{-180, -85, 180, 85},
+		Center:  [3]float32{0, 0, 0},
+		Scheme:  "xyz",
+	}
 	return att
 }
 

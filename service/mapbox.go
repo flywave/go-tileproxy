@@ -43,7 +43,13 @@ type MapboxServiceOptions struct {
 }
 
 func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
-	s := &MapboxService{Tilesets: opts.Tilesets, Styles: opts.Styles, Fonts: make(map[string]*StyleProvider), Metadata: opts.Metadata, MaxTileAge: opts.MaxTileAge}
+	s := &MapboxService{
+		Tilesets:   opts.Tilesets,
+		Styles:     opts.Styles,
+		Fonts:      make(map[string]*StyleProvider),
+		Metadata:   opts.Metadata,
+		MaxTileAge: opts.MaxTileAge,
+	}
 	s.router = map[string]func(r request.Request) *Response{
 		"tilejson": func(r request.Request) *Response {
 			return s.GetTileJSON(r)

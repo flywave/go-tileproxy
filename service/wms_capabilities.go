@@ -23,7 +23,15 @@ type WMSCapabilities struct {
 }
 
 func newCapabilities(service *WMSMetadata, root_layer *WMSGroupLayer, imageFormats []string, info_formats []string, srs *geo.SupportedSRS, srsExtents map[string]*geo.MapExtent, maxOutputPixels int) *WMSCapabilities {
-	return &WMSCapabilities{service: service, rootLayer: root_layer, imageFormats: imageFormats, infoFormats: info_formats, srs: srs, srsExtents: srsExtents, maxOutputPixels: maxOutputPixels}
+	return &WMSCapabilities{
+		service:         service,
+		rootLayer:       root_layer,
+		imageFormats:    imageFormats,
+		infoFormats:     info_formats,
+		srs:             srs,
+		srsExtents:      srsExtents,
+		maxOutputPixels: maxOutputPixels,
+	}
 }
 
 func (c *WMSCapabilities) layerSrsBBox(layer WMSLayer, epsgAxisOrder bool) map[string]vec2d.Rect {

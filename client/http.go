@@ -47,7 +47,11 @@ func createCollector(config *Config) *crawler.Collector {
 	)
 
 	sc.SetProxyFunc(rp)
-	sc.Limit(&crawler.LimitRule{DomainGlob: "*", Parallelism: config.Threads, RandomDelay: time.Duration(config.RandomDelay) * time.Second})
+	sc.Limit(&crawler.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: config.Threads,
+		RandomDelay: time.Duration(config.RandomDelay) * time.Second,
+	})
 	sc.WithTransport(&http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: config.SkipSSL},
 		Proxy:           http.ProxyFromEnvironment,

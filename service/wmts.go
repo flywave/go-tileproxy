@@ -372,10 +372,6 @@ func NewWMTSRestService(opts *WMTSRestServiceOptions) *WMTSRestService {
 	return ret
 }
 
-func (s *WMTSRestService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) *RequestError {
-	return nil
-}
-
 type WMTSTileLayer map[string]Provider
 
 func (l WMTSTileLayer) frist() Provider {

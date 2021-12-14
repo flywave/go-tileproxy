@@ -145,16 +145,18 @@ func TestLK(t *testing.T) {
 	data := []byte{}
 	tile, _ := mvt.NewTile(ddd, mvt.PROTO_LK)
 	for _, layer := range tile.LayerMap {
-		conf := mvt.NewConfig(layer.Name, tileid, mvt.PROTO_MAPBOX)
-		conf.ExtentBool = false
-		feats := []*geom.Feature{}
-		for layer.Next() {
-			feat, _ := layer.Feature()
-			featg, _ := feat.ToGeoJSON(tileid)
-			feats = append(feats, featg)
-		}
+		if layer.Name == "cn_river" {
+			conf := mvt.NewConfig(layer.Name, tileid, mvt.PROTO_MAPBOX)
+			conf.ExtentBool = false
+			feats := []*geom.Feature{}
+			for layer.Next() {
+				feat, _ := layer.Feature()
+				featg, _ := feat.ToGeoJSON(tileid)
+				feats = append(feats, featg)
+			}
 
-		data = append(data, mvt.WriteLayer(feats, conf)...)
+			data = append(data, mvt.WriteLayer(feats, conf)...)
+		}
 	}
 
 	f2, _ := os.Create("./test1.mvt")

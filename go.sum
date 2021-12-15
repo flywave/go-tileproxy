@@ -77,7 +77,12 @@ github.com/flywave/go3d v0.0.0-20211005091456-f6cf94b6f807 h1:r6Lk0xD9g7QORUVPoj
 github.com/flywave/go3d v0.0.0-20211005091456-f6cf94b6f807/go.mod h1:0/K6WtaMwhhVJb84xWStt+ALQl2EdvzW2oJqz+330GU=
 github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs=
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
-github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322 h1:6sA1g1ZjlCDtVk5+3dUjM1p9REBn8dCPzN8Oub/kzdo=
+github.com/flywave/ogc-osgeo v0.0.0-20211215000458-8c0ce98f7e86 h1:q72QP8tyqf5hQ1VwF5gyPwIsZZ6TSglUg4nOG+MNgug=
+github.com/flywave/ogc-osgeo v0.0.0-20211215000458-8c0ce98f7e86/go.mod h1:abWx0JGCgNAmti6Bjdc1UYjzmvsLbpWWjdpI7Dn6fDM=
+github.com/flywave/ogc-osgeo v0.2.7-0.20210911004212-c6396d5ad322 h1:6sA1g1ZjlCDtVk5+3dUjM1p9REBn8dCPzN8Oub/kzdo=
+github.com/flywave/ogc-osgeo v0.2.7-0.20210911004212-c6396d5ad322/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
+github.com/flywave/ogc-osgeo v0.2.7 h1:1fSggnazcEtLFOltlFZXVuxuFiTNYZ95+odoR4vOe5I=
+github.com/flywave/ogc-osgeo v0.2.7/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/flywave/ogc-specifications v0.2.7-0.20210911004212-c6396d5ad322/go.mod h1:zAzdVrlW3i0ydGO/zYMvlr8Bx1bYiUse/7BG3sCzvvo=
 github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704 h1:/qESK2yi5ewSdT+AIz6sH/lBscbrBh/9vifVFcMfp8A=
 github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=

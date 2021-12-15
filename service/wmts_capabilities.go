@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/flywave/go-tileproxy/request"
-	"github.com/flywave/ogc-specifications/pkg/wmts100"
+	"github.com/flywave/ogc-osgeo/pkg/wmts100"
 )
 
 type WMTSCapabilities struct {

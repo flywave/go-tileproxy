@@ -10,7 +10,7 @@ import (
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
-	tms100 "github.com/flywave/ogc-specifications/pkg/tms100"
+	tms100 "github.com/flywave/ogc-osgeo/pkg/tms100"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"

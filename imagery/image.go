@@ -184,7 +184,7 @@ func (s *ImageSource) makeImageBuf() error {
 		}
 		return nil
 	}
-	return errors.New("image name is empty!")
+	return errors.New("image name is empty")
 }
 
 func imageToBuf(image image.Image, image_opts *ImageOptions, georef *geo.GeoReference) []byte {
@@ -380,7 +380,7 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 		return nil
 	}
 
-	if imIn1.Bounds().Dx() != imIn1.Bounds().Dx() || imIn1.Bounds().Dy() != imIn1.Bounds().Dy() {
+	if imIn1.Bounds().Dx() != imIn2.Bounds().Dx() || imIn1.Bounds().Dy() != imIn2.Bounds().Dy() {
 		return nil
 	}
 
@@ -399,13 +399,11 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 			for i := 0; i < len(im1.Pix); i++ {
 				result.Pix[i] = (uint8)(float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
 			}
-			break
 		case *image.RGBA:
 			im2 := imIn2.(*image.RGBA)
 			for i := 0; i < len(im1.Pix); i++ {
 				result.Pix[i] = (uint8)(float64(im1.Pix[i]) + alpha*(float64(im2.Pix[i])-float64(im1.Pix[i])))
 			}
-			break
 		}
 	} else {
 		switch im1 := imIn1.(type) {
@@ -421,7 +419,6 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 					result.Pix[i] = uint8(temp)
 				}
 			}
-			break
 		case *image.RGBA:
 			im2 := imIn2.(*image.RGBA)
 			for i := 0; i < len(im1.Pix); i++ {
@@ -434,7 +431,6 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 					result.Pix[i] = uint8(temp)
 				}
 			}
-			break
 		}
 	}
 	return result

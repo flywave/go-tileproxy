@@ -150,7 +150,7 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 }
 
 func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, error) {
-	if !data.HasBorder() {
+	if !data.IsUnilateral() {
 		return nil, errors.New("error")
 	}
 

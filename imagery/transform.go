@@ -40,7 +40,7 @@ func (t *ImageTransformer) Transform(srcImg tile.Source, srcBBox vec2d.Rect, dst
 
 func (t *ImageTransformer) noTransformationNeeded(srcSize [2]uint32, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect) bool {
 	xres := (dstBBox.Max[0] - dstBBox.Min[0]) / float64(dstSize[0])
-	yres := (dstBBox.Min[1] - dstBBox.Min[1]) / float64(dstSize[1])
+	yres := (dstBBox.Max[1] - dstBBox.Min[1]) / float64(dstSize[1])
 	return (srcSize == dstSize &&
 		t.SrcSRS.Eq(t.DstSRS) &&
 		geo.BBoxEquals(srcBBox, dstBBox, xres/10, yres/10))

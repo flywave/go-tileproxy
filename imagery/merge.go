@@ -173,13 +173,10 @@ func splitImage(img image.Image, mode ImageMode) (cha [][]uint32, rect image.Rec
 	switch mode {
 	case RGB:
 		numcha = 3
-		break
 	case RGBA:
 		numcha = 4
-		break
 	case GRAY:
 		numcha = 1
-		break
 	}
 	si := rect.Bounds().Dx() * rect.Bounds().Dy()
 	cha = make([][]uint32, numcha)
@@ -213,10 +210,8 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 	case RGB:
 	case RGBA:
 		out = image.NewNRGBA(rect)
-		break
 	case GRAY:
 		out = image.NewGray(rect)
-		break
 	}
 	for y := 0; y < rect.Bounds().Dy(); y++ {
 		for x := 0; x < rect.Bounds().Dx(); x++ {
@@ -230,11 +225,9 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 					c := color.NRGBA{R: uint8(bands[0][off]), G: uint8(bands[1][off]), B: uint8(bands[2][off]), A: uint8(bands[3][off])}
 					outt.Set(x, y, c)
 				}
-				break
 			case *image.Gray:
 				c := color.Gray{Y: uint8(bands[3][off])}
 				outt.Set(x, y, c)
-				break
 			}
 		}
 	}

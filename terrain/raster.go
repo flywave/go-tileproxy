@@ -145,7 +145,7 @@ func (s *RasterSource) SetSource(src interface{}) {
 }
 
 func (s *RasterSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
-	var dem_opts *RasterOptions
+	var dem_opts *RasterOptions // unuse
 	if in_tile_opts != nil {
 		dem_opts = in_tile_opts.(*RasterOptions)
 	} else {

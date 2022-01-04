@@ -29,10 +29,6 @@ func TestMaskImage(t *testing.T) {
 	defer os.Remove("./test.png")
 }
 
-func coverage(geom *geos.Geometry, srs string) *geo.GeomCoverage {
-	return geo.NewGeosCoverage(geom, geo.NewProj(srs), false)
-}
-
 func TestMaskOutsideOfImageTransparent(t *testing.T) {
 	img_opts := *PNG_FORMAT
 	img_opts.Transparent = geo.NewBool(true)

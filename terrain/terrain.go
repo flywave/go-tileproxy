@@ -67,7 +67,7 @@ func (s *TerrainSource) Decode(r io.Reader) (*qmt.QuantizedMeshTile, error) {
 		return nil, errors.New("reader is must ReadSeeker")
 	} else {
 		mesh := &qmt.QuantizedMeshTile{}
-		err := mesh.Read(reader)
+		err := mesh.Read(reader, qmt.Ext_None)
 		return mesh, err
 	}
 }

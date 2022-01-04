@@ -64,7 +64,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	}
 
 	if c.Service.Provider != nil {
-		resp.ServiceProvider = *c.Service.Provider
+		resp.ServiceProvider = c.Service.Provider
 	}
 
 	url := c.Service.URL
@@ -189,7 +189,7 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 	}
 
 	if c.Service.Provider != nil {
-		resp.ServiceProvider = *c.Service.Provider
+		resp.ServiceProvider = c.Service.Provider
 	}
 
 	url := c.Service.URL

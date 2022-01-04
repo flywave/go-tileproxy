@@ -15,7 +15,7 @@ require (
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20211215003006-e6753208a194
 	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
-	github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d
+	github.com/flywave/go-quantized-mesh v0.0.0-20220104003607-ec07714ee178
 	github.com/flywave/go-tin v0.0.0-20210814015358-bf6f824e615b
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20211208020909-d2697502845a

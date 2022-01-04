@@ -144,7 +144,7 @@ func (d *TileData) GetExtend() ([]float64, [2]uint32, [6]float64) {
 	pixelsize := caclulatePixelSize(int(d.Size[0]), int(d.Size[1]), d.Box)
 
 	if !d.HasBorder() {
-		return d.Datas[:], d.Size, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
+		return d.Datas[:], d.Size, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Max[1], 0, -pixelsize[1]}
 	}
 	if d.IsBilateral() {
 		w, h := (d.Size[0] + 2), (d.Size[1] + 2)
@@ -162,7 +162,7 @@ func (d *TileData) GetExtend() ([]float64, [2]uint32, [6]float64) {
 		off := (d.Size[1] + 1) * w
 		copy(ret[off:int(off+w)], d.BottomBorder)
 
-		return ret, [2]uint32{(d.Size[0] + 2), (d.Size[1] + 2)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
+		return ret, [2]uint32{(d.Size[0] + 2), (d.Size[1] + 2)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Max[1], 0, -pixelsize[1]}
 	}
 	if d.IsUnilateral() {
 		w, h := (d.Size[0] + 1), (d.Size[1] + 1)
@@ -175,7 +175,7 @@ func (d *TileData) GetExtend() ([]float64, [2]uint32, [6]float64) {
 			copy(ret[off:off+int(d.Size[0])], d.Datas[y*int(d.Size[0]):(y+1)*int(d.Size[0])])
 		}
 
-		return ret, [2]uint32{(d.Size[0] + 1), (d.Size[1] + 1)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Min[1], 0, -pixelsize[1]}
+		return ret, [2]uint32{(d.Size[0] + 1), (d.Size[1] + 1)}, [6]float64{d.Box.Min[0], pixelsize[0], 0, d.Box.Max[1], 0, -pixelsize[1]}
 	}
 	return nil, [2]uint32{}, [6]float64{}
 }

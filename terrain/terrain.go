@@ -170,7 +170,7 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 	mesh1 := tin.GenerateTinMesh(rd, options.MaxError)
 	mk := tin.NewTileMaker(mesh1)
 
-	mesh, _ := mk.GenTile(tsf, xsize, ysize)
+	mesh, _ := mk.GenTile()
 
 	qdt := &qmt.MeshData{}
 	qdt.Vertices = *(*[][3]float64)(unsafe.Pointer(&mesh.Vertices))
@@ -178,7 +178,7 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 	qdt.BBox = mesh.BBox
 
 	qmesh := &qmt.QuantizedMeshTile{}
-	qmesh.SetMesh(qdt, false)
+	qmesh.SetMesh(qdt, true)
 
 	source := NewTerrainSource(options)
 

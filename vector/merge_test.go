@@ -121,7 +121,16 @@ func TestMergeLK(t *testing.T) {
 
 	os.Remove("./test.json")
 
-	opts := &geojsonvt.TileOptions{Tolerance: 0, LineMetrics: true, Buffer: 2048, Extent: 4096, MaxZoom: 20, IndexMaxZoom: 5, IndexMaxPoints: 100000, GenerateId: false}
+	opts := &geojsonvt.TileOptions{
+		Tolerance:      0,
+		LineMetrics:    true,
+		Buffer:         2048,
+		Extent:         4096,
+		MaxZoom:        20,
+		IndexMaxZoom:   5,
+		IndexMaxPoints: 100000,
+		GenerateId:     false,
+	}
 
 	vt := geojsonvt.NewGeoJSONVT(jsonvtdata, *opts)
 	vttile := vt.GetTile(16, 53958, 24829)

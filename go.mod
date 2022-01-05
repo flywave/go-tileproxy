@@ -28,7 +28,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/lanrat/extsort v1.0.0
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.10 // indirect
 	github.com/mholt/archiver/v3 v3.5.1
@@ -40,7 +39,6 @@ require (
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )

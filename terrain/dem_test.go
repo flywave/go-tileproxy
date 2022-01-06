@@ -55,7 +55,7 @@ func convertGeoTIFF(x, y, z int) {
 	data, _ := LoadDEM(f, ModeMapbox)
 	f.Close()
 
-	tiledata := NewTileData([2]uint32{uint32(data.Dim - 2), uint32(data.Dim - 2)}, BORDER_BILATERAL)
+	tiledata := NewTileData([2]uint32{uint32(data.Dim - 2), uint32(data.Dim - 2)}, BORDER_NONE)
 	for x := 0; x < data.Dim; x++ {
 		for y := 0; y < data.Dim; y++ {
 			if x > 0 && y > 0 && x < data.Dim-1 && y < data.Dim-1 {
@@ -97,7 +97,7 @@ func convertGeoTIFF(x, y, z int) {
 	tiledata.Box = bbox2
 	tiledata.Boxsrs = srs4326
 
-	tiffio := &GeoTIFFIO{Mode: BORDER_BILATERAL}
+	tiffio := &GeoTIFFIO{Mode: BORDER_NONE}
 
 	tiff, _ := tiffio.Encode(tiledata)
 

@@ -2,27 +2,16 @@ package terrain
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 
-	geotiff "github.com/flywave/go-geotiff"
-
+	"github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
-)
-
-var (
-	GEOTIFF_DT_MAP = map[int]RasterType{
-		geotiff.DT_INT8:    RT_CHAR,
-		geotiff.DT_UINT8:   RT_UCHAR,
-		geotiff.DT_INT16:   RT_SHORT,
-		geotiff.DT_UINT16:  RT_USHORT,
-		geotiff.DT_INT32:   RT_INT,
-		geotiff.DT_UINT32:  RT_UINT,
-		geotiff.DT_FLOAT32: RT_FLOAT,
-		geotiff.DT_FLOAT64: RT_DOUBLE,
-	}
+	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/google/tiff"
 )
 
 type GeoTIFFRasterSource struct {
@@ -35,23 +24,10 @@ func NewGeoTIFFRasterSource(mode BorderMode, options tile.TileOptions) *GeoTIFFR
 	return src
 }
 
-func LoadTiff(r io.Reader) (*geotiff.Raster, error) {
-	rat := r.(io.ReaderAt)
-	raster, err := geotiff.CreateRasterFromStream(rat)
-	if err != nil {
-		return nil, err
-	}
+func LoadTiff(r io.Reader) (*cog.Reader, error) {
+	rat := r.(tiff.ReadAtReadSeeker)
+	raster := cog.ReadFrom(rat)
 	return raster, nil
-}
-
-func EncodeTiff(r *geotiff.Raster) ([]byte, error) {
-	wr := &bytes.Buffer{}
-	r.SetWriter(wr)
-	err := r.Save()
-	if err != nil {
-		return nil, err
-	}
-	return wr.Bytes(), nil
 }
 
 type GeoTIFFIO struct {
@@ -71,25 +47,36 @@ func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
 		off = 2
 	}
 
-	row, col := raster.Rows(), raster.Columns()
+	si := raster.GetSize(0)
+
+	row, col := int(si[1]), int(si[0])
 	tiledata := NewTileData([2]uint32{uint32(col - off), uint32(row - off)}, d.Mode)
 
-	tiledata.Box.Min[0], tiledata.Box.Min[1], tiledata.Box.Max[0], tiledata.Box.Max[1] = raster.West(), raster.South(), raster.East(), raster.North()
-	tiledata.Boxsrs = geo.NewProj(fmt.Sprintf("EPSG:%d", raster.GetRasterConfig().EPSGCode))
+	tiledata.Box = raster.GetBounds(0)
+
+	epsg, err := raster.GetEPSGCode(0)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tiledata.Boxsrs = geo.NewProj(fmt.Sprintf("EPSG:%d", epsg))
+
+	imageData := raster.Data[0].([]float64)
 
 	if d.Mode == BORDER_UNILATERAL {
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 {
-					tiledata.Set(x-1, y-1, raster.Value(y, x))
+					tiledata.Set(x-1, y-1, imageData[y*col+x])
 				}
 
 				if x == 0 && y != 0 && y != row-1 {
-					tiledata.FillBorder(BORDER_LEFT, y-1, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_LEFT, y-1, imageData[y*col+x])
 				}
 
 				if y == 0 {
-					tiledata.FillBorder(BORDER_TOP, x, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_TOP, x, imageData[y*col+x])
 				}
 			}
 		}
@@ -97,30 +84,30 @@ func (d *GeoTIFFIO) Decode(r io.Reader) (*TileData, error) {
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 && x < col-1 && y < row-1 {
-					tiledata.Set(x-1, y-1, raster.Value(y, x))
+					tiledata.Set(x-1, y-1, imageData[y*col+x])
 				}
 
 				if x == 0 && y != 0 && y != row-1 {
-					tiledata.FillBorder(BORDER_LEFT, y-1, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_LEFT, y-1, imageData[y*col+x])
 				}
 
 				if x == col-1 && y != 0 && y != row-1 {
-					tiledata.FillBorder(BORDER_RIGHT, y-1, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_RIGHT, y-1, imageData[y*col+x])
 				}
 
 				if y == 0 {
-					tiledata.FillBorder(BORDER_TOP, x, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_TOP, x, imageData[y*col+x])
 				}
 
 				if y == row-1 {
-					tiledata.FillBorder(BORDER_BOTTOM, x, raster.Value(y, x))
+					tiledata.FillBorder(BORDER_BOTTOM, x, imageData[y*col+x])
 				}
 			}
 		}
 	} else {
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
-				tiledata.Set(x, y, raster.Value(y, x))
+				tiledata.Set(x, y, imageData[y*col+x])
 			}
 		}
 	}
@@ -133,34 +120,34 @@ func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	}
 	data, si, tran := tile.GetExtend()
 
-	var north, south, east, west float64
+	var miny, maxy, minx, maxx float64
 	if tran[5] < 0 {
-		north = tran[3]
-		south = tran[3] + tran[5]*float64(si[1])
+		maxy = tran[3]
+		miny = tran[3] + tran[5]*float64(si[1])
 	} else {
-		south = tran[3]
-		north = tran[3] + tran[5]*float64(si[1])
+		miny = tran[3]
+		maxy = tran[3] + tran[5]*float64(si[1])
 	}
 	if tran[1] < 0 {
-		east = tran[0]
-		west = tran[0] + tran[1]*float64(si[0])
+		maxx = tran[0]
+		minx = tran[0] + tran[1]*float64(si[0])
 	} else {
-		west = tran[0]
-		east = tran[0] + tran[1]*float64(si[0])
+		minx = tran[0]
+		maxx = tran[0] + tran[1]*float64(si[0])
 	}
 
-	conf := geotiff.NewDefaultRasterConfig()
-	conf.EPSGCode = geo.GetEpsgNum(tile.Boxsrs.GetSrsCode())
+	bbox := vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
 
-	raster, err := geotiff.CreateNewRaster("", int(si[1]), int(si[0]), north, south, east, west, conf)
+	src := cog.NewSource(data, nil, cog.CTLZW)
+
+	w := cog.NewTileWriter(src, binary.LittleEndian, false, bbox, tile.Boxsrs, si, true, nil)
+	writer := &bytes.Buffer{}
+
+	err := w.WriteData(writer)
+
 	if err != nil {
 		return nil, err
 	}
-
-	raster.SetData(data)
-	writer := &bytes.Buffer{}
-	raster.SetWriter(writer)
-	raster.Save()
 
 	return writer.Bytes(), nil
 }

@@ -7,10 +7,10 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
+	github.com/flywave/go-cog v0.0.0-20220108091104-5b25c59d5277
 	github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5
 	github.com/flywave/go-geom v0.0.0-20211230100258-27b9a5f30082
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
-	github.com/flywave/go-geotiff v0.0.0-20210812062209-a5754fcc5680
 	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20211229093613-0550dfb0402e
@@ -26,6 +26,7 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0

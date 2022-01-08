@@ -2,9 +2,12 @@ package terrain
 
 import (
 	"fmt"
+	"image"
 	"os"
 	"testing"
 
+	"github.com/flywave/go-cog"
+	_ "github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -49,7 +52,7 @@ func TestDem(t *testing.T) {
 	f.Close()
 }
 
-func convertGeoTIFF(x, y, z int) {
+func convertGeoTIFF(x, y, z int, t *testing.T) {
 	webp := fmt.Sprintf("../data/%d_%d_%d.webp", z, x, y)
 	f, _ := os.Open(webp)
 	data, _ := LoadDEM(f, ModeMapbox)
@@ -81,7 +84,6 @@ func convertGeoTIFF(x, y, z int) {
 	}
 
 	srs900913 := geo.NewProj(900913)
-	srs4326 := geo.NewProj(4326)
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
@@ -92,20 +94,14 @@ func convertGeoTIFF(x, y, z int) {
 	grid := geo.NewTileGrid(conf)
 
 	bbox := grid.TileBBox([3]int{x, y, z}, false)
-	bbox2 := srs900913.TransformRectTo(srs4326, bbox, 16)
-
-	tiledata.Box = bbox2
-	tiledata.Boxsrs = srs4326
-
-	tiffio := &GeoTIFFIO{Mode: BORDER_NONE}
-
-	tiff, _ := tiffio.Encode(tiledata)
 
 	geotiff := fmt.Sprintf("../data/%d_%d_%d.tif", z, x, y)
 
-	f, _ = os.Create(geotiff)
-	f.Write(tiff)
-	f.Close()
+	rect := image.Rect(0, 0, 512, 512)
+
+	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
+
+	cog.WriteTile(geotiff, src, bbox, srs900913, [2]uint32{512, 512}, true, nil)
 }
 
 func TestTiff(t *testing.T) {
@@ -117,7 +113,7 @@ func TestTiff(t *testing.T) {
 	}
 	tiffs := []string{}
 	for i := range tiles {
-		convertGeoTIFF(tiles[i][0], tiles[i][1], tiles[i][2])
+		convertGeoTIFF(tiles[i][0], tiles[i][1], tiles[i][2], t)
 		tiffs = append(tiffs, fmt.Sprintf("../data/%d_%d_%d.tif", tiles[i][2], tiles[i][0], tiles[i][1]))
 	}
 

@@ -101,7 +101,7 @@ func convertGeoTIFF(x, y, z int, t *testing.T) {
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile(geotiff, src, bbox, srs900913, [2]uint32{512, 512}, true, nil)
+	cog.WriteTile(geotiff, src, bbox, srs900913, [2]uint32{512, 512}, nil)
 }
 
 func TestTiff(t *testing.T) {

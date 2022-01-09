@@ -28,10 +28,10 @@ github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
-github.com/flywave/go-cog v0.0.0-20220108083603-52c83071e0b0 h1:bjN/i6Q4sZb4yOoC9hessn30cuy3W8UlTlg1yHl90Dw=
-github.com/flywave/go-cog v0.0.0-20220108083603-52c83071e0b0/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-cog v0.0.0-20220108091104-5b25c59d5277 h1:1mWDreh1BKHohDCmNVXdxZ4n0BAsvkcUHWLeUYZ/82g=
 github.com/flywave/go-cog v0.0.0-20220108091104-5b25c59d5277/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
+github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be h1:X5Itc9aYopG2/XAu+TC9Obw2ySLpgq2xwD4ipELfZVw=
+github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-geo v0.0.0-20211215003832-1f14b4f215cb/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=
 github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5 h1:dx3LuAfbZOMU8y/NedU7nmnJw0rl1oKNdGO37vWfX7g=
 github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=

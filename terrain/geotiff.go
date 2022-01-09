@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"image"
 	"io"
 
 	"github.com/flywave/go-cog"
@@ -137,10 +138,10 @@ func (d *GeoTIFFIO) Encode(tile *TileData) ([]byte, error) {
 	}
 
 	bbox := vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
+	rect := image.Rect(0, 0, int(si[0]), int(si[1]))
+	src := cog.NewSource(data, &rect, cog.CTLZW)
 
-	src := cog.NewSource(data, nil, cog.CTLZW)
-
-	w := cog.NewTileWriter(src, binary.LittleEndian, false, bbox, tile.Boxsrs, si, true, nil)
+	w := cog.NewTileWriter(src, binary.LittleEndian, false, bbox, tile.Boxsrs, si, nil)
 	writer := &bytes.Buffer{}
 
 	err := w.WriteData(writer)

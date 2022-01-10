@@ -3,10 +3,7 @@ package terrain
 import (
 	"math"
 
-	qmt "github.com/flywave/go-quantized-mesh"
-
 	vec2d "github.com/flywave/go3d/float64/vec2"
-	vec3d "github.com/flywave/go3d/float64/vec3"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
@@ -87,77 +84,6 @@ func (t *RasterMerger) tileOffset(i int) [2]int {
 	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1]))}
 }
 
-type TerrainMerger struct {
-	Grid [2]int
-}
-
-func NewTerrainMerger(tile_grid [2]int) *TerrainMerger {
-	return &TerrainMerger{Grid: tile_grid}
-}
-
-func (t *TerrainMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) tile.Source {
-	if t.Grid[0] == 1 && t.Grid[1] == 1 {
-		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
-			tile := ordered_tiles[0]
-			return tile
-		}
-	}
-
-	var cacheable *tile.CacheInfo
-
-	fdata := ordered_tiles[0].GetTile().(*qmt.QuantizedMeshTile)
-
-	var bbox vec3d.Box
-
-	mdata, err := fdata.GetMesh()
-	if err != nil {
-		return nil
-	}
-
-	bbox = vec3d.Box{Min: vec3d.T{mdata.BBox[0][0], mdata.BBox[0][1], mdata.BBox[0][2]},
-		Max: vec3d.T{mdata.BBox[1][0], mdata.BBox[1][1], mdata.BBox[1][2]}}
-
-	for _, source := range ordered_tiles {
-		if source == nil {
-			continue
-		}
-
-		if source.GetCacheable() == nil {
-			cacheable = source.GetCacheable()
-		}
-
-		tdata := source.GetTile().(*qmt.QuantizedMeshTile)
-
-		tmdata, err := tdata.GetMesh()
-		if err != nil {
-			return nil
-		}
-
-		bboxss := vec3d.Box{Min: vec3d.T{tmdata.BBox[0][0], tmdata.BBox[0][1], tmdata.BBox[0][2]},
-			Max: vec3d.T{tmdata.BBox[1][0], tmdata.BBox[1][1], tmdata.BBox[1][2]}}
-		bbox = vec3d.Joined(&bbox, &bboxss)
-
-		faceindxe := len(mdata.Vertices)
-
-		mdata.Vertices = append(mdata.Vertices, tmdata.Vertices...)
-
-		for _, f := range tmdata.Faces {
-			mdata.Faces = append(mdata.Faces, [3]int{f[0] + faceindxe, f[1] + faceindxe, f[2] + faceindxe})
-		}
-	}
-
-	mdata.BBox[0] = [3]float64(bbox.Min)
-	mdata.BBox[1] = [3]float64(bbox.Max)
-
-	qmesh := &qmt.QuantizedMeshTile{}
-	qmesh.SetMesh(mdata, false)
-
-	src := NewTerrainSource(opts)
-	src.cacheable = cacheable
-	src.SetSource(qmesh)
-	return src
-}
-
 type RasterSplitter struct {
 	dem     tile.Source
 	Options *RasterOptions
@@ -180,7 +106,7 @@ func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [
 
 	georef := geo.NewGeoReference(newbox, boxsrs)
 
-	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), rasterS.GetRasterOptions().Mode, georef)
+	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.Options.Mode, georef)
 
 	err := rasterS.Resample(nil, grid)
 
@@ -204,13 +130,8 @@ func NewTiledRaster(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32) 
 }
 
 func (t *TiledRaster) GetRaster(dem_opts *RasterOptions) tile.Source {
-	if dem_opts.Format.Extension() == "terrain" {
-		tm := NewTerrainMerger(t.TileGrid)
-		return tm.Merge(t.Tiles, dem_opts)
-	} else {
-		tm := NewRasterMerger(t.TileGrid, t.TileSize)
-		return tm.Merge(t.Tiles, dem_opts)
-	}
+	tm := NewRasterMerger(t.TileGrid, t.TileSize)
+	return tm.Merge(t.Tiles, dem_opts)
 }
 
 func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, dem_opts *RasterOptions) tile.Source {

@@ -8,6 +8,8 @@ import (
 	"os"
 	"unsafe"
 
+	"github.com/flywave/go-geoid"
+	"github.com/flywave/go-proj"
 	qmt "github.com/flywave/go-quantized-mesh"
 	tin "github.com/flywave/go-tin"
 
@@ -165,6 +167,22 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 
 	rd := tin.NewRasterDoubleWithData(xsize, ysize, raw)
 	rd.NoData = data.NoDataValue()
+
+	rd.SetTransform(func(v *tin.Vertex) tin.Vertex {
+		z := v[2]
+		if options.HeightModel == geoid.HAE {
+			z += options.HeightOffset
+		} else {
+			gid := geoid.NewGeoid(options.HeightModel, false)
+			z = gid.ConvertHeight(v[0], v[1], z, geoid.GEOIDTOELLIPSOID)
+		}
+		x, y, z1, err := proj.Lonlat2Ecef(v[0], v[1], z)
+		if err != nil {
+			return *v
+		}
+		return tin.Vertex{x, y, z1}
+	})
+
 	rd.SetXYPos(tsf[0], ypos, tsf[1])
 
 	mesh1 := tin.GenerateTinMesh(rd, options.MaxError)

@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 
+	"github.com/flywave/go-geoid"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
@@ -27,6 +28,8 @@ type RasterOptions struct {
 	MaxError     float64
 	Nodata       float64
 	Interpolator string
+	HeightModel  geoid.VerticalDatum
+	HeightOffset float64
 }
 
 func (s *RasterOptions) GetFormat() tile.TileFormat {
@@ -230,7 +233,7 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
 	if float64(s.pixelSize[1]) > 0 {
-		yPixel = (dataEndLat - lat) / float64(s.pixelSize[1])
+		yPixel = ((dataEndLat-lat)/float64(s.pixelSize[1]) - 1)
 	} else {
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
@@ -245,8 +248,8 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 	yOnDataPoint := math.Abs(yInterpolationAmount) < epsilon
 
 	if xOnDataPoint && yOnDataPoint {
-		x := int(math.Round(xPixel))
-		y := int(math.Round(yPixel))
+		x := int(math.Floor(xPixel))
+		y := int(math.Floor(yPixel))
 		heightValue = s.getElevation(x, y)
 	} else {
 		xCeiling := int(math.Ceil(xPixel))
@@ -300,7 +303,7 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 		bbox = grid.srs.TransformRectTo(georef.GetSrs(), bbox, 16)
 	}
 	if !geo.BBoxContains(georef.GetBBox(), bbox) {
-		return errors.New("not Contains target grid")
+		//	return errors.New("not Contains target grid")
 	}
 	opt := s.Options.(*RasterOptions)
 

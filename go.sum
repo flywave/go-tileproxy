@@ -28,8 +28,6 @@ github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
-github.com/flywave/go-cog v0.0.0-20220108091104-5b25c59d5277 h1:1mWDreh1BKHohDCmNVXdxZ4n0BAsvkcUHWLeUYZ/82g=
-github.com/flywave/go-cog v0.0.0-20220108091104-5b25c59d5277/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be h1:X5Itc9aYopG2/XAu+TC9Obw2ySLpgq2xwD4ipELfZVw=
 github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-geo v0.0.0-20211215003832-1f14b4f215cb/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=
@@ -46,15 +44,12 @@ github.com/flywave/go-geom v0.0.0-20211230100258-27b9a5f30082/go.mod h1:yrZ0GpfB
 github.com/flywave/go-geos v0.0.0-20210901070302-5537e39a4985/go.mod h1:2CKYxCmQE8aQzzVrw23MLuMmC/BA5EvVIdvUaPkeAKI=
 github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026 h1:ccxFo1tlib18fLXah8jDwIeTJjvFZqW+IcjsCo7UnZA=
 github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026/go.mod h1:5nZRI3ua5qOepZ7Vd8uTWjIRI8hIMWoxdDVU7rH26RQ=
-github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54 h1:Is7+hPljzdBIgsd5Un7WMjCmFnoucHIJe1XoZ8l3aQA=
 github.com/flywave/go-geotiff v0.0.0-20210730100939-aadf13b7cc54/go.mod h1:EJFPW3SUG56OqOQ9fyEJHf+N9Svpcv1sHb2WV/Gno5c=
 github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419 h1:itoqmyEno9TeAN7h8zz5QLqZzm7nE4bAtt0Hm+2BwmA=
 github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419/go.mod h1:L34aOG4eu416BlBFsWZQtfarIt5soGcNm+tg6o99eDw=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9 h1:0XyPXUfne9rwAuqnZcTgZirpm7RlAcXGA1C4MkXPF5Y=
 github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9/go.mod h1:ViGRrCXmuOf68/rpxR2fHy9nKOxdCKgCFd5+/iyWRTs=
 github.com/flywave/go-mapbox v0.0.0-20211214141607-a6ac10dbb5a6/go.mod h1:pQYpFqxVJ+exzOMOdYYOQRQpB0Fpkjt+iPiZeklu+9s=
-github.com/flywave/go-mapbox v0.0.0-20211229093613-0550dfb0402e h1:Y/p0OgurwANUvw8fgSJCUIrMteacAJwM+0j3BV5Mjd4=
-github.com/flywave/go-mapbox v0.0.0-20211229093613-0550dfb0402e/go.mod h1:pQYpFqxVJ+exzOMOdYYOQRQpB0Fpkjt+iPiZeklu+9s=
 github.com/flywave/go-mapbox v0.0.0-20220109115657-1d4c53dcc874 h1:fM9rB8CxZD3hmVlQo8zHDFHe2DDCZb6OFk6qayYV1IQ=
 github.com/flywave/go-mapbox v0.0.0-20220109115657-1d4c53dcc874/go.mod h1:TBf+TMsJLRzvLD12aech9WVy6u6xfaby3uN0Gz/Qywc=
 github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4 h1:hxK07K6obrhfqjbCOPR9SGoQs79KOF6i9T5ZxqmpqO4=
@@ -68,8 +63,8 @@ github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0/go.mod h1:RX83BRZN
 github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d/go.mod h1:/OSV1sGRbJezuTheaHH6X2Xf/G7MVaOBeHIGQtGpj+0=
 github.com/flywave/go-quantized-mesh v0.0.0-20220104003607-ec07714ee178 h1:8Cska6ci813/wfByGdeqCb+rsW5wej59SVOPVNR8BiU=
 github.com/flywave/go-quantized-mesh v0.0.0-20220104003607-ec07714ee178/go.mod h1:Cm+gTfx6E3tyRioEZywWyMNWwRf9NaBUezGmpq1SypQ=
-github.com/flywave/go-tin v0.0.0-20220104094406-e54dbf7e8a83 h1:Ygm4IOKeEaQi96bSMEEJdtwd7UYGQbSVC6sFBQN9M7Q=
-github.com/flywave/go-tin v0.0.0-20220104094406-e54dbf7e8a83/go.mod h1:OFGBbky1hGhO30xl0I6IbUVdOPvjwo9qfi7zcH8fivo=
+github.com/flywave/go-tin v0.0.0-20220110004811-6449192b8e25 h1:bq72lEHj+OVx+V0kEDN3gPYupj/UAkHUMCJ6WTpKATc=
+github.com/flywave/go-tin v0.0.0-20220110004811-6449192b8e25/go.mod h1:0hyQ9vusB4J5rKXkvlqa1umPsE3Z7fjTKRYFXvvZbPg=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67/go.mod h1:tADSmg0//jibF4kAQCkw36d4w5sUKQB5N4nnBpUxy3I=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=

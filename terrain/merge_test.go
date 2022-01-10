@@ -107,7 +107,3 @@ func TestRasterMerger(t *testing.T) {
 	f.Close()
 
 }
-
-func TestTiledRaster(t *testing.T) {
-
-}

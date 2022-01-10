@@ -2,6 +2,7 @@ package terrain
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	"image/color"
 	"io"
@@ -107,13 +108,13 @@ func init() {
 }
 
 func (d *DemIO) Encode(tile *TileData) ([]byte, error) {
-	//if !tile.IsBilateral() {
-	//	return nil, errors.New("dem must sample bilateral border")
-	//}
+	if !tile.IsBilateral() {
+		return nil, errors.New("dem must sample bilateral border")
+	}
 	data, si, _ := tile.GetExtend()
-	//if si[0] != si[1] {
-	//	return nil, errors.New("row === col")
-	//}
+	if si[0] != si[1] {
+		return nil, errors.New("row === col")
+	}
 
 	var pack func(h float64) [4]byte
 

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/flywave/go-cog"
-	_ "github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 )

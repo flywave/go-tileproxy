@@ -113,21 +113,10 @@ func TestGeo(t *testing.T) {
 
 	m := NewRasterMerger(grids, [2]uint32{512, 512})
 	rr := m.Merge(sources, opts)
-	fsdss := rr.GetTile().(*TileData)
-
-	io := &DemIO{Mode: ModeMapbox, Format: tile.TileFormat("webp")}
-
-	raw, _ := io.Encode(fsdss)
-
-	f, _ := os.Create("./all.webp")
-	f.Write(raw)
-	f.Close()
 
 	if rr == nil {
 		t.FailNow()
 	}
-
-	opts = &RasterOptions{Format: tile.TileFormat("webp"), Mode: BORDER_NONE}
 
 	splitter := NewRasterSplitter(rr, opts)
 
@@ -143,18 +132,11 @@ func TestGeo(t *testing.T) {
 	smtd.Box = realbbox
 	smtd.Boxsrs = srs4326
 
-	raw, _ = io.Encode(smtd)
-
-	f, _ = os.Create("./data.webp")
-	f.Write(raw)
-	f.Close()
-
 	rect := image.Rect(0, 0, int(newSize[0]), int(newSize[1]))
 
 	src := cog.NewSource(smtd.Datas, &rect, cog.CTLZW)
 
 	cog.WriteTile("./test.tif", src, realbbox, srs4326, newSize, nil)
-
 }
 
 func TestGenTerrainSourceFromDem(t *testing.T) {

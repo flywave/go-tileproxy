@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/flywave/go-geoid"
+
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
@@ -303,7 +304,7 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 		bbox = grid.srs.TransformRectTo(georef.GetSrs(), bbox, 16)
 	}
 	if !geo.BBoxContains(georef.GetBBox(), bbox) {
-		//	return errors.New("not Contains target grid")
+		return errors.New("not Contains target grid")
 	}
 	opt := s.Options.(*RasterOptions)
 

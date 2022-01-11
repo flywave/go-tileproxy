@@ -65,6 +65,10 @@ func (s *RasterSource) SetCacheable(c *tile.CacheInfo) {
 	s.cacheable = c
 }
 
+func (s *RasterSource) SetGeoReference(georef *geo.GeoReference) {
+	s.georef = georef
+}
+
 func (s *RasterSource) GetFileName() string {
 	return s.fname
 }

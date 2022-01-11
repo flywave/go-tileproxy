@@ -40,8 +40,8 @@ func NewMBTilesExport(uri string, g *geo.TileGrid, optios tile.TileOptions) (*MB
 		},
 		db:        db,
 		boundsSrs: geo.NewProj("EPSG:4326"),
-		minZoom:   30,
-		maxZoom:   0,
+		minZoom:   0,
+		maxZoom:   30,
 	}, nil
 }
 

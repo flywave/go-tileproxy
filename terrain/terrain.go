@@ -176,7 +176,7 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 			gid := geoid.NewGeoid(options.HeightModel, false)
 			z = gid.ConvertHeight(v[0], v[1], z, geoid.GEOIDTOELLIPSOID)
 		}
-		x, y, z1, err := proj.Lonlat2Ecef(v[0], v[1], z)
+		x, y, z1, err := proj.Lonlat2Ecef(v[0], v[1], v[2])
 		if err != nil {
 			return *v
 		}

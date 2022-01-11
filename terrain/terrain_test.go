@@ -118,7 +118,9 @@ func TestGeo(t *testing.T) {
 		t.FailNow()
 	}
 
-	splitter := NewRasterSplitter(rr, opts)
+	wopts := &RasterOptions{Format: tile.TileFormat("webp"), MaxError: 2, Mode: BORDER_UNILATERAL}
+
+	splitter := NewRasterSplitter(rr, wopts)
 
 	newSize := [2]uint32{
 		uint32(math.Ceil((realbbox.Max[0] - realbbox.Min[0]) / psize[0])),
@@ -137,6 +139,22 @@ func TestGeo(t *testing.T) {
 	src := cog.NewSource(smtd.Datas, &rect, cog.CTLZW)
 
 	cog.WriteTile("./test.tif", src, realbbox, srs4326, newSize, nil)
+
+	topts := &RasterOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
+
+	source, err := GenTerrainSource(smtd, topts)
+
+	t1 := source.GetTile()
+
+	buff := source.GetBuffer(nil, nil)
+
+	f, _ := os.Create("./data.terrain")
+	f.Write(buff)
+	f.Close()
+
+	if t1 == nil && err != nil {
+		t.FailNow()
+	}
 }
 
 func TestGenTerrainSourceFromDem(t *testing.T) {

@@ -34,7 +34,9 @@ func TestGetGeotiff(t *testing.T) {
 
 	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 13)
 
-	if err != nil {
+	sbox := srs900913.TransformRectTo(srs4326, cbox, 16)
+
+	if err != nil || sbox.Min[0] == 0 {
 		t.FailNow()
 	}
 
@@ -96,7 +98,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile("./zhoucun.tif", src, cbox, srs900913, tiledata.Size, nil)
+	cog.WriteTile("./zhoucun.tif", src, sbox, srs4326, tiledata.Size, nil)
 }
 
 func TestGeoTIFF(t *testing.T) {

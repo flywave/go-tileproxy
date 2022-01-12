@@ -15,8 +15,8 @@ import (
 
 func TestGetGeotiff(t *testing.T) {
 	bbox := vec2d.Rect{
-		Min: vec2d.T{117.820129394, 36.815331734},
-		Max: vec2d.T{117.882614135, 36.853801657},
+		Min: vec2d.T{117.8265, 36.832349},
+		Max: vec2d.T{117.8788, 36.842198},
 	}
 
 	srs900913 := geo.NewProj(900913)
@@ -30,9 +30,9 @@ func TestGetGeotiff(t *testing.T) {
 
 	grid := geo.NewTileGrid(conf)
 
-	r, l, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
+	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
 
-	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, l)
+	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 13)
 
 	if err != nil {
 		t.FailNow()

@@ -17,14 +17,14 @@ import (
 type CogExport struct {
 	Export
 	filename string
-	box      vec2d.Rect
+	bbox     vec2d.Rect
 	optios   tile.TileOptions
 	grid     *geo.TileGrid
 	layers   map[int]*cog.TileLayer
 }
 
 func NewCogExport(filename string, g *geo.TileGrid, optios tile.TileOptions) (*CogExport, error) {
-	return &CogExport{}, nil
+	return &CogExport{filename: filename, grid: g, optios: optios, layers: make(map[int]*cog.TileLayer)}, nil
 }
 
 func (e *CogExport) GetTileFormat() tile.TileFormat {
@@ -42,7 +42,7 @@ func (e *CogExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
 	dstTile.Coord = dc
 
 	if _, ok := e.layers[dc[2]]; !ok {
-		e.layers[dc[2]] = cog.NewTileLayer(e.box, dc[2], e.grid)
+		e.layers[dc[2]] = cog.NewTileLayer(e.bbox, dc[2], e.grid)
 	}
 
 	switch e.optios.(type) {

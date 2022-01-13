@@ -38,6 +38,8 @@ func New(fileName string, g *geo.TileGrid, optios tile.TileOptions, settings map
 		return NewGeoPackageExport(fileName, tableName, g, optios)
 	} else if strings.HasSuffix(fileName, ".mbtiles") {
 		return NewMBTilesExport(fileName, g, optios)
+	} else if strings.HasSuffix(fileName, ".tif") {
+		return NewCogExport(fileName, g, optios)
 	}
 	return nil, errors.New("export not fount")
 }

@@ -1,10 +1,15 @@
 package terrain
 
 import (
+	"bytes"
 	"fmt"
 	"image"
+	"io"
+	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
@@ -13,10 +18,58 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
+var (
+	tile_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ"
+)
+
+func get_url(url string) []byte {
+	client := &http.Client{Timeout: 20 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	var buffer [512]byte
+	result := bytes.NewBuffer(nil)
+	for {
+		n, err := resp.Body.Read(buffer[0:])
+		result.Write(buffer[0:n])
+		if err != nil && err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+	}
+
+	return result.Bytes()
+}
+
+func download(x, y, z int, sourceName string) {
+	data := get_url(fmt.Sprintf(tile_url, z, x, y))
+
+	dst := fmt.Sprintf("%s/%d_%d_%d.webp", sourceName, z, x, y)
+
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		fmt.Printf("mkdirAll error")
+	}
+	f, _ := os.Create(dst)
+	f.Write(data)
+	f.Close()
+}
+
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	} else if err != nil {
+		return false
+	}
+	return true
+}
+
 func TestGetGeotiff(t *testing.T) {
 	bbox := vec2d.Rect{
-		Min: vec2d.T{117.8265, 36.832349},
-		Max: vec2d.T{117.8788, 36.842198},
+		Min: vec2d.T{118.0787624999999963, 36.4794427545898472},
+		Max: vec2d.T{118.1429638549804650, 36.5374643000000034},
 	}
 
 	srs900913 := geo.NewProj(900913)
@@ -69,6 +122,12 @@ func TestGetGeotiff(t *testing.T) {
 
 	for i := range tilesCoord {
 		z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]
+
+		src := fmt.Sprintf("../data/%d_%d_%d.webp", z, x, y)
+
+		if !fileExists(src) {
+			download(x, y, z, "../data")
+		}
 
 		source := NewDemRasterSource(ModeMapbox, opts)
 

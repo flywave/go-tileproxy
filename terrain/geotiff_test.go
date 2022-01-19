@@ -85,7 +85,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
 
-	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 13)
+	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 14)
 
 	sbox := srs900913.TransformRectTo(srs4326, cbox, 16)
 
@@ -149,7 +149,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	raw, _ := io.Encode(tiledata)
 
-	f, _ := os.Create("./zhoucun.webp")
+	f, _ := os.Create("./taihe.webp")
 	f.Write(raw)
 	f.Close()
 
@@ -157,7 +157,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile("./zhoucun.tif", src, sbox, srs4326, tiledata.Size, nil)
+	cog.WriteTile("./taihe.tif", src, sbox, srs4326, tiledata.Size, nil)
 }
 
 func TestGeoTIFF(t *testing.T) {

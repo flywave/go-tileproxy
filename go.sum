@@ -31,6 +31,8 @@ github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZA
 github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-cog v0.0.0-20220111024750-35a9bfc7c52e h1:QuPbK3rXH5x5wi4fMEHWBQijS5eI/Vs6wIq0qoEKYBA=
 github.com/flywave/go-cog v0.0.0-20220111024750-35a9bfc7c52e/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
+github.com/flywave/go-cog v0.0.0-20220113141633-c8b930c16c31 h1:nUh4AmJMpLwnxkhyhK30qnMJxWnOl78gOJHpAX4Ub5o=
+github.com/flywave/go-cog v0.0.0-20220113141633-c8b930c16c31/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-geo v0.0.0-20211215003832-1f14b4f215cb/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=
 github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5 h1:dx3LuAfbZOMU8y/NedU7nmnJw0rl1oKNdGO37vWfX7g=
 github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=

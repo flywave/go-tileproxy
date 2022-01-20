@@ -78,6 +78,7 @@ func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
 		url = strings.Replace(url, "{z}", zstr, 1)
 		url = strings.Replace(url, "{x}", xstr, 1)
 		url = strings.Replace(url, "{y}", ystr, 1)
+
 		return url
 	}
 	return ""

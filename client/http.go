@@ -28,6 +28,7 @@ type CollectorClient struct {
 
 func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
 	q, _ := NewQueue(config.Threads, config.MaxQueueSize)
+
 	c := createCollector(config)
 
 	cli := &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}

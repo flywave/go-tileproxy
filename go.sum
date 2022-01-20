@@ -29,10 +29,6 @@ github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELy
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
 github.com/flywave/go-cog v0.0.0-20220109113741-c4b8ae8c49be/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
-github.com/flywave/go-cog v0.0.0-20220111024750-35a9bfc7c52e h1:QuPbK3rXH5x5wi4fMEHWBQijS5eI/Vs6wIq0qoEKYBA=
-github.com/flywave/go-cog v0.0.0-20220111024750-35a9bfc7c52e/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
-github.com/flywave/go-cog v0.0.0-20220113141633-c8b930c16c31 h1:nUh4AmJMpLwnxkhyhK30qnMJxWnOl78gOJHpAX4Ub5o=
-github.com/flywave/go-cog v0.0.0-20220113141633-c8b930c16c31/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-cog v0.0.0-20220120065707-cc2252bb3ec2 h1:y65AoEoSR2BsNwPSV+1jXtajxr4vA+eU1Ze/eVQFpRU=
 github.com/flywave/go-cog v0.0.0-20220120065707-cc2252bb3ec2/go.mod h1:HFGxELqo3hfCLdPMd6NAeFEFvyIwScLkConxWG4Lbx8=
 github.com/flywave/go-geo v0.0.0-20211215003832-1f14b4f215cb/go.mod h1:cItmd/n/fqdnoD/BxZWbjq4eFq0PvIukWoz/u7ini7U=
@@ -104,6 +100,8 @@ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a h1:Mi5lnNcpqYN2M2J52gy1uknSRhfA9BBAPVBd5XfHi+U=
 github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a/go.mod h1:gpYY+jaYz1cbbiPKT9p2ReLdpBTvTRqoKwJ21LdEk+4=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/hhrutter/lzw v0.0.0-20190829144645-6f07a24e8650 h1:1yY/RQWNSBjJe2GDCIYoLmpWVidrooriUr4QS/zaATQ=
 github.com/hhrutter/lzw v0.0.0-20190829144645-6f07a24e8650/go.mod h1:yJBvOcu1wLQ9q9XZmfiPfur+3dQJuIhYQsMGLYcItZk=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=

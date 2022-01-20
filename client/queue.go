@@ -96,7 +96,7 @@ func (q *Queue) loop(c *crawler.Collector, requestc chan<- *Future, complete <-c
 		sent := requestc
 		var fut *Future
 		if size > 0 {
-			fut = q.loadFuture(c)
+			fut = q.loadFuture(c.Clone())
 			if fut == nil {
 				continue
 			}

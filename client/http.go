@@ -1,12 +1,10 @@
 package client
 
 import (
-	"bytes"
 	"crypto/tls"
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/flywave/go-tileproxy/crawler"
@@ -15,25 +13,18 @@ import (
 
 type HttpClient interface {
 	Open(url string, data []byte) (statusCode int, body []byte)
-	Start() error
-	Stop()
 }
 
 type CollectorClient struct {
 	HttpClient
-	Collector      *crawler.Collector
-	CollectorQueue *Queue
-	BaseRequest    *crawler.Request
+	Collector   *crawler.Collector
+	BaseRequest *crawler.Request
 }
 
 func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
-	q, _ := NewQueue(config.Threads, config.MaxQueueSize)
-
 	c := createCollector(config)
 
-	cli := &CollectorClient{Collector: c, CollectorQueue: q, BaseRequest: &crawler.Request{Ctx: ctx}}
-
-	go cli.Start()
+	cli := &CollectorClient{Collector: c, BaseRequest: &crawler.Request{Ctx: ctx}}
 
 	return cli
 }
@@ -86,45 +77,22 @@ func createCollector(config *Config) *crawler.Collector {
 	return sc
 }
 
-func (c *CollectorClient) Start() error {
-	return c.CollectorQueue.Run(c.Collector)
-}
-
-func (c *CollectorClient) Stop() {
-	c.CollectorQueue.Stop()
-}
-
 func (c *CollectorClient) GetCollector() *crawler.Collector {
 	return c.Collector
 }
 
 func (c *CollectorClient) Open(u string, data []byte) (statusCode int, body []byte) {
 	if data == nil {
-		u, err := url.Parse(u)
-		if err != nil {
-			return 500, nil
-		}
-		req := &crawler.Request{
-			URL:    u,
-			Method: "GET",
-		}
-		fut, err := c.CollectorQueue.AddRequest(req)
+		fut := newFuture()
+		err := c.Collector.Visit(u, fut)
 		if err != nil {
 			return 500, nil
 		}
 		reqult := fut.GetResult()
 		return reqult.StatusCode, reqult.Body
 	} else {
-		u, err := url.Parse(u)
-		if err != nil {
-			return 500, nil
-		}
-		req := &crawler.Request{
-			URL:    u,
-			Method: "POST",
-			Body:   bytes.NewBuffer(data),
-		}
-		fut, err := c.CollectorQueue.AddRequest(req)
+		fut := newFuture()
+		err := c.Collector.PostRaw(u, data, fut)
 		if err != nil {
 			return 500, nil
 		}

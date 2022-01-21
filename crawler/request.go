@@ -108,6 +108,10 @@ func (r *Request) Do() error {
 	return r.collector.scrape(r.URL.String(), r.Method, r.Depth, r.Body, r.Ctx, r.UserData, *r.Headers)
 }
 
+func (r *Request) Wait() {
+	r.collector.Wait()
+}
+
 func (r *Request) Marshal() ([]byte, error) {
 	ctx := make(map[string]interface{})
 	if r.Ctx != nil {

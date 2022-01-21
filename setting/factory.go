@@ -676,11 +676,6 @@ func newCollectorContext(httpOpts *HttpSetting) *client.CollectorContext {
 	} else {
 		conf.Threads = DefaultThreads
 	}
-	if httpOpts.MaxQueueSize != nil {
-		conf.MaxQueueSize = *httpOpts.MaxQueueSize
-	} else {
-		conf.MaxQueueSize = DefaultMaxQueueSize
-	}
 	return client.NewCollectorContext(&conf)
 }
 

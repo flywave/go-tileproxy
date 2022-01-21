@@ -49,7 +49,6 @@ type HttpSetting struct {
 	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`
 	Proxys            []string       `json:"proxys,omitempty"`
 	RequestTimeout    *time.Duration `json:"request_timeout,omitempty"`
-	MaxQueueSize      *int           `json:"max_queue_size,omitempty"`
 	Threads           *int           `json:"thread_size,omitempty"`
 }
 

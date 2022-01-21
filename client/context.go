@@ -14,7 +14,6 @@ type Config struct {
 	DisableKeepAlives bool
 	Proxys            []string
 	RequestTimeout    time.Duration
-	MaxQueueSize      int
 }
 
 type Context interface {

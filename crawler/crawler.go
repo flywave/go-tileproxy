@@ -235,33 +235,33 @@ func (c *Collector) Init() {
 	c.Context = context.Background()
 }
 
-func (c *Collector) Visit(URL string) error {
+func (c *Collector) Visit(URL string, userData interface{}) error {
 	if c.CheckHead {
-		if check := c.scrape(URL, "HEAD", 1, nil, nil, nil, nil); check != nil {
+		if check := c.scrape(URL, "HEAD", 1, nil, nil, userData, nil); check != nil {
 			return check
 		}
 	}
-	return c.scrape(URL, "GET", 1, nil, nil, nil, nil)
+	return c.scrape(URL, "GET", 1, nil, nil, userData, nil)
 }
 
 func (c *Collector) Head(URL string) error {
 	return c.scrape(URL, "HEAD", 1, nil, nil, nil, nil)
 }
 
-func (c *Collector) Post(URL string, requestData map[string]string) error {
-	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, nil, nil)
+func (c *Collector) Post(URL string, requestData map[string]string, userData interface{}) error {
+	return c.scrape(URL, "POST", 1, createFormReader(requestData), nil, userData, nil)
 }
 
-func (c *Collector) PostRaw(URL string, requestData []byte) error {
-	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, nil, nil)
+func (c *Collector) PostRaw(URL string, requestData []byte, userData interface{}) error {
+	return c.scrape(URL, "POST", 1, bytes.NewReader(requestData), nil, userData, nil)
 }
 
-func (c *Collector) PostMultipart(URL string, requestData map[string][]byte) error {
+func (c *Collector) PostMultipart(URL string, requestData map[string][]byte, userData interface{}) error {
 	boundary := randomBoundary()
 	hdr := http.Header{}
 	hdr.Set("Content-Type", "multipart/form-data; boundary="+boundary)
 	hdr.Set("User-Agent", c.UserAgent)
-	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, nil, hdr)
+	return c.scrape(URL, "POST", 1, createMultipartReader(boundary, requestData), nil, userData, hdr)
 }
 
 func (c *Collector) Request(method, URL string, requestData io.Reader, ctx *Context, userData interface{}, hdr http.Header) error {

@@ -169,7 +169,7 @@ func (m *MessageImage) Draw(img tile.Source, size []uint32, in_place bool) (tile
 		base_img = imgd.Image()
 	}
 
-	return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
+	return &ImageSource{image: base_img, size: size, Options: image_opts}, nil
 }
 
 func (m *MessageImage) drawMsg(draw *gg.Context, size []uint32) {
@@ -278,7 +278,7 @@ func (m *WatermarkImage) Draw(img tile.Source, size []uint32, in_place bool) (ti
 		base_img = imgd.Image()
 	}
 
-	return &ImageSource{image: base_img, size: size, Options: m.image_opts}, nil
+	return &ImageSource{image: base_img, size: size, Options: image_opts}, nil
 }
 
 func (e *WatermarkImage) drawMsg(draw *gg.Context, size []uint32) {

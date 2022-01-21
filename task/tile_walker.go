@@ -79,7 +79,6 @@ func (t *TileWalker) Analytic() int {
 
 func (t *TileWalker) analytic(cur_bbox vec2d.Rect, levels []int, currentLevel int, allSubtiles bool) (bool, []int, int) {
 	_, _, subtiles := t.grid.GetAffectedLevelTiles(cur_bbox, currentLevel)
-	allSubtiles = true
 	subtilesIt := t.filterSubtiles(subtiles, allSubtiles)
 
 	total := 0

@@ -23,6 +23,7 @@ type VectorOptions struct {
 	Buffer      uint16
 	LineMetrics bool
 	MaxZoom     uint8
+	Proto       int
 }
 
 func (s *VectorOptions) GetFormat() tile.TileFormat {
@@ -138,10 +139,9 @@ func (s *VectorSource) decode(r io.Reader) (interface{}, error) {
 
 func NewBlankVectorSource(size [2]uint32, opts tile.TileOptions, cacheable *tile.CacheInfo) tile.Source {
 	format := opts.GetFormat()
-	if format.Extension() == "mvt" {
-		return NewEmptyMVTSource(PBF_PTOTO_MAPBOX, opts)
-	} else if format.Extension() == "pbf" {
-		return NewEmptyMVTSource(PBF_PTOTO_LUOKUANG, opts)
+	if format.Extension() == "mvt" || format.Extension() == "pbf" {
+		_opts := opts.(*VectorOptions)
+		return NewEmptyMVTSource(mvt.ProtoType(_opts.Proto), opts)
 	} else if format.Extension() == "json" || format.Extension() == "geojson" {
 		return NewEmptyGeoJSONVTSource(opts)
 	}
@@ -150,13 +150,8 @@ func NewBlankVectorSource(size [2]uint32, opts tile.TileOptions, cacheable *tile
 
 func CreateVectorSourceFromBufer(buf []byte, tile [3]int, opts *VectorOptions) tile.Source {
 	format := opts.GetFormat()
-	if format.Extension() == "mvt" {
-		mvt := NewMVTSource(tile, PBF_PTOTO_MAPBOX, opts)
-		reader := bytes.NewBuffer(buf)
-		mvt.SetSource(reader)
-		return mvt
-	} else if format.Extension() == "pbf" {
-		mvt := NewMVTSource(tile, PBF_PTOTO_LUOKUANG, opts)
+	if format.Extension() == "mvt" || format.Extension() == "pbf" {
+		mvt := NewMVTSource(tile, mvt.ProtoType(opts.Proto), opts)
 		reader := bytes.NewBuffer(buf)
 		mvt.SetSource(reader)
 		return mvt
@@ -171,13 +166,8 @@ func CreateVectorSourceFromBufer(buf []byte, tile [3]int, opts *VectorOptions) t
 
 func CreateVectorSourceFromVector(vt Vector, tile [3]int, opts *VectorOptions, cacheable *tile.CacheInfo) tile.Source {
 	format := opts.GetFormat()
-	if format.Extension() == "mvt" {
-		mvt := NewMVTSource(tile, PBF_PTOTO_MAPBOX, opts)
-		mvt.SetSource(vt)
-		mvt.SetCacheable(cacheable)
-		return mvt
-	} else if format.Extension() == "pbf" {
-		mvt := NewMVTSource(tile, PBF_PTOTO_LUOKUANG, opts)
+	if format.Extension() == "mvt" || format.Extension() == "pbf" {
+		mvt := NewMVTSource(tile, mvt.ProtoType(opts.Proto), opts)
 		mvt.SetSource(vt)
 		mvt.SetCacheable(cacheable)
 		return mvt
@@ -207,11 +197,8 @@ func (c *VectorSourceCreater) GetExtension() string {
 }
 
 func EncodeVector(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error) {
-	if opts.Format.Extension() == "mvt" {
-		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
-		return io.Encode(data)
-	} else if opts.Format.Extension() == "pbf" {
-		io := &PBFIO{tile: tile, proto: mvt.PROTO_LK}
+	if opts.Format.Extension() == "mvt" || opts.Format.Extension() == "pbf" {
+		io := &PBFIO{tile: tile, proto: mvt.ProtoType(opts.Proto)}
 		return io.Encode(data)
 	} else if opts.Format.Extension() == "json" || opts.Format.Extension() == "geojson" {
 		io := &GeoJSONVTIO{tile: tile, options: opts}
@@ -221,11 +208,8 @@ func EncodeVector(opts *VectorOptions, tile [3]int, data Vector) ([]byte, error)
 }
 
 func DecodeVector(opts *VectorOptions, tile [3]int, reader io.Reader) (Vector, error) {
-	if opts.Format.Extension() == "mvt" {
-		io := &PBFIO{tile: tile, proto: mvt.PROTO_MAPBOX}
-		return io.Decode(reader)
-	} else if opts.Format.Extension() == "pbf" {
-		io := &PBFIO{tile: tile, proto: mvt.PROTO_LK}
+	if opts.Format.Extension() == "mvt" || opts.Format.Extension() == "pbf" {
+		io := &PBFIO{tile: tile, proto: mvt.ProtoType(opts.Proto)}
 		return io.Decode(reader)
 	} else if opts.Format.Extension() == "json" || opts.Format.Extension() == "geojson" {
 		io := &GeoJSONVTIO{tile: tile, options: opts}

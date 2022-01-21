@@ -28,9 +28,7 @@ func TestTileMerge(t *testing.T) {
 
 func TestOneTileMerge(t *testing.T) {
 	tiles := []tile.Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: PNG_FORMAT}}
-	for i := 0; i < 9; i++ {
-		tiles = append(tiles)
-	}
+
 	m := NewTileMerger([2]int{1, 1}, [2]uint32{100, 100})
 	result := m.Merge(tiles, PNG_FORMAT)
 	img := result.GetTile().(image.Image)
@@ -41,10 +39,6 @@ func TestOneTileMerge(t *testing.T) {
 }
 
 func TestMissingTileMerge(t *testing.T) {
-	cleanup_tiles := make([]string, 0, 9)
-	for i := 0; i < 9; i++ {
-		cleanup_tiles = append(cleanup_tiles, createTmpImageFile([2]uint32{100, 100}))
-	}
 	tiles := []tile.Source{&ImageSource{fname: createTmpImageFile([2]uint32{100, 100}), Options: PNG_FORMAT}}
 	for i := 0; i < 8; i++ {
 		tiles = append(tiles, nil)

@@ -84,7 +84,7 @@ func (r *TileRequest) initRequest() error {
 	}
 
 	if len(match) == 0 || result["begin"] != r.RequestPrefix {
-		return errors.New(fmt.Sprintf("invalid request (%s)", url))
+		return fmt.Errorf("invalid request (%s)", url)
 	}
 
 	r.Layer = result["layer"]

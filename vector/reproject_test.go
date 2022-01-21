@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/flywave/go-geo"
+	"github.com/flywave/go-mapbox/mvt"
 )
 
 func TestVectorTransformer(t *testing.T) {
@@ -12,7 +13,7 @@ func TestVectorTransformer(t *testing.T) {
 
 	tran := NewVectorTransformer(pgcj02, srs4326)
 
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME_LUOKUANG})
+	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)})
 
 	source.SetSource("../data/tile.pbf")
 	tile := source.GetTile()

@@ -114,6 +114,7 @@ type VectorOpts struct {
 	Buffer      *uint16  `json:"buffer,omitempty"`
 	LineMetrics *bool    `json:"line_metrics,omitempty"`
 	MaxZoom     *uint8   `json:"max_zoom,omitempty"`
+	Proto       *int     `json:"proto,omitempty"`
 }
 
 type GridOpts struct {
@@ -294,27 +295,11 @@ type MapboxTileLayer struct {
 	FillZoom     *uint32                 `json:"fill_zoom,omitempty"`
 }
 
-type MapboxStyleLayer struct {
-	UUID             string       `json:"uuid"`
-	Url              string       `json:"url,omitempty"`
-	AccessToken      string       `json:"access_token,omitempty"`
-	AccessTokenName  string       `json:"access_token_name,omitempty"`
-	StyleID          string       `json:"style_id,omitempty"`
-	Store            *StoreInfo   `json:"store"`
-	Http             *HttpSetting `json:"http,omitempty"`
-	Sprite           string       `json:"sprite"`
-	Glyphs           string       `json:"glyphs"`
-	GlyphsStore      *StoreInfo   `json:"glyphs_store"`
-	Fonts            []string     `json:"fonts,omitempty"`
-	StyleContentAttr *string      `json:"style_content,omitempty"`
-}
-
 type MapboxService struct {
-	Type       string             `json:"type,omitempty"`
-	Name       string             `json:"name,omitempty"`
-	Layers     []MapboxTileLayer  `json:"layers,omitempty"`
-	Styles     []MapboxStyleLayer `json:"styles,omitempty"`
-	MaxTileAge *int               `json:"max_tile_age,omitempty"`
+	Type       string            `json:"type,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Layers     []MapboxTileLayer `json:"layers,omitempty"`
+	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
 type TileLayer struct {

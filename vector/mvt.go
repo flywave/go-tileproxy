@@ -14,8 +14,8 @@ import (
 const (
 	PBF_PTOTO_MAPBOX   mvt.ProtoType = mvt.PROTO_MAPBOX
 	PBF_PTOTO_LUOKUANG mvt.ProtoType = mvt.PROTO_LK
-	PBF_MIME_MAPBOX                  = "application/vnd.mapbox-vector-tile"
-	PBF_MIME_LUOKUANG                = "application/x-protobuf"
+	MVT_MIME                         = "application/vnd.mapbox-vector-tile"
+	PBF_MIME                         = "application/x-protobuf"
 )
 
 type MVTSource struct {

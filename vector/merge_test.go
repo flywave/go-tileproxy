@@ -53,7 +53,7 @@ func TestMergeLK(t *testing.T) {
 
 	for i := range tilesCoord {
 		z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]
-		source := NewMVTSource([3]int{x, y, z}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME_LUOKUANG})
+		source := NewMVTSource([3]int{x, y, z}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)})
 
 		source.SetSource(fmt.Sprintf("../data/%d_%d_%d.pbf", z, x, y))
 
@@ -148,7 +148,7 @@ func TestMergeLK(t *testing.T) {
 func TestLK(t *testing.T) {
 	tileid := m.TileID{X: 105, Y: 50, Z: 7}
 
-	name := fmt.Sprintf("../data/bug.pbf")
+	name := "../data/bug.pbf"
 	f, _ := os.Open(name)
 	ddd, _ := ioutil.ReadAll(f)
 	data := []byte{}

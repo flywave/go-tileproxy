@@ -93,6 +93,9 @@ func NewVectorOptions(opt *VectorOpts) *vector.VectorOptions {
 	if opt.Tolerance != nil {
 		vector_opt.Tolerance = *opt.Tolerance
 	}
+	if opt.Proto != nil {
+		vector_opt.Proto = *opt.Proto
+	}
 	return vector_opt
 }
 
@@ -859,54 +862,12 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting) *sources.Arc
 	return sources.NewArcGISInfoSource(c)
 }
 
-func LoadStyleSource(s *MapboxStyleLayer, globals *GlobalsSetting, fac CacheFactory) (style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) {
-	var http *HttpSetting
-	if s.Http != nil {
-		http = s.Http
-	} else {
-		http = &globals.Http.HttpSetting
-	}
-	accessTokenName := "access_token"
-	if s.AccessTokenName != "" {
-		accessTokenName = s.AccessTokenName
-	}
-	c := client.NewMapboxStyleClient(s.Url, s.AccessToken, accessTokenName, newCollectorContext(http))
-
-	if s.StyleContentAttr != nil {
-		c.StyleContentAttr = s.StyleContentAttr
-	}
-
-	csprite := client.NewMapboxStyleClient(s.Sprite, s.AccessToken, accessTokenName, newCollectorContext(http))
-	cglyphs := client.NewMapboxStyleClient(s.Glyphs, s.AccessToken, accessTokenName, newCollectorContext(http))
-
-	var cache *resource.StyleCache
-	if fac != nil {
-		cache = resource.NewStyleCache(fac.CreateStore(s.Store))
-	} else {
-		cache = resource.NewStyleCache(ConvertLocalStore(s.Store))
-	}
-
-	var gcache *resource.GlyphsCache
-	if fac != nil {
-		gcache = resource.NewGlyphsCache(fac.CreateStore(s.GlyphsStore))
-	} else {
-		gcache = resource.NewGlyphsCache(ConvertLocalStore(s.GlyphsStore))
-	}
-	return sources.NewMapboxStyleSource(c, csprite, cache), sources.NewMapboxGlyphsSource(cglyphs, s.Fonts, gcache)
-}
-
 func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *service.MapboxService {
 	layers := make(map[string]service.Provider)
-	styles := make(map[string]*service.StyleProvider)
 	metadata := &service.MapboxMetadata{Name: s.Name}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertMapboxTileLayer(&tl, globals, instance)
-	}
-
-	for _, st := range s.Styles {
-		sts, glys := LoadStyleSource(&st, globals, fac)
-		styles[st.StyleID] = service.NewStyleProvider(sts, glys)
 	}
 
 	var maxTileAge *time.Duration
@@ -916,7 +877,7 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 		maxTileAge = &d
 	}
 
-	sopts := &service.MapboxServiceOptions{Tilesets: layers, Styles: styles, Metadata: metadata, MaxTileAge: maxTileAge}
+	sopts := &service.MapboxServiceOptions{Tilesets: layers, Metadata: metadata, MaxTileAge: maxTileAge}
 
 	return service.NewMapboxService(sopts)
 }

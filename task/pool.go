@@ -123,7 +123,6 @@ func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}) {
 				q.mut.Lock()
 				q.running = false
 				q.mut.Unlock()
-				break
 			}
 		}
 	}

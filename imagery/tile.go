@@ -62,7 +62,10 @@ func (t *TileMerger) srcSize() [2]uint32 {
 }
 
 func (t *TileMerger) tileOffset(i int) [2]int {
-	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1]))}
+	return [2]int{
+		int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])),
+		int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1])),
+	}
 }
 
 type TileSplitter struct {

@@ -98,7 +98,7 @@ func (c *mockMVTSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions
 }
 
 func (c *mockMVTSourceCreater) Create(data []byte, tile [3]int) tile.Source {
-	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.PBF_MIME_MAPBOX})
+	source := vector.NewMVTSource([3]int{13515, 6392, 14}, vector.PBF_PTOTO_MAPBOX, &vector.VectorOptions{Format: vector.MVT_MIME})
 	source.SetSource("../data/3194.mvt")
 	return source
 }

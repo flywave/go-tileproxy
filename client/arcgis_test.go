@@ -19,7 +19,9 @@ func TestArcGISClient(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
+
 	req := request.NewArcGISRequest(param, "/MapServer/export?map=foo")
+
 	query := &layer.MapQuery{
 		BBox: vec2d.Rect{
 			Min: vec2d.T{-200000, -200000},
@@ -47,7 +49,9 @@ func TestArcGISInfoClient(t *testing.T) {
 	param := http.Header{
 		"layers": []string{"foo"},
 	}
+
 	req := request.NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo")
+
 	query := &layer.InfoQuery{
 		BBox: vec2d.Rect{
 			Min: vec2d.T{8, 50},

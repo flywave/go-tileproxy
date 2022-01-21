@@ -91,18 +91,6 @@ var (
 				TileJSON: "rasterdem",
 			},
 		},
-		Styles: []setting.MapboxStyleLayer{
-			{
-				Url:         MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7",
-				StyleID:     "style",
-				AccessToken: MAPBOX_ACCESSTOKEN,
-				Store:       &setting.StoreInfo{Directory: "./cache_data/style/"},
-				Sprite:      MAPBOX_API_URL + "/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite",
-				Glyphs:      MAPBOX_API_URL + "/fonts/v1/examples/{fontstack}/{range}.pbf",
-				GlyphsStore: &setting.StoreInfo{Directory: "./cache_data/glyphs/"},
-				Fonts:       []string{"Arial Unicode MS Regular"},
-			},
-		},
 	}
 )
 
@@ -141,10 +129,6 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 //http://127.0.0.1:8000/v4/raster_layer/1/0/0.png
 //http://127.0.0.1:8000/v4/rasterdem_layer.json
 //http://127.0.0.1:8000/v4/rasterdem_layer/14/13733/6366.webp
-//http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7
-//http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite@3x
-//http://127.0.0.1:8000/styles/v1/examples/cjikt35x83t1z2rnxpdmjs7y7/sprite.png
-//http://127.0.0.1:8000/fonts/v1/examples/Arial%20Unicode%20MS%20Regular/0-255.pbf
 func main() {
 	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8000", nil)

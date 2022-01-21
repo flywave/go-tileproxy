@@ -326,7 +326,7 @@ func (s *WMSMapRequest) ValidateBBox() error {
 	bbox := params.GetBBox()
 	x0, y0, x1, y1 := bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]
 	if x0 >= x1 || y0 >= y1 {
-		return errors.New(fmt.Sprintf("invalid bbox [%f %f %f %f]", x0, y0, x1, y1))
+		return fmt.Errorf("invalid bbox [%f %f %f %f]", x0, y0, x1, y1)
 	}
 	return nil
 }

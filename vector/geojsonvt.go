@@ -128,7 +128,9 @@ func ToGeoJSONVT(extent int, tile [3]int, feat *geom.Feature) (*geojsonvt.Featur
 			err = errors.New("error in feature.ToGeoJSON()")
 		}
 	}()
+
 	bound := tileBounds(tile)
+
 	deltax := bound[2] - bound[0]
 	deltay := bound[3] - bound[1]
 
@@ -202,13 +204,15 @@ func ToGeoJSON(extent int, tile [3]int, feat *geojsonvt.Feature) (*geom.Feature,
 			err = errors.New("error in feature.ToGeoJSON()")
 		}
 	}()
+
+	if err != nil {
+		return &geom.Feature{}, err
+	}
+
 	size := float64(extent) * float64(math.Pow(2, float64(tile[2])))
 	x0 := float64(extent) * float64(tile[0])
 	y0 := float64(extent) * float64(tile[1])
 	geometry := feat.GetGeometry()
-	if err != nil {
-		return &geom.Feature{}, err
-	}
 
 	geomd := &geom.GeometryData{Type: geom.GeometryType(geometry.GetType())}
 	switch geometry.GetType() {

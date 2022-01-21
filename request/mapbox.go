@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -65,7 +64,7 @@ func (r *MapboxTileJSONRequest) initRequest() error {
 	}
 
 	if len(match) == 0 || result["version"] != r.Version {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
+		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
 	if v, ok := result["tileset_id"]; ok {
@@ -133,7 +132,7 @@ func (r *MapboxTileRequest) initRequest() error {
 	}
 
 	if len(match) == 0 || result["version"] != r.Version {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
+		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
 	if v, ok := result["tileset_id"]; ok {
@@ -156,190 +155,11 @@ func (r *MapboxTileRequest) initRequest() error {
 	return nil
 }
 
-type MapboxStyleRequest struct {
-	MapboxRequest
-	Username string
-	StyleID  string
-}
-
-func NewMapboxStyleRequest(hreq *http.Request, validate bool) *MapboxStyleRequest {
-	req := &MapboxStyleRequest{}
-	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
-	return req
-}
-
-func (r *MapboxStyleRequest) init(param interface{}, url string, validate bool, http *http.Request) {
-	r.BaseRequest.init(param, url, validate, http)
-	r.RequestHandlerName = "style"
-	r.Version = "v1"
-	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<style_id>[^/]+)`)
-	r.initRequest()
-}
-
-func (r *MapboxStyleRequest) initRequest() error {
-	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
-	if len(match) == 0 {
-		return errors.New("url error")
-	}
-	groupNames := r.ReqRegex.SubexpNames()
-	result := make(map[string]string)
-	for i, name := range groupNames {
-		if name != "" && match[i] != "" {
-			result[name] = match[i]
-		}
-	}
-
-	if len(match) == 0 || result["version"] != r.Version {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
-	}
-
-	if v, ok := result["username"]; ok {
-		r.Username = v
-	}
-	if v, ok := result["style_id"]; ok {
-		r.StyleID = v
-	}
-	return nil
-}
-
-type MapboxSpriteRequest struct {
-	MapboxRequest
-	Username string
-	StyleID  string
-	Format   *tile.TileFormat
-	Retina   *int
-}
-
-func NewMapboxSpriteRequest(hreq *http.Request, validate bool) *MapboxSpriteRequest {
-	req := &MapboxSpriteRequest{}
-	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
-	return req
-}
-
-func (r *MapboxSpriteRequest) init(param interface{}, url string, validate bool, http *http.Request) {
-	r.BaseRequest.init(param, url, validate, http)
-	r.RequestHandlerName = "sprite"
-	r.Version = "v1"
-	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/styles/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<style_id>[^/]+)/sprite(@(?P<retina>[^/]+)x)?\.?(?P<format>\w+)?`)
-	r.initRequest()
-}
-
-func (r *MapboxSpriteRequest) initRequest() error {
-	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
-	if len(match) == 0 {
-		return errors.New("url error")
-	}
-	groupNames := r.ReqRegex.SubexpNames()
-	result := make(map[string]string)
-	for i, name := range groupNames {
-		result[name] = match[i]
-	}
-
-	if len(match) == 0 || result["version"] != r.Version {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
-	}
-
-	if v, ok := result["username"]; ok {
-		r.Username = v
-	}
-	if v, ok := result["style_id"]; ok {
-		r.StyleID = v
-	}
-	if v, ok := result["retina"]; ok {
-		if v != "" {
-			rt, err := strconv.ParseInt(v, 10, 64)
-			if err != nil {
-				r.Retina = geo.NewInt(int(rt))
-			}
-		}
-	}
-	if v, ok := result["format"]; ok {
-		f := tile.TileFormat(v)
-		r.Format = &f
-	}
-	return nil
-}
-
-type MapboxGlyphsRequest struct {
-	MapboxRequest
-	Username string
-	Font     string
-	Start    int
-	End      int
-}
-
-func NewMapboxGlyphsRequest(hreq *http.Request, validate bool) *MapboxGlyphsRequest {
-	req := &MapboxGlyphsRequest{}
-	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
-	return req
-}
-
-func (r *MapboxGlyphsRequest) init(param interface{}, url string, validate bool, http *http.Request) {
-	r.BaseRequest.init(param, url, validate, http)
-	r.RequestHandlerName = "glyphs"
-	r.Version = "v1"
-	r.AccessToken = r.Params.GetOne("access_token", "")
-	r.ReqRegex = regexp.MustCompile(`^/fonts/(?P<version>[^/]+)/((?P<username>[^/]+)/)?(?P<font>[^/]+)/(?P<start>-?\d+)-(?P<end>-?\d+)\.(?P<format>\w+)`)
-	r.initRequest()
-}
-
-func (r *MapboxGlyphsRequest) initRequest() error {
-	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
-	if len(match) == 0 {
-		return errors.New("url error")
-	}
-	groupNames := r.ReqRegex.SubexpNames()
-	result := make(map[string]string)
-	for i, name := range groupNames {
-		if name != "" && match[i] != "" {
-			result[name] = match[i]
-		}
-	}
-
-	if len(match) == 0 || result["version"] != r.Version {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
-	}
-
-	if v, ok := result["format"]; !ok || v != "pbf" {
-		return errors.New(fmt.Sprintf("invalid request (%s)", r.Http.URL.Path))
-	}
-
-	if v, ok := result["username"]; ok {
-		str, _ := url.PathUnescape(v)
-		r.Username = str
-	}
-	if v, ok := result["font"]; ok {
-		r.Font = v
-	}
-
-	if v, ok := result["start"]; ok {
-		r.Start, _ = strconv.Atoi(v)
-	}
-
-	if v, ok := result["end"]; ok {
-		r.End, _ = strconv.Atoi(v)
-	}
-
-	return nil
-}
-
 func MakeMapboxRequest(req *http.Request, validate bool) Request {
 	url := req.URL.String()
-	if strings.Contains(url, "/styles/") {
-		if strings.Contains(url, "/sprite") {
-			return NewMapboxSpriteRequest(req, validate)
-		} else {
-			return NewMapboxStyleRequest(req, validate)
-		}
-	} else if strings.Contains(url, "/fonts/") {
-		return NewMapboxGlyphsRequest(req, validate)
+	if strings.Contains(url, ".json") {
+		return NewMapboxTileJSONRequest(req, validate)
 	} else {
-		if strings.Contains(url, ".json") {
-			return NewMapboxTileJSONRequest(req, validate)
-		} else {
-			return NewMapboxTileRequest(req, validate)
-		}
+		return NewMapboxTileRequest(req, validate)
 	}
 }

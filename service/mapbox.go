@@ -1,23 +1,18 @@
 package service
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
-	"github.com/flywave/go-mapbox/style"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
-	"github.com/flywave/go-tileproxy/sources"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -29,15 +24,12 @@ type MapboxMetadata struct {
 type MapboxService struct {
 	BaseService
 	Tilesets   map[string]Provider
-	Styles     map[string]*StyleProvider
-	Fonts      map[string]*StyleProvider
 	Metadata   *MapboxMetadata
 	MaxTileAge *time.Duration
 }
 
 type MapboxServiceOptions struct {
 	Tilesets   map[string]Provider
-	Styles     map[string]*StyleProvider
 	Metadata   *MapboxMetadata
 	MaxTileAge *time.Duration
 }
@@ -45,8 +37,6 @@ type MapboxServiceOptions struct {
 func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 	s := &MapboxService{
 		Tilesets:   opts.Tilesets,
-		Styles:     opts.Styles,
-		Fonts:      make(map[string]*StyleProvider),
 		Metadata:   opts.Metadata,
 		MaxTileAge: opts.MaxTileAge,
 	}
@@ -57,21 +47,6 @@ func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 		"tile": func(r request.Request) *Response {
 			return s.GetTile(r)
 		},
-		"style": func(r request.Request) *Response {
-			return s.GetStyle(r)
-		},
-		"sprite": func(r request.Request) *Response {
-			return s.GetSprite(r)
-		},
-		"glyphs": func(r request.Request) *Response {
-			return s.GetGlyphs(r)
-		},
-	}
-	for _, sty := range opts.Styles {
-		for _, fontId := range sty.getFonts() {
-			s.Fonts[fontId] = sty
-		}
-		sty.metadata = opts.Metadata
 	}
 	s.requestParser = func(r *http.Request) request.Request {
 		return request.MakeMapboxRequest(r, false)
@@ -147,111 +122,6 @@ func (s *MapboxService) getLayer(id string, req request.Request) (*RequestError,
 		return nil, l
 	}
 	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &MapboxExceptionHandler{}, req, false, nil), nil
-}
-
-func (s *MapboxService) GetStyle(req request.Request) *Response {
-	style_req := req.(*request.MapboxStyleRequest)
-
-	if st, ok := s.Styles[style_req.StyleID]; ok {
-		resp := st.fetch(style_req)
-		return NewResponse(resp, 200, "application/json")
-	}
-
-	resp := NewRequestError("Style not found", "Style_Not_Found", &MapboxExceptionHandler{}, style_req, false, nil)
-	return resp.Render()
-}
-
-func (s *MapboxService) GetSprite(req request.Request) *Response {
-	sprite_req := req.(*request.MapboxSpriteRequest)
-
-	if st, ok := s.Styles[sprite_req.StyleID]; ok {
-		if sprite_req.Format == nil {
-			resp := st.fetchSprite(sprite_req)
-			return NewResponse(resp, 200, "application/json")
-		} else {
-			resp := st.fetchSprite(sprite_req)
-			return NewResponse(resp, 200, sprite_req.Format.MimeType())
-		}
-	}
-
-	resp := NewRequestError("Style not found", "Style_Not_Found", &MapboxExceptionHandler{}, sprite_req, false, nil)
-	return resp.Render()
-}
-
-func (s *MapboxService) GetGlyphs(req request.Request) *Response {
-	glyphs_req := req.(*request.MapboxGlyphsRequest)
-
-	if st, ok := s.Fonts[glyphs_req.Font]; ok {
-		resp := st.fetchGlyph(glyphs_req)
-		return NewResponse(resp, 200, "application/x-protobuf")
-	}
-
-	resp := NewRequestError("Not found", "Not_Found", &MapboxExceptionHandler{}, glyphs_req, false, nil)
-	return resp.Render()
-}
-
-type StyleProvider struct {
-	metadata     *MapboxMetadata
-	styleSource  *sources.MapboxStyleSource
-	glyphsSource *sources.MapboxGlyphsSource
-}
-
-func NewStyleProvider(style *sources.MapboxStyleSource, glyphs *sources.MapboxGlyphsSource) *StyleProvider {
-	return &StyleProvider{styleSource: style, glyphsSource: glyphs}
-}
-
-func (c *StyleProvider) getFonts() []string {
-	return c.glyphsSource.Fonts
-}
-
-func (c *StyleProvider) serviceMetadata(tms_request *request.MapboxStyleRequest) MapboxMetadata {
-	md := *c.metadata
-	md.URL = tms_request.Http.URL.Host
-	return md
-}
-
-func (c *StyleProvider) convertTileJson(style_ *resource.Style, req *request.MapboxStyleRequest) []byte {
-	metadata := c.serviceMetadata(req)
-	sprite_url := metadata.URL + "/v1/sprites/{style_id}"
-	glyphs_url := metadata.URL + "/v1/fonts/{fontstack}/{range}.pbf"
-	styleJson := style_.GetStyle()
-	styleJson.Sprite = &sprite_url
-	styleJson.Glyphs = &glyphs_url
-	for k, data := range styleJson.Sources {
-		var src style.Source
-		dec := json.NewDecoder(bytes.NewBuffer(data))
-		if err := dec.Decode(&src); err != nil {
-			return nil
-		}
-
-		if strings.Contains(src.URL, "mapbox://") {
-			src.URL = strings.ReplaceAll(src.URL, "mapbox://", metadata.URL+"/v4/")
-		}
-
-		buf := &bytes.Buffer{}
-		enc := json.NewEncoder(buf)
-		if err := enc.Encode(src); err != nil {
-			return nil
-		}
-		styleJson.Sources[k] = buf.Bytes()
-	}
-	return style_.GetData()
-}
-
-func (c *StyleProvider) fetch(req *request.MapboxStyleRequest) []byte {
-	styles := c.styleSource.GetStyle(req.StyleID)
-	return c.convertTileJson(styles, req)
-}
-
-func (c *StyleProvider) fetchSprite(req *request.MapboxSpriteRequest) []byte {
-	styles := c.styleSource.GetSpriteJSON(req.StyleID)
-	return styles.GetData()
-}
-
-func (c *StyleProvider) fetchGlyph(req *request.MapboxGlyphsRequest) []byte {
-	query := &layer.GlyphsQuery{Start: req.Start, End: req.End, Font: req.Font}
-	glyphs := c.glyphsSource.GetGlyphs(query)
-	return glyphs.GetData()
 }
 
 type MapboxTileType uint32

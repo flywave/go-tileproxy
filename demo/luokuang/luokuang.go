@@ -43,20 +43,6 @@ var (
 				TileJSON: "mvt",
 			},
 		},
-		Styles: []setting.MapboxStyleLayer{
-			{
-				Url:              LK_API_URL + "/openplatform/v1/mapStyle/getStyle?styleId=standard&type=1",
-				StyleID:          "standard",
-				AccessTokenName:  "AK",
-				AccessToken:      LK_ACCESSTOKEN,
-				Store:            &setting.StoreInfo{Directory: "./cache_data/style/"},
-				Sprite:           LK_API_URL + "/emg/static/sprites/sprite",
-				Glyphs:           LK_API_URL + "/emg/fonts/{fontstack}/{range}.pbf",
-				GlyphsStore:      &setting.StoreInfo{Directory: "./cache_data/glyphs/"},
-				Fonts:            []string{"Noto Sans CJK SC DemiLight"},
-				StyleContentAttr: setting.NewString("data.styleContent"),
-			},
-		},
 	}
 )
 
@@ -83,18 +69,6 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	}
 	dataset.Service.ServeHTTP(w, req)
 }
-
-//https://api.luokuang.com/view/map/lkstreetv2.json
-//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=nightblue&type=1&AK={token}
-//https://api.luokuang.com/openplatform/v1/mapStyle/getStyle?styleId=standard&type=1&AK={token}
-//https://api.luokuang.com/emg/static/sprites/sprite.json?ak={token}
-//https://api.luokuang.com/emg/static/sprites/sprite.png?ak={token}
-//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.png?ak={token}
-//https://api.luokuang.com/emg/static/sprites/sprite_2020_v2.json?ak={token}
-//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight/0-255.pbf?ak={token}
-//https://api.luokuang.com/emg/fonts/Noto%20Sans%20CJK%20SC%20DemiLight,Arial%20Unicode%20MS%20Regular/0-255.pbf?ak={token}
-//https://api.luokuang.com/emg/v1/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak={token}
-//https://api.luokuang.com/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom=11&x=1687&y=775&ak={token}
 
 //http://127.0.0.1:8000/v4/mvt_layer.json
 //http://127.0.0.1:8000/v4/mvt_layer/11/1687/775.mvt

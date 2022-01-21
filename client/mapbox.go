@@ -1,12 +1,10 @@
 package client
 
 import (
-	"errors"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
 )
 
@@ -82,94 +80,4 @@ func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
 		return url
 	}
 	return ""
-}
-
-type MapboxStyleClient struct {
-	MapboxClient
-	StyleContentAttr *string
-}
-
-func NewMapboxStyleClient(url string, token string, tokenName string, ctx Context) *MapboxStyleClient {
-	return &MapboxStyleClient{
-		MapboxClient: MapboxClient{
-			BaseClient:      BaseClient{ctx: ctx},
-			BaseURL:         url,
-			AccessToken:     token,
-			AccessTokenName: tokenName,
-		},
-	}
-}
-
-func (c *MapboxStyleClient) GetSpriteJSON() *resource.SpriteJSON {
-	url, err := c.buildQuery(c.BaseURL)
-	if err != nil {
-		return nil
-	}
-	status, resp := c.httpClient().Open(url, nil)
-	if status == 200 {
-		return resource.CreateSpriteJSON(resp)
-	}
-	return nil
-}
-
-func (c *MapboxStyleClient) GetSprite() *resource.Sprite {
-	url, err := c.buildQuery(c.BaseURL)
-	if err != nil {
-		return nil
-	}
-	status, resp := c.httpClient().Open(url, nil)
-	if status == 200 {
-		return resource.CreateSprite(resp)
-	}
-	return nil
-}
-
-func (c *MapboxStyleClient) GetStyle() *resource.Style {
-	url, err := c.buildQuery(c.BaseURL)
-	if err != nil {
-		return nil
-	}
-	status, resp := c.httpClient().Open(url, nil)
-	if status == 200 {
-		if c.StyleContentAttr != nil {
-			return resource.ExtractStyle(resp, *c.StyleContentAttr)
-		} else {
-			return resource.CreateStyle(resp)
-		}
-	}
-	return nil
-}
-
-func (c *MapboxStyleClient) GetGlyphs(q *layer.GlyphsQuery) *resource.Glyphs {
-	url, err := c.buildGlyphsURL(q.Font, q.Start, q.End)
-
-	if err != nil {
-		return nil
-	}
-	status, resp := c.httpClient().Open(url, nil)
-	if status == 200 {
-		return resource.CreateGlyphs(resp)
-	}
-	return nil
-}
-
-func (c *MapboxStyleClient) buildGlyphsURL(font string, start, end int) (string, error) {
-	furl := c.BaseURL
-	if strings.Contains(furl, "{fontstack}") && strings.Contains(furl, "{range}") {
-		rangestr := strconv.Itoa(start) + "-" + strconv.Itoa(end)
-
-		furl = strings.Replace(furl, "{fontstack}", font, 1)
-		furl = strings.Replace(furl, "{range}", rangestr, 1)
-
-		u, err := url.Parse(furl)
-		if err != nil {
-			return "", err
-		}
-
-		q := u.Query()
-		q.Set(c.AccessTokenName, c.AccessToken)
-		u.RawQuery = q.Encode()
-		return u.String(), nil
-	}
-	return "", errors.New("build glyphs url error")
 }

@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/flywave/go-tileproxy/crawler"
-	"github.com/flywave/go-tileproxy/utils"
 )
 
 type Queue struct {
@@ -12,20 +11,25 @@ type Queue struct {
 	wake    chan struct{}
 	mut     sync.Mutex
 	running bool
-	storage *utils.Deque
+	storage Storage
 	q       sync.Mutex
 }
 
 func NewQueue(threads int, maxSize int) (*Queue, error) {
+	s := &InMemoryQueueStorage{MaxSize: maxSize}
+	if err := s.Init(); err != nil {
+		return nil, err
+	}
 	return &Queue{
 		Threads: threads,
 		running: true,
-		storage: utils.NewDeque(maxSize),
+		storage: s,
 	}, nil
 }
 
 func (q *Queue) IsEmpty() bool {
-	return q.Size() == 0
+	s, _ := q.Size()
+	return s == 0
 }
 
 func (q *Queue) AddRequest(r *crawler.Request) (*Future, error) {
@@ -50,13 +54,13 @@ func (q *Queue) storeRequest(r *crawler.Request) (*Future, error) {
 	}
 	f := newFuture(d)
 	q.q.Lock()
-	q.storage.PushBack(f)
+	q.storage.AddFuture(f)
 	q.q.Unlock()
 	return f, nil
 }
 
-func (q *Queue) Size() int {
-	return q.storage.Cap()
+func (q *Queue) Size() (int, error) {
+	return q.storage.QueueSize()
 }
 
 func (q *Queue) Run(c *crawler.Collector) error {
@@ -72,11 +76,11 @@ func (q *Queue) Run(c *crawler.Collector) error {
 	requestc := make(chan *Future)
 	complete, errc := make(chan struct{}), make(chan error, 1)
 	for i := 0; i < q.Threads; i++ {
-		go independentRunner(requestc, complete)
+		go independentRunner(requestc, complete, errc)
 	}
 	go q.loop(c, requestc, complete, errc)
 	defer close(requestc)
-	return <-errc
+	return nil
 }
 
 func (q *Queue) Stop() {
@@ -88,16 +92,18 @@ func (q *Queue) Stop() {
 func (q *Queue) loop(c *crawler.Collector, requestc chan<- *Future, complete <-chan struct{}, errc chan<- error) {
 	var active int
 	for {
-		size := q.Size()
+		size, err := q.Size()
+		if err != nil {
+			break
+		}
 		if size == 0 && active == 0 || !q.running {
-			errc <- nil
 			break
 		}
 		sent := requestc
 		var fut *Future
 		if size > 0 {
-			fut = q.loadFuture(c.Clone())
-			if fut == nil {
+			fut, err = q.loadFuture(c)
+			if err != nil {
 				continue
 			}
 		} else {
@@ -123,23 +129,25 @@ func (q *Queue) loop(c *crawler.Collector, requestc chan<- *Future, complete <-c
 	}
 }
 
-func independentRunner(requestc <-chan *Future, complete chan<- struct{}) {
+func independentRunner(requestc <-chan *Future, complete chan<- struct{}, errorchan chan<- error) {
 	for req := range requestc {
-		req.Do()
+		err := req.Do()
+
+		if err != nil {
+			errorchan <- err
+			return
+		}
 		complete <- struct{}{}
 	}
 }
 
-func (q *Queue) loadFuture(c *crawler.Collector) *Future {
-	if q.storage.Len() == 0 {
-		return nil
+func (q *Queue) loadFuture(c *crawler.Collector) (*Future, error) {
+	fut, err := q.storage.GetFuture()
+	if err != nil {
+		return nil, err
 	}
-	q.q.Lock()
-	fraw := q.storage.PopFront()
-	q.q.Unlock()
-	fut := fraw.(*Future)
 	if fut != nil {
 		fut.setCollector(c)
 	}
-	return fut
+	return fut, nil
 }

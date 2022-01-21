@@ -1,10 +1,17 @@
 package client
 
 import (
-	"fmt"
-	"strconv"
+	"math/rand"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	whatwgUrl "github.com/nlnwa/whatwg-url/url"
+
+	"github.com/flywave/go-tileproxy/crawler"
 )
 
 var (
@@ -20,32 +27,41 @@ var (
 	}
 )
 
-func open_url(client *CollectorClient, url string, x, y int, t map[[2]int]int) {
-	u := fmt.Sprintf(url, x, y)
-	_, data := client.Open(u, nil)
-
-	z, err := strconv.Atoi(string(data))
-
-	if err != nil {
-		return
-	}
-
-	if z != x+y {
-		return
-	}
-
-	t[[2]int{x, y}] = z
-}
-
 func TestHttpFetch(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(serverHandler))
+	defer server.Close()
+	rng := rand.New(rand.NewSource(12387123712321232))
+	var (
+		requests uint32
+		success  uint32
+		failure  uint32
+	)
 	client := NewCollectorClient(&httpConf, nil)
-	result := make(map[[2]int]int)
+	client.Collector.OnResponse(func(resp *crawler.Response) {
+		if resp.StatusCode == http.StatusOK {
+			atomic.AddUint32(&success, 1)
+		} else {
+			atomic.AddUint32(&failure, 1)
+		}
+	})
 
-	for i := 0; i < 100; i++ {
-		open_url(client, "http://127.0.0.1:8001/mock/%d/%d.add", i, 29, result)
+	for i := 0; i < 30; i++ {
+		ti := time.Duration(rng.Intn(50)) * time.Microsecond
+		uri := server.URL + "/delay?t=" + ti.String()
+
+		u, _ := whatwgUrl.Parse(uri)
+		u2, _ := url.Parse(u.Href(false))
+
+		atomic.AddUint32(&requests, 1)
+
+		client.Collector.Visit(u2.String())
+
+		client.Collector.Wait()
 	}
 
-	if result == nil {
-		t.FailNow()
+	if success+failure != requests || failure > 0 {
+		t.Fatalf("wrong Queue implementation: "+
+			" requests = %d, success = %d, failure = %d",
+			requests, success, failure)
 	}
 }

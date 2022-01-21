@@ -71,17 +71,17 @@ type key int
 const ProxyURLKey key = iota
 
 var (
-	ErrForbiddenDomain     = errors.New("Forbidden domain")
-	ErrMissingURL          = errors.New("Missing URL")
-	ErrForbiddenURL        = errors.New("ForbiddenURL")
-	ErrNoURLFiltersMatch   = errors.New("No URLFilters match")
+	ErrForbiddenDomain     = errors.New("forbidden domain")
+	ErrMissingURL          = errors.New("missing URL")
+	ErrForbiddenURL        = errors.New("forbiddenURL")
+	ErrNoURLFiltersMatch   = errors.New("no URLFilters match")
 	ErrAlreadyVisited      = errors.New("URL already visited")
 	ErrRobotsTxtBlocked    = errors.New("URL blocked by robots.txt")
-	ErrNoCookieJar         = errors.New("Cookie jar is not available")
-	ErrNoPattern           = errors.New("No pattern defined in LimitRule")
-	ErrEmptyProxyURL       = errors.New("Proxy URL list is empty")
-	ErrAbortedAfterHeaders = errors.New("Aborted after receiving response headers")
-	ErrQueueFull           = errors.New("Queue MaxSize reached")
+	ErrNoCookieJar         = errors.New("cookie jar is not available")
+	ErrNoPattern           = errors.New("no pattern defined in LimitRule")
+	ErrEmptyProxyURL       = errors.New("proxy URL list is empty")
+	ErrAbortedAfterHeaders = errors.New("aborted after receiving response headers")
+	ErrQueueFull           = errors.New("queue MaxSize reached")
 )
 
 var envMap = map[string]func(*Collector, string){
@@ -684,7 +684,7 @@ func (c *Collector) Clone() *Collector {
 func (c *Collector) checkRedirectFunc() func(req *http.Request, via []*http.Request) error {
 	return func(req *http.Request, via []*http.Request) error {
 		if !c.isDomainAllowed(req.URL.Hostname()) {
-			return fmt.Errorf("Not following redirect to %s because its not in AllowedDomains", req.URL.Host)
+			return fmt.Errorf("not following redirect to %s because its not in AllowedDomains", req.URL.Host)
 		}
 
 		if c.redirectHandler != nil {
@@ -782,17 +782,4 @@ func isMatchingFilter(fs []*regexp.Regexp, d []byte) bool {
 		}
 	}
 	return false
-}
-
-func streamToByte(r io.Reader) []byte {
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(r)
-
-	if strReader, k := r.(*strings.Reader); k {
-		strReader.Seek(0, 0)
-	} else if bReader, kb := r.(*bytes.Reader); kb {
-		bReader.Seek(0, 0)
-	}
-
-	return buf.Bytes()
 }

@@ -12,13 +12,8 @@ type Future struct {
 	finished   bool
 	result     *crawler.Response
 	resultchan chan *crawler.Response
-	c          *crawler.Collector
 	error_     error
 	l          sync.Mutex
-}
-
-func (f *Future) setCollector(c *crawler.Collector) {
-	f.c = c
 }
 
 func (f *Future) GetResult() *crawler.Response {

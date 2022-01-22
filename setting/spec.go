@@ -220,12 +220,15 @@ type WMSSource struct {
 	Transparent      *bool             `json:"transparent,omitempty"`
 	Format           string            `json:"format,omitempty"`
 	Store            *StoreInfo        `json:"store"`
+	AccessToken      *string           `json:"access_token,omitempty"`
+	AccessTokenName  *string           `json:"access_token_name,omitempty"`
 }
 
 type TileSource struct {
 	SourceCommons
 	Type          SourceType   `json:"type,omitempty"`
 	URLTemplate   string       `json:"url_template,omitempty"`
+	AccessToken   *string      `json:"access_token,omitempty"`
 	Transparent   *bool        `json:"transparent,omitempty"`
 	Options       interface{}  `json:"options,omitempty"`
 	Grid          string       `json:"grid,omitempty"`
@@ -249,9 +252,11 @@ type MapboxTileSource struct {
 }
 
 type ArcGISSourceOpts struct {
-	Featureinfo                 *bool `json:"featureinfo,omitempty"`
-	FeatureinfoTolerance        *int  `json:"featureinfo_tolerance,omitempty"`
-	FeatureinfoReturnGeometries *bool `json:"featureinfo_return_geometries,omitempty"`
+	Featureinfo                 *bool   `json:"featureinfo,omitempty"`
+	FeatureinfoTolerance        *int    `json:"featureinfo_tolerance,omitempty"`
+	FeatureinfoReturnGeometries *bool   `json:"featureinfo_return_geometries,omitempty"`
+	AccessToken                 *string `json:"access_token,omitempty"`
+	AccessTokenName             *string `json:"access_token_name,omitempty"`
 }
 
 type ArcGISSource struct {

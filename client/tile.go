@@ -15,16 +15,17 @@ import (
 
 type TileClient struct {
 	BaseClient
-	Grid     *geo.TileGrid
-	Template *TileURLTemplate
+	Grid        *geo.TileGrid
+	Template    *TileURLTemplate
+	AccessToken *string
 }
 
-func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate, ctx Context) *TileClient {
-	return &TileClient{Grid: grid, Template: tpl, BaseClient: BaseClient{ctx: ctx}}
+func NewTileClient(grid *geo.TileGrid, tpl *TileURLTemplate, accessToken *string, ctx Context) *TileClient {
+	return &TileClient{Grid: grid, Template: tpl, AccessToken: accessToken, BaseClient: BaseClient{ctx: ctx}}
 }
 
 func (c *TileClient) GetTile(tile_coord [3]int, format *tile.TileFormat) []byte {
-	url := c.Template.substitute(tile_coord, format, c.Grid)
+	url := c.Template.substitute(tile_coord, format, c.Grid, c.AccessToken)
 	status, resp := c.httpClient().Open(url, nil)
 	if status == 200 {
 		return resp
@@ -83,6 +84,7 @@ type TileURLTemplate struct {
 	WithArcgisCachePath bool
 	WithBBox            bool
 	HasSubdomains       bool
+	HasAccessToken      bool
 	Subdomains          []string
 	r                   *rand.Rand
 }
@@ -131,6 +133,13 @@ func NewURLTemplate(template string, format string, subdomains []string) *TileUR
 		rt.WithArcgisCachePath = false
 	}
 
+	if strings.Contains(template, "{access_token}") {
+		template = strings.Replace(template, "{access_token}", "{{ .access_token }}", 1)
+		rt.HasAccessToken = true
+	} else {
+		rt.HasAccessToken = false
+	}
+
 	if strings.Contains(template, "{bbox}") {
 		template = strings.Replace(template, "{bbox}", "{{ .bbox }}", 1)
 		rt.WithBBox = true
@@ -143,7 +152,7 @@ func NewURLTemplate(template string, format string, subdomains []string) *TileUR
 	return rt
 }
 
-func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat, grid *geo.TileGrid) string {
+func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat, grid *geo.TileGrid, accessToken *string) string {
 	x, y, z := tile_coord[0], tile_coord[1], tile_coord[2]
 	data := map[string]string{"x": strconv.FormatInt(int64(x), 10), "y": strconv.FormatInt(int64(y), 10), "z": strconv.FormatInt(int64(z), 10)}
 	if format != nil {
@@ -165,6 +174,10 @@ func (t *TileURLTemplate) substitute(tile_coord [3]int, format *tile.TileFormat,
 	}
 	if t.WithBBox {
 		data["bbox"] = bbox(tile_coord, grid)
+	}
+
+	if t.HasAccessToken && accessToken != nil {
+		data["access_token"] = *accessToken
 	}
 
 	if t.HasSubdomains && t.Subdomains != nil {

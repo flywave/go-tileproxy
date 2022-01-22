@@ -35,7 +35,7 @@ func TestWMSSource(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, ctx)
+	client := client.NewWMSClient(req, nil, nil, ctx)
 
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 

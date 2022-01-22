@@ -52,7 +52,7 @@ func TestWMSClient(t *testing.T) {
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
-	client := NewWMSClient(req, ctx)
+	client := NewWMSClient(req, nil, nil, ctx)
 	format := tile.TileFormat("png")
 	client.Retrieve(query, &format)
 
@@ -73,7 +73,7 @@ func TestWMSInfoClient(t *testing.T) {
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(25832)}}
 
-	client := NewWMSInfoClient(req, srs, ctx)
+	client := NewWMSInfoClient(req, srs, nil, nil, ctx)
 
 	query := &layer.InfoQuery{BBox: vec2d.Rect{Min: vec2d.T{-200000, -200000}, Max: vec2d.T{200000, 200000}}, Size: [2]uint32{512, 512}, Srs: geo.NewProj(4326), Pos: [2]float64{128, 64}, Format: "text/plain"}
 
@@ -97,7 +97,7 @@ func TestWMSLegendClient(t *testing.T) {
 	}
 	req := request.NewWMSLegendGraphicRequest(param, "/service?map=foo", false, nil, false)
 
-	client := NewWMSLegendClient(req, ctx)
+	client := NewWMSLegendClient(req, nil, nil, ctx)
 
 	query := &layer.LegendQuery{Scale: 2}
 

@@ -48,7 +48,7 @@ func TestTileSource(t *testing.T) {
 
 	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
-	client := client.NewTileClient(grid, urlTemplate, ctx)
+	client := client.NewTileClient(grid, urlTemplate, nil, ctx)
 
 	creater := &dummyCreater{}
 

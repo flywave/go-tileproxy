@@ -22,10 +22,12 @@ type WMSClient struct {
 	HttpMethod      string
 	FWDReqParams    map[string]string
 	AdaptTo111      bool
+	AccessToken     *string
+	AccessTokenName *string
 }
 
-func NewWMSClient(req *request.WMSMapRequest, ctx Context) *WMSClient {
-	return &WMSClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}}
+func NewWMSClient(req *request.WMSMapRequest, accessToken *string, accessTokenName *string, ctx Context) *WMSClient {
+	return &WMSClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}, AccessToken: accessToken, AccessTokenName: accessTokenName}
 }
 
 func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
@@ -69,7 +71,15 @@ func (c *WMSClient) queryData(query *layer.MapQuery, format *tile.TileFormat) (u
 }
 
 func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
-	return c.queryReq(query, format).CompleteUrl()
+	req := c.queryReq(query, format)
+	if c.AccessToken != nil {
+		if c.AccessTokenName != nil {
+			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+		} else {
+			req.GetParams().Set("access_token", []string{*c.AccessToken})
+		}
+	}
+	return req.CompleteUrl()
 }
 
 func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.WMSMapRequest {
@@ -108,10 +118,12 @@ type WMSInfoClient struct {
 	RequestTemplate *request.WMSFeatureInfoRequest
 	SupportedSrs    *geo.SupportedSRS
 	AdaptTo111      bool
+	AccessToken     *string
+	AccessTokenName *string
 }
 
-func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, ctx Context) *WMSInfoClient {
-	return &WMSInfoClient{RequestTemplate: req, SupportedSrs: supported_srs, BaseClient: BaseClient{ctx: ctx}}
+func NewWMSInfoClient(req *request.WMSFeatureInfoRequest, supported_srs *geo.SupportedSRS, accessToken *string, accessTokenName *string, ctx Context) *WMSInfoClient {
+	return &WMSInfoClient{RequestTemplate: req, SupportedSrs: supported_srs, BaseClient: BaseClient{ctx: ctx}, AccessToken: accessToken, AccessTokenName: accessTokenName}
 }
 
 func (c *WMSInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoDoc {
@@ -192,8 +204,17 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	} else {
 		params.SetFormat("image/png")
 	}
+
 	if c.AdaptTo111 {
 		req.AdaptToWMS111()
+	}
+
+	if c.AccessToken != nil {
+		if c.AccessTokenName != nil {
+			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+		} else {
+			req.GetParams().Set("access_token", []string{*c.AccessToken})
+		}
 	}
 	return req.CompleteUrl()
 }
@@ -201,10 +222,12 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 type WMSLegendClient struct {
 	BaseClient
 	RequestTemplate *request.WMSLegendGraphicRequest
+	AccessToken     *string
+	AccessTokenName *string
 }
 
-func NewWMSLegendClient(req *request.WMSLegendGraphicRequest, ctx Context) *WMSLegendClient {
-	return &WMSLegendClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}}
+func NewWMSLegendClient(req *request.WMSLegendGraphicRequest, accessToken *string, accessTokenName *string, ctx Context) *WMSLegendClient {
+	return &WMSLegendClient{RequestTemplate: req, BaseClient: BaseClient{ctx: ctx}, AccessToken: accessToken, AccessTokenName: accessTokenName}
 }
 
 func (c *WMSLegendClient) GetLegend(query *layer.LegendQuery) *resource.Legend {
@@ -239,6 +262,14 @@ func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 	}
 	if query.Scale > 0 {
 		params.SetScale(query.Scale)
+	}
+
+	if c.AccessToken != nil {
+		if c.AccessTokenName != nil {
+			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+		} else {
+			req.GetParams().Set("access_token", []string{*c.AccessToken})
+		}
 	}
 	return req.CompleteUrl()
 }

@@ -116,7 +116,7 @@ func seeder(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *testin
 
 	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
-	client := client.NewTileClient(grid, urlTemplate, ctx)
+	client := client.NewTileClient(grid, urlTemplate, nil, ctx)
 
 	ccreater := &mockMVTSourceCreater{}
 
@@ -172,7 +172,7 @@ func seederGeom(geom *geos.Geometry, levels []int, t *testing.T) map[int][][2]in
 
 	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
-	client := client.NewTileClient(grid, urlTemplate, ctx)
+	client := client.NewTileClient(grid, urlTemplate, nil, ctx)
 
 	ccreater := &mockMVTSourceCreater{}
 
@@ -228,7 +228,7 @@ func analytic(bbox vec2d.Rect, levels []int, seedProgress *TaskProgress, t *test
 
 	urlTemplate := client.NewURLTemplate("/{tms_path}.png", "", nil)
 
-	client := client.NewTileClient(grid, urlTemplate, ctx)
+	client := client.NewTileClient(grid, urlTemplate, nil, ctx)
 
 	ccreater := &mockMVTSourceCreater{}
 

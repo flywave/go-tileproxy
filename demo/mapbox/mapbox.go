@@ -12,7 +12,7 @@ import (
 const (
 	MAPBOX_API_URL     = "https://api.mapbox.com"
 	MAPBOX_TILE_URL    = "https://a.tiles.mapbox.com"
-	MAPBOX_ACCESSTOKEN = "{token}"
+	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ"
 )
 
 var (

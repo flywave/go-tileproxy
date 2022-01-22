@@ -55,10 +55,12 @@ type ArcGISInfoClient struct {
 	SupportedSrs     *geo.SupportedSRS
 	ReturnGeometries bool
 	Tolerance        int
+	AccessToken      *string
+	AccessTokenName  *string
 }
 
-func NewArcGISInfoClient(req *request.ArcGISIdentifyRequest, supported_srs *geo.SupportedSRS, ctx Context, return_geometries bool, tolerance int) *ArcGISInfoClient {
-	ret := &ArcGISInfoClient{BaseClient: BaseClient{ctx: ctx}, RequestTemplate: req, SupportedSrs: supported_srs, ReturnGeometries: return_geometries, Tolerance: tolerance}
+func NewArcGISInfoClient(req *request.ArcGISIdentifyRequest, supported_srs *geo.SupportedSRS, ctx Context, return_geometries bool, tolerance int, accessToken *string, accessTokenName *string) *ArcGISInfoClient {
+	ret := &ArcGISInfoClient{BaseClient: BaseClient{ctx: ctx}, RequestTemplate: req, SupportedSrs: supported_srs, ReturnGeometries: return_geometries, Tolerance: tolerance, AccessToken: accessToken, AccessTokenName: accessTokenName}
 	return ret
 }
 
@@ -121,10 +123,19 @@ func (c *ArcGISInfoClient) queryURL(query *layer.InfoQuery) string {
 	}
 
 	req.GetParams().Set("tolerance", []string{strconv.FormatInt(int64(c.Tolerance), 10)})
+
 	if c.ReturnGeometries {
 		req.GetParams().Set("returnGeometry", []string{"true"})
 	} else {
 		req.GetParams().Set("returnGeometry", []string{"false"})
+	}
+
+	if c.AccessToken != nil {
+		if c.AccessTokenName != nil {
+			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+		} else {
+			req.GetParams().Set("access_token", []string{*c.AccessToken})
+		}
 	}
 
 	return req.CompleteUrl()

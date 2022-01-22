@@ -552,7 +552,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting) *
 		http = &globals.Http.HttpSetting
 	}
 
-	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), newCollectorContext(http))
+	c := client.NewWMSInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), s.AccessToken, s.AccessTokenName, newCollectorContext(http))
 
 	if s.Opts.Version == "1.1.1" {
 		c.AdaptTo111 = true
@@ -587,7 +587,7 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting, fac CacheFactor
 	for _, layer := range s.Layers {
 		params["layer"] = []string{layer}
 		lg_request := request.NewWMSLegendGraphicRequest(params, url, false, nil, false)
-		lg_clients = append(lg_clients, client.NewWMSLegendClient(lg_request, newCollectorContext(http)))
+		lg_clients = append(lg_clients, client.NewWMSLegendClient(lg_request, s.AccessToken, s.AccessTokenName, newCollectorContext(http)))
 	}
 
 	var cache *resource.LegendCache
@@ -639,7 +639,7 @@ func LoadWMSMapSource(s *WMSSource, instance ProxyInstance, globals *GlobalsSett
 	}
 
 	req := request.NewWMSMapRequest(params, url, false, nil, false)
-	c := client.NewWMSClient(req, newCollectorContext(http))
+	c := client.NewWMSClient(req, s.AccessToken, s.AccessTokenName, newCollectorContext(http))
 
 	if s.Opts.Version == "1.1.1" {
 		c.AdaptTo111 = true
@@ -710,7 +710,7 @@ func LoadTileSource(s *TileSource, globals *GlobalsSetting, instance ProxyInstan
 
 	tpl := client.NewURLTemplate(s.URLTemplate, s.RequestFormat, s.Subdomains)
 
-	c := client.NewTileClient(grid.(*geo.TileGrid), tpl, newCollectorContext(http))
+	c := client.NewTileClient(grid.(*geo.TileGrid), tpl, s.AccessToken, newCollectorContext(http))
 
 	return sources.NewTileSource(grid.(*geo.TileGrid), c, coverage, opts, res_range, creater)
 }
@@ -858,7 +858,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting) *sources.Arc
 
 	fi_request := request.NewArcGISIdentifyRequest(params, url)
 
-	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), newCollectorContext(http), return_geometries, tolerance)
+	c := client.NewArcGISInfoClient(fi_request, newSupportedSrs(s.SupportedSrs, GetPreferredSrcSRS(&globals.Srs)), newCollectorContext(http), return_geometries, tolerance, s.Opts.AccessToken, s.Opts.AccessTokenName)
 	return sources.NewArcGISInfoSource(c)
 }
 

@@ -101,7 +101,7 @@ func TestTileProvider(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, ctx)
+	client := client.NewWMSClient(req, nil, nil, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 
@@ -177,7 +177,7 @@ func TestTileServiceGetMap(t *testing.T) {
 	}
 	req := request.NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
-	client := client.NewWMSClient(req, ctx)
+	client := client.NewWMSClient(req, nil, nil, ctx)
 
 	source := sources.NewWMSSource(client, imageopts, nil, nil, nil, nil, nil, nil, nil)
 

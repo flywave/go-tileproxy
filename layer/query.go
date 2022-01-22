@@ -1,7 +1,6 @@
 package layer
 
 import (
-	"fmt"
 	"strings"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -130,27 +129,6 @@ func (q *LegendQuery) Eq(o *LegendQuery) bool {
 		return false
 	}
 	if q.Scale != o.Scale {
-		return false
-	}
-	return true
-}
-
-type GlyphsQuery struct {
-	Query
-	Font  string
-	Start int
-	End   int
-}
-
-func (req *GlyphsQuery) GetID() string {
-	return fmt.Sprintf("%s-%d-%d", req.Font, req.Start, req.End)
-}
-
-func (q *GlyphsQuery) Eq(o *GlyphsQuery) bool {
-	if q.Start != o.Start {
-		return false
-	}
-	if q.End != o.End {
 		return false
 	}
 	return true

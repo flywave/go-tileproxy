@@ -65,7 +65,7 @@ func TestArcGISInfoClient(t *testing.T) {
 
 	srs := &geo.SupportedSRS{Srs: []geo.Proj{geo.NewProj(4326)}}
 
-	client := NewArcGISInfoClient(req, srs, ctx, false, 5)
+	client := NewArcGISInfoClient(req, srs, ctx, false, 5, nil, nil)
 
 	feature := client.GetInfo(query)
 

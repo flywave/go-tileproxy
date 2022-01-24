@@ -16,6 +16,7 @@ type CacheMapLayer struct {
 	tileManager  Manager
 	grid         *geo.TileGrid
 	maxTileLimit *int
+	emptySource  tile.Source
 }
 
 func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int) *CacheMapLayer {
@@ -31,6 +32,7 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 		tileManager:  tm,
 		grid:         tm.GetGrid(),
 		maxTileLimit: maxTileLimit,
+		emptySource:  nil,
 	}
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
@@ -85,15 +87,26 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	tile_collection, _ := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
 	if tile_collection.Empty() {
-		return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
+		if r.emptySource == nil {
+			r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+		}
+		return r.emptySource, nil
 	}
 
 	if query.TiledOnly {
-		t := tile_collection.GetItem(0)
-		tile := t.Source
-		tile.SetTileOptions(r.tileManager.GetTileOptions())
-		tile.SetCacheable(t.GetCacheInfo())
-		return tile, nil
+		if len(tile_collection.tiles) > 1 {
+			tile_sources := []tile.Source{}
+			for _, t := range tile_collection.tiles {
+				tile_sources = append(tile_sources, t.Source)
+			}
+			return ResampeTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions()), nil
+		} else {
+			t := tile_collection.GetItem(0)
+			tile := t.Source
+			tile.SetTileOptions(r.tileManager.GetTileOptions())
+			tile.SetCacheable(t.GetCacheInfo())
+			return tile, nil
+		}
 	}
 
 	tile_sources := []tile.Source{}
@@ -116,16 +129,25 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	var result tile.Source
 	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(queryExtent) {
 		if !r.Extent.Intersects(queryExtent) {
-			return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
+			if r.emptySource == nil {
+				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+			}
+			return r.emptySource, nil
 		}
 		size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
 		if size[0] == 0 || size[1] == 0 {
-			return GetEmptyTile(query.Size, r.tileManager.GetTileOptions()), nil
+			if r.emptySource == nil {
+				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+			}
+			return r.emptySource, nil
 		}
 		src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: query.Format}
 		resp, err := r.getSource(src_query)
 		if err != nil {
-			return GetEmptyTile(size, r.tileManager.GetTileOptions()), nil
+			if r.emptySource == nil {
+				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+			}
+			return r.emptySource, nil
 		}
 		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options.(*imagery.ImageOptions), resp.GetCacheable())
 	} else {

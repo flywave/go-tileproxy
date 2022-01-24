@@ -60,18 +60,30 @@ func SplitTiles(layers tile.Source, tiles []geo.TilePattern, tile_size [2]uint32
 }
 
 func ScaleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, opts tile.TileOptions) tile.Source {
-	switch op := opts.(type) {
+	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
 		tiled_image := imagery.NewTiledImage(layers, src_tile_grid, [2]uint32{grid.TileSize[0], grid.TileSize[1]}, src_bbox, grid.Srs)
-		return tiled_image.Transform(queryBBox, querySrs, [2]uint32{grid.TileSize[0], grid.TileSize[1]}, op)
+		return tiled_image.Transform(queryBBox, querySrs, [2]uint32{grid.TileSize[0], grid.TileSize[1]}, opt)
 	}
 	return nil
 }
 
 func MaskImageSourceFromCoverage(source tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, opts tile.TileOptions) tile.Source {
-	switch op := opts.(type) {
+	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
-		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, op)
+		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, opt)
+	}
+	return nil
+}
+
+func ResampeTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, opts tile.TileOptions) tile.Source {
+	switch opt := opts.(type) {
+	case *imagery.ImageOptions:
+
+	case *terrain.RasterOptions:
+
+	case *vector.VectorOptions:
+
 	}
 	return nil
 }

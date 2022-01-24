@@ -26,7 +26,7 @@ func GetEmptyTile(size [2]uint32, opts tile.TileOptions) tile.Source {
 	return nil
 }
 
-func BlendTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) tile.Source {
+func MergeTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) tile.Source {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
 		return imagery.MergeImages(layers, opt, size, bbox, Srs, tileMerger)
@@ -68,22 +68,23 @@ func ScaleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, s
 	return nil
 }
 
-func MaskImageSourceFromCoverage(source tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, opts tile.TileOptions) tile.Source {
+func ResampleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, out_size [2]uint32, opts tile.TileOptions) tile.Source {
+	size := [2]uint32{grid.TileSize[0], grid.TileSize[1]}
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
-		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, opt)
+		return imagery.Resample(layers, src_tile_grid, size, src_bbox, grid.Srs, queryBBox, querySrs, out_size, opt)
+	case *terrain.RasterOptions:
+		return terrain.Resample(layers, src_tile_grid, size, src_bbox, grid.Srs, queryBBox, querySrs, out_size, opt)
+	case *vector.VectorOptions:
+		return vector.Resample(layers, src_tile_grid, size, src_bbox, grid.Srs, queryBBox, querySrs, out_size, opt)
 	}
 	return nil
 }
 
-func ResampeTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, opts tile.TileOptions) tile.Source {
+func MaskImageSourceFromCoverage(source tile.Source, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage, opts tile.TileOptions) tile.Source {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
-
-	case *terrain.RasterOptions:
-
-	case *vector.VectorOptions:
-
+		imagery.MaskImageSourceFromCoverage(source, bbox, bbox_srs, coverage, opt)
 	}
 	return nil
 }

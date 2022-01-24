@@ -8,7 +8,7 @@ import (
 
 type CacheSource struct {
 	CacheMapLayer
-	TiledOnly bool
+	tiledOnly bool
 }
 
 func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions, maxTileLimit *int, tiled_only bool) *CacheSource {
@@ -26,7 +26,7 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 			grid:         tm.GetGrid(),
 			maxTileLimit: maxTileLimit,
 		},
-		TiledOnly: tiled_only,
+		tiledOnly: tiled_only,
 	}
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
@@ -36,7 +36,7 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 }
 
 func (r *CacheSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
-	if r.TiledOnly {
+	if r.tiledOnly {
 		query.TiledOnly = true
 	}
 	return r.CacheMapLayer.GetMap(query)

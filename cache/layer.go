@@ -99,7 +99,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			return ResampeTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions()), nil
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, query.Size, r.tileManager.GetTileOptions()), nil
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source

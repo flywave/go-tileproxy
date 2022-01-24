@@ -137,7 +137,7 @@ func (l *VectorMerger) AddSource(src tile.Source, cov geo.Coverage) {
 	l.Layers = append(l.Layers, src)
 }
 
-func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, tile [3]int, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Vector {
+func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Vector {
 	if len(l.Layers) == 1 {
 		t := l.Layers[0].GetTile()
 		feats := t.(map[string][]*geom.Feature)
@@ -179,7 +179,7 @@ func NewTiledVector(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, 
 	return &TiledVector{Tiles: tiles, TileGrid: tile_grid, TileSize: tile_size, SrcBBox: src_bbox, SrcSRS: src_srs, BufferFactor: 0.2}
 }
 
-func (t *TiledVector) GetVector(v_opts *VectorOptions, tile [3]int, dest_bbox vec2d.Rect, dest_srs geo.Proj) Vector {
+func (t *TiledVector) GetVector(v_opts *VectorOptions, dest_bbox vec2d.Rect, dest_srs geo.Proj) Vector {
 	var tranbbox vec2d.Rect
 	if !t.SrcSRS.Eq(dest_srs) {
 		tranbbox = dest_srs.TransformRectTo(t.SrcSRS, dest_bbox, 16)
@@ -196,19 +196,30 @@ func (t *TiledVector) GetVector(v_opts *VectorOptions, tile [3]int, dest_bbox ve
 	}
 
 	tm := NewVectorMerger(t.Tiles)
-	return tm.Merge(v_opts, t.TileSize[:], tile, tranbbox, t.SrcSRS, nil)
+	return tm.Merge(v_opts, t.TileSize[:], tranbbox, t.SrcSRS, nil)
 }
 
-func (t *TiledVector) Transform(req_bbox vec2d.Rect, grid geo.TileGrid, vec_opts *VectorOptions) tile.Source {
+func (t *TiledVector) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
+	opts := geo.DefaultTileGridOptions()
+	opts[geo.TILEGRID_SRS] = req_srs.GetSrsCode()
+	opts[geo.TILEGRID_ORIGIN] = geo.ORIGIN_NW
+	opts[geo.TILEGRID_TILE_SIZE] = []uint32{out_size[0], out_size[1]}
+
+	grid := geo.NewTileGrid(opts)
+
+	src_img := t.GetVector(vec_opts, req_bbox, req_srs)
+
+	transformer := NewVectorTransformer(t.SrcSRS, req_srs)
+
+	vecs := transformer.ApplyVector(src_img)
+
 	_, _, tiles, _ := grid.GetAffectedTiles(req_bbox, t.TileSize, grid.Srs)
 
 	x, y, z, _ := tiles.Next()
 
-	src_img := t.GetVector(vec_opts, [3]int{x, y, z}, req_bbox, grid.Srs)
-
-	transformer := NewVectorTransformer(t.SrcSRS, grid.Srs)
-
-	vecs := transformer.ApplyVector(src_img)
-
 	return CreateVectorSourceFromVector(vecs, [3]int{x, y, z}, vec_opts, nil)
+}
+
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
+	return nil
 }

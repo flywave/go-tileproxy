@@ -135,3 +135,7 @@ func imageTileOffset(srcbox vec2d.Rect, src_srs geo.Proj, src_size [2]uint32, ds
 
 	return [2]int{int(facx * float64(src_size[0])), int(facy * float64(src_size[1]))}
 }
+
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) tile.Source {
+	return nil
+}

@@ -93,9 +93,19 @@ func (s *VectorSource) SetSource(src interface{}) {
 }
 
 func (s *VectorSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
+	var vec_opts *VectorOptions
+	if in_tile_opts != nil {
+		vec_opts = in_tile_opts.(*VectorOptions)
+	} else {
+		vec_opts = s.Options.(*VectorOptions)
+	}
+	if format != nil {
+		vec_opts = s.Options.(*VectorOptions)
+		vec_opts.Format = *format
+	}
 	if s.buf == nil {
 		var err error
-		s.buf, err = s.io.Encode(s.GetTile().(Vector))
+		s.buf, err = EncodeVector(vec_opts, s.tile, s.GetTile().(Vector))
 		if err != nil {
 			return nil
 		}

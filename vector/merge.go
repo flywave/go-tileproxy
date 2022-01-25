@@ -221,5 +221,6 @@ func (t *TiledVector) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 }
 
 func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
-	return nil
+	rr := NewTiledVector(tiles, tile_grid, tile_size, src_bbox, src_srs)
+	return rr.Transform(req_bbox, req_srs, out_size, vec_opts)
 }

@@ -84,12 +84,20 @@ func (tm *TileManager) GetSources() []layer.Layer {
 	return tm.sources
 }
 
+func (tm *TileManager) SetSources(layer []layer.Layer) {
+	tm.sources = layer
+}
+
 func (tm *TileManager) GetGrid() *geo.TileGrid {
 	return tm.grid
 }
 
 func (tm *TileManager) GetCache() Cache {
 	return tm.cache
+}
+
+func (tm *TileManager) SetCache(c Cache) {
+	tm.cache = c
 }
 
 func (tm *TileManager) GetMetaGrid() *geo.MetaGrid {
@@ -107,6 +115,10 @@ func (tm *TileManager) Cleanup() bool {
 
 func (tm *TileManager) GetTileOptions() tile.TileOptions {
 	return tm.tileOpts
+}
+
+func (tm *TileManager) SetTileOptions(opt tile.TileOptions) {
+	tm.tileOpts = opt
 }
 
 func (tm *TileManager) GetFormat() string {
@@ -152,9 +164,11 @@ func (tm *TileManager) LoadTileCoords(tileCoords [][3]int, dimensions utils.Dime
 		}
 	}
 
-	tiles = tm.loadTileCoords(
-		tiles, dimensions, with_metadata,
-		rescale_till_zoom, nil)
+	tiles, err := tm.loadTileCoords(tiles, dimensions, with_metadata, rescale_till_zoom, nil)
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, t := range tiles.tiles {
 		if t.Source == RESCALE_TILE_MISSING {
@@ -165,7 +179,7 @@ func (tm *TileManager) LoadTileCoords(tileCoords [][3]int, dimensions utils.Dime
 	return tiles, nil
 }
 
-func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Dimensions, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) *TileCollection {
+func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Dimensions, with_metadata bool, rescale_till_zoom int, rescaled_tiles *TileCollection) (*TileCollection, error) {
 	uncached_tiles := []*Tile{}
 
 	if rescaled_tiles != nil {
@@ -176,7 +190,11 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 		}
 	}
 
-	tm.cache.LoadTiles(tiles, with_metadata)
+	err := tm.cache.LoadTiles(tiles, with_metadata)
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, tile := range tiles.tiles {
 		if !tm.IsCached(tile.Coord, dimensions) {
@@ -186,12 +204,19 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 
 	if len(uncached_tiles) > 0 {
 		creator := tm.Creator(dimensions)
-		created_tiles := creator.CreateTiles(uncached_tiles)
+		created_tiles, err := creator.CreateTiles(uncached_tiles)
+
+		if err != nil {
+			return nil, err
+		}
 
 		if created_tiles == nil && tm.rescaleTiles != -1 {
 			created_tiles = make([]*Tile, len(uncached_tiles))
 			for i, t := range uncached_tiles {
-				created_tiles[i] = tm.scaledTile(t, rescale_till_zoom, rescaled_tiles)
+				created_tiles[i], err = tm.scaledTile(t, rescale_till_zoom, rescaled_tiles)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -202,16 +227,16 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 		}
 	}
 
-	return tiles
+	return tiles, nil
 }
 
 var (
 	RESCALE_TILE_MISSING = imagery.NewBlankImageSource([2]uint32{256, 256}, &imagery.ImageOptions{}, nil)
 )
 
-func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCollection) *Tile {
+func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCollection) (*Tile, error) {
 	if rescaled_tiles.Contains(t.Coord) {
-		return rescaled_tiles.GetItem(t.Coord)
+		return rescaled_tiles.GetItem(t.Coord), nil
 	}
 
 	t.Source = RESCALE_TILE_MISSING
@@ -220,8 +245,9 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 	tile_bbox := tm.grid.TileBBox(t.Coord, false)
 	current_zoom := t.Coord[2]
 	if stop_zoom == current_zoom {
-		return t
+		return t, nil
 	}
+
 	var src_level int
 	if stop_zoom > current_zoom {
 		src_level = current_zoom + 1
@@ -245,15 +271,19 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 		}
 	}
 
-	tile_collection := tm.loadTileCoords(
+	tile_collection, err := tm.loadTileCoords(
 		affected_tiles,
 		nil,
 		false,
 		stop_zoom,
 		rescaled_tiles)
 
+	if err != nil {
+		return nil, err
+	}
+
 	if tile_collection.AllBlank() {
-		return t
+		return t, nil
 	}
 
 	tile_sources := []tile.Source{}
@@ -263,12 +293,16 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 		}
 	}
 
-	t.Source = ScaleTiles(tile_sources, tile_bbox, tm.grid.Srs, src_tile_grid, tm.grid, src_bbox, tm.tileOpts)
+	t.Source, err = ScaleTiles(tile_sources, tile_bbox, tm.grid.Srs, src_tile_grid, tm.grid, src_bbox, tm.tileOpts)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if tm.cacheRescaledTiles {
 		tm.cache.StoreTile(t)
 	}
-	return t
+	return t, nil
 }
 
 func (tm *TileManager) RemoveTileCoords(tile_coords [][3]int) error {

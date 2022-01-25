@@ -133,6 +133,7 @@ type GridOpts struct {
 	Origin               string      `json:"origin,omitempty"`
 	TileSize             *[2]uint32  `json:"tile_size,omitempty"`
 	ThresholdRes         []float64   `json:"threshold_res,omitempty"`
+	InitialResMin        *bool       `json:"initial_res_min,omitempty"`
 }
 
 type ScaleHints struct {

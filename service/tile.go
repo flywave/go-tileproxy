@@ -628,7 +628,10 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 	if coverage_intersects {
 		format := tile.TileFormat(tl.GetFormat())
 		tile_opts := t.Source.GetTileOptions()
-		s := cache.MaskImageSourceFromCoverage(t.Source, tile_bbox, tl.grid.srs, coverage, tile_opts)
+		s, err := cache.MaskImageSourceFromCoverage(t.Source, tile_bbox, tl.grid.srs, coverage, tile_opts)
+		if err != nil {
+			return NewRequestError("mask image error", "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
+		}
 		nt := cache.NewTile(t.Coord)
 		nt.Source = s
 		return nil, newTileResponse(nt, &format, nil, tl.tileManager.GetTileOptions())

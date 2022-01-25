@@ -162,24 +162,7 @@ func LoadFilter(f interface{}) cache.Filter {
 	return nil
 }
 
-func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) cache.Manager {
-	opts := []tile.TileOptions{}
-	layers := []layer.Layer{}
-
-	for i := range c.Sources {
-		l := instance.GetSource(c.Sources[i])
-		if l != nil {
-			layers = append(layers, l)
-			opts = append(opts, l.GetOptions())
-		} else {
-			l := instance.GetCacheSource(c.Sources[i])
-			if l != nil {
-				layers = append(layers, l)
-				opts = append(opts, l.GetOptions())
-			}
-		}
-	}
-
+func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) cache.Manager {
 	grid := instance.GetGrid(c.Grid)
 	request_format := c.RequestFormat
 	var request_format_ext string
@@ -248,15 +231,6 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	}
 
 	name := c.Name
-	tile_opts := opts[0]
-
-	var cacheB cache.Cache
-
-	if fac != nil {
-		cacheB = fac.CreateCache(c.CacheInfo, tile_opts)
-	} else {
-		cacheB = ConvertLocalCache(c.CacheInfo, tile_opts)
-	}
 
 	var locker cache.TileLocker
 
@@ -277,13 +251,13 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	tilegrid := grid.(*geo.TileGrid)
 
 	topts := &cache.TileManagerOptions{
-		Sources:              layers,
+		Sources:              nil,
 		Grid:                 tilegrid,
-		Cache:                cacheB,
+		Cache:                nil,
 		Locker:               locker,
 		Identifier:           name,
 		Format:               request_format_ext,
-		Options:              tile_opts,
+		Options:              nil,
 		MinimizeMetaRequests: minimize_meta_requests,
 		BulkMetaTiles:        bulk_meta_tiles,
 		PreStoreFilter:       pre_store_filter,
@@ -294,6 +268,39 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 	}
 
 	return cache.NewTileManager(topts)
+}
+
+func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory, manager cache.Manager) {
+	opts := []tile.TileOptions{}
+	layers := []layer.Layer{}
+
+	for i := range c.Sources {
+		l := instance.GetSource(c.Sources[i])
+		if l != nil {
+			layers = append(layers, l)
+			opts = append(opts, l.GetOptions())
+		} else {
+			l := instance.GetCacheSource(c.Sources[i])
+			if l != nil {
+				layers = append(layers, l)
+				opts = append(opts, l.GetOptions())
+			}
+		}
+	}
+
+	manager.SetSources(layers)
+
+	manager.SetTileOptions(opts[0])
+
+	var cacheB cache.Cache
+
+	if fac != nil {
+		cacheB = fac.CreateCache(c.CacheInfo, opts[0])
+	} else {
+		cacheB = ConvertLocalCache(c.CacheInfo, opts[0])
+	}
+
+	manager.SetCache(cacheB)
 }
 
 func NewResolutionRange(conf *ScaleHints) *geo.ResolutionRange {

@@ -15,6 +15,7 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
+
 	ret := &CacheSource{
 		CacheMapLayer: CacheMapLayer{
 			MapLayer: layer.MapLayer{
@@ -28,6 +29,7 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 		},
 		tiledOnly: tiled_only,
 	}
+
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
 		ret.ResRange = layer.MergeLayerResRanges(tm.GetSources())

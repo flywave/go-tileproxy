@@ -12,10 +12,13 @@ import (
 
 type Manager interface {
 	GetSources() []layer.Layer
+	SetSources(layer []layer.Layer)
 	GetGrid() *geo.TileGrid
 	GetCache() Cache
+	SetCache(c Cache)
 	GetMetaGrid() *geo.MetaGrid
 	GetTileOptions() tile.TileOptions
+	SetTileOptions(opt tile.TileOptions)
 	Cleanup() bool
 	GetFormat() string
 	GetRequestFormat() string

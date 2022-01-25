@@ -41,20 +41,28 @@ func (c *TileCreator) IsCached(tile [3]int) bool {
 	return c.manager.IsCached(tile, nil)
 }
 
-func (c *TileCreator) CreateTiles(tiles []*Tile) []*Tile {
+func (c *TileCreator) CreateTiles(tiles []*Tile) ([]*Tile, error) {
 	if c.sources == nil {
-		return []*Tile{}
+		return []*Tile{}, errors.New("source is nil")
 	}
 	var created_tiles []*Tile
+	var err error
 	if c.metaGrid == nil {
-		created_tiles = c.createSingleTiles(tiles)
+		created_tiles, err = c.createSingleTiles(tiles)
+		if err != nil {
+			return nil, err
+		}
 	} else if c.manager.GetMinimizeMetaRequests() && len(tiles) > 1 {
 		coords := [][3]int{}
 		for i := range tiles {
 			coords = append(coords, tiles[i].Coord)
 		}
 		meta_tile := c.metaGrid.MinimalMetaTile(coords)
-		created_tiles = append(created_tiles, c.createMetaTile(meta_tile)...)
+		tiles, err := c.createMetaTile(meta_tile)
+		if err != nil {
+			return nil, err
+		}
+		created_tiles = append(created_tiles, tiles...)
 	} else {
 		meta_tiles := []*geo.MetaTile{}
 		meta_bboxes := mapset.NewSet()
@@ -65,22 +73,31 @@ func (c *TileCreator) CreateTiles(tiles []*Tile) []*Tile {
 				meta_bboxes.Add(meta_tile.GetBBox())
 			}
 		}
-		created_tiles = c.createMetaTiles(meta_tiles)
+		tiles, err := c.createMetaTiles(meta_tiles)
+		if err != nil {
+			return nil, err
+		}
+		created_tiles = tiles
 	}
 
-	return created_tiles
+	return created_tiles, nil
 }
 
-func (c *TileCreator) createSingleTiles(tiles []*Tile) []*Tile {
+func (c *TileCreator) createSingleTiles(tiles []*Tile) ([]*Tile, error) {
 	created_tiles := []*Tile{}
 	for _, tile := range tiles {
-		created_tiles = append(created_tiles, c.createSingleTile(tile))
+		t, err := c.createSingleTile(tile)
+		if err != nil {
+			return nil, err
+		}
+		created_tiles = append(created_tiles, t)
 	}
-	return created_tiles
+	return created_tiles, nil
 }
 
-func (c *TileCreator) createSingleTile(t *Tile) *Tile {
+func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 	tile_bbox := c.grid.TileBBox(t.Coord, false)
+
 	query := &layer.MapQuery{
 		BBox:       tile_bbox,
 		Size:       [2]uint32{c.grid.TileSize[0], c.grid.TileSize[1]},
@@ -92,7 +109,7 @@ func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	c.manager.Lock(lockCtx, t, func() error {
+	err := c.manager.Lock(lockCtx, t, func() error {
 		if !c.IsCached(t.Coord) {
 			source, err := c.querySources(query)
 			if source == nil || err != nil {
@@ -110,7 +127,7 @@ func (c *TileCreator) createSingleTile(t *Tile) *Tile {
 		}
 		return nil
 	})
-	return t
+	return t, err
 }
 
 func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
@@ -130,31 +147,44 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			layers = append(layers, img)
 		}
 	}
-	ret := MergeTiles(layers, c.manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.tileMerger)
 
-	if ret == nil {
-		return nil, errors.New("no blend")
+	if len(layers) == 1 {
+		return layers[0], nil
+	}
+
+	ret, err := MergeTiles(layers, c.manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.tileMerger)
+
+	if err != nil {
+		return nil, err
 	}
 	return ret, nil
 }
 
-func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) []*Tile {
+func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) ([]*Tile, error) {
 	if c.bulkMetaTiles {
 		created_tiles := []*Tile{}
 		for _, meta_tile := range meta_tiles {
-			created_tiles = append(created_tiles, c.createBulkMetaTile(meta_tile)...)
+			tiles, err := c.createBulkMetaTile(meta_tile)
+			if err != nil {
+				return nil, err
+			}
+			created_tiles = append(created_tiles, tiles...)
 		}
-		return created_tiles
+		return created_tiles, nil
 	}
 
 	created_tiles := []*Tile{}
 	for _, meta_tile := range meta_tiles {
-		created_tiles = append(created_tiles, c.createMetaTile(meta_tile)...)
+		tiles, err := c.createMetaTile(meta_tile)
+		if err != nil {
+			return nil, err
+		}
+		created_tiles = append(created_tiles, tiles...)
 	}
-	return created_tiles
+	return created_tiles, nil
 }
 
-func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
+func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 	tile_size := c.grid.TileSize
 	query := &layer.MapQuery{
 		BBox:       meta_tile.GetBBox(),
@@ -169,7 +199,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	c.manager.Lock(lockCtx, main_tile, func() error {
+	err := c.manager.Lock(lockCtx, main_tile, func() error {
 		flag := true
 
 		for _, t := range meta_tile.GetTiles() {
@@ -194,15 +224,19 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) []*Tile {
 		return nil
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	tiles := NewTileCollection(nil)
 	for _, coord := range meta_tile.GetTiles() {
 		tiles.SetItem(NewTile(coord))
 	}
 	c.cache.LoadTiles(tiles, false)
-	return tiles.tiles
+	return tiles.tiles, nil
 }
 
-func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) *Tile {
+func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) (*Tile, error) {
 	query := &layer.MapQuery{
 		BBox:       c.grid.TileBBox(coord, false),
 		Size:       [2]uint32{tile_size[0], tile_size[1]},
@@ -211,18 +245,18 @@ func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) *Tile {
 		Dimensions: c.dimensions,
 	}
 	tile_data, err := c.querySources(query)
-	if tile_data == nil || err != nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
 	tile := NewTile(coord)
 	tile.SetCacheInfo(tile_data.GetCacheable())
 	tile.Source = tile_data
 	tile = c.manager.ApplyTileFilter(tile)
-	return tile
+	return tile, nil
 }
 
-func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
+func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 	tile_size := c.grid.TileSize
 	main_tile := NewTile(meta_tile.GetMainTileCoord())
 	var tiles []*Tile
@@ -230,7 +264,7 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	c.manager.Lock(lockCtx, main_tile, func() error {
+	err := c.manager.Lock(lockCtx, main_tile, func() error {
 		flag := true
 
 		for _, t := range meta_tile.GetTiles() {
@@ -241,7 +275,10 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 
 		if !flag {
 			for _, coord := range meta_tile.GetTiles() {
-				tile := c.queryTile(coord, tile_size)
+				tile, err := c.queryTile(coord, tile_size)
+				if err != nil {
+					return err
+				}
 				tiles = append(tiles, tile)
 			}
 
@@ -252,14 +289,16 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 				}
 			}
 
-			c.cache.StoreTiles(cacheTiles)
-			return nil
+			err := c.cache.StoreTiles(cacheTiles)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
 
-	if tiles != nil {
-		return tiles
+	if err != nil {
+		return nil, err
 	}
 
 	ctiles := NewTileCollection(nil)
@@ -268,5 +307,5 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) []*Tile {
 	}
 	c.cache.LoadTiles(ctiles, false)
 
-	return ctiles.tiles
+	return ctiles.tiles, nil
 }

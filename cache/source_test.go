@@ -45,5 +45,8 @@ func TestGetEmptyTile(t *testing.T) {
 	if empty == nil || buff == nil {
 		t.FailNow()
 	}
+}
+
+func TestResampleTile(t *testing.T) {
 
 }

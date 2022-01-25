@@ -13,4 +13,5 @@ func init() {
 	GridMap["global_webmercator"] = setting.GridOpts{Name: "GLOBAL_WEB_MERCATOR", Srs: "EPSG:3857", Origin: "nw"}
 	GridMap["global_geodetic_cgcs2000"] = setting.GridOpts{Name: "GLOBAL_GEODETIC_CGCS2000", Srs: "EPSG:4490", Origin: "sw"}
 	GridMap["global_mercator_cgcs2000"] = setting.GridOpts{Name: "GLOBAL_MERCATOR_CGCS2000", Srs: "EPSG:4479", Origin: "sw"}
+	GridMap["global_mercator_gcj02"] = setting.GridOpts{Name: "GLOBAL_MERCATOR_GCJ02", Srs: "EPSG:GCJ02MC", Origin: "sw"}
 }

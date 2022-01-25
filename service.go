@@ -87,7 +87,14 @@ func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, glo
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
 		case *setting.CacheSource:
-			s.Caches[k] = setting.LoadCacheManager(cache, globals, s, fac)
+			s.Caches[k] = setting.PreLoadCacheManager(cache, globals, s, fac)
+		}
+	}
+
+	for k, c := range dataset.Caches {
+		switch cache := c.(type) {
+		case *setting.CacheSource:
+			setting.LoadCacheManager(cache, globals, s, fac, s.Caches[k])
 		}
 	}
 }

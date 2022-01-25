@@ -7,6 +7,7 @@ import (
 	"github.com/flywave/go-tileproxy"
 	"github.com/flywave/go-tileproxy/demo"
 	"github.com/flywave/go-tileproxy/setting"
+	"github.com/flywave/go-tileproxy/vector"
 )
 
 const (
@@ -15,19 +16,30 @@ const (
 )
 
 var (
-	mapboxMVTSource = setting.MapboxTileSource{
+	luokuangMVTSource = setting.MapboxTileSource{
 		Url:             LK_API_URL + "/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom={z}&x={x}&y={y}",
 		AccessToken:     LK_ACCESSTOKEN,
 		AccessTokenName: "AK",
-		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096},
-		Grid:            "global_webmercator",
+		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
+		Grid:            "global_mercator_gcj02",
 		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
 		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
+	luokuangMVTCache = setting.CacheSource{
+		Sources:       []string{"lk_mvt"},
+		Name:          "lk_mvt_cache",
+		Grid:          "global_mercator_gcj02",
+		Format:        "mvt",
+		RequestFormat: "mvt",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/mvt",
+			DirectoryLayout: "tms",
+		},
+	}
 	mapboxMVTCache = setting.CacheSource{
-		Sources:       []string{"mvt"},
+		Sources:       []string{"lk_mvt_cache"},
 		Name:          "mvt_cache",
-		Grid:          "global_webmercator",
+		Grid:          "global_mercator",
 		Format:        "mvt",
 		RequestFormat: "mvt",
 		CacheInfo: &setting.CacheInfo{
@@ -50,8 +62,9 @@ func getProxyService() *setting.ProxyService {
 	pd := setting.NewProxyService("mapbox")
 	pd.Grids = demo.GridMap
 
-	pd.Sources["mvt"] = &mapboxMVTSource
+	pd.Sources["lk_mvt"] = &luokuangMVTSource
 	pd.Caches["mvt_cache"] = &mapboxMVTCache
+	pd.Caches["lk_mvt_cache"] = &luokuangMVTCache
 
 	pd.Service = &mapboxService
 	return pd

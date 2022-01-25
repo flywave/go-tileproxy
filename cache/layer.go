@@ -23,6 +23,7 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
+	
 	ret := &CacheMapLayer{
 		MapLayer: layer.MapLayer{
 			SupportMetaTiles: true,
@@ -34,6 +35,7 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 		maxTileLimit: maxTileLimit,
 		emptySource:  nil,
 	}
+
 	ret.ResRange = nil
 	if tm.GetRescaleTiles() == -1 {
 		ret.ResRange = layer.MergeLayerResRanges(tm.GetSources())
@@ -94,26 +96,18 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if query.TiledOnly {
-		if len(tile_collection.tiles) > 1 {
-			tile_sources := []tile.Source{}
-			for _, t := range tile_collection.tiles {
-				tile_sources = append(tile_sources, t.Source)
-			}
-			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, query.Size, r.tileManager.GetTileOptions()), nil
-		} else {
-			t := tile_collection.GetItem(0)
-			tile := t.Source
-			tile.SetTileOptions(r.tileManager.GetTileOptions())
-			tile.SetCacheable(t.GetCacheInfo())
-			return tile, nil
-		}
+		t := tile_collection.GetItem(0)
+		tile := t.Source
+		tile.SetTileOptions(r.tileManager.GetTileOptions())
+		tile.SetCacheable(t.GetCacheInfo())
+		return tile, nil
 	}
 
 	tile_sources := []tile.Source{}
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions()), nil
+	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions())
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {

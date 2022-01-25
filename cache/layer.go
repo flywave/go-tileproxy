@@ -93,11 +93,19 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if query.TiledOnly {
-		t := tile_collection.GetItem(0)
-		tile := t.Source
-		tile.SetTileOptions(r.tileManager.GetTileOptions())
-		tile.SetCacheable(t.GetCacheInfo())
-		return tile, nil
+		if len(tile_collection.tiles) > 1 {
+			tile_sources := []tile.Source{}
+			for _, t := range tile_collection.tiles {
+				tile_sources = append(tile_sources, t.Source)
+			}
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, query.Size, r.tileManager.GetTileOptions())
+		} else {
+			t := tile_collection.GetItem(0)
+			tile := t.Source
+			tile.SetTileOptions(r.tileManager.GetTileOptions())
+			tile.SetCacheable(t.GetCacheInfo())
+			return tile, nil
+		}
 	}
 
 	tile_sources := []tile.Source{}

@@ -89,8 +89,7 @@ func tile_location_tms(tile *Tile, cache_dir string, file_ext string, create_dir
 func tile_location_reverse_tms(tile *Tile, cache_dir string, file_ext string, create_dir bool) string {
 	if tile.Location == "" {
 		x, y, z := tile.Coord[0], tile.Coord[1], tile.Coord[2]
-		tile.Location = path.Join(
-			cache_dir, strconv.Itoa(y), strconv.Itoa(x), strconv.Itoa(z)+"."+file_ext)
+		tile.Location = path.Join(cache_dir, strconv.Itoa(y), strconv.Itoa(x), strconv.Itoa(z)+"."+file_ext)
 	}
 	if create_dir {
 		dir := path.Dir(tile.Location)

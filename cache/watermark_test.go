@@ -21,7 +21,7 @@ func TestWatermark(t *testing.T) {
 	img := imagery.CreateImageSource([2]uint32{256, 256}, img_opts)
 	tc.Source = img
 
-	tc = filter.Apply(tc)
+	tc, _ = filter.Apply(tc)
 
 	imaging.Save(tc.GetSourceImage(), "./test.png")
 

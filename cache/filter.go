@@ -1,5 +1,5 @@
 package cache
 
 type Filter interface {
-	Apply(*Tile) *Tile
+	Apply(*Tile) (*Tile, error)
 }

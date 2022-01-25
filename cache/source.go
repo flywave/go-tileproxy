@@ -65,12 +65,12 @@ func splitImageMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_si
 	return split_tiles
 }
 
-func SplitTiles(layers tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, opts tile.TileOptions) *TileCollection {
+func SplitTiles(layers tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, opts tile.TileOptions) (*TileCollection, error) {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
-		return splitImageMetaTiles(layers, tiles, tile_size, opt)
+		return splitImageMetaTiles(layers, tiles, tile_size, opt), nil
 	}
-	return nil
+	return nil, errors.New("not support source")
 }
 
 func ScaleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, opts tile.TileOptions) (tile.Source, error) {

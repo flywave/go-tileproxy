@@ -35,14 +35,18 @@ func tileWatermarkPlacement(coord [3]int, double_spacing bool) string {
 	return ""
 }
 
-func (w *Watermark) Apply(tile *Tile) *Tile {
+func (w *Watermark) Apply(tile *Tile) (*Tile, error) {
 	double_spacing := false
 	if w.spacing != nil && *w.spacing == "wide" {
 		double_spacing = true
 	}
+	var err error
 	placement := tileWatermarkPlacement(tile.Coord, double_spacing)
 	wimg := imagery.NewWatermarkImage(w.text, tile.Source.GetTileOptions().(*imagery.ImageOptions),
 		placement, w.opacity, w.fontColor, w.fontSize)
-	tile.Source, _ = wimg.Draw(tile.Source, nil, false)
-	return tile
+	tile.Source, err = wimg.Draw(tile.Source, nil, false)
+	if err != nil {
+		return nil, err
+	}
+	return tile, nil
 }

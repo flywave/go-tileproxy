@@ -34,7 +34,7 @@ type Manager interface {
 	IsStale(tileCoord [3]int, dimensions utils.Dimensions) bool
 	ExpireTimestamp(tile *Tile) *time.Time
 	SetExpireTimestamp(t *time.Time)
-	ApplyTileFilter(tile *Tile) *Tile
+	ApplyTileFilter(tile *Tile) (*Tile, error)
 	Creator(dimensions utils.Dimensions) *TileCreator
 	Lock(ctx context.Context, tile *Tile, run func() error) error
 }

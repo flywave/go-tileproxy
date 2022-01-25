@@ -344,15 +344,19 @@ func (tm *TileManager) SetExpireTimestamp(t *time.Time) {
 	tm.expireTimestamp = t
 }
 
-func (tm *TileManager) ApplyTileFilter(tile *Tile) *Tile {
+func (tm *TileManager) ApplyTileFilter(tile *Tile) (*Tile, error) {
 	if tile.Stored {
-		return tile
+		return tile, nil
 	}
 
+	var err error
 	for _, filter := range tm.preStoreFilter {
-		tile = filter.Apply(tile)
+		tile, err = filter.Apply(tile)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return tile
+	return tile, nil
 }
 
 func (tm *TileManager) Creator(dimensions utils.Dimensions) *TileCreator {

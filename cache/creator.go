@@ -112,13 +112,16 @@ func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 	err := c.manager.Lock(lockCtx, t, func() error {
 		if !c.IsCached(t.Coord) {
 			source, err := c.querySources(query)
-			if source == nil || err != nil {
-				return nil
+			if err != nil {
+				return err
 			}
 			source.SetTileOptions(c.manager.GetTileOptions())
 			t.Source = source
 			t.SetCacheInfo(source.GetCacheable())
-			t = c.manager.ApplyTileFilter(t)
+			t, err = c.manager.ApplyTileFilter(t)
+			if err != nil {
+				return err
+			}
 			if source.GetCacheable() != nil {
 				return c.cache.StoreTile(t)
 			}
@@ -210,12 +213,19 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 
 		if !flag {
 			metaTileImage, err := c.querySources(query)
-			if metaTileImage == nil || err != nil {
-				return nil
+			if err != nil {
+				return err
 			}
-			splittedTiles = SplitTiles(metaTileImage, meta_tile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
+			splittedTiles, err = SplitTiles(metaTileImage, meta_tile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
+			if err != nil {
+				return err
+			}
 			for i, t := range splittedTiles.tiles {
-				splittedTiles.UpdateItem(i, c.manager.ApplyTileFilter(t))
+				tt, err := c.manager.ApplyTileFilter(t)
+				if err != nil {
+					return err
+				}
+				splittedTiles.UpdateItem(i, tt)
 			}
 			if metaTileImage.GetCacheable() != nil {
 				c.cache.StoreTiles(splittedTiles)
@@ -252,7 +262,10 @@ func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) (*Tile, error)
 	tile := NewTile(coord)
 	tile.SetCacheInfo(tile_data.GetCacheable())
 	tile.Source = tile_data
-	tile = c.manager.ApplyTileFilter(tile)
+	tile, err = c.manager.ApplyTileFilter(tile)
+	if err != nil {
+		return nil, err
+	}
 	return tile, nil
 }
 

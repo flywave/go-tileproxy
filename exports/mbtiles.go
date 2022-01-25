@@ -118,7 +118,7 @@ func (a *MBTilesExport) buildMetadata() *mbtiles.Metadata {
 		Type:            mbtiles.Overlay,
 		DirectoryLayout: "",
 		Origin:          geo.OriginToString(a.grid.Origin),
-		Srs:             a.grid.Srs.SrsCode,
+		Srs:             a.grid.Srs.GetSrsCode(),
 		BoundsSrs:       a.boundsSrs.GetSrsCode(),
 	}
 

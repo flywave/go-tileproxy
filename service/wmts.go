@@ -475,7 +475,7 @@ type TileMatrixSet struct {
 }
 
 func NewTileMatrixSet(grid *geo.TileGrid) *TileMatrixSet {
-	return &TileMatrixSet{grid: grid, name: grid.Name, srs_name: grid.Srs.SrsCode}
+	return &TileMatrixSet{grid: grid, name: grid.Name, srs_name: grid.Srs.GetSrsCode()}
 }
 
 func (s *TileMatrixSet) GetTileMatrices() []map[string]string {

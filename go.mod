@@ -8,7 +8,7 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-cog v0.0.0-20220120065707-cc2252bb3ec2
-	github.com/flywave/go-geo v0.0.0-20211222073119-5fae1ce6a5c5
+	github.com/flywave/go-geo v0.0.0-20220125053209-8f501fcbc1f3
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
 	github.com/flywave/go-geom v0.0.0-20211230100258-27b9a5f30082
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026

@@ -12,7 +12,7 @@ import (
 
 const (
 	LK_API_URL     = "https://api.luokuang.com"
-	LK_ACCESSTOKEN = "{token}"
+	LK_ACCESSTOKEN = "DE16394725636226419F0AB3765FFA4D2EB27A998BD259465DGXZ8TJUZKE2067"
 )
 
 var (
@@ -21,31 +21,33 @@ var (
 		AccessToken:     LK_ACCESSTOKEN,
 		AccessTokenName: "AK",
 		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
-		Grid:            "global_mercator_gcj02",
+		Grid:            "global_webmercator_gcj02",
 		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
 		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	luokuangMVTCache = setting.CacheSource{
 		Sources:       []string{"lk_mvt"},
 		Name:          "lk_mvt_cache",
-		Grid:          "global_mercator_gcj02",
+		Grid:          "global_webmercator_gcj02",
 		Format:        "mvt",
 		RequestFormat: "mvt",
 		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/mvt",
+			Directory:       "./cache_data/lk_mvt",
 			DirectoryLayout: "tms",
 		},
+		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
 	}
 	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"lk_mvt_cache"},
 		Name:          "mvt_cache",
-		Grid:          "global_mercator",
+		Grid:          "global_webmercator",
 		Format:        "mvt",
 		RequestFormat: "mvt",
 		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/mvt",
 			DirectoryLayout: "tms",
 		},
+		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_MAPBOX))},
 	}
 	mapboxService = setting.MapboxService{
 		Layers: []setting.MapboxTileLayer{

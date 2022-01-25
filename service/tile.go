@@ -309,17 +309,17 @@ func NewTileServiceGrid(grid *geo.TileGrid) *TileServiceGrid {
 	ret.grid = grid
 	ret.srs = grid.Srs
 	ret.profile = ""
-	if grid.Srs.SrsCode == "EPSG:900913" && geo.BBoxEquals(*grid.BBox, geo.DEFAULT_SRS_BBOX["EPSG:900913"], 0.0001, 0.0001) {
+	if grid.Srs.GetSrsCode() == "EPSG:900913" && geo.BBoxEquals(*grid.BBox, geo.DEFAULT_SRS_BBOX["EPSG:900913"], 0.0001, 0.0001) {
 		ret.profile = "global-mercator"
 		ret.srs_name = "OSGEO:41001"
 		ret.skip_first_level = true
-	} else if grid.Srs.SrsCode == "EPSG:4326" && geo.BBoxEquals(*grid.BBox, geo.DEFAULT_SRS_BBOX["EPSG:4326"], 0.0001, 0.0001) {
+	} else if grid.Srs.GetSrsCode() == "EPSG:4326" && geo.BBoxEquals(*grid.BBox, geo.DEFAULT_SRS_BBOX["EPSG:4326"], 0.0001, 0.0001) {
 		ret.profile = "global-geodetic"
 		ret.srs_name = "EPSG:4326"
 		ret.skip_first_level = true
 	} else {
 		ret.profile = "local"
-		ret.srs_name = grid.Srs.SrsCode
+		ret.srs_name = grid.Srs.GetSrsCode()
 		ret.skip_first_level = false
 	}
 

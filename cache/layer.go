@@ -23,7 +23,7 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
-	
+
 	ret := &CacheMapLayer{
 		MapLayer: layer.MapLayer{
 			SupportMetaTiles: true,
@@ -65,10 +65,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		return nil, fmt.Errorf("too many tiles, max_tile_limit: %d, num_tiles: %d", *r.maxTileLimit, num_tiles)
 	}
 
-	if query.TiledOnly {
-		if num_tiles > 1 {
-			return nil, errors.New("not a single tile")
-		}
+	if query.TiledOnly && num_tiles == 1 {
 		bbox := query.BBox
 		if !geo.BBoxEquals(bbox, src_bbox, math.Abs((bbox.Max[0]-bbox.Min[0])/float64(query.Size[0])/10),
 			math.Abs((bbox.Max[1]-bbox.Min[1])/float64(query.Size[1])/10)) {

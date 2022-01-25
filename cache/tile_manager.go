@@ -190,11 +190,7 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 		}
 	}
 
-	err := tm.cache.LoadTiles(tiles, with_metadata)
-
-	if err != nil {
-		return nil, err
-	}
+	tm.cache.LoadTiles(tiles, with_metadata)
 
 	for _, tile := range tiles.tiles {
 		if !tm.IsCached(tile.Coord, dimensions) {

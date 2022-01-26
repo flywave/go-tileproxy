@@ -21,6 +21,7 @@ type Manager interface {
 	SetTileOptions(opt tile.TileOptions)
 	GetReprojectSrcSrs() geo.Proj
 	GetReprojectDstSrs() geo.Proj
+	GetQueryBuffer() *int
 	Cleanup() bool
 	GetFormat() string
 	GetRequestFormat() string

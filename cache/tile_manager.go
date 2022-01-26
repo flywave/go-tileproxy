@@ -30,6 +30,7 @@ type TileManager struct {
 	bulkMetaTiles        bool
 	reprojectSrcSrs      geo.Proj
 	reprojectDstSrs      geo.Proj
+	queryBuffer          *int
 }
 
 type TileManagerOptions struct {
@@ -49,6 +50,7 @@ type TileManagerOptions struct {
 	MetaSize             [2]uint32
 	ReprojectSrcSrs      geo.Proj
 	ReprojectDstSrs      geo.Proj
+	QueryBuffer          *int
 }
 
 func NewTileManager(opts *TileManagerOptions) *TileManager {
@@ -68,6 +70,7 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 	ret.bulkMetaTiles = false
 	ret.reprojectSrcSrs = opts.ReprojectSrcSrs
 	ret.reprojectDstSrs = opts.ReprojectDstSrs
+	ret.queryBuffer = opts.QueryBuffer
 
 	if opts.MetaBuffer != -1 || (opts.MetaSize != [2]uint32{1, 1}) {
 		allsm := true
@@ -104,6 +107,10 @@ func (tm *TileManager) GetCache() Cache {
 
 func (tm *TileManager) SetCache(c Cache) {
 	tm.cache = c
+}
+
+func (tm *TileManager) GetQueryBuffer() *int {
+	return tm.queryBuffer
 }
 
 func (tm *TileManager) GetReprojectSrcSrs() geo.Proj {

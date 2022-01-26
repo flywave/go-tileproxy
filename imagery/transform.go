@@ -75,7 +75,6 @@ func (t *ImageTransformer) transformSimple(srcImg tile.Source, srcBBox vec2d.Rec
 }
 
 func (t *ImageTransformer) transform(srcImg tile.Source, srcBBox vec2d.Rect, dstSize [2]uint32, dstBBox vec2d.Rect, imageOpts *ImageOptions) tile.Source {
-
 	meshes := transformMeshes(
 		srcImg.GetSize(),
 		srcBBox,

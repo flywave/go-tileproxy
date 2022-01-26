@@ -143,7 +143,7 @@ func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *
 
 	sp := NewTileSplitter(result, image_opts)
 
-	off := imageTileOffset(src_bbox, src_srs, [2]uint32{uint32(tile_grid[0] * int(tile_size[0])), uint32(tile_grid[1] * int(tile_size[1]))}, req_bbox, req_srs)
+	off := imageTileOffset(src_bbox, grid.Srs, [2]uint32{uint32(tile_grid[0] * int(tile_size[0])), uint32(tile_grid[1] * int(tile_size[1]))}, req_bbox, req_srs)
 
 	return sp.GetTile(off, out_size)
 }

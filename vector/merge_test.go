@@ -29,7 +29,7 @@ func TestMergeLK(t *testing.T) {
 
 	grid := geo.NewTileGrid(conf)
 
-	bbox := grid.TileBBox([3]int{53958, 24829, 16}, false)
+	bbox := grid.TileBBox([3]int{1687, 775, 11}, false)
 	bbox2 := srs900913.TransformRectTo(srs4326, bbox, 16)
 	bbox = srs4326.TransformRectTo(pgcj02, bbox2, 16)
 

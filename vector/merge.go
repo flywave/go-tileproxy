@@ -15,13 +15,13 @@ type FeatureBuilder struct {
 	srs      geo.Proj
 }
 
-func NewFeatureBuilder(cov geo.Coverage, srs geo.Proj) *FeatureBuilder {
-	return &FeatureBuilder{feat: nil, coverage: cov, srs: srs}
+func NewFeatureBuilder(cov geo.Coverage) *FeatureBuilder {
+	return &FeatureBuilder{feat: nil, coverage: cov, srs: cov.GetSrs()}
 }
 
 func (l *FeatureBuilder) applyGeometryPoint(feature *geom.Feature) {
 	pt := feature.GeometryData.Point
-	if l.coverage.ContainsPoint(pt, l.srs) {
+	if l.coverage == nil || l.coverage.ContainsPoint(pt, l.srs) {
 		l.feat = geom.NewFeatureFromGeometryData(&feature.GeometryData)
 		l.feat.ID = feature.ID
 		l.feat.Properties = feature.Properties
@@ -29,11 +29,11 @@ func (l *FeatureBuilder) applyGeometryPoint(feature *geom.Feature) {
 }
 
 func (l *FeatureBuilder) applyGeometryLinestring(feature *geom.Feature) {
-	if feature.BoundingBox == nil {
+	if l.coverage != nil && feature.BoundingBox == nil {
 		feature.BoundingBox = geom.BoundingBoxFromGeometryData(&feature.GeometryData)
 	}
 	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0], feature.BoundingBox[1]}, Max: vec2d.T{feature.BoundingBox[2], feature.BoundingBox[3]}}
-	if l.coverage.Intersects(rect, l.srs) {
+	if l.coverage == nil || l.coverage.Intersects(rect, l.srs) {
 		l.feat = geom.NewFeatureFromGeometryData(&feature.GeometryData)
 		l.feat.ID = feature.ID
 		l.feat.Properties = feature.Properties
@@ -41,11 +41,11 @@ func (l *FeatureBuilder) applyGeometryLinestring(feature *geom.Feature) {
 }
 
 func (l *FeatureBuilder) applyGeometryPolygon(feature *geom.Feature) {
-	if feature.BoundingBox == nil {
+	if l.coverage != nil && feature.BoundingBox == nil {
 		feature.BoundingBox = geom.BoundingBoxFromGeometryData(&feature.GeometryData)
 	}
 	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0], feature.BoundingBox[1]}, Max: vec2d.T{feature.BoundingBox[2], feature.BoundingBox[3]}}
-	if l.coverage.Intersects(rect, l.srs) {
+	if l.coverage == nil || l.coverage.Intersects(rect, l.srs) {
 		l.feat = geom.NewFeatureFromGeometryData(&feature.GeometryData)
 		l.feat.ID = feature.ID
 		l.feat.Properties = feature.Properties
@@ -75,7 +75,6 @@ func (l *FeatureBuilder) Finalize() *geom.Feature {
 type LayerBuilder struct {
 	coverage geo.Coverage
 	result   []*geom.Feature
-	srs      geo.Proj
 }
 
 func (l *LayerBuilder) AddFeatures(feats []*geom.Feature) {
@@ -85,7 +84,7 @@ func (l *LayerBuilder) AddFeatures(feats []*geom.Feature) {
 }
 
 func (l *LayerBuilder) addFeature(feature *geom.Feature) {
-	builder := NewFeatureBuilder(l.coverage, l.srs)
+	builder := NewFeatureBuilder(l.coverage)
 	builder.Apply(feature)
 	l.result = append(l.result, builder.Finalize())
 }
@@ -140,7 +139,7 @@ func (l *VectorMerger) AddSource(src tile.Source, cov geo.Coverage) {
 func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect, bbox_srs geo.Proj, coverage geo.Coverage) Vector {
 	if len(l.Layers) == 1 {
 		t := l.Layers[0].GetTile()
-		feats := t.(map[string][]*geom.Feature)
+		feats := t.(Vector)
 		return feats
 	}
 
@@ -156,7 +155,7 @@ func (l *VectorMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Re
 		if t == nil {
 			return nil
 		}
-		feats, ok := t.(map[string][]*geom.Feature)
+		feats, ok := t.(Vector)
 		if !ok {
 			return nil
 		}
@@ -195,21 +194,22 @@ func (t *TiledVector) GetVector(v_opts *VectorOptions, dest_bbox vec2d.Rect, des
 		tranbbox.Max[1] = tranbbox.Max[1] + ybuf
 	}
 
+	geo_srs := geo.GetLatLongProj(t.SrcSRS)
+	if !t.SrcSRS.IsLatLong() {
+		tranbbox = t.SrcSRS.TransformRectTo(geo_srs, dest_bbox, 16)
+	}
+
 	tm := NewVectorMerger(t.Tiles)
-	return tm.Merge(v_opts, t.TileSize[:], tranbbox, t.SrcSRS, nil)
+	return tm.Merge(v_opts, t.TileSize[:], tranbbox, geo_srs, nil)
 }
 
-func (t *TiledVector) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
-	opts := geo.DefaultTileGridOptions()
-	opts[geo.TILEGRID_SRS] = req_srs.GetSrsCode()
-	opts[geo.TILEGRID_ORIGIN] = geo.ORIGIN_NW
-	opts[geo.TILEGRID_TILE_SIZE] = []uint32{out_size[0], out_size[1]}
-
-	grid := geo.NewTileGrid(opts)
-
+func (t *TiledVector) Transform(grid *geo.TileGrid, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
 	src_img := t.GetVector(vec_opts, req_bbox, req_srs)
 
-	transformer := NewVectorTransformer(t.SrcSRS, req_srs)
+	geo_src_srs := geo.GetLatLongProj(t.SrcSRS)
+	geo_req_srs := geo.GetLatLongProj(req_srs)
+
+	transformer := NewVectorTransformer(geo_src_srs, geo_req_srs)
 
 	vecs := transformer.ApplyVector(src_img)
 
@@ -220,7 +220,7 @@ func (t *TiledVector) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 	return CreateVectorSourceFromVector(vecs, [3]int{x, y, z}, vec_opts, nil)
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
 	rr := NewTiledVector(tiles, tile_grid, tile_size, src_bbox, src_srs)
-	return rr.Transform(req_bbox, req_srs, out_size, vec_opts)
+	return rr.Transform(grid, req_bbox, req_srs, out_size, vec_opts)
 }

@@ -19,6 +19,8 @@ type Manager interface {
 	GetMetaGrid() *geo.MetaGrid
 	GetTileOptions() tile.TileOptions
 	SetTileOptions(opt tile.TileOptions)
+	GetReprojectSrcSrs() geo.Proj
+	GetReprojectDstSrs() geo.Proj
 	Cleanup() bool
 	GetFormat() string
 	GetRequestFormat() string

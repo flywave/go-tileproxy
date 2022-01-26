@@ -8,19 +8,18 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-cog v0.0.0-20220120065707-cc2252bb3ec2
-	github.com/flywave/go-geo v0.0.0-20220125055902-62eb76243c5c
+	github.com/flywave/go-geo v0.0.0-20220126075414-6c3011149e1f
 	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
-	github.com/flywave/go-geom v0.0.0-20211230100258-27b9a5f30082
+	github.com/flywave/go-geom v0.0.0-20220126050849-e33a48d71477
 	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
 	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20220112091059-1fc58fbea09a
 	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
-	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
 	github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7
 	github.com/flywave/go-tin v0.0.0-20220115094045-a61aa5b84cc6
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
-	github.com/flywave/go3d v0.0.0-20211208020909-d2697502845a
+	github.com/flywave/go3d v0.0.0-20220126024157-17948fdd73bb
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc
 	github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704

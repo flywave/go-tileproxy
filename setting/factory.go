@@ -271,6 +271,16 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		cacheB = ConvertLocalCache(c.CacheInfo, opts)
 	}
 
+	var reprojectSrcSrs geo.Proj
+	if c.ReprojectSrcSrs != nil {
+		reprojectSrcSrs = geo.NewProj(*c.ReprojectSrcSrs)
+	}
+
+	var reprojectDstSrs geo.Proj
+	if c.ReprojectDstSrs != nil {
+		reprojectDstSrs = geo.NewProj(*c.ReprojectDstSrs)
+	}
+
 	topts := &cache.TileManagerOptions{
 		Sources:              nil,
 		Grid:                 tilegrid,
@@ -286,6 +296,8 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		CacheRescaledTiles:   cache_rescaled_tiles,
 		MetaBuffer:           meta_buffer,
 		MetaSize:             meta_size,
+		ReprojectSrcSrs:      reprojectSrcSrs,
+		ReprojectDstSrs:      reprojectDstSrs,
 	}
 
 	return cache.NewTileManager(topts)

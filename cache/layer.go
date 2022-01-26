@@ -17,9 +17,11 @@ type CacheMapLayer struct {
 	grid         *geo.TileGrid
 	maxTileLimit *int
 	emptySource  tile.Source
+	reprojectSrc geo.Proj
+	reprojectDst geo.Proj
 }
 
-func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int) *CacheMapLayer {
+func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int, reprojectSrc geo.Proj, reprojectDst geo.Proj) *CacheMapLayer {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
@@ -34,6 +36,8 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 		grid:         tm.GetGrid(),
 		maxTileLimit: maxTileLimit,
 		emptySource:  nil,
+		reprojectSrc: reprojectSrc,
+		reprojectDst: reprojectDst,
 	}
 
 	ret.ResRange = nil
@@ -54,7 +58,17 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
-	src_bbox, tile_grid, affected_tile_coords, err := r.grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
+	bbox, srs, dst_srs := query.BBox, query.Srs, query.Srs
+	if r.reprojectSrc != nil {
+		bbox = srs.TransformRectTo(r.reprojectSrc, bbox, 16)
+		srs = r.reprojectSrc
+		if r.reprojectDst != nil {
+			dst_srs = r.reprojectDst
+		} else {
+			dst_srs = geo.NewProj("EPSG:4326")
+		}
+	}
+	src_bbox, tile_grid, affected_tile_coords, err := r.grid.GetAffectedTiles(bbox, query.Size, dst_srs)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +80,6 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	if query.TiledOnly && num_tiles == 1 {
-		bbox := query.BBox
 		if !geo.BBoxEquals(bbox, src_bbox, math.Abs((bbox.Max[0]-bbox.Min[0])/float64(query.Size[0])/10),
 			math.Abs((bbox.Max[1]-bbox.Min[1])/float64(query.Size[1])/10)) {
 			return nil, errors.New("query does not align to tile boundaries")
@@ -74,13 +87,15 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	coords := [][3]int{}
-	x, y, zoom, done := affected_tile_coords.Next()
-	for !done {
-		coords = append(coords, [3]int{x, y, zoom})
-		x, y, zoom, done = affected_tile_coords.Next()
-	}
-	if len(coords) == 0 {
-		coords = append(coords, [3]int{x, y, zoom})
+
+	for {
+		x, y, z, done := affected_tile_coords.Next()
+
+		coords = append(coords, [3]int{x, y, z})
+
+		if done {
+			break
+		}
 	}
 
 	tile_collection, _ := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
@@ -98,7 +113,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, query.Size, r.tileManager.GetTileOptions())
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions())
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source

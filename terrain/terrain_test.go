@@ -5,11 +5,13 @@ import (
 	"image"
 	"math"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 func TestTerrainSource(t *testing.T) {
@@ -264,5 +266,81 @@ func TestGenTerrainSourceFromLerc(t *testing.T) {
 
 	if t1 == nil && err != nil {
 		t.FailNow()
+	}
+}
+
+const (
+	mp_turl = "https://api.maptiler.com/tiles/terrain-quantized-mesh/%d/%d/%d.terrain?key=RQ1nmTeb2C0dgCERCEVO"
+)
+
+func download_mp(x, y, z int, sourceName string) {
+	data := get_url(fmt.Sprintf(mp_turl, z, x, y))
+
+	dst := fmt.Sprintf("%s/%d/%d/%d.terrain", sourceName, z, x, y)
+
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		fmt.Printf("mkdirAll error")
+	}
+	f, _ := os.Create(dst)
+	f.Write(data)
+	f.Close()
+}
+
+func TestGetTerrain(t *testing.T) {
+	bbox := vec2d.Rect{
+		Min: vec2d.T{118.04672241210939, 36.46105407505434},
+		Max: vec2d.T{118.14971923828126, 36.54384614538856},
+	}
+
+	srs4326 := geo.NewProj(4326)
+
+	conf := geo.DefaultTileGridOptions()
+	conf[geo.TILEGRID_SRS] = srs4326
+	conf[geo.TILEGRID_RES_FACTOR] = 2.0
+	conf[geo.TILEGRID_TILE_SIZE] = []uint32{512, 512}
+	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
+
+	grid := geo.NewTileGrid(conf)
+
+	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
+
+	for l := 0; l < 13; l++ {
+
+		_, _, it, _ := grid.GetAffectedLevelTiles(r, l)
+
+		tilesCoord := [][3]int{}
+		minx, miny := 0, 0
+		for {
+			x, y, z, done := it.Next()
+
+			if minx == 0 || x < minx {
+				minx = x
+			}
+
+			if miny == 0 || y < miny {
+				miny = y
+			}
+
+			tilesCoord = append(tilesCoord, [3]int{x, y, z})
+
+			if done {
+				break
+			}
+		}
+
+		if len(tilesCoord) == 0 {
+			t.FailNow()
+		}
+
+		for i := range tilesCoord {
+			z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]
+
+			src := fmt.Sprintf("./data/%d/%d/%d.terrain", z, x, y)
+
+			if !fileExists(src) {
+				download_mp(x, y, z, "./data")
+			}
+
+		}
 	}
 }

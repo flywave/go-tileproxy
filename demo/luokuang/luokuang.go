@@ -16,26 +16,36 @@ const (
 )
 
 var (
+	GridMap = map[string]setting.GridOpts{}
+)
+
+func init() {
+	GridMap["global_webmercator"] = setting.GridOpts{Name: "GLOBAL_WEB_MERCATOR", Srs: "EPSG:3857", Origin: "ul", TileSize: &[2]uint32{4096, 4096}}
+}
+
+var (
 	luokuangMVTSource = setting.MapboxTileSource{
 		Url:             LK_API_URL + "/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom={z}&x={x}&y={y}",
 		AccessToken:     LK_ACCESSTOKEN,
-		AccessTokenName: "AK",
+		AccessTokenName: "ak",
 		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
-		Grid:            "global_webmercator_gcj02",
+		Grid:            "global_webmercator",
 		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
 		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 	}
 	luokuangMVTCache = setting.CacheSource{
 		Sources:       []string{"lk_mvt"},
 		Name:          "lk_mvt_cache",
-		Grid:          "global_webmercator_gcj02",
+		Grid:          "global_webmercator",
 		Format:        "mvt",
 		RequestFormat: "mvt",
 		CacheInfo: &setting.CacheInfo{
 			Directory:       "./cache_data/lk_mvt",
 			DirectoryLayout: "tms",
 		},
-		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
+		TileOptions:     &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
+		ReprojectSrcSrs: setting.NewString("EPSG:GCJ02"),
+		ReprojectDstSrs: setting.NewString("EPSG:4326"),
 	}
 	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"lk_mvt_cache"},
@@ -62,7 +72,7 @@ var (
 
 func getProxyService() *setting.ProxyService {
 	pd := setting.NewProxyService("mapbox")
-	pd.Grids = demo.GridMap
+	pd.Grids = GridMap
 
 	pd.Sources["lk_mvt"] = &luokuangMVTSource
 	pd.Caches["mvt_cache"] = &mapboxMVTCache

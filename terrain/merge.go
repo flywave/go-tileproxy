@@ -140,7 +140,7 @@ func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 	return transformer.GetTile(req_bbox, req_srs, out_size)
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, dem_opts *RasterOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, dem_opts *RasterOptions) tile.Source {
 	m := NewRasterMerger(tile_grid, tile_size)
 
 	rr := m.Merge(tiles, dem_opts)

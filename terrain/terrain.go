@@ -15,7 +15,6 @@ import (
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geoid"
-	"github.com/flywave/go-proj"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
 	"github.com/flywave/go-tileproxy/utils/ray"
@@ -176,11 +175,7 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 			gid := geoid.NewGeoid(options.HeightModel, false)
 			z = gid.ConvertHeight(v[0], v[1], z, geoid.GEOIDTOELLIPSOID)
 		}
-		x, y, z1, err := proj.Lonlat2Ecef(v[0], v[1], z)
-		if err != nil {
-			return *v
-		}
-		return tin.Vertex{x, y, z1}
+		return tin.Vertex{v[0], v[1], z}
 	})
 
 	rd.SetXYPos(tsf[0], ypos, tsf[1])

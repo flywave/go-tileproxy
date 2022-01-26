@@ -63,16 +63,20 @@ func (t *VectorTransformer) apply(feat *geom.Feature) *geom.Feature {
 }
 
 func (t *VectorTransformer) Apply(feats []*geom.Feature) []*geom.Feature {
-	rets := make([]*geom.Feature, len(feats))
-	for i, f := range feats {
-		rets[i] = t.apply(f)
+	rets := make([]*geom.Feature, 0, len(feats))
+	for _, f := range feats {
+		if f != nil {
+			rets = append(rets, t.apply(f))
+		}
 	}
 	return rets
 }
 
 func (t *VectorTransformer) ApplyVector(layers Vector) Vector {
 	for k, l := range layers {
-		layers[k] = t.Apply(l)
+		if l != nil {
+			layers[k] = t.Apply(l)
+		}
 	}
 	return layers
 }

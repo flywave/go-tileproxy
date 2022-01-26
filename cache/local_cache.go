@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 
 	"github.com/flywave/go-tileproxy/tile"
@@ -44,7 +45,10 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 		if withMetadata {
 			c.LoadTileMetadata(tile)
 		}
-		data, _ := os.ReadFile(location)
+		data, err := ioutil.ReadFile(location)
+		if err != nil {
+			return err
+		}
 		tile.Source = c.creater.Create(data, tile.Coord)
 		return nil
 	}

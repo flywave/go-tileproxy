@@ -84,7 +84,7 @@ func TestCacheMapLayer(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
+	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil, nil, nil)
 
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}
 
@@ -145,7 +145,7 @@ func TestCacheMapLayerGetLarge(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
+	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil, nil, nil)
 
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-20037508.34, -20037508.34}, Max: vec2d.T{20037508.34, 20037508.34}}, Size: [2]uint32{500, 500}, Srs: geo.NewProj(900913), Format: tile.TileFormat("png")}
 
@@ -206,7 +206,7 @@ func TestCacheMapLayerWithExtent(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil)
+	cachelayer := NewCacheMapLayer(manager, nil, imageopts, nil, nil, nil)
 	cov := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{90, 45}}, geo.NewProj(4326), false)
 	cachelayer.Extent = cov.GetExtent()
 	query := &layer.MapQuery{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Size: [2]uint32{300, 150}, Srs: geo.NewProj(4326), Format: tile.TileFormat("png")}

@@ -161,7 +161,7 @@ func (s *Service) GetCacheSource(name string) layer.Layer {
 		cache_extent := geo.MapExtentFromGrid(tile_grid)
 		cache_extent = extent.Intersection(cache_extent)
 
-		return cache.NewCacheSource(manager, cache_extent, manager.GetTileOptions(), nil, true)
+		return cache.NewCacheSource(manager, cache_extent, manager.GetTileOptions(), nil, true, manager.GetReprojectSrcSrs(), manager.GetReprojectDstSrs())
 	}
 	return nil
 }

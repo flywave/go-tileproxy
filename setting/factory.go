@@ -272,13 +272,15 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 	}
 
 	var reprojectSrcSrs geo.Proj
-	if c.ReprojectSrcSrs != nil {
-		reprojectSrcSrs = geo.NewProj(*c.ReprojectSrcSrs)
+	if c.ReprojectSrs != nil {
+		reprojectSrcSrs = geo.NewProj(c.ReprojectSrs.SrcSrs)
 	}
 
 	var reprojectDstSrs geo.Proj
-	if c.ReprojectDstSrs != nil {
-		reprojectDstSrs = geo.NewProj(*c.ReprojectDstSrs)
+	if c.ReprojectSrs != nil {
+		if c.ReprojectSrs.DestSrs != "" {
+			reprojectDstSrs = geo.NewProj(c.ReprojectSrs.DestSrs)
+		}
 	}
 
 	topts := &cache.TileManagerOptions{

@@ -43,9 +43,8 @@ var (
 			Directory:       "./cache_data/lk_mvt",
 			DirectoryLayout: "tms",
 		},
-		TileOptions:     &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
-		ReprojectSrcSrs: setting.NewString("EPSG:GCJ02"),
-		ReprojectDstSrs: setting.NewString("EPSG:4326"),
+		TileOptions:  &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
+		ReprojectSrs: &setting.Reproject{SrcSrs: "EPSG:GCJ02", DestSrs: "EPSG:4326"},
 	}
 	mapboxMVTCache = setting.CacheSource{
 		Sources:       []string{"lk_mvt_cache"},

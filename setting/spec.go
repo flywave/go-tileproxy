@@ -160,6 +160,11 @@ type CacheInfo struct {
 	Directory       string    `json:"directory,omitempty"`
 }
 
+type Reproject struct {
+	SrcSrs  string `json:"src_srs,omitempty"`
+	DestSrs string `json:"dest_srs,omitempty"`
+}
+
 type CacheSource struct {
 	Type                 SourceType    `json:"type,omitempty"`
 	Sources              []string      `json:"sources,omitempty"`
@@ -181,8 +186,7 @@ type CacheSource struct {
 	DownscaleTiles       *int          `json:"downscale_tiles,omitempty"`
 	Filters              []interface{} `json:"filters,omitempty"`
 	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
-	ReprojectSrcSrs      *string       `json:"reproject_src_srs,omitempty"`
-	ReprojectDstSrs      *string       `json:"reproject_dst_srs,omitempty"`
+	ReprojectSrs         *Reproject    `json:"reproject,omitempty"`
 }
 
 type WMSSourceOpts struct {

@@ -31,7 +31,7 @@ type mockClient struct {
 	code int
 }
 
-func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte) {
+func (c *mockClient) Open(url string, data []byte, hdr http.Header) (statusCode int, body []byte) {
 	c.data = data
 	c.url = append(c.url, url)
 	return c.code, c.body

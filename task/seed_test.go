@@ -1,6 +1,7 @@
 package task
 
 import (
+	"net/http"
 	"testing"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -24,7 +25,7 @@ type mockClient struct {
 	code int
 }
 
-func (c *mockClient) Open(url string, data []byte) (statusCode int, body []byte) {
+func (c *mockClient) Open(url string, data []byte, hdr http.Header) (statusCode int, body []byte) {
 	c.data = data
 	c.url = url
 	return c.code, c.body

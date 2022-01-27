@@ -235,13 +235,13 @@ func (c *Collector) Init() {
 	c.Context = context.Background()
 }
 
-func (c *Collector) Visit(URL string, userData interface{}) error {
+func (c *Collector) Visit(URL string, userData interface{}, hdr http.Header) error {
 	if c.CheckHead {
 		if check := c.scrape(URL, "HEAD", 1, nil, nil, userData, nil); check != nil {
 			return check
 		}
 	}
-	return c.scrape(URL, "GET", 1, nil, nil, userData, nil)
+	return c.scrape(URL, "GET", 1, nil, nil, userData, hdr)
 }
 
 func (c *Collector) Head(URL string) error {

@@ -69,7 +69,7 @@ func TestHttpFetch(t *testing.T) {
 
 		futs = append(futs, fut)
 
-		client.Collector.Visit(u2.String(), fut)
+		client.Collector.Visit(u2.String(), fut, nil)
 	}
 
 	client.Collector.Wait()
@@ -122,7 +122,7 @@ const (
 )
 
 func download(x, y, z int, sourceName string, client *CollectorClient) {
-	_, data := client.Open(fmt.Sprintf(tile_url, z, x, y), nil)
+	_, data := client.Open(fmt.Sprintf(tile_url, z, x, y), nil, nil)
 
 	dst := fmt.Sprintf("%s/satellite_%d_%d_%d.webp", sourceName, z, x, y)
 

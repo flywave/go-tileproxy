@@ -249,6 +249,7 @@ func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 
 	ret["infoformat"], _ = params.params.Get("infoformat")
 	ret["pos"] = params.GetPos()
+
 	return ret
 }
 

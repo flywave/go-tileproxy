@@ -12,7 +12,7 @@ import (
 )
 
 type HttpClient interface {
-	Open(url string, data []byte) (statusCode int, body []byte)
+	Open(url string, data []byte, hdr http.Header) (statusCode int, body []byte)
 }
 
 type CollectorClient struct {
@@ -81,10 +81,10 @@ func (c *CollectorClient) GetCollector() *crawler.Collector {
 	return c.Collector
 }
 
-func (c *CollectorClient) Open(u string, data []byte) (statusCode int, body []byte) {
+func (c *CollectorClient) Open(u string, data []byte, hdr http.Header) (statusCode int, body []byte) {
 	if data == nil {
 		fut := newFuture()
-		err := c.Collector.Visit(u, fut)
+		err := c.Collector.Visit(u, fut, hdr)
 		if err != nil {
 			return 500, nil
 		}

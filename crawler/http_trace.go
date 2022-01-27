@@ -18,7 +18,6 @@ func (ht *HTTPTrace) trace() *httptrace.ClientTrace {
 		ConnectDone: func(network, addr string, err error) {
 			ht.ConnectDuration = time.Since(ht.connect)
 		},
-
 		GetConn: func(hostPort string) { ht.start = time.Now() },
 		GotFirstResponseByte: func() {
 			ht.FirstByteDuration = time.Since(ht.start)

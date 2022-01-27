@@ -257,7 +257,6 @@ func NewXSLTransformer(xsltscript string, info_format *string) *XSLTransformer {
 func (t *XSLTransformer) Transform(input_doc FeatureInfoDoc) FeatureInfoDoc {
 	xml := input_doc.ToString()
 	xslt_tree, _ := xslt.NewStylesheet([]byte(t.xsltscript))
-
 	output_xml, _ := xslt_tree.Transform([]byte(xml))
 	if t.info_type == "html" {
 		return NewHTMLFeatureInfoDoc(output_xml)

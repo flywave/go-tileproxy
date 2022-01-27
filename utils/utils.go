@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"strings"
 
 	colorful "github.com/lucasb-eyer/go-colorful"
 )
@@ -34,4 +35,11 @@ func IsSymlink(path string) (bool, error) {
 func HexColor(scol string) colorful.Color {
 	c, _ := colorful.Hex(scol)
 	return c
+}
+
+func HasPrefix(s string, prefix string) (bool, string) {
+	if strings.HasPrefix(s, prefix) {
+		return true, strings.TrimPrefix(s, prefix)
+	}
+	return false, s
 }

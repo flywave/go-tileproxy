@@ -11,7 +11,7 @@ type CacheSource struct {
 	tiledOnly bool
 }
 
-func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions, maxTileLimit *int, tiled_only bool, reprojectSrc geo.Proj, reprojectDst geo.Proj) *CacheSource {
+func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions, maxTileLimit *int, tiled_only bool, queryBuffer *int, reprojectSrc geo.Proj, reprojectDst geo.Proj) *CacheSource {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
@@ -28,6 +28,7 @@ func NewCacheSource(tm Manager, ext *geo.MapExtent, image_opts tile.TileOptions,
 			maxTileLimit: maxTileLimit,
 			reprojectSrc: reprojectSrc,
 			reprojectDst: reprojectDst,
+			queryBuffer:  queryBuffer,
 		},
 		tiledOnly: tiled_only,
 	}

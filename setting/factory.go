@@ -283,6 +283,11 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		}
 	}
 
+	var query_buffer *int
+	if c.QueryBuffer != nil {
+		query_buffer = c.QueryBuffer
+	}
+
 	topts := &cache.TileManagerOptions{
 		Sources:              nil,
 		Grid:                 tilegrid,
@@ -300,6 +305,7 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		MetaSize:             meta_size,
 		ReprojectSrcSrs:      reprojectSrcSrs,
 		ReprojectDstSrs:      reprojectDstSrs,
+		QueryBuffer:          query_buffer,
 	}
 
 	return cache.NewTileManager(topts)

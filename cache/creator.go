@@ -24,7 +24,7 @@ type TileCreator struct {
 	tileMerger    tile.Merger
 }
 
-func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulk_meta_tiles bool) *TileCreator {
+func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, bulkMetaTiles bool) *TileCreator {
 	return &TileCreator{
 		manager:       m,
 		sources:       m.GetSources(),
@@ -33,7 +33,7 @@ func NewTileCreator(m Manager, dimensions utils.Dimensions, merger tile.Merger, 
 		metaGrid:      m.GetMetaGrid(),
 		dimensions:    dimensions,
 		tileMerger:    merger,
-		bulkMetaTiles: bulk_meta_tiles,
+		bulkMetaTiles: bulkMetaTiles,
 	}
 }
 
@@ -163,10 +163,10 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 	return ret, nil
 }
 
-func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) ([]*Tile, error) {
+func (c *TileCreator) createMetaTiles(metaTiles []*geo.MetaTile) ([]*Tile, error) {
 	if c.bulkMetaTiles {
 		created_tiles := []*Tile{}
-		for _, meta_tile := range meta_tiles {
+		for _, meta_tile := range metaTiles {
 			tiles, err := c.createBulkMetaTile(meta_tile)
 			if err != nil {
 				return nil, err
@@ -177,7 +177,7 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) ([]*Tile, erro
 	}
 
 	created_tiles := []*Tile{}
-	for _, meta_tile := range meta_tiles {
+	for _, meta_tile := range metaTiles {
 		tiles, err := c.createMetaTile(meta_tile)
 		if err != nil {
 			return nil, err
@@ -187,16 +187,16 @@ func (c *TileCreator) createMetaTiles(meta_tiles []*geo.MetaTile) ([]*Tile, erro
 	return created_tiles, nil
 }
 
-func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
+func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 	tile_size := c.grid.TileSize
 	query := &layer.MapQuery{
-		BBox:       meta_tile.GetBBox(),
-		Size:       meta_tile.GetSize(),
+		BBox:       metaTile.GetBBox(),
+		Size:       metaTile.GetSize(),
 		Srs:        c.grid.Srs,
 		Format:     tile.TileFormat(c.manager.GetRequestFormat()),
 		Dimensions: c.dimensions,
 	}
-	main_tile := NewTile(meta_tile.GetMainTileCoord())
+	main_tile := NewTile(metaTile.GetMainTileCoord())
 	var splittedTiles *TileCollection
 
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -205,7 +205,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 	err := c.manager.Lock(lockCtx, main_tile, func() error {
 		flag := true
 
-		for _, t := range meta_tile.GetTiles() {
+		for _, t := range metaTile.GetTiles() {
 			if !c.IsCached(t) {
 				flag = false
 			}
@@ -216,7 +216,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 			if err != nil {
 				return err
 			}
-			splittedTiles, err = SplitTiles(metaTileImage, meta_tile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
+			splittedTiles, err = SplitTiles(metaTileImage, metaTile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
 			if err != nil {
 				return err
 			}
@@ -239,7 +239,7 @@ func (c *TileCreator) createMetaTile(meta_tile *geo.MetaTile) ([]*Tile, error) {
 	}
 
 	tiles := NewTileCollection(nil)
-	for _, coord := range meta_tile.GetTiles() {
+	for _, coord := range metaTile.GetTiles() {
 		tiles.SetItem(NewTile(coord))
 	}
 	c.cache.LoadTiles(tiles, false)
@@ -254,6 +254,7 @@ func (c *TileCreator) queryTile(coord [3]int, tile_size []uint32) (*Tile, error)
 		Format:     tile.TileFormat(c.manager.GetRequestFormat()),
 		Dimensions: c.dimensions,
 	}
+
 	tile_data, err := c.querySources(query)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
@@ -19,9 +21,10 @@ type CacheMapLayer struct {
 	emptySource  tile.Source
 	reprojectSrc geo.Proj
 	reprojectDst geo.Proj
+	queryBuffer  *int
 }
 
-func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int, reprojectSrc geo.Proj, reprojectDst geo.Proj) *CacheMapLayer {
+func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, maxTileLimit *int, reprojectSrc geo.Proj, reprojectDst geo.Proj, queryBuffer *int) *CacheMapLayer {
 	if ext == nil {
 		ext = geo.MapExtentFromGrid(tm.GetGrid())
 	}
@@ -38,6 +41,7 @@ func NewCacheMapLayer(tm Manager, ext *geo.MapExtent, opts tile.TileOptions, max
 		emptySource:  nil,
 		reprojectSrc: reprojectSrc,
 		reprojectDst: reprojectDst,
+		queryBuffer:  queryBuffer,
 	}
 
 	ret.ResRange = nil
@@ -57,8 +61,29 @@ func (r *CacheMapLayer) checkTiled(query *layer.MapQuery) error {
 	return nil
 }
 
+func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) vec2d.Rect {
+	minx, miny, maxx, maxy := bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]
+
+	if queryBuffer > 0 {
+		res := g.Resolution(level)
+		minx -= float64(queryBuffer) * res
+		miny -= float64(queryBuffer) * res
+		maxx += float64(queryBuffer) * res
+		maxy += float64(queryBuffer) * res
+	}
+	return vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
+}
+
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	bbox, srs, dst_srs := query.BBox, query.Srs, query.Srs
+	if r.queryBuffer != nil {
+		_, level, err := r.grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, srs)
+		if err != nil {
+			return nil, err
+		}
+		bbox = bufferedBBox(r.grid, bbox, level, *r.queryBuffer)
+	}
+
 	if r.reprojectSrc != nil {
 		bbox = srs.TransformRectTo(r.reprojectSrc, bbox, 16)
 		srs = r.reprojectSrc
@@ -68,6 +93,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 			dst_srs = geo.NewProj("EPSG:4326")
 		}
 	}
+
 	src_bbox, tile_grid, affected_tile_coords, err := r.grid.GetAffectedTiles(bbox, query.Size, dst_srs)
 	if err != nil {
 		return nil, err

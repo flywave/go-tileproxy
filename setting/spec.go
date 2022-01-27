@@ -187,6 +187,7 @@ type CacheSource struct {
 	Filters              []interface{} `json:"filters,omitempty"`
 	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
 	ReprojectSrs         *Reproject    `json:"reproject,omitempty"`
+	QueryBuffer          *int          `json:"query_buffer,omitempty"`
 }
 
 type WMSSourceOpts struct {

@@ -4,5 +4,5 @@ import (
 	_ "github.com/flywave/go-obj"
 )
 
-type ObjOutput struct {
+type ObjWriter struct {
 }

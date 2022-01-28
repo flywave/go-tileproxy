@@ -6,7 +6,6 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/beevik/etree v1.1.0
 	github.com/deckarep/golang-set v1.8.0
-	github.com/flopp/go-coordsparser v0.0.0-20201115094714-8baaeb7062d5
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-cog v0.0.0-20220120065707-cc2252bb3ec2
 	github.com/flywave/go-geo v0.0.0-20220126075414-6c3011149e1f

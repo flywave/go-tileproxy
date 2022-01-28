@@ -1,10 +1,22 @@
 package mesh
 
-import "github.com/flywave/go-tileproxy/static/draw"
+import (
+	"image"
 
-type TextureStitching struct {
+	"github.com/flywave/go-tileproxy/static/draw"
+)
+
+type TextureSource struct {
 }
 
-type DrawTextureStitching struct {
+func (s *TextureSource) GetTexture() image.Image {
+	return nil
+}
+
+type DrawTextureSource struct {
 	ctx draw.Context
+}
+
+func (s *DrawTextureSource) GetTexture() image.Image {
+	return nil
 }

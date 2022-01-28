@@ -4,5 +4,5 @@ import (
 	_ "github.com/qmuntal/gltf"
 )
 
-type GltfOutput struct {
+type GltfWriter struct {
 }

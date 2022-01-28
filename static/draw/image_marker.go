@@ -13,7 +13,6 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
@@ -44,6 +43,7 @@ func ParseImageMarkerString(s string) ([]*ImageMarker, error) {
 	var img image.Image = nil
 	offsetX := 0.0
 	offsetY := 0.0
+	epsg := int64(4326)
 
 	for _, ss := range strings.Split(s, "|") {
 		if ok, suffix := utils.HasPrefix(ss, "image:"); ok {
@@ -69,15 +69,21 @@ func ParseImageMarkerString(s string) ([]*ImageMarker, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if ok, suffix := utils.HasPrefix(ss, "epsg:"); ok {
+			var err error
+			epsg, err = strconv.ParseInt(suffix, 10, 64)
+			if err != nil {
+				return nil, err
+			}
 		} else {
-			lat, lng, err := coordsparser.Parse(ss)
+			lat, lng, err := ParseLatLon(ss)
 			if err != nil {
 				return nil, err
 			}
 			if img == nil {
 				return nil, fmt.Errorf("cannot create an ImageMarker without an image: %s", s)
 			}
-			m := NewImageMarker(vec2d.T{lat, lng}, geo.NewProj("EPSG:4326"), img, offsetX, offsetY)
+			m := NewImageMarker(vec2d.T{lat, lng}, geo.NewProj(int(epsg)), img, offsetX, offsetY)
 			markers = append(markers, m)
 		}
 	}

@@ -8,10 +8,11 @@ import (
 type TileProvider interface {
 	Attribution() string
 	Grid() *geo.TileGrid
+	Manager() cache.Manager
 }
 
 type TileFetcher interface {
-	Fetch(tile *cache.Tile) error
+	Fetch(coord [3]int) (*cache.Tile, error)
 }
 
 func NewTileFetcher(p TileProvider) TileFetcher {

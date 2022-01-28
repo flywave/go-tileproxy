@@ -1,10 +1,10 @@
 package draw
 
 import (
-	"github.com/flywave/go-geo"
-	vec2d "github.com/flywave/go3d/float64/vec2"
-
 	"github.com/flywave/gg"
+	"github.com/flywave/go-geo"
+
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type MapObject interface {

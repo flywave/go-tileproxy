@@ -42,6 +42,7 @@ func ParseCircleString(s string) (circles []*Circle, err error) {
 
 	var col color.Color = color.RGBA{0xff, 0, 0, 0xff}
 	var fill color.Color = color.Transparent
+
 	radius := 100.0
 	weight := 5.0
 
@@ -73,6 +74,7 @@ func ParseCircleString(s string) (circles []*Circle, err error) {
 			circles = append(circles, c)
 		}
 	}
+
 	return circles, nil
 }
 

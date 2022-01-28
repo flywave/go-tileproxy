@@ -8,15 +8,18 @@ import (
 	"strconv"
 	"strings"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
-	"github.com/golang/geo/s2"
 )
 
 type Marker struct {
 	MapObject
-	Position     s2.LatLng
+	Position     vec2d.T
+	Srs          geo.Proj
 	Color        color.Color
 	Size         float64
 	Label        string
@@ -25,9 +28,10 @@ type Marker struct {
 	LabelYOffset float64
 }
 
-func NewMarker(pos s2.LatLng, col color.Color, size float64) *Marker {
+func NewMarker(pos vec2d.T, srs geo.Proj, col color.Color, size float64) *Marker {
 	m := new(Marker)
 	m.Position = pos
+	m.Srs = srs
 	m.Color = col
 	m.Size = size
 	m.Label = ""
@@ -114,7 +118,7 @@ func ParseMarkerString(s string) ([]*Marker, error) {
 			if err != nil {
 				return nil, err
 			}
-			m := NewMarker(s2.LatLngFromDegrees(lat, lng), markerColor, size)
+			m := NewMarker(vec2d.T{lat, lng}, geo.NewProj("EPSG:4326"), markerColor, size)
 			m.Label = label
 			if labelColor != nil {
 				m.SetLabelColor(labelColor)
@@ -135,15 +139,19 @@ func (m *Marker) ExtraMarginPixels() (float64, float64, float64, float64) {
 	return 0.5*m.Size + 1.0, 1.5*m.Size + 1.0, 0.5*m.Size + 1.0, 1.0
 }
 
-func (m *Marker) Bounds() s2.Rect {
-	r := s2.EmptyRect()
-	r = r.AddPoint(m.Position)
+func (m *Marker) Bounds() vec2d.Rect {
+	r := vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}
+	r.Extend(&m.Position)
 	return r
+}
+
+func (m *Marker) SrsProj() geo.Proj {
+	return m.Srs
 }
 
 func (m *Marker) Draw(gc *gg.Context, trans *Transformer) {
 	if !CanDisplay(m.Position) {
-		log.Printf("Marker coordinates not displayable: %f/%f", m.Position.Lat.Degrees(), m.Position.Lng.Degrees())
+		log.Printf("Marker coordinates not displayable: %f/%f", m.Position[0], m.Position[0])
 		return
 	}
 
@@ -152,7 +160,7 @@ func (m *Marker) Draw(gc *gg.Context, trans *Transformer) {
 	gc.SetLineWidth(1.0)
 
 	radius := 0.5 * m.Size
-	x, y := trans.LatLngToXY(m.Position)
+	x, y := trans.LatLngToXY(m.Position, m.Srs)
 	gc.DrawArc(x, y-m.Size, radius, (90.0+60.0)*math.Pi/180.0, (360.0+90.0-60.0)*math.Pi/180.0)
 	gc.LineTo(x, y)
 	gc.ClosePath()

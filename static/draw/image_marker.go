@@ -11,23 +11,27 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
-	"github.com/golang/geo/s2"
 )
 
 type ImageMarker struct {
 	MapObject
-	Position s2.LatLng
+	Position vec2d.T
+	Srs      geo.Proj
 	Img      image.Image
 	OffsetX  float64
 	OffsetY  float64
 }
 
-func NewImageMarker(pos s2.LatLng, img image.Image, offsetX, offsetY float64) *ImageMarker {
+func NewImageMarker(pos vec2d.T, srs geo.Proj, img image.Image, offsetX, offsetY float64) *ImageMarker {
 	m := new(ImageMarker)
 	m.Position = pos
+	m.Srs = srs
 	m.Img = img
 	m.OffsetX = offsetX
 	m.OffsetY = offsetY
@@ -73,7 +77,7 @@ func ParseImageMarkerString(s string) ([]*ImageMarker, error) {
 			if img == nil {
 				return nil, fmt.Errorf("cannot create an ImageMarker without an image: %s", s)
 			}
-			m := NewImageMarker(s2.LatLngFromDegrees(lat, lng), img, offsetX, offsetY)
+			m := NewImageMarker(vec2d.T{lat, lng}, geo.NewProj("EPSG:4326"), img, offsetX, offsetY)
 			markers = append(markers, m)
 		}
 	}
@@ -97,18 +101,22 @@ func (m *ImageMarker) ExtraMarginPixels() (float64, float64, float64, float64) {
 	return m.OffsetX, m.OffsetY, float64(size.X) - m.OffsetX, float64(size.Y) - m.OffsetY
 }
 
-func (m *ImageMarker) Bounds() s2.Rect {
-	r := s2.EmptyRect()
-	r = r.AddPoint(m.Position)
+func (m *ImageMarker) Bounds() vec2d.Rect {
+	r := vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}
+	r.Extend(&m.Position)
 	return r
+}
+
+func (m *ImageMarker) SrsProj() geo.Proj {
+	return m.Srs
 }
 
 func (m *ImageMarker) Draw(gc *gg.Context, trans *Transformer) {
 	if !CanDisplay(m.Position) {
-		log.Printf("ImageMarker coordinates not displayable: %f/%f", m.Position.Lat.Degrees(), m.Position.Lng.Degrees())
+		log.Printf("ImageMarker coordinates not displayable: %f/%f", m.Position[0], m.Position[1])
 		return
 	}
 
-	x, y := trans.LatLngToXY(m.Position)
+	x, y := trans.LatLngToXY(m.Position, m.Srs)
 	gc.DrawImage(m.Img, int(x-m.OffsetX), int(y-m.OffsetY))
 }

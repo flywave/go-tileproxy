@@ -4,11 +4,25 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/golang/geo/s1"
-	"github.com/golang/geo/s2"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
-func CreateBBox(nwlat float64, nwlng float64, selat float64, selng float64) (*s2.Rect, error) {
+type interval struct {
+	Lo, Hi float64
+}
+
+func IntervalFromEndpoints(lo, hi float64) (Lo, Hi float64) {
+	i := interval{lo, hi}
+	if lo == -math.Pi && hi != math.Pi {
+		i.Lo = math.Pi
+	}
+	if hi == -math.Pi && lo != math.Pi {
+		i.Hi = math.Pi
+	}
+	return i.Lo, i.Hi
+}
+
+func CreateBBox(nwlat float64, nwlng float64, selat float64, selng float64) (*vec2d.Rect, error) {
 	if nwlat < -90 || nwlat > 90 {
 		return nil, fmt.Errorf("out of range nwlat (%f) must be in [-90, 90]", nwlat)
 	}
@@ -30,15 +44,15 @@ func CreateBBox(nwlat float64, nwlng float64, selat float64, selng float64) (*s2
 		return nil, fmt.Errorf("nwlng and selng must not be equal")
 	}
 
-	bbox := new(s2.Rect)
+	bbox := new(vec2d.Rect)
 	if selat < nwlat {
-		bbox.Lat.Lo = selat * math.Pi / 180.0
-		bbox.Lat.Hi = nwlat * math.Pi / 180.0
+		bbox.Min[0] = selat * math.Pi / 180.0
+		bbox.Max[0] = nwlat * math.Pi / 180.0
 	} else {
-		bbox.Lat.Lo = nwlat * math.Pi / 180.0
-		bbox.Lat.Hi = selat * math.Pi / 180.0
+		bbox.Min[1] = nwlat * math.Pi / 180.0
+		bbox.Max[1] = selat * math.Pi / 180.0
 	}
-	bbox.Lng = s1.IntervalFromEndpoints(nwlng*math.Pi/180.0, selng*math.Pi/180.0)
+	bbox.Min[1], bbox.Max[1] = IntervalFromEndpoints(nwlng*math.Pi/180.0, selng*math.Pi/180.0)
 
 	return bbox, nil
 }

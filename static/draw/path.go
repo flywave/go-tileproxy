@@ -6,25 +6,29 @@ import (
 	"strconv"
 	"strings"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpx"
 	"github.com/flywave/go-tileproxy/utils"
-	"github.com/golang/geo/s2"
 )
 
 type Path struct {
 	MapObject
-	Positions []s2.LatLng
+	Positions []vec2d.T
+	Srs       geo.Proj
 	Color     color.Color
 	Weight    float64
 }
 
-func NewPath(positions []s2.LatLng, col color.Color, weight float64) *Path {
+func NewPath(positions []vec2d.T, srs geo.Proj, col color.Color, weight float64) *Path {
 	p := new(Path)
 	p.Positions = positions
 	p.Color = col
 	p.Weight = weight
+	p.Srs = srs
 
 	return p
 }
@@ -57,7 +61,7 @@ func ParsePathString(s string) ([]*Path, error) {
 					p.Color = currentPath.Color
 					p.Weight = currentPath.Weight
 					for _, pt := range seg.TrkPt {
-						p.Positions = append(p.Positions, s2.LatLngFromDegrees(pt.Lat, pt.Lon))
+						p.Positions = append(p.Positions, vec2d.T{pt.Lat, pt.Lon})
 					}
 					if len(p.Positions) > 0 {
 						paths = append(paths, p)
@@ -69,7 +73,7 @@ func ParsePathString(s string) ([]*Path, error) {
 			if err != nil {
 				return nil, err
 			}
-			currentPath.Positions = append(currentPath.Positions, s2.LatLngFromDegrees(lat, lng))
+			currentPath.Positions = append(currentPath.Positions, vec2d.T{lat, lng})
 		}
 	}
 	if len(currentPath.Positions) > 0 {
@@ -82,12 +86,16 @@ func (p *Path) ExtraMarginPixels() (float64, float64, float64, float64) {
 	return p.Weight, p.Weight, p.Weight, p.Weight
 }
 
-func (p *Path) Bounds() s2.Rect {
-	r := s2.EmptyRect()
+func (p *Path) Bounds() vec2d.Rect {
+	r := vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}
 	for _, ll := range p.Positions {
-		r = r.AddPoint(ll)
+		r.Extend(&ll)
 	}
 	return r
+}
+
+func (m *Path) SrsProj() geo.Proj {
+	return m.Srs
 }
 
 func (p *Path) Draw(gc *gg.Context, trans *Transformer) {
@@ -100,7 +108,7 @@ func (p *Path) Draw(gc *gg.Context, trans *Transformer) {
 	gc.SetLineCap(gg.LineCapRound)
 	gc.SetLineJoin(gg.LineJoinRound)
 	for _, ll := range p.Positions {
-		gc.LineTo(trans.LatLngToXY(ll))
+		gc.LineTo(trans.LatLngToXY(ll, p.Srs))
 	}
 	gc.SetColor(p.Color)
 	gc.Stroke()

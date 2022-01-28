@@ -191,7 +191,7 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 	qdt.BBox = mesh.BBox
 
 	qmesh := &qmt.QuantizedMeshTile{}
-	qmesh.SetMesh(qdt, true)
+	qmesh.SetMesh(qdt, false)
 
 	source := NewTerrainSource(options)
 

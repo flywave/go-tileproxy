@@ -9,50 +9,40 @@ import (
 	"math"
 	"sync"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-tileproxy/cache"
+	"github.com/flywave/go-tileproxy/imagery"
+	"github.com/flywave/go-tileproxy/static"
+
 	"github.com/flywave/gg"
-	"github.com/golang/geo/r2"
-	"github.com/golang/geo/s1"
-	"github.com/golang/geo/s2"
+	"github.com/flywave/go-geo"
 )
 
 type Context struct {
-	width  int
-	height int
-
-	hasZoom bool
-	zoom    int
-
-	hasCenter bool
-	center    s2.LatLng
-
-	hasBoundingBox bool
-	boundingBox    s2.Rect
-
-	background color.Color
-
-	objects  []MapObject
-	overlays []*TileProvider
-
-	tileProvider *TileProvider
-
+	width               int
+	height              int
+	zoom                *int
+	boundingBox         *vec2d.Rect
+	boundingBoxSrs      geo.Proj
+	background          color.Color
+	objects             []MapObject
+	overlays            []static.TileProvider
+	tileProvider        static.TileProvider
 	overrideAttribution *string
+	grid                *geo.TileGrid
 }
 
 func NewContext() *Context {
 	t := new(Context)
 	t.width = 512
 	t.height = 512
-	t.hasZoom = false
-	t.hasCenter = false
-	t.hasBoundingBox = false
 	t.background = nil
-	t.userAgent = ""
-	t.online = true
-	t.tileProvider = NewTileProviderOpenStreetMaps()
+	t.tileProvider = nil
 	return t
 }
 
-func (m *Context) SetTileProvider(t *TileProvider) {
+func (m *Context) SetTileProvider(t static.TileProvider) {
 	m.tileProvider = t
 }
 
@@ -62,18 +52,12 @@ func (m *Context) SetSize(width, height int) {
 }
 
 func (m *Context) SetZoom(zoom int) {
-	m.zoom = zoom
-	m.hasZoom = true
+	m.zoom = &zoom
 }
 
-func (m *Context) SetCenter(center s2.LatLng) {
-	m.center = center
-	m.hasCenter = true
-}
-
-func (m *Context) SetBoundingBox(bbox s2.Rect) {
-	m.boundingBox = bbox
-	m.hasBoundingBox = true
+func (m *Context) SetBoundingBox(bbox vec2d.Rect, srs geo.Proj) {
+	m.boundingBox = &bbox
+	m.boundingBoxSrs = srs
 }
 
 func (m *Context) SetBackground(col color.Color) {
@@ -156,7 +140,7 @@ func (m *Context) ClearObjects() {
 	m.objects = nil
 }
 
-func (m *Context) AddOverlay(overlay *TileProvider) {
+func (m *Context) AddOverlay(overlay static.TileProvider) {
 	m.overlays = append(m.overlays, overlay)
 }
 
@@ -172,15 +156,23 @@ func (m *Context) Attribution() string {
 	if m.overrideAttribution != nil {
 		return *m.overrideAttribution
 	}
-	return m.tileProvider.Attribution
+	return m.tileProvider.Attribution()
 }
 
-func (m *Context) determineBounds() s2.Rect {
-	r := s2.EmptyRect()
+func (m *Context) determineBounds() (vec2d.Rect, geo.Proj) {
+	r := vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}
+	var srs geo.Proj
 	for _, object := range m.objects {
-		r = r.Union(object.Bounds())
+		bb := object.Bounds()
+		if srs == nil {
+			srs = object.SrsProj()
+		} else if !srs.Eq(object.SrsProj()) {
+			bb = object.SrsProj().TransformRectTo(srs, bb, 16)
+		}
+
+		r.Join(&bb)
 	}
-	return r
+	return r, srs
 }
 
 func (m *Context) determineExtraMarginPixels() (float64, float64, float64, float64) {
@@ -201,25 +193,28 @@ func (m *Context) determineExtraMarginPixels() (float64, float64, float64, float
 	return maxL, maxT, maxR, maxB
 }
 
-func (m *Context) determineZoom(bounds s2.Rect, center s2.LatLng) int {
-	b := bounds.AddPoint(center)
-	if b.IsEmpty() || b.IsPoint() {
+func (m *Context) determineZoom(bounds vec2d.Rect, center vec2d.T) int {
+	bounds.Extend(&center)
+	if bounds.Area() == 0 {
 		return 15
 	}
 
-	tileSize := m.tileProvider.TileSize
+	b := bounds
+
 	marginL, marginT, marginR, marginB := m.determineExtraMarginPixels()
-	w := (float64(m.width) - marginL - marginR) / float64(tileSize)
-	h := (float64(m.height) - marginT - marginB) / float64(tileSize)
+	w := (float64(m.width) - marginL - marginR) / float64(m.grid.TileSize[0])
+	h := (float64(m.height) - marginT - marginB) / float64(m.grid.TileSize[1])
+
 	if w <= 0 || h <= 0 {
 		log.Printf("Object margins are bigger than the target image size => ignoring object margins for calculation of the zoom level")
-		w = float64(m.width) / float64(tileSize)
-		h = float64(m.height) / float64(tileSize)
+		w = float64(m.width) / float64(m.grid.TileSize[0])
+		h = float64(m.height) / float64(m.grid.TileSize[1])
 	}
-	minX := (b.Lo().Lng.Degrees() + 180.0) / 360.0
-	maxX := (b.Hi().Lng.Degrees() + 180.0) / 360.0
-	minY := (1.0 - math.Log(math.Tan(b.Lo().Lat.Radians())+(1.0/math.Cos(b.Lo().Lat.Radians())))/math.Pi) / 2.0
-	maxY := (1.0 - math.Log(math.Tan(b.Hi().Lat.Radians())+(1.0/math.Cos(b.Hi().Lat.Radians())))/math.Pi) / 2.0
+
+	minX := (b.Min[1] + 180.0) / 360.0
+	maxX := (b.Max[1] + 180.0) / 360.0
+	minY := (1.0 - math.Log(math.Tan(DegreesToRadians(b.Min[0]))+(1.0/math.Cos(b.Min[1])))/math.Pi) / 2.0
+	maxY := (1.0 - math.Log(math.Tan(DegreesToRadians(b.Max[0]))+(1.0/math.Cos(b.Max[1])))/math.Pi) / 2.0
 
 	dx := maxX - minX
 	for dx < 0 {
@@ -242,22 +237,22 @@ func (m *Context) determineZoom(bounds s2.Rect, center s2.LatLng) int {
 	return 15
 }
 
-func (m *Context) determineCenter(bounds s2.Rect) s2.LatLng {
-	latLo := bounds.Lo().Lat.Radians()
-	latHi := bounds.Hi().Lat.Radians()
+func (m *Context) determineCenter(bounds vec2d.Rect) vec2d.T {
+	latLo := DegreesToRadians(bounds.Min[0])
+	latHi := DegreesToRadians(bounds.Max[0])
 	yLo := math.Log((1+math.Sin(latLo))/(1-math.Sin(latLo))) / 2
 	yHi := math.Log((1+math.Sin(latHi))/(1-math.Sin(latHi))) / 2
-	lat := s1.Angle(math.Atan(math.Sinh((yLo + yHi) / 2)))
-	lng := bounds.Center().Lng
-	return s2.LatLng{Lat: lat, Lng: lng}
+	lat := RadiansToDegrees(math.Atan(math.Sinh((yLo + yHi) / 2)))
+	lng := (bounds.Min[1] + bounds.Max[1]) / 2
+	return vec2d.T{lat, lng}
 }
 
-func (m *Context) adjustCenter(center s2.LatLng, zoom int) s2.LatLng {
+func (m *Context) adjustCenter(center vec2d.T, srs geo.Proj, zoom int) vec2d.T {
 	if m.objects == nil || len(m.objects) == 0 {
 		return center
 	}
 
-	transformer := newTransformer(m.width, m.height, zoom, center, m.tileProvider.TileSize)
+	transformer := newTransformer(m.width, m.height, zoom, center, srs, m.grid)
 
 	first := true
 	minX := 0.0
@@ -266,8 +261,8 @@ func (m *Context) adjustCenter(center s2.LatLng, zoom int) s2.LatLng {
 	maxY := 0.0
 	for _, object := range m.objects {
 		bounds := object.Bounds()
-		nwX, nwY := transformer.LatLngToXY(bounds.Vertex(3))
-		seX, seY := transformer.LatLngToXY(bounds.Vertex(1))
+		nwX, nwY := transformer.LatLngToXY(bounds.Min, srs)
+		seX, seY := transformer.LatLngToXY(bounds.Max, srs)
 		l, t, r, b := object.ExtraMarginPixels()
 		if first {
 			minX = nwX - l
@@ -291,70 +286,61 @@ func (m *Context) adjustCenter(center s2.LatLng, zoom int) s2.LatLng {
 	centerX := (maxX + minX) * 0.5
 	centerY := (maxY + minY) * 0.5
 
-	return transformer.XYToLatLng(centerX, centerY)
+	return transformer.XYToLatLng(centerX, centerY, srs)
 }
 
-func (m *Context) determineZoomCenter() (int, s2.LatLng, error) {
-	if m.hasBoundingBox && !m.boundingBox.IsEmpty() {
-		center := m.determineCenter(m.boundingBox)
-		return m.determineZoom(m.boundingBox, center), center, nil
+func (m *Context) determineZoomCenter() (int, vec2d.T, geo.Proj, error) {
+	if m.boundingBox != nil {
+		center := m.determineCenter(*m.boundingBox)
+		return m.determineZoom(*m.boundingBox, center), center, m.boundingBoxSrs, nil
 	}
 
-	if m.hasCenter {
-		if m.hasZoom {
-			return m.zoom, m.center, nil
-		}
-		return m.determineZoom(m.determineBounds(), m.center), m.center, nil
-	}
-
-	bounds := m.determineBounds()
-	if !bounds.IsEmpty() {
+	bounds, srs := m.determineBounds()
+	if m.boundingBox == nil {
 		center := m.determineCenter(bounds)
 		zoom := m.zoom
-		if !m.hasZoom {
-			zoom = m.determineZoom(bounds, center)
+		if zoom == nil {
+			z := m.determineZoom(bounds, center)
+			zoom = &z
 		}
-		return zoom, m.adjustCenter(center, zoom), nil
+		return *zoom, m.adjustCenter(center, srs, *zoom), srs, nil
 	}
 
-	return 0, s2.LatLngFromDegrees(0, 0), errors.New("cannot determine map extent: no center coordinates given, no bounding box given, no content (markers, paths, areas) given")
+	return 0, vec2d.T{}, nil, errors.New("cannot determine map extent: no center coordinates given, no bounding box given, no content (markers, paths, areas) given")
 }
 
 type Transformer struct {
 	zoom               int
 	numTiles           float64
-	tileSize           int
 	pWidth, pHeight    int
 	pCenterX, pCenterY int
 	tCountX, tCountY   int
 	tCenterX, tCenterY float64
 	tOriginX, tOriginY int
 	pMinX, pMaxX       int
-	proj               s2.Projection
+	grid               *geo.TileGrid
 }
 
 func (m *Context) Transformer() (*Transformer, error) {
-	zoom, center, err := m.determineZoomCenter()
+	zoom, center, srs, err := m.determineZoomCenter()
 	if err != nil {
 		return nil, err
 	}
 
-	return newTransformer(m.width, m.height, zoom, center, m.tileProvider.TileSize), nil
+	return newTransformer(m.width, m.height, zoom, center, srs, m.grid), nil
 }
 
-func newTransformer(width int, height int, zoom int, llCenter s2.LatLng, tileSize int) *Transformer {
+func newTransformer(width int, height int, zoom int, llCenter vec2d.T, srs geo.Proj, grid *geo.TileGrid) *Transformer {
 	t := new(Transformer)
 
 	t.zoom = zoom
 	t.numTiles = math.Exp2(float64(t.zoom))
-	t.tileSize = tileSize
+	t.grid = grid
 
-	t.proj = s2.NewMercatorProjection(0.5)
+	t.tCenterX, t.tCenterY = t.ll2t(llCenter, srs)
 
-	t.tCenterX, t.tCenterY = t.ll2t(llCenter)
-
-	ww := float64(width) / float64(tileSize)
-	hh := float64(height) / float64(tileSize)
+	ww := float64(width) / float64(grid.TileSize[0])
+	hh := float64(height) / float64(grid.TileSize[1])
 
 	t.tOriginX = int(math.Floor(t.tCenterX - 0.5*ww))
 	t.tOriginY = int(math.Floor(t.tCenterY - 0.5*hh))
@@ -362,11 +348,11 @@ func newTransformer(width int, height int, zoom int, llCenter s2.LatLng, tileSiz
 	t.tCountX = 1 + int(math.Floor(t.tCenterX+0.5*ww)) - t.tOriginX
 	t.tCountY = 1 + int(math.Floor(t.tCenterY+0.5*hh)) - t.tOriginY
 
-	t.pWidth = t.tCountX * tileSize
-	t.pHeight = t.tCountY * tileSize
+	t.pWidth = t.tCountX * int(grid.TileSize[0])
+	t.pHeight = t.tCountY * int(grid.TileSize[1])
 
-	t.pCenterX = int((t.tCenterX - float64(t.tOriginX)) * float64(tileSize))
-	t.pCenterY = int((t.tCenterY - float64(t.tOriginY)) * float64(tileSize))
+	t.pCenterX = int((t.tCenterX - float64(t.tOriginX)) * float64(grid.TileSize[0]))
+	t.pCenterY = int((t.tCenterY - float64(t.tOriginY)) * float64(grid.TileSize[1]))
 
 	t.pMinX = t.pCenterX - width/2
 	t.pMaxX = t.pMinX + width
@@ -374,17 +360,18 @@ func newTransformer(width int, height int, zoom int, llCenter s2.LatLng, tileSiz
 	return t
 }
 
-func (t *Transformer) ll2t(ll s2.LatLng) (float64, float64) {
-	p := t.proj.FromLatLng(ll)
-	return t.numTiles * (p.X + 0.5), t.numTiles * (1 - (p.Y + 0.5))
+func (t *Transformer) ll2t(ll vec2d.T, srs geo.Proj) (float64, float64) {
+	p := t.grid.Srs.TransformTo(srs, []vec2d.T{ll})
+	return t.numTiles * (p[0][0] + 0.5), t.numTiles * (1 - (p[0][1] + 0.5))
 }
 
-func (t *Transformer) LatLngToXY(ll s2.LatLng) (float64, float64) {
-	x, y := t.ll2t(ll)
-	x = float64(t.pCenterX) + (x-t.tCenterX)*float64(t.tileSize)
-	y = float64(t.pCenterY) + (y-t.tCenterY)*float64(t.tileSize)
+func (t *Transformer) LatLngToXY(ll vec2d.T, srs geo.Proj) (float64, float64) {
+	x, y := t.ll2t(ll, srs)
 
-	offset := t.numTiles * float64(t.tileSize)
+	x = float64(t.pCenterX) + (x-t.tCenterX)*float64(t.grid.TileSize[0])
+	y = float64(t.pCenterY) + (y-t.tCenterY)*float64(t.grid.TileSize[1])
+
+	offset := t.numTiles * float64(t.grid.TileSize[0])
 	if x < float64(t.pMinX) {
 		for x < float64(t.pMinX) {
 			x = x + offset
@@ -397,46 +384,46 @@ func (t *Transformer) LatLngToXY(ll s2.LatLng) (float64, float64) {
 	return x, y
 }
 
-func (t *Transformer) XYToLatLng(x float64, y float64) s2.LatLng {
-	xx := ((((x - float64(t.pCenterX)) / float64(t.tileSize)) + t.tCenterX) / t.numTiles) - 0.5
-	yy := 0.5 - (((y-float64(t.pCenterY))/float64(t.tileSize))+t.tCenterY)/t.numTiles
-	return t.proj.ToLatLng(r2.Point{X: xx, Y: yy})
+func (t *Transformer) XYToLatLng(x float64, y float64, srs geo.Proj) vec2d.T {
+	xx := ((((x - float64(t.pCenterX)) / float64(t.grid.TileSize[0])) + t.tCenterX) / t.numTiles) - 0.5
+	yy := 0.5 - (((y-float64(t.pCenterY))/float64(t.grid.TileSize[1]))+t.tCenterY)/t.numTiles
+	return t.grid.Srs.TransformTo(srs, []vec2d.T{{xx, yy}})[0]
 }
 
-func (t *Transformer) Rect() (bbox s2.Rect) {
+func (t *Transformer) Rect() (bbox vec2d.Rect) {
 	invNumTiles := 1.0 / t.numTiles
 
 	n := math.Pi - 2.0*math.Pi*float64(t.tOriginY)*invNumTiles
-	bbox.Lat.Hi = math.Atan(0.5 * (math.Exp(n) - math.Exp(-n)))
+	bbox.Max[0] = RadiansToDegrees(math.Atan(0.5 * (math.Exp(n) - math.Exp(-n))))
 	n = math.Pi - 2.0*math.Pi*float64(t.tOriginY+t.tCountY)*invNumTiles
-	bbox.Lat.Lo = math.Atan(0.5 * (math.Exp(n) - math.Exp(-n)))
+	bbox.Min[0] = RadiansToDegrees(math.Atan(0.5 * (math.Exp(n) - math.Exp(-n))))
 
-	bbox.Lng.Lo = float64(t.tOriginX)*invNumTiles*2.0*math.Pi - math.Pi
-	bbox.Lng.Hi = float64(t.tOriginX+t.tCountX)*invNumTiles*2.0*math.Pi - math.Pi
+	bbox.Min[1] = RadiansToDegrees(float64(t.tOriginX)*invNumTiles*2.0*math.Pi - math.Pi)
+	bbox.Max[1] = RadiansToDegrees(float64(t.tOriginX+t.tCountX)*invNumTiles*2.0*math.Pi - math.Pi)
+
 	return bbox
 }
 
 func (m *Context) Render() (image.Image, error) {
-	zoom, center, err := m.determineZoomCenter()
+	zoom, center, srs, err := m.determineZoomCenter()
 	if err != nil {
 		return nil, err
 	}
 
-	tileSize := m.tileProvider.TileSize
-	trans := newTransformer(m.width, m.height, zoom, center, tileSize)
+	trans := newTransformer(m.width, m.height, zoom, center, srs, m.grid)
 	img := image.NewRGBA(image.Rect(0, 0, trans.pWidth, trans.pHeight))
 	gc := gg.NewContextForRGBA(img)
 	if m.background != nil {
 		draw.Draw(img, img.Bounds(), &image.Uniform{m.background}, image.Point{}, draw.Src)
 	}
 
-	layers := []*TileProvider{m.tileProvider}
+	layers := []static.TileProvider{m.tileProvider}
 	if m.overlays != nil {
 		layers = append(layers, m.overlays...)
 	}
 
 	for _, layer := range layers {
-		if err := m.renderLayer(gc, zoom, trans, tileSize, layer); err != nil {
+		if err := m.renderLayer(gc, zoom, trans, layer); err != nil {
 			return nil, err
 		}
 	}
@@ -467,26 +454,25 @@ func (m *Context) Render() (image.Image, error) {
 }
 
 func (m *Context) RenderWithTransformer() (image.Image, *Transformer, error) {
-	zoom, center, err := m.determineZoomCenter()
+	zoom, center, srs, err := m.determineZoomCenter()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tileSize := m.tileProvider.TileSize
-	trans := newTransformer(m.width, m.height, zoom, center, tileSize)
+	trans := newTransformer(m.width, m.height, zoom, center, srs, m.grid)
 	img := image.NewRGBA(image.Rect(0, 0, trans.pWidth, trans.pHeight))
 	gc := gg.NewContextForRGBA(img)
 	if m.background != nil {
 		draw.Draw(img, img.Bounds(), &image.Uniform{m.background}, image.Point{}, draw.Src)
 	}
 
-	layers := []*TileProvider{m.tileProvider}
+	layers := []static.TileProvider{m.tileProvider}
 	if m.overlays != nil {
 		layers = append(layers, m.overlays...)
 	}
 
 	for _, layer := range layers {
-		if err := m.renderLayer(gc, zoom, trans, tileSize, layer); err != nil {
+		if err := m.renderLayer(gc, zoom, trans, layer); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -495,34 +481,40 @@ func (m *Context) RenderWithTransformer() (image.Image, *Transformer, error) {
 		object.Draw(gc, trans)
 	}
 
-	if m.tileProvider.Attribution == "" {
+	if m.tileProvider.Attribution() == "" {
 		return img, trans, nil
 	}
-	_, textHeight := gc.MeasureString(m.tileProvider.Attribution)
+	_, textHeight := gc.MeasureString(m.tileProvider.Attribution())
 	boxHeight := textHeight + 4.0
 	gc.SetRGBA(0.0, 0.0, 0.0, 0.5)
 	gc.DrawRectangle(0.0, float64(trans.pHeight)-boxHeight, float64(trans.pWidth), boxHeight)
 	gc.Fill()
 	gc.SetRGBA(1.0, 1.0, 1.0, 0.75)
-	gc.DrawString(m.tileProvider.Attribution, 4.0, float64(m.height)-4.0)
+	gc.DrawString(m.tileProvider.Attribution(), 4.0, float64(m.height)-4.0)
 
 	return img, trans, nil
 }
 
-func (m *Context) RenderWithBounds() (image.Image, s2.Rect, error) {
+func (m *Context) RenderWithBounds() (image.Image, vec2d.Rect, error) {
 	img, trans, err := m.RenderWithTransformer()
 	if err != nil {
-		return nil, s2.Rect{}, err
+		return nil, vec2d.Rect{}, err
 
 	}
 	return img, trans.Rect(), nil
 }
 
-func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, tileSize int, provider *TileProvider) error {
+type tile struct {
+	t    *cache.Tile
+	offx int
+	offy int
+}
+
+func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, provider static.TileProvider) error {
 	var wg sync.WaitGroup
 	tiles := (1 << uint(zoom))
-	fetchedTiles := make(chan *Tile)
-	t := NewTileFetcher(provider)
+	fetchedTiles := make(chan *tile)
+	f := static.NewTileFetcher(provider)
 
 	go func() {
 		for xx := 0; xx < trans.tCountX; xx++ {
@@ -543,19 +535,17 @@ func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, tile
 					continue
 				}
 				wg.Add(1)
-				tile := &Tile{Zoom: zoom, X: x, Y: y}
-				go func(wg *sync.WaitGroup, tile *Tile, xx, yy int) {
+				t := &tile{t: &cache.Tile{Coord: [3]int{x, y, zoom}}}
+				go func(wg *sync.WaitGroup, t *tile, xx, yy int) {
 					defer wg.Done()
-					if err := t.Fetch(tile); err == nil {
-						tile.X = xx * tileSize
-						tile.Y = yy * tileSize
-						fetchedTiles <- tile
-					} else if err == errTileNotFound && provider.IgnoreNotFound {
+					if err := f.Fetch(t.t); err == nil {
+						t.offx = xx * int(m.grid.TileSize[0])
+						t.offy = yy * int(m.grid.TileSize[1])
+						fetchedTiles <- t
+					} else if err != nil {
 						log.Printf("Error downloading tile file: %s (Ignored)", err)
-					} else {
-						log.Printf("Error downloading tile file: %s", err)
 					}
-				}(&wg, tile, xx, yy)
+				}(&wg, t, xx, yy)
 			}
 		}
 		wg.Wait()
@@ -563,7 +553,8 @@ func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, tile
 	}()
 
 	for tile := range fetchedTiles {
-		gc.DrawImage(tile.Img, tile.X, tile.Y)
+		image := tile.t.Source.(*imagery.ImageSource).GetImage()
+		gc.DrawImage(image, tile.offx, tile.offy)
 	}
 
 	return nil

@@ -5,27 +5,30 @@ import (
 	"strconv"
 	"strings"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
+	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
-	"github.com/golang/geo/s2"
 )
 
 type Area struct {
 	MapObject
-	Positions []s2.LatLng
+	Positions []vec2d.T
+	Srs       geo.Proj
 	Color     color.Color
 	Fill      color.Color
 	Weight    float64
 }
 
-func NewArea(positions []s2.LatLng, col color.Color, fill color.Color, weight float64) *Area {
+func NewArea(positions []vec2d.T, srs geo.Proj, col color.Color, fill color.Color, weight float64) *Area {
 	a := new(Area)
 	a.Positions = positions
+	a.Srs = srs
 	a.Color = col
 	a.Fill = fill
 	a.Weight = weight
-
 	return a
 }
 
@@ -34,6 +37,7 @@ func ParseAreaString(s string) (*Area, error) {
 	area.Color = color.RGBA{0xff, 0, 0, 0xff}
 	area.Fill = color.Transparent
 	area.Weight = 5.0
+	area.Srs = geo.NewProj("EPSG:4326")
 
 	for _, ss := range strings.Split(s, "|") {
 		if ok, suffix := utils.HasPrefix(ss, "color:"); ok {
@@ -59,7 +63,7 @@ func ParseAreaString(s string) (*Area, error) {
 			if err != nil {
 				return nil, err
 			}
-			area.Positions = append(area.Positions, s2.LatLngFromDegrees(lat, lng))
+			area.Positions = append(area.Positions, vec2d.T{lat, lng})
 		}
 	}
 	return area, nil
@@ -69,12 +73,16 @@ func (p *Area) ExtraMarginPixels() (float64, float64, float64, float64) {
 	return p.Weight, p.Weight, p.Weight, p.Weight
 }
 
-func (p *Area) Bounds() s2.Rect {
-	r := s2.EmptyRect()
+func (p *Area) Bounds() vec2d.Rect {
+	r := vec2d.Rect{Min: vec2d.MaxVal, Max: vec2d.MinVal}
 	for _, ll := range p.Positions {
-		r = r.AddPoint(ll)
+		r.Extend(&ll)
 	}
 	return r
+}
+
+func (p *Area) SrsProj() geo.Proj {
+	return p.Srs
 }
 
 func (p *Area) Draw(gc *gg.Context, trans *Transformer) {
@@ -87,7 +95,7 @@ func (p *Area) Draw(gc *gg.Context, trans *Transformer) {
 	gc.SetLineCap(gg.LineCapRound)
 	gc.SetLineJoin(gg.LineJoinRound)
 	for _, ll := range p.Positions {
-		gc.LineTo(trans.LatLngToXY(ll))
+		gc.LineTo(trans.LatLngToXY(ll, p.Srs))
 	}
 	gc.ClosePath()
 	gc.SetColor(p.Fill)

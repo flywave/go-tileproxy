@@ -12,7 +12,7 @@ func TestCollectorContext(t *testing.T) {
 
 	client := NewCollectorClient(conf, nil)
 
-	code, data := client.Open("https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt?access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ", nil, nil)
+	code, data := client.Open("https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/1/0/0.mvt?access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja3pjOXRqcWkybWY3MnVwaGxkbTgzcXAwIn0._tCv9fpOyCT4O_Tdpl6h0w", nil, nil)
 
 	if code != 200 || data == nil {
 		t.FailNow()

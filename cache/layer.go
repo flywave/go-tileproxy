@@ -81,7 +81,9 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		if err != nil {
 			return nil, err
 		}
+		bbox = srs.TransformRectTo(r.grid.Srs, bbox, 16)
 		bbox = bufferedBBox(r.grid, bbox, level, *r.queryBuffer)
+		bbox = r.grid.Srs.TransformRectTo(srs, bbox, 16)
 	}
 
 	if r.reprojectSrc != nil {

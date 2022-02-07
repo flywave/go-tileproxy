@@ -7,7 +7,7 @@ var (
 )
 
 func init() {
-	GridMap["global_geodetic"] = setting.GridOpts{Name: "GLOBAL_GEODETIC", Srs: "EPSG:4326", Origin: "sw"}
+	GridMap["global_geodetic"] = setting.GridOpts{Name: "GLOBAL_GEODETIC", Srs: "EPSG:4326", Origin: "ul"}
 	GridMap["global_geodetic_root"] = setting.GridOpts{Name: "GLOBAL_GEODETIC", Srs: "EPSG:4326", Origin: "sw", InitialResMin: setting.NewBool(true)}
 	GridMap["global_geodetic_sqrt2"] = setting.GridOpts{Name: "GLOBAL_GEODETIC", Srs: "EPSG:4326", Origin: "sw", ResFactor: "sqrt2"}
 	GridMap["global_mercator"] = setting.GridOpts{Name: "GLOBAL_MERCATOR", Srs: "EPSG:900913", Origin: "sw"}

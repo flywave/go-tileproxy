@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	MAPBOX_TILE_URL    = "https://a.tiles.mapbox.com"
-	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja291c2piaGwwMDYyMm5wbWI1aGl4Y2VjIn0.slAHkiCz89a6ukssQ7lebQ"
+	MAPBOX_TILE_URL    = "https://api.mapbox.com"
+	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja3pjOXRqcWkybWY3MnVwaGxkbTgzcXAwIn0._tCv9fpOyCT4O_Tdpl6h0w"
 )
 
 var (
@@ -33,13 +33,28 @@ var (
 			Directory:       "./cache_data/rasterdem/",
 			DirectoryLayout: "tms",
 		},
+		TileOptions: &setting.RasterOpts{Format: "webp"},
+		QueryBuffer: setting.NewInt(1),
 	}
-	mapboxService = setting.MapboxService{
-		Layers: []setting.MapboxTileLayer{
+	cesiumTerrainCache = setting.CacheSource{
+		Sources:       []string{"rasterdem_cache"},
+		Name:          "terrain_cache",
+		Grid:          "global_geodetic",
+		Format:        "terrain",
+		RequestFormat: "terrain",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/terrain/",
+			DirectoryLayout: "tms",
+		},
+		TileOptions: &setting.RasterOpts{Format: "terrain"},
+	}
+	cesiumService = setting.CesiumService{
+		Layers: []setting.CesiumTileLayer{
 			{
-				Source:   "rasterdem_cache",
-				Name:     "rasterdem_layer",
-				TileJSON: "rasterdem",
+				Source:    "terrain_cache",
+				Name:      "terrain_layer",
+				LayerJSON: "terrain",
+				ZoomRange: &[2]int{0, 13},
 			},
 		},
 	}
@@ -51,8 +66,10 @@ func getProxyService() *setting.ProxyService {
 
 	pd.Sources["rasterdem"] = &mapboxRasterDemSource
 	pd.Caches["rasterdem_cache"] = &mapboxRasterDemCache
+	pd.Caches["terrain_cache"] = &cesiumTerrainCache
 
-	pd.Service = &mapboxService
+	pd.Service = &cesiumService
+
 	return pd
 }
 

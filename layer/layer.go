@@ -228,9 +228,14 @@ func MergeLayerExtents(layers []Layer) *geo.MapExtent {
 		return geo.MapExtentFromDefault()
 	}
 	extent := layers[0].GetExtent()
-	layers = layers[1:]
-	for _, layer := range layers[1:] {
-		extent = extent.Add(layer.GetExtent())
+	if extent == nil {
+		return geo.MapExtentFromDefault()
+	}
+	if len(layers) > 1 {
+		layers = layers[1:]
+		for _, layer := range layers[1:] {
+			extent = extent.Add(layer.GetExtent())
+		}
 	}
 	return extent
 }

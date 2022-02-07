@@ -73,6 +73,8 @@ func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, gl
 			s.Sources[k] = setting.LoadTileSource(source, globals, s)
 		case *setting.MapboxTileSource:
 			s.Sources[k] = setting.LoadMapboxTileSource(source, globals, s, fac)
+		case *setting.CesiumTileSource:
+			s.Sources[k] = setting.LoadCesiumTileSource(source, globals, s, fac)
 		case *setting.ArcGISSource:
 			if source.Opts.Featureinfo != nil && *source.Opts.Featureinfo {
 				s.InfoSources[k] = setting.LoadArcGISInfoSource(source, globals)
@@ -107,6 +109,8 @@ func (s *Service) loadService(dataset *setting.ProxyService, basePath string, gl
 		s.Service = setting.LoadWMSService(srv, s, globals, basePath)
 	case *setting.MapboxService:
 		s.Service = setting.LoadMapboxService(srv, globals, s, fac)
+	case *setting.CesiumService:
+		s.Service = setting.LoadCesiumService(srv, globals, s, fac)
 	case *setting.WMTSService:
 		if srv.Restful != nil && *srv.Restful {
 			s.Service = setting.LoadWMTSRestfulService(srv, s)

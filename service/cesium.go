@@ -8,6 +8,7 @@ import (
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
@@ -129,30 +130,33 @@ type CesiumLayerMetadata struct {
 
 type CesiumTileProvider struct {
 	Provider
-	name        string
-	metadata    *CesiumLayerMetadata
-	tileManager cache.Manager
-	extent      *geo.MapExtent
-	empty_tile  []byte
-	zoomRange   [2]int
-	extensions  []string
+	name            string
+	metadata        *CesiumLayerMetadata
+	tileManager     cache.Manager
+	extent          *geo.MapExtent
+	empty_tile      []byte
+	zoomRange       [2]int
+	extensions      []string
+	layerjsonSource layer.CesiumLayerJSONLayer
 }
 
 type CesiumTileOptions struct {
-	Name        string
-	Metadata    *CesiumLayerMetadata
-	TileManager cache.Manager
-	ZoomRange   *[2]int
-	Extensions  []string
+	Name            string
+	Metadata        *CesiumLayerMetadata
+	TileManager     cache.Manager
+	ZoomRange       *[2]int
+	Extensions      []string
+	LayerjsonSource layer.CesiumLayerJSONLayer
 }
 
 func NewCesiumTileProvider(opts *CesiumTileOptions) *CesiumTileProvider {
 	ret := &CesiumTileProvider{
-		name:        opts.Name,
-		metadata:    opts.Metadata,
-		tileManager: opts.TileManager,
-		extent:      geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
-		extensions:  opts.Extensions,
+		name:            opts.Name,
+		metadata:        opts.Metadata,
+		tileManager:     opts.TileManager,
+		extent:          geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
+		extensions:      opts.Extensions,
+		layerjsonSource: opts.LayerjsonSource,
 	}
 	if opts.ZoomRange != nil {
 		ret.zoomRange = *opts.ZoomRange
@@ -245,7 +249,18 @@ func (c *CesiumTileProvider) serviceMetadata(tms_request *request.CesiumLayerJSO
 	return md
 }
 
+func (c *CesiumTileProvider) convertLayerJson(tilejson *resource.LayerJson, req *request.CesiumLayerJSONRequest) []byte {
+	md := c.serviceMetadata(req)
+	url := md.URL + "/" + req.AssetID + "/{z}/{x}/{y}." + c.GetFormat()
+	tilejson.Tiles = []string{url}
+	return tilejson.GetData()
+}
+
 func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest) []byte {
+	if c.layerjsonSource != nil {
+		styles := c.layerjsonSource.GetLayerJSON(req.AssetID)
+		return c.convertLayerJson(styles, req)
+	}
 	md := c.serviceMetadata(req)
 
 	layerjson := &resource.LayerJson{MetadataAvailability: 10}
@@ -282,6 +297,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	layerjson.BVHLevels = 6
 	layerjson.Minzoom = c.zoomRange[0]
 	layerjson.Maxzoom = c.zoomRange[1]
+	layerjson.Available = av
 
 	url := md.URL + "/" + req.AssetID + "/{z}/{x}/{y}." + c.GetFormat()
 

@@ -13,8 +13,9 @@ import (
 
 type CesiumClient struct {
 	BaseClient
+	AuthURL     string
 	BaseURL     string
-	AssetId     string
+	AssetId     int
 	AuthToken   string
 	AccessToken string
 	AuthHeaders http.Header
@@ -24,21 +25,22 @@ type CesiumClient struct {
 }
 
 func (c *CesiumClient) buildAuthQuery() string {
-	return fmt.Sprintf("%s/v1/assets/%s/endpoint?access_token=%s", c.BaseURL, c.AssetId, c.AccessToken)
+	return fmt.Sprintf("%s/v1/assets/%d/endpoint?access_token=%s", c.AuthURL, c.AssetId, c.AuthToken)
 }
 
 type CesiumTileClient struct {
 	CesiumClient
 }
 
-func NewCesiumTileClient(urlTemplate string, assetId string, token string, ctx Context) *CesiumTileClient {
+func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, ctx Context) *CesiumTileClient {
 	return &CesiumTileClient{
 		CesiumClient: CesiumClient{
 			BaseClient: BaseClient{ctx: ctx},
-			BaseURL:    urlTemplate,
+			AuthURL:    authUrl,
+			BaseURL:    assetUrl,
 			AssetId:    assetId,
 			AuthToken:  token,
-			Version:    "",
+			Version:    ver,
 			Extensions: nil,
 		},
 	}
@@ -102,12 +104,12 @@ func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
 }
 
 func (c *CesiumTileClient) buildLayerJson() string {
-	return fmt.Sprintf("%s/%s/layer.json", c.BaseURL, c.AssetId)
+	return fmt.Sprintf("%s/%d/layer.json", c.BaseURL, c.AssetId)
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
 	if strings.Contains(c.TileURL, "{z}") && strings.Contains(c.TileURL, "{x}") && strings.Contains(c.TileURL, "{y}") {
-		url := fmt.Sprintf("%s/%s/%s", c.BaseURL, c.AssetId, c.TileURL)
+		url := fmt.Sprintf("%s/%d/%s", c.BaseURL, c.AssetId, c.TileURL)
 
 		zstr := strconv.Itoa(tile_coord[2])
 		xstr := strconv.Itoa(tile_coord[0])

@@ -14,6 +14,7 @@ const (
 	TILE_SOURCE       SourceType = "tile"
 	MAPBOXTILE_SOURCE SourceType = "mapbox_tile"
 	ARCGIS_SOURCE     SourceType = "arcgis"
+	CESIUMTILE_SOURCE SourceType = "cesium_tile"
 )
 
 type ServiceType string
@@ -25,6 +26,7 @@ const (
 	WMTS_SERVICE      ServiceType = "wmts"
 	WMTS_REST_SERVICE ServiceType = "wmts_rest"
 	MAPBOX_SERVICE    ServiceType = "mapbox"
+	CESIUM_SERVICE    ServiceType = "cesium"
 )
 
 type CacheType string
@@ -259,6 +261,20 @@ type MapboxTileSource struct {
 	TilejsonStore   *StoreInfo   `json:"tilejson_store"`
 }
 
+type CesiumTileSource struct {
+	SourceCommons
+	Type           SourceType   `json:"type,omitempty"`
+	AuthUrl        string       `json:"auth_url,omitempty"`
+	Url            string       `json:"url,omitempty"`
+	Version        string       `json:"version,omitempty"`
+	AssetId        int          `json:"assetId,omitempty"`
+	AccessToken    string       `json:"access_token,omitempty"`
+	Options        interface{}  `json:"options,omitempty"`
+	Grid           string       `json:"grid,omitempty"`
+	Http           *HttpSetting `json:"http,omitempty"`
+	LayerjsonStore *StoreInfo   `json:"layerjson_store"`
+}
+
 type ArcGISSourceOpts struct {
 	Featureinfo                 *bool   `json:"featureinfo,omitempty"`
 	FeatureinfoTolerance        *int    `json:"featureinfo_tolerance,omitempty"`
@@ -312,6 +328,24 @@ type MapboxService struct {
 	Type       string            `json:"type,omitempty"`
 	Name       string            `json:"name,omitempty"`
 	Layers     []MapboxTileLayer `json:"layers,omitempty"`
+	MaxTileAge *int              `json:"max_tile_age,omitempty"`
+}
+
+type CesiumTileLayer struct {
+	UUID        string  `json:"uuid"`
+	Source      string  `json:"source"`
+	Name        string  `json:"name,omitempty"`
+	Title       string  `json:"title"`
+	ZoomRange   *[2]int `json:"zoom_range,omitempty"`
+	LayerJSON   string  `json:"layerjson,omitempty"`
+	Attribution *string `json:"attribution,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+type CesiumService struct {
+	Type       string            `json:"type,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Layers     []CesiumTileLayer `json:"layers,omitempty"`
 	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 

@@ -17,6 +17,10 @@ type LegendLayer interface {
 	GetLegend(query *LegendQuery) tile.Source
 }
 
+type CesiumLayerJSONLayer interface {
+	GetLayerJSON(id string) *resource.LayerJson
+}
+
 type MapboxTileJSONLayer interface {
 	GetTileJSON(id string) *resource.TileJSON
 }

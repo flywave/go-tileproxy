@@ -285,7 +285,7 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest) []byte {
 	md := c.serviceMetadata(req)
 	url := md.URL + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
-	tilejson.Tiles = append(tilejson.Tiles, url)
+	tilejson.Tiles = []string{url}
 	return tilejson.GetData()
 }
 

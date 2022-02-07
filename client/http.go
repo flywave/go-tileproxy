@@ -23,9 +23,7 @@ type CollectorClient struct {
 
 func NewCollectorClient(config *Config, ctx *crawler.Context) *CollectorClient {
 	c := createCollector(config)
-
 	cli := &CollectorClient{Collector: c, BaseRequest: &crawler.Request{Ctx: ctx}}
-
 	return cli
 }
 

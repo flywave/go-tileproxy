@@ -378,10 +378,36 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 
 	if ok {
 		topts.TilejsonSource = tilejsonSource
-		return service.NewMapboxTileProvider(topts)
 	}
 
 	return service.NewMapboxTileProvider(topts)
+}
+
+func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instance ProxyInstance) *service.CesiumTileProvider {
+	tileManager := instance.GetCache(l.Source)
+
+	layersource := instance.GetSource(l.LayerJSON)
+
+	layerjsonSource, ok := layersource.(layer.CesiumLayerJSONLayer)
+
+	metadata := &service.CesiumLayerMetadata{
+		Name:        l.Name,
+		Attribution: l.Attribution,
+		Description: l.Description,
+	}
+
+	topts := &service.CesiumTileOptions{
+		Name:        l.Name,
+		Metadata:    metadata,
+		TileManager: tileManager,
+		ZoomRange:   l.ZoomRange,
+	}
+
+	if ok {
+		topts.LayerjsonSource = layerjsonSource
+	}
+
+	return service.NewCesiumTileProvider(topts)
 }
 
 func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
@@ -785,6 +811,38 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }
 
+func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *sources.CesiumTileSource {
+	var opts tile.TileOptions
+	switch o := s.Options.(type) {
+	case *ImageOpts:
+		opts = NewImageOptions(o)
+	case *RasterOpts:
+		opts = NewRasterOptions(o)
+	}
+
+	grid := instance.GetGrid(s.Grid)
+
+	var http *HttpSetting
+	if s.Http != nil {
+		http = s.Http
+	} else {
+		http = &globals.Http.HttpSetting
+	}
+
+	var tcache *resource.LayerJSONCache
+	if fac != nil {
+		tcache = resource.NewLayerJSONCache(fac.CreateStore(s.LayerjsonStore))
+	} else {
+		tcache = resource.NewLayerJSONCache(ConvertLocalStore(s.LayerjsonStore))
+	}
+
+	creater := cache.GetSourceCreater(opts)
+
+	c := client.NewCesiumTileClient(s.AuthUrl, s.Url, s.AssetId, s.AccessToken, s.Version, newCollectorContext(http))
+
+	return sources.NewCesiumTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
+}
+
 func LoadArcGISSource(s *ArcGISSource, instance ProxyInstance, globals *GlobalsSetting) *sources.ArcGISSource {
 	params := make(request.RequestParams)
 
@@ -913,6 +971,26 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 	sopts := &service.MapboxServiceOptions{Tilesets: layers, Metadata: metadata, MaxTileAge: maxTileAge}
 
 	return service.NewMapboxService(sopts)
+}
+
+func LoadCesiumService(s *CesiumService, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *service.CesiumService {
+	layers := make(map[string]service.Provider)
+	metadata := &service.CesiumMetadata{Name: s.Name}
+
+	for _, tl := range s.Layers {
+		layers[tl.Name] = ConvertCesiumTileLayer(&tl, globals, instance)
+	}
+
+	var maxTileAge *time.Duration
+
+	if s.MaxTileAge != nil {
+		d := time.Duration(*s.MaxTileAge * int(time.Hour))
+		maxTileAge = &d
+	}
+
+	sopts := &service.CesiumServiceOptions{Tilesets: layers, Metadata: metadata, MaxTileAge: maxTileAge}
+
+	return service.NewCesiumService(sopts)
 }
 
 func LoadTMSService(s *TMSService, instance ProxyInstance) *service.TileService {

@@ -36,6 +36,7 @@ var (
 			Directory:       "./cache_data/terrain/",
 			DirectoryLayout: "tms",
 		},
+		TileOptions: &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumService = setting.CesiumService{
 		Layers: []setting.CesiumTileLayer{

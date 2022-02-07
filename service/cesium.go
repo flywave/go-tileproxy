@@ -218,7 +218,7 @@ func (t *CesiumTileProvider) emptyResponse() TileResponse {
 }
 
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
-	tile_request := req.(*request.MapboxTileRequest)
+	tile_request := req.(*request.CesiumTileRequest)
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 	}

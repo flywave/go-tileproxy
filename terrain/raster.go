@@ -14,6 +14,7 @@ import (
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
+	"github.com/flywave/go-tileproxy/utils"
 )
 
 const (
@@ -380,7 +381,7 @@ func CreateRasterSourceFromBufer(buf []byte, opts *RasterOptions) tile.Source {
 		return src
 	} else if opts.Format.Extension() == "terrain" {
 		src := NewTerrainSource(opts)
-		reader := bytes.NewBuffer(buf)
+		reader := utils.NewMemFile(buf)
 		src.SetSource(reader)
 		return src
 	}

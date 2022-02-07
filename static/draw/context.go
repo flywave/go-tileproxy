@@ -206,7 +206,6 @@ func (m *Context) determineZoom(bounds vec2d.Rect, center vec2d.T) int {
 	h := (float64(m.height) - marginT - marginB) / float64(m.grid.TileSize[1])
 
 	if w <= 0 || h <= 0 {
-		log.Printf("Object margins are bigger than the target image size => ignoring object margins for calculation of the zoom level")
 		w = float64(m.width) / float64(m.grid.TileSize[0])
 		h = float64(m.height) / float64(m.grid.TileSize[1])
 	}
@@ -279,7 +278,6 @@ func (m *Context) adjustCenter(center vec2d.T, srs geo.Proj, zoom int) vec2d.T {
 	}
 
 	if (maxX-minX) > float64(m.width) || (maxY-minY) > float64(m.height) {
-		log.Printf("Object margins are bigger than the target image size => ignoring object margins for adjusting the center")
 		return center
 	}
 
@@ -525,27 +523,26 @@ func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, prov
 				x = x - tiles
 			}
 			if x < 0 || x >= tiles {
-				log.Printf("Skipping out of bounds tile column %d/?", x)
 				continue
 			}
 			for yy := 0; yy < trans.tCountY; yy++ {
 				y := trans.tOriginY + yy
 				if y < 0 || y >= tiles {
-					log.Printf("Skipping out of bounds tile %d/%d", x, y)
 					continue
 				}
 				wg.Add(1)
-				t := &tile{t: &cache.Tile{Coord: [3]int{x, y, zoom}}}
-				go func(wg *sync.WaitGroup, t *tile, xx, yy int) {
+				coord := [3]int{x, y, zoom}
+				go func(wg *sync.WaitGroup, c [3]int, xx, yy int) {
 					defer wg.Done()
-					if err := f.Fetch(t.t); err == nil {
+					if ti, err := f.Fetch(c); err == nil {
+						t := &tile{t: ti}
 						t.offx = xx * int(m.grid.TileSize[0])
 						t.offy = yy * int(m.grid.TileSize[1])
 						fetchedTiles <- t
 					} else if err != nil {
 						log.Printf("Error downloading tile file: %s (Ignored)", err)
 					}
-				}(&wg, t, xx, yy)
+				}(&wg, coord, xx, yy)
 			}
 		}
 		wg.Wait()

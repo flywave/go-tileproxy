@@ -8,18 +8,18 @@ import (
 )
 
 type interval struct {
-	Lo, Hi float64
+	min, max float64
 }
 
-func IntervalFromEndpoints(lo, hi float64) (Lo, Hi float64) {
+func intervalFromEndpoints(lo, hi float64) (min, max float64) {
 	i := interval{lo, hi}
 	if lo == -math.Pi && hi != math.Pi {
-		i.Lo = math.Pi
+		i.min = math.Pi
 	}
 	if hi == -math.Pi && lo != math.Pi {
-		i.Hi = math.Pi
+		i.max = math.Pi
 	}
-	return i.Lo, i.Hi
+	return i.min, i.max
 }
 
 func CreateBBox(nwlat float64, nwlng float64, selat float64, selng float64) (*vec2d.Rect, error) {
@@ -52,7 +52,7 @@ func CreateBBox(nwlat float64, nwlng float64, selat float64, selng float64) (*ve
 		bbox.Min[1] = nwlat * math.Pi / 180.0
 		bbox.Max[1] = selat * math.Pi / 180.0
 	}
-	bbox.Min[1], bbox.Max[1] = IntervalFromEndpoints(nwlng*math.Pi/180.0, selng*math.Pi/180.0)
+	bbox.Min[1], bbox.Max[1] = intervalFromEndpoints(nwlng*math.Pi/180.0, selng*math.Pi/180.0)
 
 	return bbox, nil
 }

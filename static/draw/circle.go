@@ -10,11 +10,18 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
 )
+
+var (
+	srs_4326 geo.Proj
+)
+
+func init() {
+	srs_4326 = geo.NewProj(4326)
+}
 
 type Circle struct {
 	MapObject
@@ -45,6 +52,7 @@ func ParseCircleString(s string) (circles []*Circle, err error) {
 
 	radius := 100.0
 	weight := 5.0
+	epsg := int64(4326)
 
 	for _, ss := range strings.Split(s, "|") {
 		if ok, suffix := utils.HasPrefix(ss, "color:"); ok {
@@ -65,12 +73,17 @@ func ParseCircleString(s string) (circles []*Circle, err error) {
 			if weight, err = strconv.ParseFloat(suffix, 64); err != nil {
 				return nil, err
 			}
-		} else {
-			lat, lng, err := coordsparser.Parse(ss)
+		} else if ok, suffix := utils.HasPrefix(ss, "epsg:"); ok {
+			epsg, err = strconv.ParseInt(suffix, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			c := NewCircle(vec2d.T{lat, lng}, geo.NewProj("EPSG:4326"), col, fill, radius, weight)
+		} else {
+			lat, lng, err := ParseLatLon(ss)
+			if err != nil {
+				return nil, err
+			}
+			c := NewCircle(vec2d.T{lat, lng}, geo.NewProj(int(epsg)), col, fill, radius, weight)
 			circles = append(circles, c)
 		}
 	}
@@ -79,6 +92,10 @@ func ParseCircleString(s string) (circles []*Circle, err error) {
 }
 
 func (m *Circle) getLatLng(plus bool) *vec2d.T {
+	var position vec2d.T
+	if !m.Srs.IsLatLong() {
+		position = m.Srs.TransformTo(srs_4326, []vec2d.T{position})[0]
+	}
 	const (
 		R = 6371000.0
 	)
@@ -87,15 +104,19 @@ func (m *Circle) getLatLng(plus bool) *vec2d.T {
 	if !plus {
 		th *= -1
 	}
-	lat := DegreesToRadians(m.Position[0])
+	lat := DegreesToRadians(position[0])
 	lat1 := math.Asin(math.Sin(lat)*math.Cos(th) + math.Cos(lat)*math.Sin(th)*math.Cos(br))
-	lng1 := DegreesToRadians(m.Position[1]) +
+	lng1 := DegreesToRadians(position[1]) +
 		math.Atan2(math.Sin(br)*math.Sin(th)*math.Cos(lat),
 			math.Cos(th)-math.Sin(lat)*math.Sin(lat1))
-	return &vec2d.T{
+	ret := vec2d.T{
 		RadiansToDegrees(lat1),
 		RadiansToDegrees(lng1),
 	}
+	if !m.Srs.IsLatLong() {
+		return &srs_4326.TransformTo(m.Srs, []vec2d.T{ret})[0]
+	}
+	return &ret
 }
 
 func (m *Circle) ExtraMarginPixels() (float64, float64, float64, float64) {

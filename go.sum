@@ -25,8 +25,6 @@ github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5/go.mod h1:qssHWj6
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 h1:Yzb9+7DPaBjB8zlTR87/ElzFsnQfuHnVUVqpZZIcV5Y=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
-github.com/flopp/go-coordsparser v0.0.0-20201115094714-8baaeb7062d5 h1:o5yuyiGtJ4c9ECOq12K6EqsQNnsGF6I+WqBZynB2Hlw=
-github.com/flopp/go-coordsparser v0.0.0-20201115094714-8baaeb7062d5/go.mod h1:t5EAdR9sDhKR06Ix2ZS/8jt8INpzeV3P5uVyEkCDYJc=
 github.com/flywave/freetype v0.0.0-20200612054648-f2aab071ba59/go.mod h1:r29LELyH+xbhmZzB6b+fi/LyejOZEr3U1n3oMSam6Kg=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2 h1:SZ2wf9CRJUZW7G/oLyTjVDF8kGgSV/9681AotxImn00=
 github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2/go.mod h1:s/8EzlwCbZATQQ//rH8jEJykODpa4yFfe4h83KjGJUI=
@@ -72,8 +70,6 @@ github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0/go.mod h1:RX83BRZN
 github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d/go.mod h1:/OSV1sGRbJezuTheaHH6X2Xf/G7MVaOBeHIGQtGpj+0=
 github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7 h1:NFufVWzewDogIyWgCfu65QtizAMTjEfFLInA6GuGSXk=
 github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7/go.mod h1:Cm+gTfx6E3tyRioEZywWyMNWwRf9NaBUezGmpq1SypQ=
-github.com/flywave/go-tin v0.0.0-20220115094045-a61aa5b84cc6 h1:iTJANE53twEBMg4kfSII8GR6uS4nIN5ebgVK5JlrlYA=
-github.com/flywave/go-tin v0.0.0-20220115094045-a61aa5b84cc6/go.mod h1:0hyQ9vusB4J5rKXkvlqa1umPsE3Z7fjTKRYFXvvZbPg=
 github.com/flywave/go-tin v0.0.0-20220128052358-c71208f6e61b h1:CDYoU7ftgwAo2cHp1FDq+x5dmGqO42Zk0Ci8WFUM1ZA=
 github.com/flywave/go-tin v0.0.0-20220128052358-c71208f6e61b/go.mod h1:0hyQ9vusB4J5rKXkvlqa1umPsE3Z7fjTKRYFXvvZbPg=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=

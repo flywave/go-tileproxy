@@ -7,7 +7,6 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
@@ -37,7 +36,6 @@ func ParseAreaString(s string) (*Area, error) {
 	area.Color = color.RGBA{0xff, 0, 0, 0xff}
 	area.Fill = color.Transparent
 	area.Weight = 5.0
-	area.Srs = geo.NewProj("EPSG:4326")
 
 	for _, ss := range strings.Split(s, "|") {
 		if ok, suffix := utils.HasPrefix(ss, "color:"); ok {
@@ -58,13 +56,23 @@ func ParseAreaString(s string) (*Area, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if ok, suffix := utils.HasPrefix(ss, "epsg:"); ok {
+			epsg, err := strconv.ParseInt(suffix, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			area.Srs = geo.NewProj(int(epsg))
 		} else {
-			lat, lng, err := coordsparser.Parse(ss)
+			lat, lng, err := ParseLatLon(ss)
 			if err != nil {
 				return nil, err
 			}
 			area.Positions = append(area.Positions, vec2d.T{lat, lng})
 		}
+	}
+
+	if area.Srs == nil {
+		area.Srs = geo.NewProj("EPSG:4326")
 	}
 	return area, nil
 }

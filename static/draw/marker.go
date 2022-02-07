@@ -10,7 +10,6 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/utils"
@@ -78,6 +77,8 @@ func ParseMarkerString(s string) ([]*Marker, error) {
 	label := ""
 	labelXOffset := 0.5
 	labelYOffset := 0.5
+	epsg := int64(4326)
+
 	var labelColor color.Color
 
 	for _, ss := range strings.Split(s, "|") {
@@ -113,12 +114,18 @@ func ParseMarkerString(s string) ([]*Marker, error) {
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			lat, lng, err := coordsparser.Parse(ss)
+		} else if ok, suffix := utils.HasPrefix(ss, "epsg:"); ok {
+			var err error
+			epsg, err = strconv.ParseInt(suffix, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			m := NewMarker(vec2d.T{lat, lng}, geo.NewProj("EPSG:4326"), markerColor, size)
+		} else {
+			lat, lng, err := ParseLatLon(ss)
+			if err != nil {
+				return nil, err
+			}
+			m := NewMarker(vec2d.T{lat, lng}, geo.NewProj(int(epsg)), markerColor, size)
 			m.Label = label
 			if labelColor != nil {
 				m.SetLabelColor(labelColor)

@@ -8,7 +8,6 @@ import (
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
-	"github.com/flopp/go-coordsparser"
 	"github.com/flywave/gg"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpx"
@@ -68,14 +67,25 @@ func ParsePathString(s string) ([]*Path, error) {
 					}
 				}
 			}
+		} else if ok, suffix := utils.HasPrefix(ss, "epsg:"); ok {
+			epsg, err := strconv.ParseInt(suffix, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			currentPath.Srs = geo.NewProj(int(epsg))
 		} else {
-			lat, lng, err := coordsparser.Parse(ss)
+			lat, lng, err := ParseLatLon(ss)
 			if err != nil {
 				return nil, err
 			}
 			currentPath.Positions = append(currentPath.Positions, vec2d.T{lat, lng})
 		}
 	}
+
+	if currentPath.Srs == nil {
+		currentPath.Srs = geo.NewProj("EPSG:4326")
+	}
+
 	if len(currentPath.Positions) > 0 {
 		paths = append(paths, currentPath)
 	}

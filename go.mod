@@ -30,6 +30,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a
+	github.com/hpinc/go3mf v0.24.0 // indirect
 	github.com/hschendel/stl v1.0.4
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/compress v1.14.2 // indirect
@@ -40,6 +41,7 @@ require (
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.12 // indirect
 	github.com/qmuntal/gltf v0.20.3
+	github.com/qmuntal/opc v0.7.11 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/ulikunitz/xz v0.5.10 // indirect

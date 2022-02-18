@@ -30,7 +30,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a
-	github.com/hpinc/go3mf v0.24.0 // indirect
+	github.com/hpinc/go3mf v0.24.0
 	github.com/hschendel/stl v1.0.4
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/compress v1.14.2 // indirect

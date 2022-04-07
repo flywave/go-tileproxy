@@ -16,7 +16,7 @@ require (
 	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20220112091059-1fc58fbea09a
-	github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4
+	github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726
 	github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7
 	github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7
 	github.com/flywave/go-tin v0.0.0-20220128052358-c71208f6e61b
@@ -32,6 +32,7 @@ require (
 	github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a
 	github.com/hpinc/go3mf v0.24.0
 	github.com/hschendel/stl v1.0.4
+	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26 // indirect
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/klauspost/compress v1.14.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0

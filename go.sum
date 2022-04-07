@@ -9,6 +9,7 @@ github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9Pq
 github.com/barnex/fmath v0.0.0-20150108074215-ec9671f295c2/go.mod h1:G7XW+2O6Hk/x6OP8AuwZjI8ZTyXvKDTTKaRK92gapfk=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
+github.com/benesch/cgosymbolizer v0.0.0-20190515212042-bec6fe6e597b h1:5JgaFtHFRnOPReItxvhMDXbvuBkjSWE+9glJyF466yw=
 github.com/benesch/cgosymbolizer v0.0.0-20190515212042-bec6fe6e597b/go.mod h1:eMD2XUcPsHYbakFEocKrWZp47G0MRJYoC60qFblGjpA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -59,6 +60,8 @@ github.com/flywave/go-mapbox v0.0.0-20220112091059-1fc58fbea09a h1:48J8urJt9sdjT
 github.com/flywave/go-mapbox v0.0.0-20220112091059-1fc58fbea09a/go.mod h1:TBf+TMsJLRzvLD12aech9WVy6u6xfaby3uN0Gz/Qywc=
 github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4 h1:hxK07K6obrhfqjbCOPR9SGoQs79KOF6i9T5ZxqmpqO4=
 github.com/flywave/go-mbgeom v0.0.0-20210821110930-83e1f4ab8cf4/go.mod h1:sUjJf2Kd42EOnBtA8lSTYUhUso0Bxu+CYpPEC/l3wks=
+github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726 h1:XuTuLPROl9fSxlBWJEB+6BFtstAyhb7qA3bCKia+/Xs=
+github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726/go.mod h1:sUjJf2Kd42EOnBtA8lSTYUhUso0Bxu+CYpPEC/l3wks=
 github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7 h1:voEDsqS6skCwuM7ZphbxrsKd7DqtpMRlDUsmO5Tl1T0=
 github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7/go.mod h1:+yO+PGuuoa4ti3kBBXNrtmlQ2KR1WlfQMPHWOMObcnU=
 github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e h1:BHGfBgDZ5CZlNtaMAgZjes6pP0ZpoDmPR1ePyUaI9Qk=
@@ -119,6 +122,8 @@ github.com/hschendel/stl v1.0.4 h1:DXT5rkiXMUkbKw4Ndi1OYZ/a5SLR35TzxGj46p5Qyf8=
 github.com/hschendel/stl v1.0.4/go.mod h1:XQFFLKrq9YTaBpmouDui4JSaxMyAYkpD7elGSSj/y3M=
 github.com/huandu/xstrings v1.3.0/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=
 github.com/ianlancetaylor/cgosymbolizer v0.0.0-20210303021718-7cb7081f6b86/go.mod h1:a5aratAVTWyz+nJMmDsN8O4XTfaLfdAsB1ysCmZX5Bw=
+github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26 h1:UT3hQ6+5hwqUT83cKhKlY5I0W/kqsl6lpn3iFb3Gtqs=
+github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26/go.mod h1:DvXTE/K/RtHehxU8/GtDs4vFtfw64jJ3PaCnFri8CRg=
 github.com/imdario/mergo v0.3.9/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/jinzhu/gorm v1.9.16 h1:+IyIjPEABKRpsu/F8OvDPy9fyQlgsg2luMV2ZIH5i5o=
 github.com/jinzhu/gorm v1.9.16/go.mod h1:G3LB3wezTOWM2ITLzPxEXgSkOXAntiLHS7UdBefADcs=

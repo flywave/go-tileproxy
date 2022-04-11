@@ -206,7 +206,8 @@ type WMSSourceOpts struct {
 
 type SourceCommons struct {
 	ScaleHints
-	Coverage *Coverage `json:"coverage,omitempty"`
+	Coverage *Coverage    `json:"coverage,omitempty"`
+	Http     *HttpSetting `json:"http,omitempty"`
 }
 
 type WMSImageOpts struct {
@@ -224,7 +225,6 @@ type WMSSource struct {
 	ForwardReqParams map[string]string `json:"forward_req_params,omitempty"`
 	SupportedFormats []string          `json:"supported_formats,omitempty"`
 	SupportedSrs     []string          `json:"supported_srs,omitempty"`
-	Http             *HttpSetting      `json:"http,omitempty"`
 	Url              string            `json:"url,omitempty"`
 	Layers           []string          `json:"layers"`
 	Transparent      *bool             `json:"transparent,omitempty"`
@@ -236,43 +236,40 @@ type WMSSource struct {
 
 type TileSource struct {
 	SourceCommons
-	Type          SourceType   `json:"type,omitempty"`
-	URLTemplate   string       `json:"url_template,omitempty"`
-	AccessToken   *string      `json:"access_token,omitempty"`
-	Transparent   *bool        `json:"transparent,omitempty"`
-	Options       interface{}  `json:"options,omitempty"`
-	Grid          string       `json:"grid,omitempty"`
-	RequestFormat string       `json:"request_format,omitempty"`
-	Subdomains    []string     `json:"subdomains,omitempty"`
-	Origin        string       `json:"origin,omitempty"`
-	Http          *HttpSetting `json:"http,omitempty"`
+	Type          SourceType  `json:"type,omitempty"`
+	URLTemplate   string      `json:"url_template,omitempty"`
+	AccessToken   *string     `json:"access_token,omitempty"`
+	Transparent   *bool       `json:"transparent,omitempty"`
+	Options       interface{} `json:"options,omitempty"`
+	Grid          string      `json:"grid,omitempty"`
+	RequestFormat string      `json:"request_format,omitempty"`
+	Subdomains    []string    `json:"subdomains,omitempty"`
+	Origin        string      `json:"origin,omitempty"`
 }
 
 type MapboxTileSource struct {
 	SourceCommons
-	Type            SourceType   `json:"type,omitempty"`
-	Url             string       `json:"url,omitempty"`
-	AccessToken     string       `json:"access_token,omitempty"`
-	AccessTokenName string       `json:"access_token_name,omitempty"`
-	Options         interface{}  `json:"options,omitempty"`
-	Grid            string       `json:"grid,omitempty"`
-	Http            *HttpSetting `json:"http,omitempty"`
-	TilejsonUrl     string       `json:"tilejson_url,omitempty"`
-	TilejsonStore   *StoreInfo   `json:"tilejson_store"`
+	Type            SourceType  `json:"type,omitempty"`
+	Url             string      `json:"url,omitempty"`
+	AccessToken     string      `json:"access_token,omitempty"`
+	AccessTokenName string      `json:"access_token_name,omitempty"`
+	Options         interface{} `json:"options,omitempty"`
+	Grid            string      `json:"grid,omitempty"`
+	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
+	TilejsonStore   *StoreInfo  `json:"tilejson_store"`
 }
 
 type CesiumTileSource struct {
 	SourceCommons
-	Type           SourceType   `json:"type,omitempty"`
-	AuthUrl        string       `json:"auth_url,omitempty"`
-	Url            string       `json:"url,omitempty"`
-	Version        string       `json:"version,omitempty"`
-	AssetId        int          `json:"assetId,omitempty"`
-	AccessToken    string       `json:"access_token,omitempty"`
-	Options        interface{}  `json:"options,omitempty"`
-	Grid           string       `json:"grid,omitempty"`
-	Http           *HttpSetting `json:"http,omitempty"`
-	LayerjsonStore *StoreInfo   `json:"layerjson_store"`
+	Type           SourceType  `json:"type,omitempty"`
+	AuthUrl        string      `json:"auth_url,omitempty"`
+	Url            string      `json:"url,omitempty"`
+	Version        string      `json:"version,omitempty"`
+	AssetId        int         `json:"assetId,omitempty"`
+	AccessToken    string      `json:"access_token,omitempty"`
+	Options        interface{} `json:"options,omitempty"`
+	Grid           string      `json:"grid,omitempty"`
+	LayerjsonStore *StoreInfo  `json:"layerjson_store"`
 }
 
 type ArcGISSourceOpts struct {
@@ -298,7 +295,6 @@ type ArcGISSource struct {
 	Opts               ArcGISSourceOpts `json:"opts"`
 	SupportedFormats   []string         `json:"supported_formats,omitempty"`
 	SupportedSrs       []string         `json:"supported_srs,omitempty"`
-	Http               *HttpSetting     `json:"http,omitempty"`
 }
 
 type WaterMark struct {

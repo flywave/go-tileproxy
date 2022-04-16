@@ -208,6 +208,7 @@ type SourceCommons struct {
 	ScaleHints
 	Coverage *Coverage    `json:"coverage,omitempty"`
 	Http     *HttpSetting `json:"http,omitempty"`
+	Name     string       `json:"name"`
 }
 
 type WMSImageOpts struct {

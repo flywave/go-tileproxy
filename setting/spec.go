@@ -79,6 +79,7 @@ type GlobalsSetting struct {
 }
 
 type Coverage struct {
+	Name         string      `json:"name"`
 	Polygons     string      `json:"polygons,omitempty"`
 	PolygonsSrs  string      `json:"polygons_srs,omitempty"`
 	BBox         *[4]float64 `json:"bbox,omitempty"`

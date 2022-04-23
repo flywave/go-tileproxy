@@ -205,11 +205,19 @@ type WMSSourceOpts struct {
 	FeatureinfoOutFormat string `json:"featureinfo_out_format,omitempty"`
 }
 
+type Source interface {
+	GetCoverage() *Coverage
+}
+
 type SourceCommons struct {
 	ScaleHints
 	Coverage *Coverage    `json:"coverage,omitempty"`
 	Http     *HttpSetting `json:"http,omitempty"`
 	Name     string       `json:"name"`
+}
+
+func (s *SourceCommons) GetCoverage() *Coverage {
+	return s.Coverage
 }
 
 type WMSImageOpts struct {

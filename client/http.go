@@ -87,6 +87,9 @@ func (c *CollectorClient) Open(u string, data []byte, hdr http.Header) (statusCo
 			return 500, nil
 		}
 		reqult := fut.GetResult()
+		if reqult == nil {
+			return 500, nil
+		}
 		return reqult.StatusCode, reqult.Body
 	} else {
 		fut := newFuture()
@@ -95,6 +98,9 @@ func (c *CollectorClient) Open(u string, data []byte, hdr http.Header) (statusCo
 			return 500, nil
 		}
 		reqult := fut.GetResult()
+		if reqult == nil {
+			return 500, nil
+		}
 		return reqult.StatusCode, reqult.Body
 	}
 }

@@ -17,25 +17,27 @@ const (
 
 var (
 	cesiumTerrainDemSource = setting.CesiumTileSource{
-		AuthUrl:        CESIUM_AUTH_URL,
-		Url:            CESIUM_ASSETS_URL,
-		AssetId:        1,
-		Version:        "1.2.0",
-		AccessToken:    CESIUM_ACCESSTOKEN,
-		Options:        &setting.RasterOpts{Format: "terrain"},
-		Grid:           "global_geodetic",
-		LayerjsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		CesiumTileSourcePart: setting.CesiumTileSourcePart{
+			AuthUrl:        CESIUM_AUTH_URL,
+			Url:            CESIUM_ASSETS_URL,
+			AssetId:        1,
+			Version:        "1.2.0",
+			AccessToken:    CESIUM_ACCESSTOKEN,
+			Grid:           "global_geodetic",
+			LayerjsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
+		Options: &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumTerrainDemCache = setting.CacheSource{
-		Sources:       []string{"terrain"},
-		Name:          "terrain_cache",
-		Grid:          "global_geodetic",
-		Format:        "terrain",
-		RequestFormat: "terrain",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/terrain/",
-			DirectoryLayout: "tms",
-		},
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"terrain"},
+			Name:          "terrain_cache",
+			Grid:          "global_geodetic",
+			Format:        "terrain",
+			RequestFormat: "terrain",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/terrain/",
+				DirectoryLayout: "tms",
+			}},
 		TileOptions: &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumService = setting.CesiumService{

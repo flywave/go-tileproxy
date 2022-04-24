@@ -130,7 +130,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 
 	if tile_collection.Empty() {
 		if r.emptySource == nil {
-			r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+			r.emptySource = GetEmptyTile(query.Size, r.Options)
 		}
 		return r.emptySource, nil
 	}
@@ -141,11 +141,11 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions())
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.Options)
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source
-			tile.SetTileOptions(r.tileManager.GetTileOptions())
+			tile.SetTileOptions(r.Options)
 			tile.SetCacheable(t.GetCacheInfo())
 			return tile, nil
 		}
@@ -155,7 +155,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.tileManager.GetTileOptions())
+	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
@@ -172,14 +172,14 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(queryExtent) {
 		if !r.Extent.Intersects(queryExtent) {
 			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+				r.emptySource = GetEmptyTile(query.Size, r.Options)
 			}
 			return r.emptySource, nil
 		}
 		size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
 		if size[0] == 0 || size[1] == 0 {
 			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+				r.emptySource = GetEmptyTile(query.Size, r.Options)
 			}
 			return r.emptySource, nil
 		}
@@ -187,7 +187,7 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		resp, err := r.getSource(src_query)
 		if err != nil {
 			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.tileManager.GetTileOptions())
+				r.emptySource = GetEmptyTile(query.Size, r.Options)
 			}
 			return r.emptySource, nil
 		}

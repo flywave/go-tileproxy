@@ -108,7 +108,7 @@ func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [
 
 	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.Options.Mode, georef)
 
-	err := rasterS.Resample(nil, grid)
+	err := rasterS.Resample(georef, grid)
 
 	if err != nil {
 		return nil

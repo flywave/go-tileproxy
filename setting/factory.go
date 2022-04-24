@@ -319,7 +319,8 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 		if l != nil {
 			layers = append(layers, l)
 		} else {
-			l := instance.GetCacheSource(c.Sources[i])
+			mng := instance.GetCache(c.Name)
+			l := instance.GetCacheSource(c.Sources[i], mng.GetTileOptions())
 			if l != nil {
 				layers = append(layers, l)
 			}
@@ -519,7 +520,7 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 		if s != nil {
 			mapLayers[name] = s
 		} else {
-			s = instance.GetCacheSource(name)
+			s = instance.GetCacheSource(name, nil)
 			if s != nil {
 				mapLayers[name] = s
 			}
@@ -806,7 +807,8 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	if s.AccessTokenName != "" {
 		accessTokenName = s.AccessTokenName
 	}
-	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.AccessToken, accessTokenName, newCollectorContext(http))
+
+	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
 
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }

@@ -1,6 +1,8 @@
 package setting
 
 import (
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/flywave/go-tileproxy/resource"
@@ -34,6 +36,12 @@ type CacheType string
 const (
 	CACHE_TYPE_FILE   CacheType = "local"
 	CACHE_TYPE_CUSTOM CacheType = "custom"
+)
+
+const (
+	TILE_OPTION_RASTER = "raster"
+	TILE_OPTION_VECTOR = "vector"
+	TILE_OPTION_IMAGE  = "image"
 )
 
 type ImageSetting struct {
@@ -94,6 +102,7 @@ type Coverage struct {
 }
 
 type RasterOpts struct {
+	Type         string   `json:"type"`
 	Format       string   `json:"format,omitempty"`
 	Mode         *string  `json:"mode,omitempty"`
 	MaxError     float64  `json:"max_error,omitempty"`
@@ -103,6 +112,7 @@ type RasterOpts struct {
 }
 
 type ImageOpts struct {
+	Type             string                 `json:"type"`
 	Mode             string                 `json:"mode,omitempty"`
 	Transparent      *bool                  `json:"transparent,omitempty"`
 	ResamplingMethod string                 `json:"resampling_method,omitempty"`
@@ -111,6 +121,7 @@ type ImageOpts struct {
 }
 
 type VectorOpts struct {
+	Type        string   `json:"type"`
 	Format      string   `json:"format,omitempty"`
 	Tolerance   *float64 `json:"tolerance,omitempty"`
 	Extent      uint16   `json:"extent,omitempty"`
@@ -169,6 +180,11 @@ type Reproject struct {
 }
 
 type CacheSource struct {
+	CacheSourcePart
+	TileOptions interface{} `json:"tile_options,omitempty"`
+}
+
+type CacheSourcePart struct {
 	Type                 SourceType    `json:"type,omitempty"`
 	Sources              []string      `json:"sources,omitempty"`
 	Name                 string        `json:"name,omitempty"`
@@ -179,7 +195,6 @@ type CacheSource struct {
 	MetaSize             []uint32      `json:"meta_size,omitempty"`
 	MetaBuffer           *int          `json:"meta_buffer,omitempty"`
 	BulkMetaTiles        *bool         `json:"bulk_meta_tiles,omitempty"`
-	TileOptions          interface{}   `json:"tile_options,omitempty"`
 	MaxTileLimit         *int          `json:"max_tile_limit,omitempty"`
 	MinimizeMetaRequests *bool         `json:"minimize_meta_requests,omitempty"`
 	Format               string        `json:"format,omitempty"`
@@ -191,6 +206,50 @@ type CacheSource struct {
 	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
 	ReprojectSrs         *Reproject    `json:"reproject,omitempty"`
 	QueryBuffer          *int          `json:"query_buffer,omitempty"`
+}
+
+func (c *CacheSource) UnmarshalJSON(data []byte) error {
+	pt := &CacheSourcePart{}
+	err := json.Unmarshal(data, pt)
+	if err != nil {
+		return err
+	}
+	tmp := struct {
+		TileOptions interface{} `json:"tile_options,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	opt, err := TileOptionUnmarshal(tmp.TileOptions)
+	if err != nil {
+		return err
+	}
+	c.TileOptions = opt
+	c.CacheSourcePart = *pt
+	return nil
+}
+
+func TileOptionUnmarshal(obj interface{}) (interface{}, error) {
+	bt, _ := json.Marshal(obj)
+	mp := make(map[string]interface{})
+	json.Unmarshal(bt, &mp)
+	switch mp["type"].(string) {
+	case TILE_OPTION_IMAGE:
+		opt := &ImageOpts{}
+		json.Unmarshal(bt, opt)
+		return opt, nil
+	case TILE_OPTION_VECTOR:
+		opt := &VectorOpts{}
+		json.Unmarshal(bt, opt)
+		return opt, nil
+	case TILE_OPTION_RASTER:
+		opt := &RasterOpts{}
+		json.Unmarshal(bt, opt)
+		return opt, nil
+	}
+	return nil, errors.New("not support type")
 }
 
 type WMSSourceOpts struct {
@@ -244,42 +303,124 @@ type WMSSource struct {
 	AccessTokenName  *string           `json:"access_token_name,omitempty"`
 }
 
-type TileSource struct {
+type TileSourcePart struct {
 	SourceCommons
-	Type          SourceType  `json:"type,omitempty"`
-	URLTemplate   string      `json:"url_template,omitempty"`
-	AccessToken   *string     `json:"access_token,omitempty"`
-	Transparent   *bool       `json:"transparent,omitempty"`
-	Options       interface{} `json:"options,omitempty"`
-	Grid          string      `json:"grid,omitempty"`
-	RequestFormat string      `json:"request_format,omitempty"`
-	Subdomains    []string    `json:"subdomains,omitempty"`
-	Origin        string      `json:"origin,omitempty"`
+	Type          SourceType `json:"type,omitempty"`
+	URLTemplate   string     `json:"url_template,omitempty"`
+	AccessToken   *string    `json:"access_token,omitempty"`
+	Transparent   *bool      `json:"transparent,omitempty"`
+	Grid          string     `json:"grid,omitempty"`
+	RequestFormat string     `json:"request_format,omitempty"`
+	Subdomains    []string   `json:"subdomains,omitempty"`
+	Origin        string     `json:"origin,omitempty"`
+}
+
+type TileSource struct {
+	TileSourcePart
+	Options interface{} `json:"options,omitempty"`
+}
+
+func (c *TileSource) UnmarshalJSON(data []byte) error {
+	p := &TileSourcePart{}
+	err := json.Unmarshal(data, p)
+	if err != nil {
+		return err
+	}
+	tmp := struct {
+		Options interface{} `json:"options,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	opt, err := TileOptionUnmarshal(tmp.Options)
+	if err != nil {
+		return err
+	}
+	c.Options = opt
+	c.TileSourcePart = *p
+	return nil
+}
+
+type MapboxTileSourcePart struct {
+	SourceCommons
+	Type            SourceType `json:"type,omitempty"`
+	Url             string     `json:"url,omitempty"`
+	Sku             string     `json:"sku,omitempty"`
+	AccessToken     string     `json:"access_token,omitempty"`
+	AccessTokenName string     `json:"access_token_name,omitempty"`
+	Grid            string     `json:"grid,omitempty"`
+	TilejsonUrl     string     `json:"tilejson_url,omitempty"`
+	TilejsonStore   *StoreInfo `json:"tilejson_store"`
 }
 
 type MapboxTileSource struct {
+	MapboxTileSourcePart
+	Options interface{} `json:"options,omitempty"`
+}
+
+func (c *MapboxTileSource) UnmarshalJSON(data []byte) error {
+	p := &MapboxTileSourcePart{}
+	err := json.Unmarshal(data, p)
+	if err != nil {
+		return err
+	}
+	tmp := struct {
+		Options interface{} `json:"options,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	opt, err := TileOptionUnmarshal(tmp.Options)
+	if err != nil {
+		return err
+	}
+	c.Options = opt
+	c.MapboxTileSourcePart = *p
+	return nil
+}
+
+type CesiumTileSourcePart struct {
 	SourceCommons
-	Type            SourceType  `json:"type,omitempty"`
-	Url             string      `json:"url,omitempty"`
-	AccessToken     string      `json:"access_token,omitempty"`
-	AccessTokenName string      `json:"access_token_name,omitempty"`
-	Options         interface{} `json:"options,omitempty"`
-	Grid            string      `json:"grid,omitempty"`
-	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
-	TilejsonStore   *StoreInfo  `json:"tilejson_store"`
+	Type           SourceType `json:"type,omitempty"`
+	AuthUrl        string     `json:"auth_url,omitempty"`
+	Url            string     `json:"url,omitempty"`
+	Version        string     `json:"version,omitempty"`
+	AssetId        int        `json:"assetId,omitempty"`
+	AccessToken    string     `json:"access_token,omitempty"`
+	Grid           string     `json:"grid,omitempty"`
+	LayerjsonStore *StoreInfo `json:"layerjson_store"`
 }
 
 type CesiumTileSource struct {
-	SourceCommons
-	Type           SourceType  `json:"type,omitempty"`
-	AuthUrl        string      `json:"auth_url,omitempty"`
-	Url            string      `json:"url,omitempty"`
-	Version        string      `json:"version,omitempty"`
-	AssetId        int         `json:"assetId,omitempty"`
-	AccessToken    string      `json:"access_token,omitempty"`
-	Options        interface{} `json:"options,omitempty"`
-	Grid           string      `json:"grid,omitempty"`
-	LayerjsonStore *StoreInfo  `json:"layerjson_store"`
+	CesiumTileSourcePart
+	Options interface{} `json:"options,omitempty"`
+}
+
+func (c *CesiumTileSource) UnmarshalJSON(data []byte) error {
+	p := &CesiumTileSourcePart{}
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		return err
+	}
+	tmp := struct {
+		Options interface{} `json:"options,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	opt, err := TileOptionUnmarshal(tmp.Options)
+	if err != nil {
+		return err
+	}
+	c.Options = opt
+	c.CesiumTileSourcePart = *p
+	return nil
 }
 
 type ArcGISSourceOpts struct {

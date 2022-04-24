@@ -11,41 +11,45 @@ import (
 
 const (
 	MAPBOX_TILE_URL    = "https://api.mapbox.com"
-	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja3pjOXRqcWkybWY3MnVwaGxkbTgzcXAwIn0._tCv9fpOyCT4O_Tdpl6h0w"
+	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiaGF3a2luZzIyMTUiLCJhIjoiY2lqcDB3OGFnMDEwbXRva292emduaXhpcSJ9.QwZ6QKL_shDTOYNuVTYbUw"
 )
 
 var (
 	mapboxRasterDemSource = setting.MapboxTileSource{
-		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
-		AccessToken:   MAPBOX_ACCESSTOKEN,
-		Options:       &setting.ImageOpts{Format: "webp"},
-		Grid:          "global_webmercator",
-		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		MapboxTileSourcePart: setting.MapboxTileSourcePart{
+			Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
+			AccessToken:   MAPBOX_ACCESSTOKEN,
+			Sku:           "101XxiLvoFYxL",
+			Grid:          "global_webmercator",
+			TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
+			TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
+		Options: &setting.RasterOpts{Format: "webp"},
 	}
 	mapboxRasterDemCache = setting.CacheSource{
-		Sources:       []string{"rasterdem"},
-		Name:          "rasterdem_cache",
-		Grid:          "global_webmercator",
-		Format:        "webp",
-		RequestFormat: "webp",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/rasterdem/",
-			DirectoryLayout: "tms",
-		},
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"rasterdem"},
+			Name:          "rasterdem_cache",
+			Grid:          "global_webmercator",
+			Format:        "webp",
+			RequestFormat: "webp",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/rasterdem/",
+				DirectoryLayout: "tms",
+			},
+			QueryBuffer: setting.NewInt(1)},
 		TileOptions: &setting.RasterOpts{Format: "webp"},
-		QueryBuffer: setting.NewInt(1),
 	}
 	cesiumTerrainCache = setting.CacheSource{
-		Sources:       []string{"rasterdem_cache"},
-		Name:          "terrain_cache",
-		Grid:          "global_geodetic",
-		Format:        "terrain",
-		RequestFormat: "terrain",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/terrain/",
-			DirectoryLayout: "tms",
-		},
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"rasterdem_cache"},
+			Name:          "terrain_cache",
+			Grid:          "global_geodetic",
+			Format:        "terrain",
+			RequestFormat: "terrain",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/terrain/",
+				DirectoryLayout: "tms",
+			}},
 		TileOptions: &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumService = setting.CesiumService{

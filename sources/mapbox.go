@@ -2,6 +2,7 @@ package sources
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/client"
@@ -74,5 +75,8 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z})
+	if len(resp) == 0 {
+		return nil, fmt.Errorf("tile %d %d %d %s", x, y, z, "have no data")
+	}
 	return s.SourceCreater.Create(resp, [3]int{x, y, z}), nil
 }

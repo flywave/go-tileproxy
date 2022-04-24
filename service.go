@@ -8,6 +8,7 @@ import (
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/service"
 	"github.com/flywave/go-tileproxy/setting"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
 type ServiceType uint32
@@ -152,7 +153,7 @@ func (s *Service) GetCache(name string) cache.Manager {
 	return nil
 }
 
-func (s *Service) GetCacheSource(name string) layer.Layer {
+func (s *Service) GetCacheSource(name string, opt tile.TileOptions) layer.Layer {
 	manager := s.GetCache(name)
 	if manager != nil {
 		tile_grid := manager.GetGrid()
@@ -164,8 +165,10 @@ func (s *Service) GetCacheSource(name string) layer.Layer {
 
 		cache_extent := geo.MapExtentFromGrid(tile_grid)
 		cache_extent = extent.Intersection(cache_extent)
-
-		return cache.NewCacheSource(manager, cache_extent, manager.GetTileOptions(), nil, true, manager.GetQueryBuffer(), manager.GetReprojectSrcSrs(), manager.GetReprojectDstSrs())
+		if opt == nil {
+			opt = manager.GetTileOptions()
+		}
+		return cache.NewCacheSource(manager, cache_extent, opt, nil, true, manager.GetQueryBuffer(), manager.GetReprojectSrcSrs(), manager.GetReprojectDstSrs())
 	}
 	return nil
 }

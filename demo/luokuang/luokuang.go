@@ -25,37 +25,40 @@ func init() {
 
 var (
 	luokuangMVTSource = setting.MapboxTileSource{
-		Url:             LK_API_URL + "/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom={z}&x={x}&y={y}",
-		AccessToken:     LK_ACCESSTOKEN,
-		AccessTokenName: "ak",
-		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
-		Grid:            "global_webmercator",
-		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
-		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		MapboxTileSourcePart: setting.MapboxTileSourcePart{
+			Url:             LK_API_URL + "/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom={z}&x={x}&y={y}",
+			AccessToken:     LK_ACCESSTOKEN,
+			AccessTokenName: "ak",
+			Grid:            "global_webmercator",
+			TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
+			TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
+		Options: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
 	}
 	luokuangMVTCache = setting.CacheSource{
-		Sources:       []string{"lk_mvt"},
-		Name:          "lk_mvt_cache",
-		Grid:          "global_webmercator",
-		Format:        "mvt",
-		RequestFormat: "mvt",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/lk_mvt",
-			DirectoryLayout: "tms",
-		},
-		TileOptions:  &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
-		ReprojectSrs: &setting.Reproject{SrcSrs: "EPSG:GCJ02", DestSrs: "EPSG:4326"},
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"lk_mvt"},
+			Name:          "lk_mvt_cache",
+			Grid:          "global_webmercator",
+			Format:        "mvt",
+			RequestFormat: "mvt",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/lk_mvt",
+				DirectoryLayout: "tms",
+			},
+			ReprojectSrs: &setting.Reproject{SrcSrs: "EPSG:GCJ02", DestSrs: "EPSG:4326"}},
+		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
 	}
 	mapboxMVTCache = setting.CacheSource{
-		Sources:       []string{"lk_mvt_cache"},
-		Name:          "mvt_cache",
-		Grid:          "global_webmercator",
-		Format:        "mvt",
-		RequestFormat: "mvt",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/mvt",
-			DirectoryLayout: "tms",
-		},
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"lk_mvt_cache"},
+			Name:          "mvt_cache",
+			Grid:          "global_webmercator",
+			Format:        "mvt",
+			RequestFormat: "mvt",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/mvt",
+				DirectoryLayout: "tms",
+			}},
 		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_MAPBOX))},
 	}
 	mapboxService = setting.MapboxService{

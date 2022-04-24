@@ -13,6 +13,7 @@ type MapboxClient struct {
 	BaseClient
 	BaseURL         string
 	TilejsonURL     string
+	Sku             string
 	AccessToken     string
 	AccessTokenName string
 }
@@ -25,6 +26,7 @@ func (c *MapboxClient) buildQuery(url_ string) (string, error) {
 
 	q := u.Query()
 	q.Set(c.AccessTokenName, c.AccessToken)
+	q.Set("sku", c.Sku)
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
@@ -33,7 +35,7 @@ type MapboxTileClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileClient(urlTemplate string, tilejsonUrl string, token string, tokenName string, ctx Context) *MapboxTileClient {
+func NewMapboxTileClient(urlTemplate, tilejsonUrl, sku, token, tokenName string, ctx Context) *MapboxTileClient {
 	return &MapboxTileClient{
 		MapboxClient: MapboxClient{
 			BaseClient:      BaseClient{ctx: ctx},
@@ -41,6 +43,7 @@ func NewMapboxTileClient(urlTemplate string, tilejsonUrl string, token string, t
 			TilejsonURL:     tilejsonUrl,
 			AccessToken:     token,
 			AccessTokenName: tokenName,
+			Sku:             sku,
 		},
 	}
 }

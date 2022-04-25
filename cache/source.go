@@ -26,15 +26,15 @@ func GetEmptyTile(size [2]uint32, opts tile.TileOptions) tile.Source {
 	return nil
 }
 
-func ResampleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, srcSrs geo.Proj, out_size [2]uint32, opts tile.TileOptions) (tile.Source, error) {
+func ResampleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj, src_tile_grid [2]int, grid *geo.TileGrid, src_bbox vec2d.Rect, srcSrs geo.Proj, out_size [2]uint32, src_opt, dest_opt tile.TileOptions) (tile.Source, error) {
 	size := [2]uint32{grid.TileSize[0], grid.TileSize[1]}
-	switch opt := opts.(type) {
+	switch opt := dest_opt.(type) {
 	case *imagery.ImageOptions:
-		return imagery.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, opt), nil
+		return imagery.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, src_opt.(*imagery.ImageOptions), opt), nil
 	case *terrain.RasterOptions:
-		return terrain.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, opt), nil
+		return terrain.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, src_opt.(*terrain.RasterOptions), opt), nil
 	case *vector.VectorOptions:
-		return vector.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, opt), nil
+		return vector.Resample(layers, src_tile_grid, size, grid, src_bbox, srcSrs, queryBBox, querySrs, out_size, src_opt.(*vector.VectorOptions), opt), nil
 	}
 	return nil, errors.New("not support source")
 }

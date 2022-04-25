@@ -136,12 +136,12 @@ func imageTileOffset(srcbox vec2d.Rect, src_srs geo.Proj, src_size [2]uint32, ds
 	return [2]int{int(facx * float64(src_size[0])), int(facy * float64(src_size[1]))}
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, image_opts *ImageOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *ImageOptions) tile.Source {
 	rr := NewTileMerger(tile_grid, tile_size)
 
-	result := rr.Merge(tiles, image_opts)
+	result := rr.Merge(tiles, src_opts)
 
-	sp := NewTileSplitter(result, image_opts)
+	sp := NewTileSplitter(result, dest_opts)
 
 	off := imageTileOffset(src_bbox, grid.Srs, [2]uint32{uint32(tile_grid[0] * int(tile_size[0])), uint32(tile_grid[1] * int(tile_size[1]))}, req_bbox, req_srs)
 

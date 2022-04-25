@@ -100,6 +100,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	if err != nil {
 		return nil, err
 	}
+	src_bbox = r.grid.Srs.TransformRectTo(dst_srs, src_bbox, 16)
 
 	num_tiles := tile_grid[0] * tile_grid[1]
 
@@ -141,7 +142,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.Options)
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions(), r.Options)
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source

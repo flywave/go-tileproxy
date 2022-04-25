@@ -126,8 +126,8 @@ func (s *TerrainSource) SetSource(src interface{}) {
 		s.data, _ = s.Decode(ss)
 	case string:
 		s.fname = ss
-	default:
-		s.data = ss.(*qmt.QuantizedMeshTile)
+	case *qmt.QuantizedMeshTile:
+		s.data = ss
 	}
 }
 

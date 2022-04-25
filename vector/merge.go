@@ -220,7 +220,7 @@ func (t *TiledVector) Transform(grid *geo.TileGrid, req_bbox vec2d.Rect, req_srs
 	return CreateVectorSourceFromVector(vecs, [3]int{x, y, z}, vec_opts, nil)
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, vec_opts *VectorOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *VectorOptions) tile.Source {
 	rr := NewTiledVector(tiles, tile_grid, tile_size, src_bbox, src_srs)
-	return rr.Transform(grid, req_bbox, req_srs, out_size, vec_opts)
+	return rr.Transform(grid, req_bbox, req_srs, out_size, dest_opts)
 }

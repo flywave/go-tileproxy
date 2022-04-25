@@ -2,6 +2,7 @@ package terrain
 
 import (
 	"io"
+	"unsafe"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -226,6 +227,10 @@ func (d *TileData) copyFrom(src *TileData, pos [2]int) {
 		}
 		copy(d.BottomBorder[offx+x_:offx+x_+int(src.Size[0])], src.BottomBorder[offx:])
 	}
+}
+
+func (d *TileData) GetData() []byte {
+	return *(*[]byte)((unsafe.Pointer)(&d.Datas))
 }
 
 type RasterIO interface {

@@ -10,8 +10,10 @@ import (
 )
 
 type RasterMerger struct {
-	Grid [2]int
-	Size [2]uint32
+	Grid     [2]int
+	Size     [2]uint32
+	bbox     vec2d.Rect
+	bbox_srs geo.Proj
 }
 
 func NewRasterMerger(tile_grid [2]int, tile_size [2]uint32) *RasterMerger {
@@ -27,23 +29,12 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 	}
 
 	src_size := t.srcSize()
-
 	var cacheable *tile.CacheInfo
-
-	fdata := ordered_tiles[0].GetTile().(*TileData)
-	georef := ordered_tiles[0].GetGeoReference()
-
-	var bbox vec2d.Rect
-	var bbox_srs geo.Proj
-
-	if georef != nil {
-		bbox = georef.GetBBox()
-		bbox_srs = georef.GetSrs()
-	}
-
-	mode := fdata.Border
-
+	mode := opts.Mode
 	tiledata := NewTileData(src_size, mode)
+
+	var bbox vec2d.Rect = t.bbox
+	var bbox_srs geo.Proj = t.bbox_srs
 
 	for i, source := range ordered_tiles {
 		if source == nil {
@@ -108,7 +99,7 @@ func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [
 
 	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.Options.Mode, georef)
 
-	err := rasterS.Resample(georef, grid)
+	err := rasterS.Resample(nil, grid)
 
 	if err != nil {
 		return nil
@@ -140,14 +131,13 @@ func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 	return transformer.GetTile(req_bbox, req_srs, out_size)
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, dem_opts *RasterOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *RasterOptions) tile.Source {
 	m := NewRasterMerger(tile_grid, tile_size)
+	m.bbox = src_bbox
+	m.bbox_srs = src_srs
 
-	rr := m.Merge(tiles, dem_opts)
-
-	splitter := NewRasterSplitter(rr, dem_opts)
-
+	rr := m.Merge(tiles, src_opts)
+	splitter := NewRasterSplitter(rr, dest_opts)
 	newTile := splitter.GetTile(req_bbox, req_srs, out_size)
-
 	return newTile
 }

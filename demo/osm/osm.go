@@ -15,21 +15,27 @@ const (
 
 var (
 	osmTMSSource = setting.TileSource{
-		URLTemplate: OSM_API_URL + "/{tms_path}.png",
-		Options:     &setting.ImageOpts{Format: "png"},
-		Grid:        "global_webmercator",
-	}
-	osmTMSCache = setting.CacheSource{
-		Sources:       []string{"tms"},
-		Name:          "tms_cache",
-		Grid:          "global_webmercator",
-		Format:        "png",
-		RequestFormat: "png",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/osm",
-			DirectoryLayout: "tms",
+		TileSourcePart: setting.TileSourcePart{
+			URLTemplate: OSM_API_URL + "/{tms_path}.png",
+			Grid:        "global_webmercator",
 		},
+		Options: &setting.ImageOpts{Format: "png"},
 	}
+
+	osmTMSCache = setting.CacheSource{
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"tms"},
+			Name:          "tms_cache",
+			Grid:          "global_webmercator",
+			Format:        "png",
+			RequestFormat: "png",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/osm",
+				DirectoryLayout: "tms",
+			}},
+		TileOptions: &setting.ImageOpts{Format: "png"},
+	}
+
 	osmService = setting.TMSService{
 		Layers: []setting.TileLayer{
 			{

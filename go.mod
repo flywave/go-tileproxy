@@ -8,10 +8,10 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-cog v0.0.0-20220209090615-63c2af73d539
-	github.com/flywave/go-geo v0.0.0-20220126075414-6c3011149e1f
-	github.com/flywave/go-geoid v0.0.0-20210705014121-cd8f70cb88bb
-	github.com/flywave/go-geom v0.0.0-20220126050849-e33a48d71477
-	github.com/flywave/go-geos v0.0.0-20210924031454-d16b758e2026
+	github.com/flywave/go-geo v0.0.0-20220302083036-0cfa1df0f51f
+	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
+	github.com/flywave/go-geom v0.0.0-20220210023939-86f84322e71f
+	github.com/flywave/go-geos v0.0.0-20220312005430-b3e54ee96ed7
 	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
 	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9

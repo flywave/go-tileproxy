@@ -44,6 +44,15 @@ const (
 	TILE_OPTION_IMAGE  = "image"
 )
 
+const (
+	DIRECTORY_LAYOUT_TC      = "tc"
+	DIRECTORY_LAYOUT_MP      = "mp"
+	DIRECTORY_LAYOUT_TMS     = "tms"
+	DIRECTORY_LAYOUT_RE_TMS  = "reverse_tms"
+	DIRECTORY_LAYOUT_QUADKEY = "quadkey"
+	DIRECTORY_LAYOUT_ARCGIS  = "arcgis"
+)
+
 type ImageSetting struct {
 	ResamplingMethod string               `json:"resampling_method,omitempty"`
 	Paletted         *bool                `json:"paletted,omitempty"`

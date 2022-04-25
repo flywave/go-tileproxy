@@ -405,9 +405,7 @@ func CreateRasterSourceFromTileData(data *TileData, opts *RasterOptions, cacheab
 		src.SetCacheable(cacheable)
 		return src
 	} else if opts.Format.Extension() == "terrain" {
-		src := NewTerrainSource(opts)
-		src.SetSource(data)
-		src.SetCacheable(cacheable)
+		src, _ := GenTerrainSource(data, opts)
 		return src
 	}
 	return nil

@@ -15,6 +15,9 @@ const (
 )
 
 var (
+	unilateral string = "unilateral"
+	bilateral  string = "bilateral"
+
 	mapboxRasterDemSource = setting.MapboxTileSource{
 		MapboxTileSourcePart: setting.MapboxTileSourcePart{
 			Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
@@ -23,7 +26,7 @@ var (
 			Grid:          "global_webmercator",
 			TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 			TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
-		Options: &setting.RasterOpts{Format: "webp"},
+		Options: &setting.RasterOpts{Format: "webp", Mode: &bilateral},
 	}
 	mapboxRasterDemCache = setting.CacheSource{
 		CacheSourcePart: setting.CacheSourcePart{
@@ -37,20 +40,20 @@ var (
 				DirectoryLayout: "tms",
 			},
 			QueryBuffer: setting.NewInt(1)},
-		TileOptions: &setting.RasterOpts{Format: "webp"},
+		TileOptions: &setting.RasterOpts{Format: "webp", Mode: &bilateral},
 	}
 	cesiumTerrainCache = setting.CacheSource{
 		CacheSourcePart: setting.CacheSourcePart{
 			Sources:       []string{"rasterdem_cache"},
 			Name:          "terrain_cache",
-			Grid:          "global_geodetic",
+			Grid:          "global_geodetic_sw",
 			Format:        "terrain",
 			RequestFormat: "terrain",
 			CacheInfo: &setting.CacheInfo{
 				Directory:       "./cache_data/terrain/",
 				DirectoryLayout: "tms",
 			}},
-		TileOptions: &setting.RasterOpts{Format: "terrain"},
+		TileOptions: &setting.RasterOpts{Format: "terrain", Mode: &unilateral},
 	}
 	cesiumService = setting.CesiumService{
 		Layers: []setting.CesiumTileLayer{

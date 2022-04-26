@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -39,6 +40,10 @@ func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 		Tilesets:   opts.Tilesets,
 		Metadata:   opts.Metadata,
 		MaxTileAge: opts.MaxTileAge,
+	}
+	if s.MaxTileAge == nil {
+		max := time.Duration(math.MaxInt64)
+		s.MaxTileAge = &max
 	}
 	s.router = map[string]func(r request.Request) *Response{
 		"tilejson": func(r request.Request) *Response {

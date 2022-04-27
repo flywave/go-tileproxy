@@ -9,6 +9,7 @@ import (
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/imagery"
+	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/terrain"
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/vector"
@@ -39,13 +40,22 @@ func ResampleTiles(layers []tile.Source, queryBBox vec2d.Rect, querySrs geo.Proj
 	return nil, errors.New("not support source")
 }
 
-func MergeTiles(layers []tile.Source, opts tile.TileOptions, size [2]uint32, bbox vec2d.Rect, Srs geo.Proj, tileMerger tile.Merger) (tile.Source, error) {
+func MergeTiles(layers []tile.Source, opts tile.TileOptions, query *layer.MapQuery, tileMerger tile.Merger) (tile.Source, error) {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
+		size, bbox, Srs := query.Size, query.BBox, query.Srs
 		return imagery.MergeImages(layers, opt, size, bbox, Srs, tileMerger), nil
-
+	case *terrain.RasterOptions:
+		return mergeRasterTile(layers, opts, query), nil
 	}
 	return nil, errors.New("not support source")
+}
+
+func mergeRasterTile(layers []tile.Source, opts tile.TileOptions, query *layer.MapQuery) tile.Source {
+	m := terrain.NewRasterMerger([2]int{int(query.MetaSize[0]), int(query.MetaSize[0])}, query.Size)
+	m.BBox = query.BBox
+	m.BBoxSrs = query.Srs
+	return m.Merge(layers, opts.(*terrain.RasterOptions))
 }
 
 func splitImageMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, image_opts *imagery.ImageOptions) *TileCollection {
@@ -65,10 +75,29 @@ func splitImageMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_si
 	return split_tiles
 }
 
+func splitRasterMetaTiles(meta_tile tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, rasterOpt *terrain.RasterOptions) *TileCollection {
+	splitter := terrain.NewRasterSplitter(meta_tile, rasterOpt)
+	split_tiles := NewTileCollection(nil)
+	for _, tile := range tiles {
+		tile_coord, crop_coord := tile.Tiles, tile.Sizes
+		if tile_coord[0] < 0 || tile_coord[1] < 0 || tile_coord[2] < 0 {
+			continue
+		}
+		data := splitter.GetSplitTile(crop_coord, tile_size)
+		new_tile := NewTile(tile_coord)
+		new_tile.SetCacheInfo(meta_tile.GetCacheable())
+		new_tile.Source = data
+		split_tiles.SetItem(new_tile)
+	}
+	return split_tiles
+}
+
 func SplitTiles(layers tile.Source, tiles []geo.TilePattern, tile_size [2]uint32, opts tile.TileOptions) (*TileCollection, error) {
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
 		return splitImageMetaTiles(layers, tiles, tile_size, opt), nil
+	case *terrain.RasterOptions:
+		return splitRasterMetaTiles(layers, tiles, tile_size, opt), nil
 	}
 	return nil, errors.New("not support source")
 }

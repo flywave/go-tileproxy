@@ -21,6 +21,7 @@ type MapQuery struct {
 	Transparent bool
 	TiledOnly   bool
 	Dimensions  utils.Dimensions
+	MetaSize    [2]uint32
 }
 
 func (q *MapQuery) Eq(o *MapQuery) bool {

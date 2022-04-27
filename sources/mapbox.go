@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/flywave/go-geo"
+	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
@@ -46,7 +47,7 @@ func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {
 }
 
 func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
-	if s.Grid.TileSize[0] != query.Size[0] || s.Grid.TileSize[1] != query.Size[1] {
+	if s.Grid.TileSize[0] != (query.Size[0]/query.MetaSize[0]) || s.Grid.TileSize[1] != (query.Size[1]/query.MetaSize[0]) {
 		return nil, errors.New("tile size of cache and tile source do not match")
 	}
 
@@ -62,21 +63,27 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
-	_, grid, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
+	_, _, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if grid != [2]int{1, 1} {
-		return nil, errors.New("bbox does not align to tile")
-	}
+	sources := []tile.Source{}
+	for {
+		x, y, z, done := tiles.Next()
 
-	x, y, z, _ := tiles.Next()
-
-	resp := s.Client.GetTile([3]int{x, y, z})
-	if len(resp) == 0 {
-		return nil, fmt.Errorf("tile %d %d %d %s", x, y, z, "have no data")
+		resp := s.Client.GetTile([3]int{x, y, z})
+		if len(resp) == 0 {
+			return nil, fmt.Errorf("tile %d %d %d %s", x, y, z, "have no data")
+		}
+		sources = append(sources, s.SourceCreater.Create(resp, [3]int{x, y, z}))
+		if done {
+			break
+		}
 	}
-	return s.SourceCreater.Create(resp, [3]int{x, y, z}), nil
+	if len(sources) == 1 {
+		return sources[0], nil
+	}
+	return cache.MergeTiles(sources, s.Options, query, nil)
 }

@@ -10,10 +10,10 @@ import (
 )
 
 type RasterMerger struct {
-	Grid     [2]int
-	Size     [2]uint32
-	bbox     vec2d.Rect
-	bbox_srs geo.Proj
+	Grid    [2]int
+	Size    [2]uint32
+	BBox    vec2d.Rect
+	BBoxSrs geo.Proj
 }
 
 func NewRasterMerger(tile_grid [2]int, tile_size [2]uint32) *RasterMerger {
@@ -33,8 +33,8 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 	mode := opts.Mode
 	tiledata := NewTileData(src_size, mode)
 
-	var bbox vec2d.Rect = t.bbox
-	var bbox_srs geo.Proj = t.bbox_srs
+	var bbox vec2d.Rect = t.BBox
+	var bbox_srs geo.Proj = t.BBoxSrs
 
 	for i, source := range ordered_tiles {
 		if source == nil {
@@ -66,8 +66,8 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 }
 
 func (t *RasterMerger) srcSize() [2]uint32 {
-	width := uint32(t.Grid[0]) * t.Size[0]
-	height := uint32(t.Grid[1]) * t.Size[1]
+	width := t.Size[0]
+	height := t.Size[1]
 	return [2]uint32{width, height}
 }
 
@@ -110,6 +110,33 @@ func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [
 	return CreateRasterSourceFromTileData(smtd, t.Options, nil)
 }
 
+func (t *RasterSplitter) GetSplitTile(crop_coord [2]int, tile_size [2]uint32) tile.Source {
+	minx, miny := crop_coord[0], crop_coord[1]
+	maxx := minx + int(tile_size[0])
+	maxy := miny + int(tile_size[1])
+	sz := t.dem.GetSize()
+
+	sx := geo.MaxInt(minx, 0)
+	sy := geo.MaxInt(miny, 0)
+	ex := geo.MinInt(maxx, int(sz[0]))
+	ey := geo.MinInt(maxy, int(sz[1]))
+	td := NewTileData(tile_size, t.Options.Mode)
+
+	type _rasterSource interface {
+		GetTileData() *TileData
+	}
+	rs, _ := t.dem.(_rasterSource)
+	dt := rs.GetTileData()
+
+	for i := sx; i < ex; i++ {
+		for j := sy; j < ey; j++ {
+			h := dt.Get(i, j)
+			td.Set(i, j, h)
+		}
+	}
+	return CreateRasterSourceFromTileData(td, t.Options, nil)
+}
+
 type TiledRaster struct {
 	Tiles    []tile.Source
 	TileGrid [2]int
@@ -133,8 +160,8 @@ func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 
 func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *RasterOptions) tile.Source {
 	m := NewRasterMerger(tile_grid, tile_size)
-	m.bbox = src_bbox
-	m.bbox_srs = src_srs
+	m.BBox = src_bbox
+	m.BBoxSrs = src_srs
 
 	rr := m.Merge(tiles, src_opts)
 	splitter := NewRasterSplitter(rr, dest_opts)

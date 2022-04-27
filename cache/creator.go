@@ -134,28 +134,25 @@ func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 }
 
 func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
-	if len(c.sources) == 1 &&
-		c.tileMerger == nil && !(c.sources[0].GetCoverage() != nil &&
-		c.sources[0].GetCoverage().IsClip() &&
-		c.sources[0].GetCoverage().Intersects(query.BBox, query.Srs)) {
-		return c.sources[0].GetMap(query)
-	}
-
 	layers := []tile.Source{}
-
 	for i := range c.sources {
-		img, err := c.sources[i].GetMap(query)
-
-		if err == nil {
-			layers = append(layers, img)
+		if !(c.sources[i].GetCoverage() != nil &&
+			c.sources[i].GetCoverage().IsClip() &&
+			c.sources[i].GetCoverage().Intersects(query.BBox, query.Srs)) {
+			img, err := c.sources[i].GetMap(query)
+			if err == nil {
+				layers = append(layers, img)
+			}
 		}
+	}
+	if len(layers) == 0 {
+		return nil, errors.New("no source create")
 	}
 
 	if len(layers) == 1 {
 		return layers[0], nil
 	}
-
-	ret, err := MergeTiles(layers, c.manager.GetTileOptions(), query.Size, query.BBox, query.Srs, c.tileMerger)
+	ret, err := MergeTiles(layers, c.manager.GetTileOptions(), query, c.tileMerger)
 
 	if err != nil {
 		return nil, err
@@ -195,7 +192,9 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 		Srs:        c.grid.Srs,
 		Format:     tile.TileFormat(c.manager.GetRequestFormat()),
 		Dimensions: c.dimensions,
+		MetaSize:   c.metaGrid.MetaSize,
 	}
+
 	main_tile := NewTile(metaTile.GetMainTileCoord())
 	var splittedTiles *TileCollection
 

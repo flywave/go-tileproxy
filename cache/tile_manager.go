@@ -31,6 +31,7 @@ type TileManager struct {
 	reprojectSrcSrs      geo.Proj
 	reprojectDstSrs      geo.Proj
 	queryBuffer          *int
+	merger               tile.Merger
 }
 
 type TileManagerOptions struct {
@@ -85,6 +86,10 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 			ret.metaGrid = geo.NewMetaGrid(ret.grid, opts.MetaSize, 0)
 			ret.bulkMetaTiles = true
 		}
+	}
+	switch opt := ret.tileOpts.(type) {
+	case *imagery.ImageOptions:
+		ret.merger = imagery.NewBandMerger(opt.Mode)
 	}
 	return ret
 }
@@ -381,7 +386,7 @@ func (tm *TileManager) ApplyTileFilter(tile *Tile) (*Tile, error) {
 }
 
 func (tm *TileManager) Creator(dimensions utils.Dimensions) *TileCreator {
-	return NewTileCreator(tm, dimensions, nil, tm.bulkMetaTiles)
+	return NewTileCreator(tm, dimensions, tm.merger, tm.bulkMetaTiles)
 }
 
 func (tm *TileManager) Lock(ctx context.Context, tile *Tile, run func() error) error {

@@ -99,11 +99,13 @@ func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 	tile_bbox := c.grid.TileBBox(t.Coord, false)
 
 	query := &layer.MapQuery{
+		TileId:     t.Coord,
 		BBox:       tile_bbox,
 		Size:       [2]uint32{c.grid.TileSize[0], c.grid.TileSize[1]},
 		Srs:        c.grid.Srs,
 		Format:     tile.TileFormat(c.manager.GetRequestFormat()),
 		Dimensions: c.dimensions,
+		MetaSize:   [2]uint32{1, 1},
 	}
 
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -140,7 +142,7 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 			c.sources[i].GetCoverage().IsClip() &&
 			c.sources[i].GetCoverage().Intersects(query.BBox, query.Srs)) {
 			img, err := c.sources[i].GetMap(query)
-			if err == nil {
+			if err == nil && img != nil {
 				layers = append(layers, img)
 			}
 		}
@@ -187,8 +189,9 @@ func (c *TileCreator) createMetaTiles(metaTiles []*geo.MetaTile) ([]*Tile, error
 func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 	tile_size := c.grid.TileSize
 	query := &layer.MapQuery{
+		TileId:     metaTile.GetMainTileCoord(),
 		BBox:       metaTile.GetBBox(),
-		Size:       metaTile.GetSize(),
+		Size:       [2]uint32{tile_size[0], tile_size[1]},
 		Srs:        c.grid.Srs,
 		Format:     tile.TileFormat(c.manager.GetRequestFormat()),
 		Dimensions: c.dimensions,
@@ -196,7 +199,7 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 	}
 
 	main_tile := NewTile(metaTile.GetMainTileCoord())
-	var splittedTiles *TileCollection
+	tiles := NewTileCollection(nil)
 
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -215,19 +218,23 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 			if err != nil {
 				return err
 			}
-			splittedTiles, err = SplitTiles(metaTileImage, metaTile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
-			if err != nil {
-				return err
-			}
-			for i, t := range splittedTiles.tiles {
-				tt, err := c.manager.ApplyTileFilter(t)
-				if err != nil {
-					return err
-				}
-				splittedTiles.UpdateItem(i, tt)
-			}
+
+			// splittedTiles, err = SplitTiles(metaTileImage, metaTile.GetTilePattern(), [2]uint32{tile_size[0], tile_size[1]}, c.manager.GetTileOptions())
+			// if err != nil {
+			// 	return err
+			// }
+			// for i, t := range splittedTiles.tiles {
+			// 	tt, err := c.manager.ApplyTileFilter(t)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			main_tile.SetCacheInfo(metaTileImage.GetCacheable())
+			main_tile.Source = metaTileImage
+			tiles.SetItem(main_tile)
+
+			// }
 			if metaTileImage.GetCacheable() != nil {
-				c.cache.StoreTiles(splittedTiles)
+				c.cache.StoreTiles(tiles)
 			}
 		}
 		return nil
@@ -237,11 +244,11 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 		return nil, err
 	}
 
-	tiles := NewTileCollection(nil)
-	for _, coord := range metaTile.GetTiles() {
-		tiles.SetItem(NewTile(coord))
-	}
-	c.cache.LoadTiles(tiles, false)
+	// tiles := NewTileCollection(nil)
+	// for _, coord := range metaTile.GetTiles() {
+	// 	tiles.SetItem(NewTile(coord))
+	// }
+	// c.cache.LoadTiles(tiles, false)
 	return tiles.tiles, nil
 }
 

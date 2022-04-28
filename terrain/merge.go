@@ -66,13 +66,13 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 }
 
 func (t *RasterMerger) srcSize() [2]uint32 {
-	width := t.Size[0]
-	height := t.Size[1]
+	width := t.Size[0] * uint32(t.Grid[0])
+	height := t.Size[1] * uint32(t.Grid[1])
 	return [2]uint32{width, height}
 }
 
 func (t *RasterMerger) tileOffset(i int) [2]int {
-	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1]))}
+	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[1]))) * float64(t.Size[1]))}
 }
 
 type RasterSplitter struct {

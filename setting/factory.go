@@ -107,6 +107,9 @@ func ConvertGridOpts(opt *GridOpts) *geo.TileGrid {
 		rect := &vec2d.Rect{Min: vec2d.T{opt.BBox[0], opt.BBox[1]}, Max: vec2d.T{opt.BBox[2], opt.BBox[3]}}
 		conf[geo.TILEGRID_BBOX] = rect
 	}
+	if opt.BBoxSrs != "" {
+		conf[geo.TILEGRID_BBOX_SRS] = opt.BBoxSrs
+	}
 	if opt.NumLevels != nil {
 		conf[geo.TILEGRID_NUM_LEVELS] = *opt.NumLevels
 	}

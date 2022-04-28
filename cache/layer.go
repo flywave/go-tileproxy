@@ -75,35 +75,25 @@ func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) 
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
-	bbox, srs, dst_srs := query.BBox, query.Srs, query.Srs
+	bbox, srs, tileId := query.BBox, query.Srs, query.TileId
+	bbox = srs.TransformRectTo(r.grid.Srs, bbox, 16)
 	if r.queryBuffer != nil {
-		_, level, err := r.grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{r.grid.TileSize[0], r.grid.TileSize[1]}, srs)
-		if err != nil {
-			return nil, err
-		}
-		bbox = srs.TransformRectTo(r.grid.Srs, bbox, 16)
-		bbox = bufferedBBox(r.grid, bbox, level, *r.queryBuffer)
+		bbox = bufferedBBox(r.grid, bbox, tileId[2], *r.queryBuffer)
 		bbox = r.grid.Srs.TransformRectTo(srs, bbox, 16)
 	}
 
 	if r.reprojectSrc != nil {
 		bbox = srs.TransformRectTo(r.reprojectSrc, bbox, 16)
 		srs = r.reprojectSrc
-		if r.reprojectDst != nil {
-			dst_srs = r.reprojectDst
-		} else {
-			dst_srs = geo.NewProj("EPSG:4326")
-		}
 	}
+	src_bbox := r.grid.Srs.TransformRectTo(srs, bbox, 16)
 
-	src_bbox, tile_grid, affected_tile_coords, err := r.grid.GetAffectedTiles(bbox, query.Size, dst_srs)
+	_, tile_grid, affected_tile_coords, err := r.grid.GetAffectedLevelTiles(src_bbox, tileId[2])
 	if err != nil {
 		return nil, err
 	}
-	src_bbox = r.grid.Srs.TransformRectTo(dst_srs, src_bbox, 16)
 
 	num_tiles := tile_grid[0] * tile_grid[1]
-
 	if r.maxTileLimit != nil && num_tiles >= *r.maxTileLimit {
 		return nil, fmt.Errorf("too many tiles, max_tile_limit: %d, num_tiles: %d", *r.maxTileLimit, num_tiles)
 	}
@@ -136,13 +126,15 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		return r.emptySource, nil
 	}
 
+	resBBox := r.grid.TileBBox(tileId, false)
+
 	if query.TiledOnly {
 		if len(tile_collection.tiles) > 1 {
 			tile_sources := []tile.Source{}
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions(), r.Options)
+			return ResampleTiles(tile_sources, resBBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions(), r.Options)
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source
@@ -156,7 +148,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
+	return ScaleTiles(tile_sources, resBBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {

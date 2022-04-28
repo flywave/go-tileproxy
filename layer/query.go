@@ -14,6 +14,7 @@ type Query interface{}
 
 type MapQuery struct {
 	Query
+	TileId      [3]int
 	BBox        vec2d.Rect
 	Size        [2]uint32
 	Srs         geo.Proj

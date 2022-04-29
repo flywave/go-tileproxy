@@ -119,21 +119,19 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 
 	tile_collection, _ := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
-	if tile_collection.Empty() {
+	if tile_collection == nil || tile_collection.Empty() {
 		if r.emptySource == nil {
 			r.emptySource = GetEmptyTile(query.Size, r.Options)
 		}
 		return r.emptySource, nil
 	}
-
-	resBBox := r.grid.TileBBox(tileId, false)
-
 	if query.TiledOnly {
 		if len(tile_collection.tiles) > 1 {
 			tile_sources := []tile.Source{}
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
+			resBBox := r.grid.TileBBox(tileId, false)
 			return ResampleTiles(tile_sources, resBBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions(), r.Options)
 		} else {
 			t := tile_collection.GetItem(0)
@@ -148,7 +146,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	for _, t := range tile_collection.tiles {
 		tile_sources = append(tile_sources, t.Source)
 	}
-	return ScaleTiles(tile_sources, resBBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
+	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
 }
 
 func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {

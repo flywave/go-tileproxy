@@ -798,6 +798,10 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 		http = &globals.Http.HttpSetting
 	}
 
+	var coverage geo.Coverage
+	if s.Coverage != nil {
+		coverage = LoadCoverage(s.Coverage)
+	}
 	var tcache *resource.TileJSONCache
 	if fac != nil {
 		tcache = resource.NewTileJSONCache(fac.CreateStore(s.TilejsonStore))
@@ -813,7 +817,7 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 
 	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
 
-	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
+	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), coverage, c, opts, creater, tcache)
 }
 
 func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *sources.CesiumTileSource {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/flywave/go-geo"
-	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
@@ -20,12 +19,13 @@ type MapboxTileSource struct {
 	Cache         *resource.TileJSONCache
 }
 
-func NewMapboxTileSource(grid *geo.TileGrid, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater, cache *resource.TileJSONCache) *MapboxTileSource {
+func NewMapboxTileSource(grid *geo.TileGrid, coverage geo.Coverage, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater, cache *resource.TileJSONCache) *MapboxTileSource {
 	return &MapboxTileSource{
 		Grid:   grid,
 		Client: c,
 		MapLayer: layer.MapLayer{
-			Options: opts,
+			Options:  opts,
+			Coverage: coverage,
 		},
 		SourceCreater: creater,
 		Cache:         cache,
@@ -69,21 +69,11 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		return nil, err
 	}
 
-	sources := []tile.Source{}
-	for {
-		x, y, z, done := tiles.Next()
+	x, y, z, _ := tiles.Next()
 
-		resp := s.Client.GetTile([3]int{x, y, z})
-		if len(resp) == 0 {
-			return nil, fmt.Errorf("tile %d %d %d %s", x, y, z, "have no data")
-		}
-		sources = append(sources, s.SourceCreater.Create(resp, [3]int{x, y, z}))
-		if done {
-			break
-		}
+	resp := s.Client.GetTile([3]int{x, y, z})
+	if len(resp) == 0 {
+		return nil, fmt.Errorf("tile %d %d %d %s", x, y, z, "have no data")
 	}
-	if len(sources) == 1 {
-		return sources[0], nil
-	}
-	return cache.MergeTiles(sources, s.Options, query, nil)
+	return s.SourceCreater.Create(resp, [3]int{x, y, z}), nil
 }

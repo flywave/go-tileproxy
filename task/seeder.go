@@ -51,10 +51,15 @@ func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_
 	active_tasks = reverse(active_tasks).([]*TileSeedTask)
 	for len(active_tasks) > 0 {
 		task := active_tasks[len(active_tasks)-1]
+		if task == nil {
+			continue
+		}
 		md := task.GetMetadata()
 		var cacheName string
-		if cn, ok := md["cache_name"]; ok {
-			cacheName = cn.(string)
+		if md != nil {
+			if cn, ok := md["cache_name"]; ok {
+				cacheName = cn.(string)
+			}
 		} else {
 			cacheName = "default"
 		}

@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) {
+func seedTask(cancel context.CancelFunc, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) {
 	if task.GetCoverage() == nil {
 		return
 	}
@@ -20,7 +20,7 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress
 		work_on_metatiles = false
 	}
 
-	tile_worker_pool := NewTileWorkerPool(ctx, concurrency, task, progress_logger)
+	tile_worker_pool := NewTileWorkerPool(cancel, concurrency, task, progress_logger)
 
 	var wg sync.WaitGroup
 
@@ -41,12 +41,15 @@ func seedTask(ctx context.Context, task *TileSeedTask, concurrency int, progress
 	wg.Wait()
 }
 
-func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Seed(cancel context.CancelFunc, tasks []*TileSeedTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
 
-	progress_store := progress_logger.GetStore()
+	var progress_store ProgressStore
+	if progress_logger != nil {
+		progress_store = progress_logger.GetStore()
+	}
 	active_tasks := tasks[:]
 	active_tasks = reverse(active_tasks).([]*TileSeedTask)
 	for len(active_tasks) > 0 {
@@ -67,12 +70,15 @@ func Seed(ctx context.Context, tasks []*TileSeedTask, concurrency int, progress_
 			var start_progress [][2]int
 			if progress_logger != nil && progress_store != nil {
 				progress_logger.SetCurrentTaskId(task.GetID())
-				start_progress = progress_store.Get(task.GetID()).([][2]int)
+				data := progress_store.Get(task.GetID())
+				if data != nil {
+					start_progress = data.([][2]int)
+				}
 			} else {
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			seedTask(ctx, task, concurrency, progress_logger, seed_progress)
+			seedTask(cancel, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

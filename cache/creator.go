@@ -147,8 +147,7 @@ func (c *TileCreator) querySources(query *layer.MapQuery) (tile.Source, error) {
 	layers := []tile.Source{}
 	for i := range c.sources {
 		if c.sources[i].GetCoverage() == nil ||
-			(c.sources[i].GetCoverage().IsClip() &&
-				c.sources[i].GetCoverage().Intersects(query.BBox, query.Srs)) {
+			(c.sources[i].GetCoverage().Intersects(query.BBox, query.Srs)) {
 			img, err := c.sources[i].GetMap(query)
 			if err == nil && img != nil {
 				layers = append(layers, img)

@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -200,10 +201,10 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 
 	for subtilesIt.HasNext() {
 		i, subtile, sub_bbox, intersection := subtilesIt.Next()
-
 		if len(subtile) == 0 {
 			continue
 		}
+		fmt.Println(currentLevels)
 
 		if len(currentLevels) > 0 {
 			sub_bbox = limitSubBBox(cur_bbox, *sub_bbox)

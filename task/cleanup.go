@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+func Cleanup(cancel context.CancelFunc, tasks []*TileCleanupTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -32,7 +32,7 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, pro
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			cleanupTask(ctx, task, concurrency, progress_logger, seed_progress)
+			cleanupTask(cancel, task, concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileCleanupTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {
@@ -43,11 +43,11 @@ func Cleanup(ctx context.Context, tasks []*TileCleanupTask, concurrency int, pro
 	}
 }
 
-func cleanupTask(ctx context.Context, task *TileCleanupTask, concurrency int, progress_logger ProgressLogger, seed_progress *TaskProgress) {
+func cleanupTask(cancel context.CancelFunc, task *TileCleanupTask, concurrency int, progress_logger ProgressLogger, seed_progress *TaskProgress) {
 	task.GetManager().SetExpireTimestamp(&task.RemoveTimestamp)
 	task.GetManager().SetMinimizeMetaRequests(false)
 
-	tile_worker_pool := NewTileWorkerPool(ctx, concurrency, task, progress_logger)
+	tile_worker_pool := NewTileWorkerPool(cancel, concurrency, task, progress_logger)
 
 	var wg sync.WaitGroup
 

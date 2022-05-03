@@ -4,25 +4,28 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/flywave/go-tileproxy/utils"
 )
 
 type workerQueue struct {
-	ctx     context.Context
+	cancel  context.CancelFunc
 	Threads int
 	wake    chan struct{}
 	mut     sync.Mutex
 	running bool
 	storage *utils.Deque
+	stop    chan struct{}
 }
 
-func newWorkerQueue(ctx context.Context, threads int) *workerQueue {
+func newWorkerQueue(cancel context.CancelFunc, threads int) *workerQueue {
 	return &workerQueue{
-		ctx:     ctx,
+		cancel:  cancel,
 		Threads: threads,
 		running: true,
 		storage: utils.NewDeque(20),
+		stop:    make(chan struct{}),
 	}
 }
 
@@ -78,6 +81,7 @@ func (q *workerQueue) Run() {
 	}
 	go q.loop(requestc, complete)
 	defer close(requestc)
+	<-q.stop
 }
 
 func (q *workerQueue) Stop() {
@@ -90,7 +94,7 @@ func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}) {
 	var active int
 	for {
 		size := q.storage.Len()
-		if size == 0 && active == 0 || !q.running {
+		if size == 0 && active == 0 && !q.running {
 			break
 		}
 		sent := requestc
@@ -119,13 +123,12 @@ func (q *workerQueue) loop(requestc chan<- Work, complete <-chan struct{}) {
 				if sent == nil && active == 0 {
 					break Sent
 				}
-			case <-q.ctx.Done():
-				q.mut.Lock()
-				q.running = false
-				q.mut.Unlock()
+			case <-time.After(5 * time.Second):
+				break Sent
 			}
 		}
 	}
+	q.stop <- struct{}{}
 }
 
 func independentRunner(requestc <-chan Work, complete chan<- struct{}) {
@@ -154,8 +157,8 @@ type TileWorkerPool struct {
 	Task   Task
 }
 
-func NewTileWorkerPool(ctx context.Context, threads int, task Task, logger ProgressLogger) *TileWorkerPool {
-	queue := newWorkerQueue(ctx, threads)
+func NewTileWorkerPool(cancel context.CancelFunc, threads int, task Task, logger ProgressLogger) *TileWorkerPool {
+	queue := newWorkerQueue(cancel, threads)
 	return &TileWorkerPool{Queue: queue, Logger: logger, Task: task}
 }
 

@@ -33,7 +33,7 @@ func exportTask(cancel context.CancelFunc, task *TileExportTask, concurrency int
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, progress_logger, seedProgress, false, true)
+	tile_walker := NewTileWalker(task, tile_worker_pool, work_on_metatiles, progress_logger, seedProgress, false, false)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {
@@ -48,7 +48,10 @@ func Export(cancel context.CancelFunc, io exports.Export, tasks []*TileExportTas
 		cache_locker = &DummyCacheLocker{}
 	}
 
-	progress_store := progress_logger.GetStore()
+	var progress_store ProgressStore
+	if progress_logger != nil {
+		progress_store = progress_logger.GetStore()
+	}
 	active_tasks := tasks[:]
 	active_tasks = reverse(active_tasks).([]*TileExportTask)
 	for len(active_tasks) > 0 {

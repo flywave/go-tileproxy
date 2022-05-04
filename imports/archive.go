@@ -29,10 +29,12 @@ type ArchiveImport struct {
 	coverage     geo.Coverage
 	creater      tile.SourceCreater
 	tileLocation func(*cache.Tile, string, string, bool) string
+	middlePath   string
 }
 
-func NewArchiveImport(fileName string, opts tile.TileOptions) *ArchiveImport {
-	return &ArchiveImport{fileName: fileName, options: opts}
+func NewArchiveImport(fileName string, opts tile.TileOptions) (*ArchiveImport, error) {
+	ipt := &ArchiveImport{fileName: fileName, options: opts}
+	return ipt, ipt.Open()
 }
 
 func (a *ArchiveImport) Open() error {
@@ -172,7 +174,9 @@ func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.T
 }
 
 func (a *ArchiveImport) TileLocation(tile *cache.Tile) string {
-	return path.Join(a.tempDir, a.tileLocation(tile, "", a.GetExtension(), false))
+	ph := a.tileLocation(tile, "", a.GetExtension(), false)
+	tile.Location = ""
+	return path.Join(a.tempDir, ph)
 }
 
 func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {

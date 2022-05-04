@@ -10,7 +10,10 @@ func Cleanup(cancel context.CancelFunc, tasks []*TileCleanupTask, concurrency in
 		cache_locker = &DummyCacheLocker{}
 	}
 
-	progress_store := progress_logger.GetStore()
+	var progress_store ProgressStore
+	if progress_logger != nil {
+		progress_store = progress_logger.GetStore()
+	}
 	active_tasks := tasks[:]
 	active_tasks = reverse(active_tasks).([]*TileCleanupTask)
 	for len(active_tasks) > 0 {
@@ -58,7 +61,7 @@ func cleanupTask(cancel context.CancelFunc, task *TileCleanupTask, concurrency i
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seed_progress, true, false)
+	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seed_progress, false, false)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {

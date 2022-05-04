@@ -23,8 +23,9 @@ type GeoPackageImport struct {
 	tableName string
 }
 
-func NewGeoPackageImport(filename string, opts tile.TileOptions) *GeoPackageImport {
-	return &GeoPackageImport{filename: filename, options: opts}
+func NewGeoPackageImport(filename string, opts tile.TileOptions) (*GeoPackageImport, error) {
+	ipt := &GeoPackageImport{filename: filename, options: opts}
+	return ipt, ipt.Open()
 }
 
 func (a *GeoPackageImport) Open() error {

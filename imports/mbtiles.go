@@ -27,8 +27,9 @@ type MBTilesImport struct {
 	db       *mbtiles.DB
 }
 
-func NewMBTilesImport(filename string, opts tile.TileOptions) *MBTilesImport {
-	return &MBTilesImport{filename: filename, options: opts}
+func NewMBTilesImport(filename string, opts tile.TileOptions) (*MBTilesImport, error) {
+	ipt := &MBTilesImport{filename: filename, options: opts}
+	return ipt, ipt.Open()
 }
 
 func (a *MBTilesImport) Open() error {

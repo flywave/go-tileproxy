@@ -23,7 +23,7 @@ func importTask(cancel context.CancelFunc, task *TileImportTask, concurrency int
 		wg.Done()
 	}()
 
-	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seedProgress, false, true)
+	tile_walker := NewTileWalker(task, tile_worker_pool, false, progress_logger, seedProgress, false, false)
 	tile_walker.Walk()
 
 	if tile_worker_pool.Queue.IsRuning() {
@@ -38,7 +38,10 @@ func Import(cancel context.CancelFunc, io imports.Import, tasks []*TileImportTas
 		cache_locker = &DummyCacheLocker{}
 	}
 
-	progress_store := progress_logger.GetStore()
+	var progress_store ProgressStore
+	if progress_logger != nil {
+		progress_store = progress_logger.GetStore()
+	}
 	active_tasks := tasks[:]
 	active_tasks = reverse(active_tasks).([]*TileImportTask)
 	for len(active_tasks) > 0 {

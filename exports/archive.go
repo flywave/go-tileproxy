@@ -182,6 +182,7 @@ func (a *ArchiveExport) buildMetadata() *mbtiles.Metadata {
 }
 
 func (a *ArchiveExport) TileLocation(tile *cache.Tile) string {
+	tile.Location = ""
 	return a.tileLocation(tile, "", a.GetExtension(), false)
 }
 

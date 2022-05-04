@@ -22,11 +22,11 @@ type Import interface {
 
 func New(fileName string, opts tile.TileOptions) (Import, error) {
 	if strings.HasSuffix(fileName, ".tar.gz") || strings.HasSuffix(fileName, ".zip") {
-		return NewArchiveImport(fileName, opts), nil
+		return NewArchiveImport(fileName, opts)
 	} else if strings.HasSuffix(fileName, ".gpkg") {
-		return NewGeoPackageImport(fileName, opts), nil
+		return NewGeoPackageImport(fileName, opts)
 	} else if strings.HasSuffix(fileName, ".mbtiles") {
-		return NewMBTilesImport(fileName, opts), nil
+		return NewMBTilesImport(fileName, opts)
 	}
 	return nil, errors.New("import not fount")
 }

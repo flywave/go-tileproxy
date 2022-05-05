@@ -9,7 +9,6 @@ import (
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpkg"
 	"github.com/flywave/go-tileproxy/cache"
-	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/tile"
 )
 
@@ -45,24 +44,6 @@ func (a *GeoPackageImport) Open() error {
 		a.tableName = tms[0].Name
 	} else {
 		return errors.New("not found tile table")
-	}
-
-	if a.options == nil {
-		format, err := a.db.GetTileFormat(a.tableName)
-		if err != nil {
-			return nil
-		}
-
-		switch format.String() {
-		case "png":
-			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-		case "jpg":
-			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-		case "webp":
-			a.options = &imagery.ImageOptions{Format: tile.TileFormat(format)}
-		case "pbf":
-			a.options = &imagery.ImageOptions{Format: tile.TileFormat("mvt")}
-		}
 	}
 
 	if a.options != nil {

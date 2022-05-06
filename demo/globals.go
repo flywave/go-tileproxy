@@ -25,4 +25,6 @@ func init() {
 		"custom_format": {Format: "image/png", Mode: "rgba", Transparent: setting.NewBool(true)},
 		"image/jpeg":    {Format: "image/jpeg", Mode: "rgb", Transparent: setting.NewBool(false), EncodingOptions: map[string]interface{}{"jpeg_quality": 90}},
 	}
+	dely := 0
+	Globals.Http.RandomDelay = &dely
 }

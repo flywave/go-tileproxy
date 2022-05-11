@@ -466,7 +466,6 @@ type WaterMark struct {
 }
 
 type MapboxTileLayer struct {
-	UUID         string                  `json:"uuid"`
 	Source       string                  `json:"source"`
 	Name         string                  `json:"name,omitempty"`
 	Title        string                  `json:"title"`
@@ -482,13 +481,11 @@ type MapboxTileLayer struct {
 
 type MapboxService struct {
 	Type       string            `json:"type,omitempty"`
-	Name       string            `json:"name,omitempty"`
 	Layers     []MapboxTileLayer `json:"layers,omitempty"`
 	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
 type CesiumTileLayer struct {
-	UUID        string  `json:"uuid"`
 	Source      string  `json:"source"`
 	Name        string  `json:"name,omitempty"`
 	Title       string  `json:"title"`
@@ -500,19 +497,17 @@ type CesiumTileLayer struct {
 
 type CesiumService struct {
 	Type       string            `json:"type,omitempty"`
-	Name       string            `json:"name,omitempty"`
 	Layers     []CesiumTileLayer `json:"layers,omitempty"`
 	MaxTileAge *int              `json:"max_tile_age,omitempty"`
 }
 
 type TileLayer struct {
 	ScaleHints
-	UUID        string                   `json:"uuid"`
+	Name        string                   `json:"name,omitempty"`
+	Title       string                   `json:"title,omitempty"`
+	Description string                   `json:"description,omitempty"`
 	TileSource  string                   `json:"tile_source"`
 	InfoSources []string                 `json:"info_sources"`
-	Name        string                   `json:"name,omitempty"`
-	Title       string                   `json:"title"`
-	Description string                   `json:"description,omitempty"`
 	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
 }
 
@@ -700,7 +695,6 @@ type WMSLayerMetadata struct {
 
 type WMSLayer struct {
 	ScaleHints
-	UUID               string                   `json:"uuid"`
 	MapSources         []string                 `json:"map_source"`
 	FeatureinfoSources []string                 `json:"featureinfo_sources,omitempty"`
 	LegendSources      []string                 `json:"legend_sources,omitempty"`

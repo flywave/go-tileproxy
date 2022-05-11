@@ -964,7 +964,7 @@ func LoadArcGISInfoSource(s *ArcGISSource, globals *GlobalsSetting) *sources.Arc
 
 func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *service.MapboxService {
 	layers := make(map[string]service.Provider)
-	metadata := &service.MapboxMetadata{Name: s.Name}
+	metadata := &service.MapboxMetadata{}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertMapboxTileLayer(&tl, globals, instance)
@@ -984,7 +984,7 @@ func LoadMapboxService(s *MapboxService, globals *GlobalsSetting, instance Proxy
 
 func LoadCesiumService(s *CesiumService, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *service.CesiumService {
 	layers := make(map[string]service.Provider)
-	metadata := &service.CesiumMetadata{Name: s.Name}
+	metadata := &service.CesiumMetadata{}
 
 	for _, tl := range s.Layers {
 		layers[tl.Name] = ConvertCesiumTileLayer(&tl, globals, instance)

@@ -21,6 +21,10 @@ type BaseService struct {
 
 func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req := s.RequestParser(r)
+	if req == nil {
+		w.WriteHeader(404)
+		return
+	}
 	handler := req.GetRequestHandler()
 	if h, ok := s.router[handler]; ok {
 		resp := h(req)

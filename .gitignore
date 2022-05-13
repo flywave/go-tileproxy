@@ -25,3 +25,4 @@ package-lock.json
 .umi
 .umi-production
 cache_data
+__debug_bin

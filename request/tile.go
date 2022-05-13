@@ -157,7 +157,7 @@ func (r *TMSRequest) init() {
 }
 
 func MakeTileRequest(req *http.Request, validate bool) Request {
-	if strings.Contains(req.URL.String(), "/tms") {
+	if strings.HasPrefix(req.URL.String(), "/tms") {
 		return NewTMSRequest(req)
 	} else {
 		return NewTileRequest(req)

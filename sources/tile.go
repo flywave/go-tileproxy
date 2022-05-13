@@ -64,6 +64,9 @@ func (s *TileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z}, &query.Format)
+	if resp == nil {
+		return nil, errors.New("500 error")
+	}
 	src := s.SourceCreater.Create(resp, [3]int{x, y, z})
 	return src, nil
 }

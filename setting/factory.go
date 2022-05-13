@@ -334,10 +334,10 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 }
 
 func NewResolutionRange(conf *ScaleHints) *geo.ResolutionRange {
-	if conf.MinRes != nil || conf.MaxRes != nil {
+	if conf.MinRes != nil && conf.MaxRes != nil && *conf.MinRes != 0 && *conf.MaxRes != 0 {
 		return &geo.ResolutionRange{Min: conf.MinRes, Max: conf.MaxRes}
 	}
-	if conf.MinScale != nil || conf.MaxScale != nil {
+	if conf.MinRes != nil && conf.MaxRes != nil && *conf.MinRes != 0 && *conf.MaxRes != 0 {
 		return geo.NewResolutionRangeScale(conf.MinScale, conf.MaxScale)
 	}
 	return nil
@@ -733,7 +733,7 @@ func newCollectorContext(httpOpts *HttpSetting) *client.CollectorContext {
 		conf.Proxys = httpOpts.Proxys
 	}
 	if httpOpts.RequestTimeout != nil {
-		conf.RequestTimeout = *httpOpts.RequestTimeout
+		conf.RequestTimeout = (*httpOpts.RequestTimeout) * time.Second
 	} else {
 		conf.RequestTimeout = time.Duration(DefaultRequestTimeout * int(time.Second))
 	}

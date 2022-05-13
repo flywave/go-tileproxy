@@ -24,21 +24,26 @@ const (
 
 var (
 	wmtsTMSSource = setting.TileSource{
-		URLTemplate: WMTS_URL + "/normal/google3857/{tms_path}.png",
-		Options:     &setting.ImageOpts{Format: "png"},
-		Grid:        "global_webmercator",
-		Subdomains:  []string{"1", "2", "3", "4"},
+		TileSourcePart: setting.TileSourcePart{
+			URLTemplate: WMTS_URL + "/normal/google3857/{tms_path}.png",
+			Grid:        "global_webmercator",
+			Subdomains:  []string{"1", "2", "3", "4"},
+		},
+		Options: &setting.ImageOpts{Format: "png"},
 	}
 	wmtsTMSCache = setting.CacheSource{
-		Sources:       []string{"wmts"},
-		Name:          "wmts_cache",
-		Grid:          "global_webmercator",
-		Format:        "png",
-		RequestFormat: "png",
-		CacheInfo: &setting.CacheInfo{
-			Directory:       "./cache_data/wmts",
-			DirectoryLayout: "tms",
+		CacheSourcePart: setting.CacheSourcePart{
+			Sources:       []string{"wmts"},
+			Name:          "wmts_cache",
+			Grid:          "global_webmercator",
+			Format:        "png",
+			RequestFormat: "png",
+			CacheInfo: &setting.CacheInfo{
+				Directory:       "./cache_data/wmts",
+				DirectoryLayout: "tms",
+			},
 		},
+		TileOptions: &setting.ImageOpts{Format: "png"},
 	}
 	wmtsService = setting.WMTSService{
 		Restful: setting.NewBool(true),
@@ -79,7 +84,7 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 //http://127.0.0.1:8000?service=WMTS&request=GetTile&version=1.0.0&layer=wmts_layer&style=&format=image/png&TileMatrixSet=GLOBAL_WEB_MERCATOR&TileMatrix=11&TileRow=1117&TileCol=710
 func main() {
 	http.HandleFunc("/", ProxyServer)
-	err := http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":8001", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

@@ -32,12 +32,13 @@ type CesiumTileClient struct {
 	CesiumClient
 }
 
-func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, ctx Context) *CesiumTileClient {
+func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, tileUrl string, ctx Context) *CesiumTileClient {
 	return &CesiumTileClient{
 		CesiumClient: CesiumClient{
 			BaseClient: BaseClient{ctx: ctx},
 			AuthURL:    authUrl,
 			BaseURL:    assetUrl,
+			TileURL:    tileUrl,
 			AssetId:    assetId,
 			AuthToken:  token,
 			Version:    ver,
@@ -74,6 +75,12 @@ func (c *CesiumTileClient) Auth() error {
 }
 
 func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
+	if !c.IsAuth() {
+		err := c.Auth()
+		if err != nil {
+			return nil
+		}
+	}
 	url := c.buildTileQuery(tile_coord)
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
 	if status == 200 {

@@ -93,42 +93,42 @@ var edgeVersions = []string{
 }
 
 var osStrings = []string{
-	// MacOS - High Sierra
-	// "Macintosh; Intel Mac OS X 10_13",
-	// "Macintosh; Intel Mac OS X 10_13_1",
-	// "Macintosh; Intel Mac OS X 10_13_2",
-	// "Macintosh; Intel Mac OS X 10_13_3",
-	// "Macintosh; Intel Mac OS X 10_13_4",
-	// "Macintosh; Intel Mac OS X 10_13_5",
-	// "Macintosh; Intel Mac OS X 10_13_6",
+	//MacOS - High Sierra
+	"Macintosh; Intel Mac OS X 10_13",
+	"Macintosh; Intel Mac OS X 10_13_1",
+	"Macintosh; Intel Mac OS X 10_13_2",
+	"Macintosh; Intel Mac OS X 10_13_3",
+	"Macintosh; Intel Mac OS X 10_13_4",
+	"Macintosh; Intel Mac OS X 10_13_5",
+	"Macintosh; Intel Mac OS X 10_13_6",
 
-	// // MacOS - Mojave
-	// "Macintosh; Intel Mac OS X 10_14",
-	// "Macintosh; Intel Mac OS X 10_14_1",
-	// "Macintosh; Intel Mac OS X 10_14_2",
-	// "Macintosh; Intel Mac OS X 10_14_3",
-	// "Macintosh; Intel Mac OS X 10_14_4",
-	// "Macintosh; Intel Mac OS X 10_14_5",
-	// "Macintosh; Intel Mac OS X 10_14_6",
+	// MacOS - Mojave
+	"Macintosh; Intel Mac OS X 10_14",
+	"Macintosh; Intel Mac OS X 10_14_1",
+	"Macintosh; Intel Mac OS X 10_14_2",
+	"Macintosh; Intel Mac OS X 10_14_3",
+	"Macintosh; Intel Mac OS X 10_14_4",
+	"Macintosh; Intel Mac OS X 10_14_5",
+	"Macintosh; Intel Mac OS X 10_14_6",
 
-	// // MacOS - Catalina
-	// "Macintosh; Intel Mac OS X 10_15",
-	// "Macintosh; Intel Mac OS X 10_15_1",
-	// "Macintosh; Intel Mac OS X 10_15_2",
-	// "Macintosh; Intel Mac OS X 10_15_3",
-	// "Macintosh; Intel Mac OS X 10_15_4",
-	// "Macintosh; Intel Mac OS X 10_15_5",
-	// "Macintosh; Intel Mac OS X 10_15_6",
-	// "Macintosh; Intel Mac OS X 10_15_7",
+	// MacOS - Catalina
+	"Macintosh; Intel Mac OS X 10_15",
+	"Macintosh; Intel Mac OS X 10_15_1",
+	"Macintosh; Intel Mac OS X 10_15_2",
+	"Macintosh; Intel Mac OS X 10_15_3",
+	"Macintosh; Intel Mac OS X 10_15_4",
+	"Macintosh; Intel Mac OS X 10_15_5",
+	"Macintosh; Intel Mac OS X 10_15_6",
+	"Macintosh; Intel Mac OS X 10_15_7",
 
-	// // MacOS - Big Sur
-	// "Macintosh; Intel Mac OS X 11_0",
-	// "Macintosh; Intel Mac OS X 11_0_1",
-	// "Macintosh; Intel Mac OS X 11_1",
-	// "Macintosh; Intel Mac OS X 11_2",
-	// "Macintosh; Intel Mac OS X 11_2_1",
-	// "Macintosh; Intel Mac OS X 11_2_2",
-	// "Macintosh; Intel Mac OS X 11_2_3",
+	// MacOS - Big Sur
+	"Macintosh; Intel Mac OS X 11_0",
+	"Macintosh; Intel Mac OS X 11_0_1",
+	"Macintosh; Intel Mac OS X 11_1",
+	"Macintosh; Intel Mac OS X 11_2",
+	"Macintosh; Intel Mac OS X 11_2_1",
+	"Macintosh; Intel Mac OS X 11_2_2",
+	"Macintosh; Intel Mac OS X 11_2_3",
 
 	// Windows
 	"Windows NT 10.0; Win64; x64",

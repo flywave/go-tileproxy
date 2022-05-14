@@ -397,6 +397,7 @@ type CesiumTileSourcePart struct {
 	Type           SourceType `json:"type,omitempty"`
 	AuthUrl        string     `json:"auth_url,omitempty"`
 	Url            string     `json:"url,omitempty"`
+	TileUrl        string     `json:"tile_url,omitempty"`
 	Version        string     `json:"version,omitempty"`
 	AssetId        int        `json:"assetId,omitempty"`
 	AccessToken    string     `json:"access_token,omitempty"`

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -198,6 +199,10 @@ func (t *CesiumTileProvider) GetFormatMimeType() string {
 }
 
 func (t *CesiumTileProvider) GetFormat() string {
+	return t.tileManager.GetFormat()
+}
+
+func (t *CesiumTileProvider) GetRequestFormat() string {
 	return t.tileManager.GetRequestFormat()
 }
 
@@ -219,7 +224,7 @@ func (t *CesiumTileProvider) emptyResponse() TileResponse {
 
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.CesiumTileRequest)
-	if string(*tile_request.Format) != tl.GetFormat() {
+	if string(*tile_request.Format) != tl.GetRequestFormat() {
 		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 	}
 	tile_coord := tile_request.Tile
@@ -251,7 +256,7 @@ func (c *CesiumTileProvider) serviceMetadata(tms_request *request.CesiumLayerJSO
 
 func (c *CesiumTileProvider) convertLayerJson(tilejson *resource.LayerJson, req *request.CesiumLayerJSONRequest) []byte {
 	md := c.serviceMetadata(req)
-	url := md.URL + "/" + req.AssetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := filepath.Join(md.URL, "{z}/{x}/{y}."+c.GetRequestFormat())
 	tilejson.Tiles = []string{url}
 	return tilejson.GetData()
 }
@@ -263,7 +268,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	}
 	md := c.serviceMetadata(req)
 
-	layerjson := &resource.LayerJson{MetadataAvailability: 10}
+	layerjson := &resource.LayerJson{}
 
 	bbox := c.GetBBox()
 
@@ -273,12 +278,18 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	layerjson.Name = md.Name
 
 	grid := geo.NewGeodeticTileGrid()
-	grid.FlippedYAxis = true
+	grid.FlippedYAxis = false
 	var av [][]resource.AvailableBounds
 
-	for z := 0; z < c.zoomRange[1]; z++ {
+	for z := 0; z <= c.zoomRange[1]; z++ {
 		x0, y0, _ := grid.Tile(bbox.Min[0], bbox.Min[1], int(z))
 		x1, y1, _ := grid.Tile(bbox.Max[0], bbox.Max[1], int(z))
+		if x1 > x0 {
+			x1--
+		}
+		if y1 > y0 {
+			y1--
+		}
 		a := resource.AvailableBounds{StartX: (x0), StartY: (y0), EndX: (x1), EndY: (y1)}
 		av = append(av, []resource.AvailableBounds{a})
 	}
@@ -299,7 +310,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	layerjson.Maxzoom = c.zoomRange[1]
 	layerjson.Available = av
 
-	url := md.URL + "/" + req.AssetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := filepath.Join(md.URL, "{z}/{x}/{y}."+c.GetRequestFormat())
 
 	layerjson.Tiles = append(layerjson.Tiles, url)
 

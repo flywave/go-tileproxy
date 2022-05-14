@@ -177,6 +177,7 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 	} else {
 		request_format_ext = request_format
 	}
+	format := c.Format
 
 	var meta_buffer int
 	if c.MetaBuffer != nil {
@@ -297,7 +298,8 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		Cache:                cacheB,
 		Locker:               locker,
 		Identifier:           name,
-		Format:               request_format_ext,
+		Format:               format,
+		RequestFormat:        request_format_ext,
 		Options:              opts,
 		MinimizeMetaRequests: minimize_meta_requests,
 		BulkMetaTiles:        bulk_meta_tiles,
@@ -847,7 +849,7 @@ func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance
 
 	creater := cache.GetSourceCreater(opts)
 
-	c := client.NewCesiumTileClient(s.AuthUrl, s.Url, s.AssetId, s.AccessToken, s.Version, newCollectorContext(http))
+	c := client.NewCesiumTileClient(s.AuthUrl, s.Url, s.AssetId, s.AccessToken, s.Version, s.TileUrl, newCollectorContext(http))
 
 	return sources.NewCesiumTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }

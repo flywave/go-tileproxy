@@ -21,7 +21,7 @@ type LayerJson struct {
 	Description          string              `json:"description,omitempty"`
 	Attribution          string              `json:"attribution,omitempty"`
 	Available            [][]AvailableBounds `json:"available"`
-	MetadataAvailability int                 `json:"metadataAvailability"`
+	MetadataAvailability int                 `json:"metadataAvailability,omitempty"`
 	Bounds               [4]float64          `json:"bounds"`
 	Extensions           []string            `json:"extensions,omitempty"`
 	Minzoom              int                 `json:"minzoom"`

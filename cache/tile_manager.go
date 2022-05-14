@@ -41,6 +41,7 @@ type TileManagerOptions struct {
 	Locker               TileLocker
 	Identifier           string
 	Format               string
+	RequestFormat        string
 	Options              tile.TileOptions
 	MinimizeMetaRequests bool
 	BulkMetaTiles        bool
@@ -61,7 +62,7 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 	ret.identifier = opts.Identifier
 	ret.format = opts.Format
 	ret.tileOpts = opts.Options
-	ret.requestFormat = opts.Format
+	ret.requestFormat = opts.RequestFormat
 	ret.sources = opts.Sources
 	ret.minimizeMetaRequests = opts.MinimizeMetaRequests
 	ret.preStoreFilter = opts.PreStoreFilter
@@ -169,6 +170,9 @@ func (tm *TileManager) GetRescaleTiles() int {
 
 func (tm *TileManager) LoadTileCoord(tileCoord [3]int, dimensions utils.Dimensions, with_metadata bool) (*Tile, error) {
 	tiles, err := tm.LoadTileCoords([][3]int{tileCoord}, dimensions, with_metadata)
+	if err != nil {
+		return nil, err
+	}
 	return tiles.GetItem(0), err
 }
 

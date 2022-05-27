@@ -50,7 +50,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
-	tileClient := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "{token}", "access_token", ctx)
+	tileClient := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "", "{token}", "access_token", ctx)
 
 	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: ccreater}
 

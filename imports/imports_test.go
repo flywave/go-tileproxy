@@ -1,9 +1,11 @@
 package imports
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestArchiveImport(t *testing.T) {
-	import_ := NewArchiveImport("../data/test_import.tar.gz", nil)
+	import_, _ := NewArchiveImport("../data/test_import.tar.gz", nil)
 
 	err := import_.Open()
 
@@ -31,7 +33,7 @@ func TestArchiveImport(t *testing.T) {
 }
 
 func TestGeoPackageImport(t *testing.T) {
-	import_ := NewGeoPackageImport("../data/test_import.gpkg", nil)
+	import_, _ := NewGeoPackageImport("../data/test_import.gpkg", nil)
 
 	err := import_.Open()
 
@@ -53,7 +55,7 @@ func TestGeoPackageImport(t *testing.T) {
 }
 
 func TestMBTilesImport(t *testing.T) {
-	import_ := NewMBTilesImport("../data/test_import.mbtils", nil)
+	import_, _ := NewMBTilesImport("../data/test_import.mbtils", nil)
 
 	err := import_.Open()
 

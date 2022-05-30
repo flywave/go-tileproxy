@@ -35,7 +35,6 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 
 	var bbox vec2d.Rect = t.BBox
 	var bbox_srs geo.Proj = t.BBoxSrs
-
 	for i, source := range ordered_tiles {
 		if source == nil {
 			continue
@@ -61,7 +60,6 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 	}
 	tiledata.Box = bbox
 	tiledata.Boxsrs = bbox_srs
-
 	return CreateRasterSourceFromTileData(tiledata, opts, cacheable)
 }
 
@@ -72,7 +70,7 @@ func (t *RasterMerger) srcSize() [2]uint32 {
 }
 
 func (t *RasterMerger) tileOffset(i int) [2]int {
-	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[1]))) * float64(t.Size[1]))}
+	return [2]int{int(math.Mod(float64(i), float64(t.Grid[0])) * float64(t.Size[0])), int(math.Floor(float64(i)/(float64(t.Grid[0]))) * float64(t.Size[1]))}
 }
 
 type RasterSplitter struct {

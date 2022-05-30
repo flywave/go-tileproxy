@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -175,7 +176,7 @@ func MapboxTileTypeToString(tp MapboxTileType) string {
 	} else if tp == MapboxRaster {
 		return "raster"
 	} else if tp == MapboxRasterDem {
-		return "rasterDem"
+		return "raster-dem"
 	}
 	return "vector"
 }
@@ -305,8 +306,7 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 
-func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest) []byte {
-	md := c.serviceMetadata(req)
+func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest, md *MapboxLayerMetadata) []byte {
 	url := md.URL + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 	tilejson.Tiles = []string{url}
 	return tilejson.GetData()
@@ -314,16 +314,17 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 
 func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxTileJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
-	md.URL = tms_request.Http.URL.Host
+	strs := strings.Split(tms_request.Http.RequestURI, tms_request.Version)
+	md.URL = strs[0]
 	return md
 }
 
 func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) []byte {
+	md := c.serviceMetadata(req)
 	if c.tilejsonSource != nil {
 		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
-		return c.convertTileJson(styles, req)
+		return c.convertTileJson(styles, req, &md)
 	}
-	md := c.serviceMetadata(req)
 
 	tilejson := &resource.TileJSON{Type: MapboxTileTypeToString(c.type_)}
 
@@ -336,8 +337,8 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.ID = req.TilesetID
 
 	tilejson.Name = md.Name
-	tilejson.MinZoom = uint32(c.zoomRange[0])
-	tilejson.MaxZoom = uint32(c.zoomRange[1])
+	tilejson.MinZoom = uint32(math.Min(float64(c.zoomRange[0]), float64(c.zoomRange[1])))
+	tilejson.MaxZoom = uint32(math.Max(float64(c.zoomRange[0]), float64(c.zoomRange[1])))
 
 	if md.Attribution != nil {
 		tilejson.Attribution = *md.Attribution
@@ -356,7 +357,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := md.URL + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := md.URL + "v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

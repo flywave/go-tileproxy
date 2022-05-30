@@ -189,6 +189,14 @@ func (t *CesiumTileProvider) GetBBox() vec2d.Rect {
 	return *t.GetGrid().BBox
 }
 
+func (t *CesiumTileProvider) GetLonlatBBox() vec2d.Rect {
+	bbx := *t.GetGrid().BBox
+	srs := t.GetGrid().Srs
+	dest := geo.NewProj("EPSG:4326")
+	ps := srs.TransformTo(dest, []vec2d.T{bbx.Min, bbx.Max})
+	return vec2d.Rect{Min: ps[0], Max: ps[1]}
+}
+
 func (t *CesiumTileProvider) GetSrs() geo.Proj {
 	return t.GetGrid().Srs
 }
@@ -270,11 +278,11 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 
 	layerjson := &resource.LayerJson{}
 
-	bbox := c.GetBBox()
+	bbox := c.GetLonlatBBox()
 
 	layerjson.Bounds[0], layerjson.Bounds[1], layerjson.Bounds[2], layerjson.Bounds[3] = bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]
 
-	layerjson.Format = c.GetFormat()
+	layerjson.Format = "quantized-mesh-1.0" // c.GetFormat()
 	layerjson.Name = md.Name
 
 	grid := geo.NewGeodeticTileGrid()

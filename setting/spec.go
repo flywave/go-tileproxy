@@ -22,14 +22,13 @@ const (
 type ServiceType string
 
 const (
-	NONE_SERVICE           ServiceType = "none"
-	WMS_SERVICE            ServiceType = "wms"
-	TMS_SERVICE            ServiceType = "tms"
-	WMTS_SERVICE           ServiceType = "wmts"
-	WMTS_REST_SERVICE      ServiceType = "wmts_rest"
-	MAPBOX_VECTOR_SERVICE  ServiceType = "mapbox_vector"
-	MAPBOX_TERRAIN_SERVICE ServiceType = "mapbox_terrain"
-	CESIUM_SERVICE         ServiceType = "cesium"
+	NONE_SERVICE      ServiceType = "none"
+	WMS_SERVICE       ServiceType = "wms"
+	TMS_SERVICE       ServiceType = "tms"
+	WMTS_SERVICE      ServiceType = "wmts"
+	WMTS_REST_SERVICE ServiceType = "wmts_rest"
+	MAPBOX_SERVICE    ServiceType = "mapbox_service"
+	CESIUM_SERVICE    ServiceType = "cesium"
 )
 
 type CacheType string

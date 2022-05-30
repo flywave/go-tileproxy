@@ -164,10 +164,20 @@ func GetMapboxTileType(tp string) MapboxTileType {
 		return MapboxVector
 	} else if tp == "raster" {
 		return MapboxRaster
-	} else if tp == "rasterDem" {
+	} else if tp == "raster-dem" {
 		return MapboxRasterDem
 	}
 	return MapboxVector
+}
+func MapboxTileTypeToString(tp MapboxTileType) string {
+	if tp == MapboxVector {
+		return "vector"
+	} else if tp == MapboxRaster {
+		return "raster"
+	} else if tp == MapboxRasterDem {
+		return "rasterDem"
+	}
+	return "vector"
 }
 
 type MapboxTileOptions struct {
@@ -218,6 +228,14 @@ func (t *MapboxTileProvider) GetGrid() *geo.TileGrid {
 
 func (t *MapboxTileProvider) GetBBox() vec2d.Rect {
 	return *t.GetGrid().BBox
+}
+
+func (t *MapboxTileProvider) GetLonlatBBox() vec2d.Rect {
+	bbx := *t.GetGrid().BBox
+	srs := t.GetGrid().Srs
+	dest := geo.NewProj("EPSG:4326")
+	ps := srs.TransformTo(dest, []vec2d.T{bbx.Min, bbx.Max})
+	return vec2d.Rect{Min: ps[0], Max: ps[1]}
 }
 
 func (t *MapboxTileProvider) GetSrs() geo.Proj {
@@ -307,9 +325,9 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	}
 	md := c.serviceMetadata(req)
 
-	tilejson := &resource.TileJSON{}
+	tilejson := &resource.TileJSON{Type: MapboxTileTypeToString(c.type_)}
 
-	bbox := c.GetBBox()
+	bbox := c.GetLonlatBBox()
 
 	tilejson.Bounds[0], tilejson.Bounds[1], tilejson.Bounds[2], tilejson.Bounds[3] = float32(bbox.Min[0]), float32(bbox.Min[1]), float32(bbox.Max[0]), float32(bbox.Max[1])
 	tilejson.Center[0], tilejson.Center[1], tilejson.Center[2] = float32(bbox.Min[0]+(bbox.Max[0]-bbox.Min[0])/2), float32(bbox.Min[1]+(bbox.Max[1]-bbox.Min[1])/2), 0
@@ -318,6 +336,8 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.ID = req.TilesetID
 
 	tilejson.Name = md.Name
+	tilejson.MinZoom = uint32(c.zoomRange[0])
+	tilejson.MaxZoom = uint32(c.zoomRange[1])
 
 	if md.Attribution != nil {
 		tilejson.Attribution = *md.Attribution

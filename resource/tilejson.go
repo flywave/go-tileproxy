@@ -28,6 +28,7 @@ func NewVectorLayer() *VectorLayer {
 
 type TileJSON struct {
 	Resource        `json:"-"`
+	Type            string         `json:"type"`
 	Attribution     string         `json:"attribution"`
 	Description     string         `json:"description"`
 	Bounds          [4]float32     `json:"bounds"`

@@ -57,9 +57,17 @@ func caclulatePixelSize(width, height int, bbox vec2d.Rect) []float64 {
 	return pixelSize
 }
 
-func CaclulateGrid(width, height int, mode BorderMode, georef *geo.GeoReference) *Grid {
-	grid := NewGrid(width, height, mode)
+func CaclulateGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
+	if opts.Format == "terrain" {
+		return cellGrid(width, height, opts, georef)
+	} else {
+		return normalGrid(width, height, opts, georef)
+	}
+}
 
+func normalGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
+	mode := opts.Mode
+	grid := NewGrid(width, height, mode)
 	grid.Count = grid.Width * grid.Height
 	grid.srs = georef.GetSrs()
 
@@ -92,6 +100,10 @@ func CaclulateGrid(width, height int, mode BorderMode, georef *geo.GeoReference)
 	grid.Coordinates = coords
 	grid.box = &vec3d.Box{Min: vec3d.T{maxbbx.Min[0], maxbbx.Max[0], 0}, Max: vec3d.T{maxbbx.Max[0], maxbbx.Max[1], 0}}
 	return grid
+}
+
+func cellGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
+
 }
 
 func (h *Grid) SetIntersection(ins []*ray.Intersection) {

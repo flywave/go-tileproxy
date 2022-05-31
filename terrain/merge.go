@@ -75,7 +75,7 @@ func NewRasterSplitter(dem_tile tile.Source, dem_opts *RasterOptions) *RasterSpl
 	return &RasterSplitter{dem: dem_tile, Options: dem_opts}
 }
 
-func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [2]uint32) tile.Source {
+func (t *RasterSplitter) 	GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [2]uint32) tile.Source {
 	type _rasterSource interface {
 		GetRasterOptions() *RasterOptions
 		Resample(georef *geo.GeoReference, grid *Grid) error
@@ -88,7 +88,7 @@ func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [
 
 	georef := geo.NewGeoReference(newbox, boxsrs)
 
-	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.Options.Mode, georef)
+	grid := CaclulateGrid(int(tile_size[0]), int(tile_size[1]), t.Options, georef)
 
 	err := rasterS.Resample(nil, grid)
 

@@ -12,6 +12,7 @@ import (
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
 
+	qmt "github.com/flywave/go-quantized-mesh"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
@@ -344,4 +345,18 @@ func TestGetTerrain(t *testing.T) {
 
 		}
 	}
+}
+
+func TestQuat(t *testing.T) {
+	rd, _ := os.Open("../cache_data/terrain/0/1/0.terrain")
+	rd1, _ := os.Open("../cache_data/terrain/0/1/0-1.terrain")
+
+	q1 := qmt.QuantizedMeshTile{}
+	q2 := qmt.QuantizedMeshTile{}
+
+	q1.Read(rd, qmt.Ext_None)
+	q2.Read(rd1, qmt.Ext_None)
+
+	rd.Close()
+	rd1.Close()
 }

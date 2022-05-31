@@ -73,7 +73,7 @@ func (s *TerrainSource) Decode(r io.Reader) (*qmt.QuantizedMeshTile, error) {
 	}
 }
 
-func (s *TerrainSource) Encode(tile *qmt.QuantizedMeshTile) ([]byte, error) {
+func EncodeMesh(tile *qmt.QuantizedMeshTile) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := tile.Write(buf)
 	return buf.Bytes(), err
@@ -134,7 +134,7 @@ func (s *TerrainSource) SetSource(src interface{}) {
 func (s *TerrainSource) GetBuffer(format *tile.TileFormat, in_tile_opts tile.TileOptions) []byte {
 	if s.buf == nil {
 		var err error
-		s.buf, err = s.Encode(s.data)
+		s.buf, err = EncodeMesh(s.data)
 		if err != nil {
 			return nil
 		}
@@ -150,7 +150,7 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 	return s.Options
 }
 
-func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, error) {
+func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshTile, error) {
 	if !data.IsUnilateral() {
 		return nil, errors.New("error")
 	}
@@ -192,7 +192,14 @@ func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, e
 
 	qmesh := &qmt.QuantizedMeshTile{}
 	qmesh.SetMesh(qdt, false)
+	return qmesh, nil
+}
 
+func GenTerrainSource(data *TileData, options *RasterOptions) (*TerrainSource, error) {
+	qmesh, err := EncodeQuatMesh(data, options)
+	if err != nil {
+		return nil, err
+	}
 	source := NewTerrainSource(options)
 
 	source.SetSource(qmesh)

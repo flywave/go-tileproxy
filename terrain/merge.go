@@ -21,13 +21,6 @@ func NewRasterMerger(tile_grid [2]int, tile_size [2]uint32) *RasterMerger {
 }
 
 func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) tile.Source {
-	if t.Grid[0] == 1 && t.Grid[1] == 1 {
-		if len(ordered_tiles) >= 1 && ordered_tiles[0] != nil {
-			tile := ordered_tiles[0]
-			return tile
-		}
-	}
-
 	src_size := t.srcSize()
 	var cacheable *tile.CacheInfo
 	mode := opts.Mode
@@ -156,7 +149,7 @@ func (t *TiledRaster) Transform(req_bbox vec2d.Rect, req_srs geo.Proj, out_size 
 	return transformer.GetTile(req_bbox, req_srs, out_size)
 }
 
-func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, grid *geo.TileGrid, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *RasterOptions) tile.Source {
+func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *RasterOptions) tile.Source {
 	m := NewRasterMerger(tile_grid, tile_size)
 	m.BBox = src_bbox
 	m.BBoxSrs = src_srs

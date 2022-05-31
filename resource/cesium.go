@@ -16,6 +16,7 @@ type AvailableBounds struct {
 type LayerJson struct {
 	Resource             `json:"-"`
 	Name                 string              `json:"name"`
+	TileJson             string              `json:"tilejson"`
 	Version              string              `json:"version"`
 	Format               string              `json:"format"`
 	Description          string              `json:"description,omitempty"`

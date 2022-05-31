@@ -308,7 +308,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	if md.Description != nil {
 		layerjson.Description = *md.Description
 	}
-
+	layerjson.TileJson = "2.1.0"
 	layerjson.Scheme = "tms"
 	layerjson.Version = "1.2.0"
 	layerjson.Projection = "EPSG:4326"
@@ -318,7 +318,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 	layerjson.Maxzoom = c.zoomRange[1]
 	layerjson.Available = av
 
-	url := filepath.Join(md.URL, "{z}/{x}/{y}."+c.GetRequestFormat())
+	url := filepath.Join(md.URL, "{z}/{x}/{y}."+c.GetRequestFormat()) + "?v={version}"
 
 	layerjson.Tiles = append(layerjson.Tiles, url)
 

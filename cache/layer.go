@@ -67,26 +67,33 @@ func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) 
 	if queryBuffer > 0 {
 		res := g.Resolution(level)
 		minx -= float64(queryBuffer) * res
+		minx = math.Max(minx, g.BBox.Min[0])
 		miny -= float64(queryBuffer) * res
+		miny = math.Max(miny, g.BBox.Min[1])
+
 		maxx += float64(queryBuffer) * res
+		maxx = math.Min(maxx, g.BBox.Max[0])
 		maxy += float64(queryBuffer) * res
+		maxy = math.Min(maxy, g.BBox.Max[1])
+
 	}
 	return vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
-	bbox, srs, tileId := query.BBox, query.Srs, query.TileId
-	bbox = srs.TransformRectTo(r.grid.Srs, bbox, 16)
+	raw_bbox, srs, tileId := query.BBox, query.Srs, query.TileId
+	currentSrs := r.grid.Srs
+	bbox := srs.TransformRectTo(currentSrs, raw_bbox, 16)
 	if r.queryBuffer != nil {
 		bbox = bufferedBBox(r.grid, bbox, tileId[2], *r.queryBuffer)
-		bbox = r.grid.Srs.TransformRectTo(srs, bbox, 16)
+		raw_bbox = r.grid.Srs.TransformRectTo(srs, bbox, 16)
 	}
 
 	if r.reprojectSrc != nil {
-		bbox = srs.TransformRectTo(r.reprojectSrc, bbox, 16)
-		srs = r.reprojectSrc
+		bbox = currentSrs.TransformRectTo(r.reprojectSrc, bbox, 16)
+		currentSrs = r.reprojectSrc
 	}
-	src_bbox := r.grid.Srs.TransformRectTo(srs, bbox, 16)
+	src_bbox := r.grid.Srs.TransformRectTo(currentSrs, bbox, 16)
 
 	_, tile_grid, affected_tile_coords, err := r.grid.GetAffectedLevelTiles(src_bbox, tileId[2])
 	if err != nil {
@@ -109,7 +116,9 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 
 	for {
 		x, y, z, done := affected_tile_coords.Next()
-
+		if x < 0 || y < 0 {
+			continue
+		}
 		coords = append(coords, [3]int{x, y, z})
 
 		if done {
@@ -126,13 +135,13 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		return r.emptySource, nil
 	}
 	if query.TiledOnly {
-		if len(tile_collection.tiles) > 1 {
+		sz := tile_collection.tiles[0].Source.GetSize()
+		if len(tile_collection.tiles) > 1 || sz[0] != query.Size[0] || sz[1] != query.Size[1] {
 			tile_sources := []tile.Source{}
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
-			resBBox := r.grid.TileBBox(tileId, false)
-			return ResampleTiles(tile_sources, resBBox, query.Srs, tile_grid, r.grid, src_bbox, srs, query.Size, r.tileManager.GetTileOptions(), r.Options)
+			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, currentSrs, query.Size, r.tileManager.GetTileOptions(), r.Options)
 		} else {
 			t := tile_collection.GetItem(0)
 			tile := t.Source

@@ -3,6 +3,7 @@ package terrain
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -239,7 +240,7 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
 	if float64(s.pixelSize[1]) > 0 {
-		yPixel = ((dataEndLat-lat)/float64(s.pixelSize[1]) - 1)
+		yPixel = ((dataEndLat - lat) / float64(s.pixelSize[1]))
 	} else {
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
@@ -328,6 +329,7 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
 			lon, lat = d[0][0], d[0][1]
 		}
+		fmt.Println(i)
 		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator)
 	}
 	return nil
@@ -437,6 +439,16 @@ func EncodeRaster(opts *RasterOptions, data *TileData) ([]byte, error) {
 	} else if opts.Format.Extension() == "tif" || opts.Format.Extension() == "tiff" {
 		io := &GeoTIFFIO{Mode: opts.Mode}
 		return io.Encode(data)
+	} else if opts.Format.Extension() == "terrain" {
+		mesh, err := EncodeQuatMesh(data, opts)
+		if err != nil {
+			return nil, err
+		}
+		buf, err := EncodeMesh(mesh)
+		if err != nil {
+			return nil, err
+		}
+		return buf, nil
 	}
 	return nil, errors.New("the format not support")
 }

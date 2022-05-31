@@ -23,7 +23,7 @@ var (
 			Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
 			AccessToken:   MAPBOX_ACCESSTOKEN,
 			Sku:           "101XxiLvoFYxL",
-			Grid:          "global_webmercator",
+			Grid:          "global_webmercator_512",
 			TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 			TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
 		Options: &setting.RasterOpts{Format: "webp", Mode: &bilateral},
@@ -32,14 +32,15 @@ var (
 		CacheSourcePart: setting.CacheSourcePart{
 			Sources:       []string{"rasterdem"},
 			Name:          "rasterdem_cache",
-			Grid:          "global_webmercator",
+			Grid:          "global_webmercator_512",
 			Format:        "webp",
 			RequestFormat: "webp",
 			CacheInfo: &setting.CacheInfo{
 				Directory:       "./cache_data/rasterdem/",
 				DirectoryLayout: "tms",
 			},
-			QueryBuffer: setting.NewInt(1)},
+			QueryBuffer: setting.NewInt(1),
+		},
 		TileOptions: &setting.RasterOpts{Format: "webp", Mode: &bilateral},
 	}
 	cesiumTerrainCache = setting.CacheSource{
@@ -87,6 +88,7 @@ func getService() *tileproxy.Service {
 var dataset *tileproxy.Service
 
 func ProxyServer(w http.ResponseWriter, req *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	if dataset == nil {
 		dataset = getService()
 	}
@@ -95,7 +97,7 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.HandleFunc("/", ProxyServer)
-	err := http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":8001", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

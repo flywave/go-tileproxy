@@ -213,7 +213,7 @@ func (t *TiledVector) Transform(grid *geo.TileGrid, req_bbox vec2d.Rect, req_srs
 
 	vecs := transformer.ApplyVector(src_img)
 
-	_, _, tiles, _ := grid.GetAffectedTiles(req_bbox, t.TileSize, grid.Srs)
+	_, _, tiles, _ := grid.GetAffectedTiles(req_bbox, t.TileSize, req_srs)
 
 	x, y, z, _ := tiles.Next()
 

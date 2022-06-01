@@ -58,14 +58,6 @@ func caclulatePixelSize(width, height int, bbox vec2d.Rect) []float64 {
 }
 
 func CaclulateGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
-	if opts.Format == "terrain" {
-		return cellGrid(width, height, opts, georef)
-	} else {
-		return normalGrid(width, height, opts, georef)
-	}
-}
-
-func normalGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
 	mode := opts.Mode
 	grid := NewGrid(width, height, mode)
 	grid.Count = grid.Width * grid.Height
@@ -98,24 +90,8 @@ func normalGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference
 		}
 	}
 	grid.Coordinates = coords
-	grid.box = &vec3d.Box{Min: vec3d.T{maxbbx.Min[0], maxbbx.Max[0], 0}, Max: vec3d.T{maxbbx.Max[0], maxbbx.Max[1], 0}}
+	grid.box = &vec3d.Box{Min: vec3d.T{maxbbx.Min[0], maxbbx.Min[1], 0}, Max: vec3d.T{maxbbx.Max[0], maxbbx.Max[1], 0}}
 	return grid
-}
-
-func cellGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
-
-}
-
-func (h *Grid) SetIntersection(ins []*ray.Intersection) {
-	coords := make(Coordinates, len(ins))
-
-	for i, intersection := range ins {
-		coords[i][0] = intersection.Point[0]
-		coords[i][1] = intersection.Point[1]
-		coords[i][2] = intersection.Point[2]
-	}
-
-	h.Coordinates = coords
 }
 
 func (h *Grid) GetRay() []ray.Ray {

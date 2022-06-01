@@ -3,7 +3,6 @@ package terrain
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -329,7 +328,6 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
 			lon, lat = d[0][0], d[0][1]
 		}
-		fmt.Println(i)
 		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator)
 	}
 	return nil

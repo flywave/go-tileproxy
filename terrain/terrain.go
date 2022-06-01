@@ -191,7 +191,7 @@ func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshT
 	qdt.BBox = mesh.BBox
 
 	qmesh := &qmt.QuantizedMeshTile{}
-	qmesh.SetMesh(qdt, false)
+	qmesh.SetMesh(qdt, true)
 	return qmesh, nil
 }
 

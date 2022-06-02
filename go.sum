@@ -72,6 +72,8 @@ github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0/go.mod h1:RX83BRZN
 github.com/flywave/go-quantized-mesh v0.0.0-20210525134750-cb854922974d/go.mod h1:/OSV1sGRbJezuTheaHH6X2Xf/G7MVaOBeHIGQtGpj+0=
 github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7 h1:NFufVWzewDogIyWgCfu65QtizAMTjEfFLInA6GuGSXk=
 github.com/flywave/go-quantized-mesh v0.0.0-20220125011202-ce9494cad6c7/go.mod h1:Cm+gTfx6E3tyRioEZywWyMNWwRf9NaBUezGmpq1SypQ=
+github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21 h1:YRqqAvkzFjzZFf3iD/R03+bLGZMvGosfKhw9QWkIpsE=
+github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21/go.mod h1:Cm+gTfx6E3tyRioEZywWyMNWwRf9NaBUezGmpq1SypQ=
 github.com/flywave/go-tin v0.0.0-20220128052358-c71208f6e61b h1:CDYoU7ftgwAo2cHp1FDq+x5dmGqO42Zk0Ci8WFUM1ZA=
 github.com/flywave/go-tin v0.0.0-20220128052358-c71208f6e61b/go.mod h1:0hyQ9vusB4J5rKXkvlqa1umPsE3Z7fjTKRYFXvvZbPg=
 github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67 h1:6Ou8nULm9IPDCZ/KBu3amSTiGkY5GmC0d0XQjXHRYcA=

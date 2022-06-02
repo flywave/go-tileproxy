@@ -66,27 +66,23 @@ func CaclulateGrid(width, height int, opts *RasterOptions, georef *geo.GeoRefere
 	coords := make(Coordinates, 0, grid.Count)
 
 	maxbbx := georef.GetBBox()
-	pixelSize := caclulatePixelSize(width, height, maxbbx)
+	pixelSize := caclulatePixelSize(grid.Width, grid.Height, georef.GetBBox())
 
-	startX := 0
-	startY := 0
-	endX := width
-	endY := height
-	if mode == BORDER_UNILATERAL {
-		endX += 1
-		endY += 1
-	} else if mode == BORDER_BILATERAL {
-		startX = -1
-		startY = -1
-		endX += 1
-		endY += 1
-	}
-
-	for y := startY; y < endY; y++ {
-		latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y))
-		for x := startX; x < endX; x++ {
-			longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x))
-			coords = append(coords, vec3d.T{longitude, latitude, 0})
+	if mode == BORDER_UNILATERAL || mode == BORDER_BILATERAL {
+		for y := grid.Height - 1; y >= 0; y-- {
+			latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y-1))
+			for x := 0; x < grid.Width; x++ {
+				longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x-1))
+				coords = append(coords, vec3d.T{longitude, latitude, 0})
+			}
+		}
+	} else {
+		for y := grid.Height - 1; y >= 0; y-- {
+			latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y))
+			for x := 0; x < grid.Width; x++ {
+				longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x))
+				coords = append(coords, vec3d.T{longitude, latitude, 0})
+			}
 		}
 	}
 	grid.Coordinates = coords

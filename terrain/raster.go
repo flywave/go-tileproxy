@@ -239,7 +239,7 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
 	if float64(s.pixelSize[1]) > 0 {
-		yPixel = ((dataEndLat - lat) / float64(s.pixelSize[1]))
+		yPixel = ((dataEndLat-lat)/float64(s.pixelSize[1]) - 1)
 	} else {
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
@@ -291,6 +291,19 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 
 func (s *RasterSource) getElevation(x, y int) float64 {
 	data := s.GetTileData()
+	if x >= int(data.Size[0]) {
+		x = int(data.Size[0] - 1)
+	}
+	if x < 0 {
+		x = 0
+	}
+
+	if y >= int(data.Size[1]) {
+		y = int(data.Size[1] - 1)
+	}
+	if y < 0 {
+		y = 0
+	}
 	if data != nil {
 		return data.Get(x, y)
 	}

@@ -81,21 +81,20 @@ func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) 
 }
 
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
-	raw_bbox, srs, tileId := query.BBox, query.Srs, query.TileId
+	bbox, srs, tileId := query.BBox, query.Srs, query.TileId
 	currentSrs := r.grid.Srs
-	bbox := srs.TransformRectTo(currentSrs, raw_bbox, 16)
+	bbox = srs.TransformRectTo(currentSrs, bbox, 16)
 	if r.queryBuffer != nil {
 		bbox = bufferedBBox(r.grid, bbox, tileId[2], *r.queryBuffer)
-		raw_bbox = r.grid.Srs.TransformRectTo(srs, bbox, 16)
 	}
+	src_bbox := bbox
 
 	if r.reprojectSrc != nil {
 		bbox = currentSrs.TransformRectTo(r.reprojectSrc, bbox, 16)
 		currentSrs = r.reprojectSrc
 	}
-	src_bbox := r.grid.Srs.TransformRectTo(currentSrs, bbox, 16)
 
-	_, tile_grid, affected_tile_coords, err := r.grid.GetAffectedLevelTiles(src_bbox, tileId[2])
+	_, tile_grid, affected_tile_coords, err := r.grid.GetAffectedLevelTiles(bbox, tileId[2])
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +134,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		return r.emptySource, nil
 	}
 	if query.TiledOnly {
-		sz := tile_collection.tiles[0].Source.GetSize()
-		if len(tile_collection.tiles) > 1 || sz[0] != query.Size[0] || sz[1] != query.Size[1] {
+		if len(tile_collection.tiles) > 1 {
 			tile_sources := []tile.Source{}
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)

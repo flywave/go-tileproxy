@@ -239,19 +239,17 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
 	if float64(s.pixelSize[1]) > 0 {
-		yPixel = ((dataEndLat-lat)/float64(s.pixelSize[1]) - 1)
+		yPixel = ((dataEndLat - lat) / float64(s.pixelSize[1]))
 	} else {
 		yPixel = (lat - dataEndLat) / float64(s.pixelSize[1])
 	}
 	xPixel = (lon - georef.GetOrigin()[0]) / float64(s.pixelSize[0])
 
-	epsilon := math.Max(float64(s.pixelSize[0])/10, float64(s.pixelSize[1])/10)
-
 	_, xInterpolationAmount = math.Modf(float64(xPixel))
 	_, yInterpolationAmount = math.Modf(float64(yPixel))
 
-	xOnDataPoint := math.Abs(xInterpolationAmount) < epsilon
-	yOnDataPoint := math.Abs(yInterpolationAmount) < epsilon
+	xOnDataPoint := math.Abs(xInterpolationAmount) < 0.1 || math.Abs(xInterpolationAmount) > 0.9
+	yOnDataPoint := math.Abs(yInterpolationAmount) < 0.1 || math.Abs(yInterpolationAmount) > 0.9
 
 	if xOnDataPoint && yOnDataPoint {
 		x := int(math.Floor(xPixel))
@@ -282,7 +280,6 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 		if southEast == noData {
 			southEast = avgHeight
 		}
-
 		heightValue = interpolator.Interpolate(southWest, southEast, northWest, northEast, xInterpolationAmount, yInterpolationAmount)
 	}
 

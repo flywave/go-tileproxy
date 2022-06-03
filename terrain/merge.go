@@ -26,7 +26,7 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 	mode := opts.Mode
 	tiledata := NewTileData(src_size, mode)
 
-	var bbox vec2d.Rect = t.BBox
+	bbox := t.BBox
 	var bbox_srs geo.Proj = t.BBoxSrs
 	for i, source := range ordered_tiles {
 		if source == nil {
@@ -38,22 +38,30 @@ func (t *RasterMerger) Merge(ordered_tiles []tile.Source, opts *RasterOptions) t
 		}
 
 		tdata := source.GetTile().(*TileData)
-		georef := source.GetGeoReference()
 
 		if tdata.Border != mode {
 			continue
 		}
+		georef := source.GetGeoReference()
 		if georef != nil {
 			bboxss := georef.GetBBox()
 			bbox = vec2d.Joined(&bbox, &bboxss)
+			bbox_srs = georef.GetSrs()
 		}
 		pos := t.tileOffset(i)
 
 		tiledata.copyFrom(tdata, pos)
 	}
+	ref := geo.NewGeoReference(bbox, bbox_srs)
 	tiledata.Box = bbox
 	tiledata.Boxsrs = bbox_srs
-	return CreateRasterSourceFromTileData(tiledata, opts, cacheable)
+	s := CreateRasterSourceFromTileData(tiledata, opts, cacheable)
+	if v, ok := s.(interface {
+		SetGeoReference(*geo.GeoReference)
+	}); ok {
+		v.SetGeoReference(ref)
+	}
+	return s
 }
 
 func (t *RasterMerger) srcSize() [2]uint32 {
@@ -75,7 +83,7 @@ func NewRasterSplitter(dem_tile tile.Source, dem_opts *RasterOptions) *RasterSpl
 	return &RasterSplitter{dem: dem_tile, Options: dem_opts}
 }
 
-func (t *RasterSplitter) 	GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [2]uint32) tile.Source {
+func (t *RasterSplitter) GetTile(newbox vec2d.Rect, boxsrs geo.Proj, tile_size [2]uint32) tile.Source {
 	type _rasterSource interface {
 		GetRasterOptions() *RasterOptions
 		Resample(georef *geo.GeoReference, grid *Grid) error

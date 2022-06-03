@@ -134,11 +134,12 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 		return r.emptySource, nil
 	}
 	if query.TiledOnly {
-		if len(tile_collection.tiles) > 1 {
+		if len(tile_collection.tiles) > 1 || !srs.Eq(currentSrs) {
 			tile_sources := []tile.Source{}
 			for _, t := range tile_collection.tiles {
 				tile_sources = append(tile_sources, t.Source)
 			}
+			src_bbox = r.grid.TilesBBox(coords)
 			return ResampleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, currentSrs, query.Size, r.tileManager.GetTileOptions(), r.Options)
 		} else {
 			t := tile_collection.GetItem(0)

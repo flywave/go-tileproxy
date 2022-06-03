@@ -115,32 +115,32 @@ func (c *CesiumTileClient) buildLayerJson() string {
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
-	if strings.Contains(c.TileURL, "{z}") && strings.Contains(c.TileURL, "{x}") && strings.Contains(c.TileURL, "{y}") {
-		url := fmt.Sprintf("%s/%d/%s", c.BaseURL, c.AssetId, c.TileURL)
-
-		zstr := strconv.Itoa(tile_coord[2])
-		xstr := strconv.Itoa(tile_coord[0])
-		ystr := strconv.Itoa(tile_coord[1])
-
-		url = strings.Replace(url, "{z}", zstr, 1)
-		url = strings.Replace(url, "{x}", xstr, 1)
-		url = strings.Replace(url, "{y}", ystr, 1)
-
-		if strings.Contains(url, "{version}") {
-			url = strings.Replace(url, "{version}", c.Version, 1)
-		}
-
-		if len(c.Extensions) > 0 {
-			var extensions string
-			if len(c.Extensions) == 1 {
-				extensions = c.Extensions[0]
-			} else {
-				extensions = strings.Join(c.Extensions, "-")
-			}
-			url += fmt.Sprintf("&extensions=%s", extensions)
-		}
-
-		return url
+	var url string
+	if !strings.Contains(c.TileURL, "{z}") || !strings.Contains(c.TileURL, "{x}") || !strings.Contains(c.TileURL, "{y}") {
+		c.TileURL = "{z}/{x}/{y}?{version}"
 	}
-	return ""
+	url = c.TileURL
+	zstr := strconv.Itoa(tile_coord[2])
+	xstr := strconv.Itoa(tile_coord[0])
+	ystr := strconv.Itoa(tile_coord[1])
+
+	url = strings.Replace(url, "{z}", zstr, 1)
+	url = strings.Replace(url, "{x}", xstr, 1)
+	url = strings.Replace(url, "{y}", ystr, 1)
+
+	if strings.Contains(url, "{version}") {
+		url = strings.Replace(url, "{version}", c.Version, 1)
+	}
+
+	if len(c.Extensions) > 0 {
+		var extensions string
+		if len(c.Extensions) == 1 {
+			extensions = c.Extensions[0]
+		} else {
+			extensions = strings.Join(c.Extensions, "-")
+		}
+		url += fmt.Sprintf("&extensions=%s", extensions)
+	}
+	url = fmt.Sprintf("%s/%d/%s", c.BaseURL, c.AssetId, url)
+	return url
 }

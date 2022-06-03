@@ -133,6 +133,10 @@ func (d *TileData) FillBorder(tp BorderType, i int, h float64) {
 	}
 }
 
+func (d *TileData) ToUnilateral() {
+	d.Border = BORDER_UNILATERAL
+}
+
 func (d *TileData) Set(x, y int, h float64) {
 	d.Datas[y*int(d.Size[0])+x] = h
 }

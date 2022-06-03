@@ -129,7 +129,7 @@ func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
 	url = strings.Replace(url, "{y}", ystr, 1)
 
 	if strings.Contains(url, "{version}") {
-		url = strings.Replace(url, "{version}", c.Version, 1)
+		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
 	}
 
 	if len(c.Extensions) > 0 {

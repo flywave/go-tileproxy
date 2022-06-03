@@ -65,9 +65,9 @@ func (c *CesiumTileClient) Auth() error {
 			return err
 		}
 
-		c.AccessToken = result.AccessToken
+		c.AuthToken = result.AccessToken
 		c.AuthHeaders = make(http.Header)
-		c.AuthHeaders["Authorization"] = []string{"Bearer " + c.AccessToken}
+		c.AuthHeaders["Authorization"] = []string{"Bearer " + c.AuthToken}
 		c.AuthHeaders["Referer"] = []string{"http://127.0.0.1:8000/test.html"}
 		return nil
 	}

@@ -25,7 +25,7 @@ type CesiumClient struct {
 }
 
 func (c *CesiumClient) buildAuthQuery() string {
-	return fmt.Sprintf("%s/v1/assets/%d/endpoint?access_token=%s", c.AuthURL, c.AssetId, c.AuthToken)
+	return fmt.Sprintf("%s/v1/assets/%d/endpoint?access_token=%s", c.AuthURL, c.AssetId, c.AccessToken)
 }
 
 type CesiumTileClient struct {
@@ -35,20 +35,20 @@ type CesiumTileClient struct {
 func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, tileUrl string, ctx Context) *CesiumTileClient {
 	return &CesiumTileClient{
 		CesiumClient: CesiumClient{
-			BaseClient: BaseClient{ctx: ctx},
-			AuthURL:    authUrl,
-			BaseURL:    assetUrl,
-			TileURL:    tileUrl,
-			AssetId:    assetId,
-			AuthToken:  token,
-			Version:    ver,
-			Extensions: nil,
+			BaseClient:  BaseClient{ctx: ctx},
+			AuthURL:     authUrl,
+			BaseURL:     assetUrl,
+			TileURL:     tileUrl,
+			AssetId:     assetId,
+			AccessToken: token,
+			Version:     ver,
+			Extensions:  nil,
 		},
 	}
 }
 
 func (c *CesiumTileClient) IsAuth() bool {
-	return c.AccessToken != ""
+	return c.AuthToken != ""
 }
 
 func (c *CesiumTileClient) Auth() error {

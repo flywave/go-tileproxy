@@ -58,6 +58,7 @@ func (c *CesiumTileClient) Auth() error {
 		type authResult struct {
 			AccessToken string `json:"accessToken"`
 		}
+		fmt.Println(string(resp))
 		result := &authResult{}
 
 		err := json.Unmarshal(resp, result)
@@ -67,8 +68,11 @@ func (c *CesiumTileClient) Auth() error {
 
 		c.AuthToken = result.AccessToken
 		c.AuthHeaders = make(http.Header)
-		c.AuthHeaders["Authorization"] = []string{"Bearer " + c.AuthToken}
-		c.AuthHeaders["Referer"] = []string{"http://127.0.0.1:8000/test.html"}
+		c.AuthHeaders["authorization"] = []string{"Bearer " + c.AuthToken}
+		c.AuthHeaders["origin"] = []string{"https://cesium.com/"}
+		c.AuthHeaders["referer"] = []string{"https://cesium.com/"}
+		c.AuthHeaders["authority"] = []string{"assets.cesium.com"}
+		c.AuthHeaders["method"] = []string{"GET"}
 		return nil
 	}
 	return errors.New(string(resp))

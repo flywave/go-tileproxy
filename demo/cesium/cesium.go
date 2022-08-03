@@ -80,7 +80,7 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 //http://127.0.0.1:8000/terrain_layer/14/13733/6366.terrain?extensions=octvertexnormals-metadata&v=1.2.0
 func main() {
 	http.HandleFunc("/", ProxyServer)
-	err := http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":8001", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

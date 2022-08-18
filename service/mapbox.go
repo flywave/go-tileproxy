@@ -67,9 +67,13 @@ func (s *MapboxService) GetTileJSON(req request.Request) *Response {
 		return err.Render()
 	}
 	tilelayer := layer.(*MapboxTileProvider)
-
-	data := tilelayer.RenderTileJson(tilejson_request)
-
+	var data []byte
+	if tilejson_request.FileName == "source" {
+		data = tilelayer.RenderTileJson(tilejson_request)
+	} else {
+		st := resource.NewGeoStats(tilejson_request.TilesetID)
+		data = st.ToJson()
+	}
 	resp := NewResponse(data, 200, "application/json")
 	return resp
 }
@@ -314,7 +318,7 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 
 func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxTileJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
-	strs := strings.Split(tms_request.Http.RequestURI, tms_request.Version)
+	strs := strings.Split(tms_request.Http.RequestURI, tms_request.TilesetID)
 	md.URL = strs[0]
 	return md
 }
@@ -357,7 +361,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := md.URL + "v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := md.URL + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

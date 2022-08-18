@@ -138,11 +138,11 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	dataset.Service.ServeHTTP(w, req)
 }
 
-//http://127.0.0.1:8000/v4/mvt_layer.json
+//http://127.0.0.1:8000/v4/mvt_layer/source.json
 //http://127.0.0.1:8000/v4/mvt_layer/1/0/0.mvt
-//http://127.0.0.1:8000/v4/raster_layer.json
+//http://127.0.0.1:8000/v4/raster_layer/source.json
 //http://127.0.0.1:8000/v4/raster_layer/1/0/0.png
-//http://127.0.0.1:8000/v4/rasterdem_layer.json
+//http://127.0.0.1:8000/v4/rasterdem_layer/source.json
 //http://127.0.0.1:8000/v4/rasterdem_layer/14/13733/6366.webp
 func main() {
 	http.HandleFunc("/", ProxyServer)

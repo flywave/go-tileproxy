@@ -148,3 +148,52 @@ func (c *TileJSONCache) Load(r Resource) error {
 func NewTileJSONCache(store Store) *TileJSONCache {
 	return &TileJSONCache{store: store}
 }
+
+type GeoInfo struct {
+	Attr     string
+	Ty       string
+	Values   interface{}
+	GeoCount uint64
+	ValueMap map[interface{}]bool
+}
+
+type Attribute struct {
+	Attr   string        `json:"attribute"`
+	Type   string        `json:"type"`
+	Values []interface{} `json:"values,omitempty"`
+	Min    float64       `json:"min,omitempty"`
+	Max    float64       `json:"max,omitempty"`
+}
+
+type LayerAtrribute struct {
+	Account    string       `json:"account"`
+	TilesetId  string       `json:"tilesetid"`
+	Layer      string       `json:"layer"`
+	Geometry   string       `json:"geometry,omitempty"`
+	Count      uint64       `json:"count,omitempty"`
+	Attributes []*Attribute `json:"attributes,omitempty"`
+}
+
+func NewLayerAtrribute(tilesetId, sourceName string) *LayerAtrribute {
+	return &LayerAtrribute{TilesetId: tilesetId, Layer: sourceName}
+}
+
+type GeoStats struct {
+	Account   string            `json:"account"`
+	TilesetId string            `json:"tilesetid"`
+	Layers    []*LayerAtrribute `json:"layers"`
+}
+
+func NewGeoStats(tid string) *GeoStats {
+	att := &GeoStats{TilesetId: tid, Layers: make([]*LayerAtrribute, 0, 10)}
+	return att
+}
+
+func (att *GeoStats) ToJson() []byte {
+	var bt []byte
+	wr := bytes.NewBuffer(bt)
+	enc := json.NewEncoder(wr)
+	enc.SetEscapeHTML(false)
+	enc.Encode(att)
+	return wr.Bytes()
+}

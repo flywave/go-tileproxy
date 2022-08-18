@@ -27,7 +27,8 @@ const (
 	TMS_SERVICE       ServiceType = "tms"
 	WMTS_SERVICE      ServiceType = "wmts"
 	WMTS_REST_SERVICE ServiceType = "wmts_rest"
-	MAPBOX_SERVICE    ServiceType = "mapbox_service"
+	MAPBOX_RASTER     ServiceType = "mapbox_raster"
+	MAPBOX_VECTOR     ServiceType = "mapbox_vector"
 	CESIUM_SERVICE    ServiceType = "cesium"
 )
 

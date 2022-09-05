@@ -32,6 +32,7 @@ type TileManager struct {
 	reprojectDstSrs      geo.Proj
 	queryBuffer          *int
 	merger               tile.Merger
+	siteURL              string
 }
 
 type TileManagerOptions struct {
@@ -53,6 +54,7 @@ type TileManagerOptions struct {
 	ReprojectSrcSrs      geo.Proj
 	ReprojectDstSrs      geo.Proj
 	QueryBuffer          *int
+	SiteURL              string
 }
 
 func NewTileManager(opts *TileManagerOptions) *TileManager {
@@ -73,6 +75,7 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 	ret.reprojectSrcSrs = opts.ReprojectSrcSrs
 	ret.reprojectDstSrs = opts.ReprojectDstSrs
 	ret.queryBuffer = opts.QueryBuffer
+	ret.siteURL = opts.SiteURL
 
 	if opts.MetaBuffer != -1 || (opts.MetaSize != [2]uint32{1, 1}) {
 		allsm := true
@@ -93,6 +96,10 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 		ret.merger = imagery.NewBandMerger(opt.Mode)
 	}
 	return ret
+}
+
+func (tm *TileManager) SiteURL() string {
+	return tm.siteURL
 }
 
 func (tm *TileManager) GetSources() []layer.Layer {

@@ -311,8 +311,9 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 }
 
 func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest, md *MapboxLayerMetadata) []byte {
-	url := md.URL + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 	url = strings.ReplaceAll(url, "//", "/")
+	url = md.URL + url
 	tilejson.Tiles = []string{url}
 	if len(tilejson.VectorLayers) > 0 {
 		tilejson.Type = resource.VECTOR
@@ -323,7 +324,7 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxTileJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
 	strs := strings.Split(tms_request.Http.RequestURI, tms_request.TilesetID)
-	md.URL = strs[0]
+	md.URL = c.tileManager.SiteURL() + strs[0]
 	return md
 }
 

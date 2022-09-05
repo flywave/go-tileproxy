@@ -11,6 +11,7 @@ import (
 )
 
 type Manager interface {
+	SiteURL() string
 	GetSources() []layer.Layer
 	SetSources(layer []layer.Layer)
 	GetGrid() *geo.TileGrid

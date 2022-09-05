@@ -64,6 +64,7 @@ type ImageSetting struct {
 }
 
 type HttpSetting struct {
+	SiteURL           string         `json:"site_url,omitempty"`
 	UserAgent         *string        `json:"user_agent,omitempty"`
 	RandomDelay       *int           `json:"random_delay,omitempty"`
 	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`

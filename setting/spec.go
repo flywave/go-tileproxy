@@ -14,7 +14,7 @@ const (
 	NONE_SOURCE       SourceType = "none"
 	WMS_SOURCE        SourceType = "wms"
 	TILE_SOURCE       SourceType = "tile"
-	MAPBOXTILE_SOURCE SourceType = "mapbox_tile"
+	VECTORTILE_SOURCE SourceType = "vector_tile"
 	ARCGIS_SOURCE     SourceType = "arcgis"
 	CESIUMTILE_SOURCE SourceType = "cesium_tile"
 )

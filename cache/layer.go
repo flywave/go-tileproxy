@@ -91,6 +91,10 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 
 	if r.reprojectSrc != nil {
 		bbox = currentSrs.TransformRectTo(r.reprojectSrc, bbox, 16)
+		if !currentSrs.IsLatLong() && r.reprojectSrc.IsLatLong() {
+			wg := geo.NewProj(4326)
+			bbox = wg.TransformRectTo(currentSrs, bbox, 16)
+		}
 		currentSrs = r.reprojectSrc
 	}
 

@@ -67,13 +67,24 @@ func fileExists(filename string) bool {
 }
 
 func TestGetGeotiff(t *testing.T) {
-	bbox := vec2d.Rect{
-		Min: vec2d.T{118.0787624999999963, 36.4794427545898472},
-		Max: vec2d.T{118.1429638549804650, 36.5374643000000034},
-	}
+	var bbox vec2d.Rect
 
+	srs32650 := geo.NewProj(32650)
 	srs900913 := geo.NewProj(900913)
 	srs4326 := geo.NewProj(4326)
+
+	if false {
+		bbox = vec2d.Rect{
+			Min: vec2d.T{117.4879, 36.7371},
+			Max: vec2d.T{117.7070, 36.9141},
+		}
+		bbox = srs32650.TransformRectTo(srs4326, bbox, 16)
+	} else {
+		bbox = vec2d.Rect{
+			Min: vec2d.T{117.4879, 36.7371},
+			Max: vec2d.T{117.7070, 36.9141},
+		}
+	}
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913

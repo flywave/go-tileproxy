@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -50,7 +49,6 @@ func NewMapboxTileClient(urlTemplate, tilejsonUrl, sku, token, tokenName string,
 
 func (c *MapboxTileClient) GetTile(tile_coord [3]int) []byte {
 	url := c.buildTileQuery(tile_coord)
-	fmt.Println("request url is ", url)
 	status, resp := c.httpClient().Open(url, nil, nil)
 	if status == 200 {
 		return resp
@@ -63,7 +61,6 @@ func (c *MapboxTileClient) GetTileJSON() *resource.TileJSON {
 	if err != nil {
 		return nil
 	}
-	fmt.Println("request url is ", url)
 	status, resp := c.httpClient().Open(url, nil, nil)
 	if status == 200 {
 		return resource.CreateTileJSON(resp)

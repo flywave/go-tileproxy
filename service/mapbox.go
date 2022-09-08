@@ -315,8 +315,16 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 	url = strings.ReplaceAll(url, "//", "/")
 	url = md.URL + url
 	tilejson.Tiles = []string{url}
+
 	if len(tilejson.VectorLayers) > 0 {
 		tilejson.Type = resource.VECTOR
+	}
+	if tilejson.Type == "" {
+		if tilejson.ID == resource.MAPBOX_STATELLITE {
+			tilejson.Type = resource.RASTER
+		} else {
+			tilejson.Type = resource.RASTER_DEM
+		}
 	}
 	return tilejson.GetData()
 }
@@ -332,6 +340,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	md := c.serviceMetadata(req)
 	if c.tilejsonSource != nil {
 		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
+		styles.Name = c.name
 		return c.convertTileJson(styles, req, &md)
 	}
 

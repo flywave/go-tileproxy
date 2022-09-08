@@ -12,6 +12,10 @@ const (
 	VECTOR     = "vector"
 )
 
+const (
+	MAPBOX_STATELLITE = "mapbox.satellite"
+)
+
 type VectorLayer struct {
 	Id          string            `json:"id"`
 	Description string            `json:"description"`

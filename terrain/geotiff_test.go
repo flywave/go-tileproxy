@@ -66,23 +66,38 @@ func fileExists(filename string) bool {
 	return true
 }
 
+func TestConvert(t *testing.T) {
+	opts := &RasterOptions{Format: tile.TileFormat("webp"), Mode: BORDER_BILATERAL}
+
+	src := "../data/14_13501_6477.webp"
+
+	source := NewDemRasterSource(ModeMapbox, opts)
+
+	source.SetSource(src)
+
+	if source.GetTile() == nil {
+		fmt.Print("")
+	}
+
+}
+
 func TestGetGeotiff(t *testing.T) {
 	var bbox vec2d.Rect
 
-	srs32650 := geo.NewProj(32650)
+	srs32651 := geo.NewProj(32651)
 	srs900913 := geo.NewProj(900913)
 	srs4326 := geo.NewProj(4326)
 
-	if false {
+	if true {
 		bbox = vec2d.Rect{
-			Min: vec2d.T{117.4879, 36.7371},
-			Max: vec2d.T{117.7070, 36.9141},
+			Min: vec2d.T{265000, 3996000},
+			Max: vec2d.T{270500, 4000500},
 		}
-		bbox = srs32650.TransformRectTo(srs4326, bbox, 16)
+		bbox = srs32651.TransformRectTo(srs4326, bbox, 16)
 	} else {
 		bbox = vec2d.Rect{
-			Min: vec2d.T{117.4879, 36.7371},
-			Max: vec2d.T{117.7070, 36.9141},
+			Min: vec2d.T{117.045, 34.760},
+			Max: vec2d.T{117.073, 34.799},
 		}
 	}
 
@@ -160,7 +175,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	raw, _ := io.Encode(tiledata)
 
-	f, _ := os.Create("./taihe.webp")
+	f, _ := os.Create("./zhaoyang.webp")
 	f.Write(raw)
 	f.Close()
 
@@ -168,7 +183,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile("./taihe.tif", src, sbox, srs4326, tiledata.Size, nil)
+	cog.WriteTile("./zhaoyang.tif", src, sbox, srs4326, tiledata.Size, nil)
 }
 
 func TestGeoTIFF(t *testing.T) {

@@ -67,9 +67,13 @@ func (s *MapboxService) GetTileJSON(req request.Request) *Response {
 		return err.Render()
 	}
 	tilelayer := layer.(*MapboxTileProvider)
-
-	data := tilelayer.RenderTileJson(tilejson_request)
-
+	var data []byte
+	if tilejson_request.FileName == "source" {
+		data = tilelayer.RenderTileJson(tilejson_request)
+	} else {
+		st := resource.NewGeoStats(tilejson_request.TilesetID)
+		data = st.ToJson()
+	}
 	resp := NewResponse(data, 200, "application/json")
 	return resp
 }
@@ -307,15 +311,28 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 }
 
 func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest, md *MapboxLayerMetadata) []byte {
-	url := md.URL + "/v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url = strings.ReplaceAll(url, "//", "/")
+	url = md.URL + url
 	tilejson.Tiles = []string{url}
+
+	if len(tilejson.VectorLayers) > 0 {
+		tilejson.Type = resource.VECTOR
+	}
+	if tilejson.Type == "" {
+		if tilejson.ID == resource.MAPBOX_STATELLITE {
+			tilejson.Type = resource.RASTER
+		} else {
+			tilejson.Type = resource.RASTER_DEM
+		}
+	}
 	return tilejson.GetData()
 }
 
 func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxTileJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
-	strs := strings.Split(tms_request.Http.RequestURI, tms_request.Version)
-	md.URL = strs[0]
+	strs := strings.Split(tms_request.Http.RequestURI, tms_request.TilesetID)
+	md.URL = c.tileManager.SiteURL() + strs[0]
 	return md
 }
 
@@ -323,6 +340,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	md := c.serviceMetadata(req)
 	if c.tilejsonSource != nil {
 		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
+		styles.Name = c.name
 		return c.convertTileJson(styles, req, &md)
 	}
 
@@ -357,7 +375,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) 
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := md.URL + "v4/" + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := md.URL + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

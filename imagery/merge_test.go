@@ -105,8 +105,8 @@ func fileExists(filename string) bool {
 func TestGetGeotiff(t *testing.T) {
 
 	bbox := vec2d.Rect{
-		Min: vec2d.T{118.0787624999999963, 36.4794427545898472},
-		Max: vec2d.T{118.1429638549804650, 36.5374643000000034},
+		Min: vec2d.T{121.6909931489999934, 36.9045675380000020},
+		Max: vec2d.T{122.3631303500000058, 37.4146094399999996},
 	}
 
 	srs900913 := geo.NewProj(900913)
@@ -122,7 +122,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{256, 256}, srs4326)
 
-	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 18)
+	cbox, grids, it, err := grid.GetAffectedLevelTiles(r, 14)
 
 	sbox := srs900913.TransformRectTo(srs4326, cbox, 16)
 

@@ -42,7 +42,6 @@ func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {
 			s.Cache.Save(ret)
 		}
 	}
-
 	return ret
 }
 

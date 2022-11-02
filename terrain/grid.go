@@ -52,12 +52,19 @@ func NewGrid(width, height int, mode BorderMode) *Grid {
 
 func caclulatePixelSize(width, height int, bbox vec2d.Rect) []float64 {
 	pixelSize := []float64{0, 0}
-	pixelSize[0] = (bbox.Max[0] - bbox.Min[0]) / float64(width)
-	pixelSize[1] = (bbox.Max[1] - bbox.Min[1]) / float64(height)
+	pixelSize[0] = (bbox.Max[0] - bbox.Min[0]) / float64(width-1)
+	pixelSize[1] = (bbox.Max[1] - bbox.Min[1]) / float64(height-1)
 	return pixelSize
 }
 
 func CaclulateGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
+	if opts.Format == "terrain" {
+		return CaclulateTerrainGrid(width, height, opts, georef)
+	}
+	return CaclulateRasterGrid(width, height, opts, georef)
+}
+
+func CaclulateRasterGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
 	mode := opts.Mode
 	grid := NewGrid(width, height, mode)
 	grid.Count = grid.Width * grid.Height
@@ -86,6 +93,43 @@ func CaclulateGrid(width, height int, opts *RasterOptions, georef *geo.GeoRefere
 		latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * float64(y))
 		for x := startX; x < endX; x++ {
 			longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * float64(x))
+			coords = append(coords, vec3d.T{longitude, latitude, 0})
+		}
+	}
+	grid.Coordinates = coords
+	grid.box = &vec3d.Box{Min: vec3d.T{maxbbx.Min[0], maxbbx.Min[1], 0}, Max: vec3d.T{maxbbx.Max[0], maxbbx.Max[1], 0}}
+	return grid
+}
+
+func CaclulateTerrainGrid(width, height int, opts *RasterOptions, georef *geo.GeoReference) *Grid {
+	mode := opts.Mode
+	grid := NewGrid(width, height, mode)
+	grid.Count = grid.Width * grid.Height
+	grid.srs = georef.GetSrs()
+
+	coords := make(Coordinates, 0, grid.Count)
+
+	maxbbx := georef.GetBBox()
+	pixelSize := caclulatePixelSize(width, height, maxbbx)
+
+	startX := 0.0
+	startY := 0.0
+	endX := float64(width)
+	endY := float64(height)
+	if mode == BORDER_UNILATERAL {
+		endX += 1
+		endY += 1
+	} else if mode == BORDER_BILATERAL {
+		startX -= 1
+		startY -= 1
+		endX += 1
+		endY += 1
+	}
+
+	for y := endY - 1; y >= 0; y-- {
+		latitude := georef.GetOrigin()[1] + (float64(pixelSize[1]) * (float64(y) - 0.5))
+		for x := startX; x < endX; x++ {
+			longitude := georef.GetOrigin()[0] + (float64(pixelSize[0]) * (float64(x) - 0.5))
 			coords = append(coords, vec3d.T{longitude, latitude, 0})
 		}
 	}

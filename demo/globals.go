@@ -27,4 +27,5 @@ func init() {
 	}
 	dely := 0
 	Globals.Http.RandomDelay = &dely
+	Globals.Http.HttpSetting.SiteURL = "http://127.0.0.1:8002"
 }

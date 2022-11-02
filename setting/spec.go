@@ -14,7 +14,7 @@ const (
 	NONE_SOURCE       SourceType = "none"
 	WMS_SOURCE        SourceType = "wms"
 	TILE_SOURCE       SourceType = "tile"
-	MAPBOXTILE_SOURCE SourceType = "mapbox_tile"
+	VECTORTILE_SOURCE SourceType = "vector_tile"
 	ARCGIS_SOURCE     SourceType = "arcgis"
 	CESIUMTILE_SOURCE SourceType = "cesium_tile"
 )
@@ -27,7 +27,8 @@ const (
 	TMS_SERVICE       ServiceType = "tms"
 	WMTS_SERVICE      ServiceType = "wmts"
 	WMTS_REST_SERVICE ServiceType = "wmts_rest"
-	MAPBOX_SERVICE    ServiceType = "mapbox_service"
+	MAPBOX_RASTER     ServiceType = "mapbox_raster"
+	MAPBOX_VECTOR     ServiceType = "mapbox_vector"
 	CESIUM_SERVICE    ServiceType = "cesium"
 )
 
@@ -63,6 +64,7 @@ type ImageSetting struct {
 }
 
 type HttpSetting struct {
+	SiteURL           string         `json:"site_url,omitempty"`
 	UserAgent         *string        `json:"user_agent,omitempty"`
 	RandomDelay       *int           `json:"random_delay,omitempty"`
 	DisableKeepAlives *bool          `json:"disable_keep_alives,omitempty"`

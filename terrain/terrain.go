@@ -3,11 +3,13 @@ package terrain
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"unsafe"
 
+	"github.com/flywave/go-proj"
 	qmt "github.com/flywave/go-quantized-mesh"
 	tin "github.com/flywave/go-tin"
 
@@ -152,7 +154,11 @@ func (s *TerrainSource) GetTileOptions() tile.TileOptions {
 
 func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshTile, error) {
 	if !data.IsUnilateral() {
-		return nil, errors.New("error")
+		if data.IsBilateral() {
+			data.ToUnilateral()
+		} else {
+			return nil, errors.New("error")
+		}
 	}
 
 	if data.NoDataValue() == 0 {
@@ -182,6 +188,25 @@ func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshT
 
 	mesh1 := tin.GenerateTinMesh(rd, options.MaxError)
 	mk := tin.NewTileMaker(mesh1)
+
+	faceTemp := "f %d %d %d \n"
+	vertTmp := "v %f %f %f \n"
+
+	obj := bytes.NewBuffer([]byte{})
+
+	for i := range mesh1.Vertices {
+		v := &mesh1.Vertices[i]
+		x, y, _ := proj.Lonlat2Merc(v[0], v[1])
+		s := fmt.Sprintf(vertTmp, x, y, v[2])
+		obj.Write([]byte(s))
+	}
+
+	for i := range mesh1.Faces {
+		v := &mesh1.Faces[i]
+		s := fmt.Sprintf(faceTemp, v[0]+1, v[1]+1, v[2]+1)
+		obj.Write([]byte(s))
+	}
+	ioutil.WriteFile("cache_data/terrain/test.obj", obj.Bytes(), 0755)
 
 	mesh, _ := mk.GenTile(true)
 

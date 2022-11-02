@@ -311,6 +311,7 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		ReprojectSrcSrs:      reprojectSrcSrs,
 		ReprojectDstSrs:      reprojectDstSrs,
 		QueryBuffer:          query_buffer,
+		SiteURL:              globals.Http.HttpSetting.SiteURL,
 	}
 
 	return cache.NewTileManager(topts)

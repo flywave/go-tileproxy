@@ -25,7 +25,7 @@ type CesiumClient struct {
 }
 
 func (c *CesiumClient) buildAuthQuery() string {
-	return fmt.Sprintf("%s/v1/assets/%d/endpoint?access_token=%s", c.AuthURL, c.AssetId, c.AuthToken)
+	return fmt.Sprintf("%s/v1/assets/%d/endpoint?access_token=%s", c.AuthURL, c.AssetId, c.AccessToken)
 }
 
 type CesiumTileClient struct {
@@ -35,24 +35,27 @@ type CesiumTileClient struct {
 func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, tileUrl string, ctx Context) *CesiumTileClient {
 	return &CesiumTileClient{
 		CesiumClient: CesiumClient{
-			BaseClient: BaseClient{ctx: ctx},
-			AuthURL:    authUrl,
-			BaseURL:    assetUrl,
-			TileURL:    tileUrl,
-			AssetId:    assetId,
-			AuthToken:  token,
-			Version:    ver,
-			Extensions: nil,
+			BaseClient:  BaseClient{ctx: ctx},
+			AuthURL:     authUrl,
+			BaseURL:     assetUrl,
+			TileURL:     tileUrl,
+			AssetId:     assetId,
+			AccessToken: token,
+			Version:     ver,
+			Extensions:  []string{"metadata"},
 		},
 	}
 }
 
 func (c *CesiumTileClient) IsAuth() bool {
-	return c.AccessToken != ""
+	return c.AuthToken != ""
 }
 
-func (c *CesiumTileClient) Auth() error {
+func (c *CesiumTileClient) Auth(tile_coord *[3]int) error {
 	url := c.buildAuthQuery()
+	c.AuthHeaders = make(http.Header)
+	c.AuthHeaders["origin"] = []string{"http:127.0.0.1/test.html"}
+	c.AuthHeaders["referer"] = []string{"http:127.0.0.1/test.html"}
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
 	if status == 200 {
 		type authResult struct {
@@ -65,10 +68,8 @@ func (c *CesiumTileClient) Auth() error {
 			return err
 		}
 
-		c.AccessToken = result.AccessToken
-		c.AuthHeaders = make(http.Header)
-		c.AuthHeaders["Authorization"] = []string{"Bearer " + c.AccessToken}
-		c.AuthHeaders["Referer"] = []string{"http://127.0.0.1:8000/test.html"}
+		c.AuthToken = result.AccessToken
+		c.AuthHeaders["authorization"] = []string{"Bearer " + c.AuthToken}
 		return nil
 	}
 	return errors.New(string(resp))
@@ -76,7 +77,7 @@ func (c *CesiumTileClient) Auth() error {
 
 func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
 	if !c.IsAuth() {
-		err := c.Auth()
+		err := c.Auth(&tile_coord)
 		if err != nil {
 			return nil
 		}
@@ -91,7 +92,7 @@ func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
 
 func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
 	if !c.IsAuth() {
-		err := c.Auth()
+		err := c.Auth(nil)
 		if err != nil {
 			return nil
 		}
@@ -111,36 +112,35 @@ func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
 }
 
 func (c *CesiumTileClient) buildLayerJson() string {
-	return fmt.Sprintf("%s/%d/layer.json", c.BaseURL, c.AssetId)
+	sub := fmt.Sprintf("%d/layer.json", c.AssetId)
+	return fmt.Sprintf("%s/%s", c.BaseURL, sub)
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
-	if strings.Contains(c.TileURL, "{z}") && strings.Contains(c.TileURL, "{x}") && strings.Contains(c.TileURL, "{y}") {
-		url := fmt.Sprintf("%s/%d/%s", c.BaseURL, c.AssetId, c.TileURL)
-
-		zstr := strconv.Itoa(tile_coord[2])
-		xstr := strconv.Itoa(tile_coord[0])
-		ystr := strconv.Itoa(tile_coord[1])
-
-		url = strings.Replace(url, "{z}", zstr, 1)
-		url = strings.Replace(url, "{x}", xstr, 1)
-		url = strings.Replace(url, "{y}", ystr, 1)
-
-		if strings.Contains(url, "{version}") {
-			url = strings.Replace(url, "{version}", c.Version, 1)
-		}
-
-		if len(c.Extensions) > 0 {
-			var extensions string
-			if len(c.Extensions) == 1 {
-				extensions = c.Extensions[0]
-			} else {
-				extensions = strings.Join(c.Extensions, "-")
-			}
-			url += fmt.Sprintf("&extensions=%s", extensions)
-		}
-
-		return url
+	var url string
+	if !strings.Contains(c.TileURL, "{z}") || !strings.Contains(c.TileURL, "{x}") || !strings.Contains(c.TileURL, "{y}") {
+		c.TileURL = "{z}/{x}/{y}.terrain?{extensions}&{version}"
 	}
-	return ""
+	url = c.TileURL
+	zstr := strconv.Itoa(tile_coord[2])
+	xstr := strconv.Itoa(tile_coord[0])
+	ystr := strconv.Itoa(tile_coord[1])
+
+	url = strings.Replace(url, "{z}", zstr, 1)
+	url = strings.Replace(url, "{x}", xstr, 1)
+	url = strings.Replace(url, "{y}", ystr, 1)
+
+	var extensions string
+	if len(c.Extensions) == 1 {
+		extensions = c.Extensions[0]
+	} else {
+		extensions = strings.Join(c.Extensions, "-")
+	}
+	url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
+
+	if strings.Contains(url, "{version}") {
+		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
+	}
+	url = fmt.Sprintf("%d/%s", c.AssetId, url)
+	return fmt.Sprintf("%s/%s", c.BaseURL, url)
 }

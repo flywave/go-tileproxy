@@ -206,7 +206,6 @@ func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshT
 		s := fmt.Sprintf(faceTemp, v[0]+1, v[1]+1, v[2]+1)
 		obj.Write([]byte(s))
 	}
-	ioutil.WriteFile("cache_data/terrain/test.obj", obj.Bytes(), 0755)
 
 	mesh, _ := mk.GenTile(true)
 

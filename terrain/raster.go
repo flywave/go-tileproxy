@@ -113,6 +113,10 @@ func (s *RasterSource) GetGeoReference() *geo.GeoReference {
 	return s.georef
 }
 
+func (s *RasterSource) SetGeoref(ref *geo.GeoReference) {
+	s.georef = ref
+}
+
 func (s *RasterSource) GetSize() [2]uint32 {
 	if s.size == nil {
 		s.size = make([]uint32, 2)

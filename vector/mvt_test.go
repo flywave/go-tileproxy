@@ -67,7 +67,7 @@ func TestPBFSourceBuffer(t *testing.T) {
 }
 
 var (
-	tile_url = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf?sku=101mJslv5DbiL&access_token=pk.eyJ1IjoidzEyNTk0ODIyIiwiYSI6IkVfSkVqMGMifQ.av8k0fqnXvMFo1ThyV9KMQ"
+	tile_url = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/%d/%d/%d.vector.pbf?sku=101mJslv5DbiL&access_token=pk.eyJ1IjoidzEyNTk0ODIyIiwiYSI6IkVfSkVqMGMifQ.av8k0fqnXvMFo1ThyV9KMQ"
 )
 
 func get_url(url string) []byte {

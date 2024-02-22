@@ -290,8 +290,8 @@ func download_mp(x, y, z int, sourceName string) {
 
 func TestGetTerrain(t *testing.T) {
 	bbox := vec2d.Rect{
-		Min: vec2d.T{118.04672241210939, 36.46105407505434},
-		Max: vec2d.T{118.14971923828126, 36.54384614538856},
+		Min: vec2d.T{117.8002166748047, 36.77409249464195},
+		Max: vec2d.T{117.92793273925783, 36.8510544475565},
 	}
 
 	srs4326 := geo.NewProj(4326)
@@ -359,4 +359,84 @@ func TestQuat(t *testing.T) {
 
 	rd.Close()
 	rd1.Close()
+}
+
+const (
+	argis_url = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/%d/%d/%d"
+)
+
+func download_argis(x, y, z int, sourceName string) {
+	data := get_url(fmt.Sprintf(argis_url, z, y, x))
+
+	dst := fmt.Sprintf("%s/%d/%d/%d.png", sourceName, z, y, x)
+
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		fmt.Printf("mkdirAll error")
+	}
+	f, _ := os.Create(dst)
+	f.Write(data)
+	f.Close()
+}
+
+func TestStaImage(t *testing.T) {
+	bbox := vec2d.Rect{
+		Min: vec2d.T{112.7856445312500142, 36.2619922044566252},
+		Max: vec2d.T{112.9394531250000426, 36.4389612408594488},
+	}
+
+	srs900913 := geo.NewProj(900913)
+	srs4326 := geo.NewProj(4326)
+
+	globalBox := srs4326.TransformRectTo(srs900913, vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, 16)
+
+	conf := geo.DefaultTileGridOptions()
+	conf[geo.TILEGRID_SRS] = srs900913
+	conf[geo.TILEGRID_RES_FACTOR] = 2.0
+	conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
+	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
+	grid := geo.NewTileGrid(conf)
+
+	r1, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{256, 256}, srs4326)
+
+	for l := 5; l < 15; l++ {
+		r := r1
+		if l < 5 {
+			r = globalBox
+		}
+		_, _, it, _ := grid.GetAffectedLevelTiles(r, l)
+		tilesCoord := [][3]int{}
+		minx, miny := 0, 0
+		for {
+			x, y, z, done := it.Next()
+
+			if minx == 0 || x < minx {
+				minx = x
+			}
+
+			if miny == 0 || y < miny {
+				miny = y
+			}
+
+			tilesCoord = append(tilesCoord, [3]int{x, y, z})
+
+			if done {
+				break
+			}
+		}
+
+		if len(tilesCoord) == 0 {
+			t.FailNow()
+		}
+
+		for i := range tilesCoord {
+			x, y, z := tilesCoord[i][0], tilesCoord[i][1], tilesCoord[i][2]
+
+			src := fmt.Sprintf("../cache_data/argis/%d/%d/%d.png", z, y, x)
+
+			if !fileExists(src) {
+				download_argis(x, y, z, "../cache_data/argis")
+			}
+
+		}
+	}
 }

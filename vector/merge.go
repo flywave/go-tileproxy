@@ -32,7 +32,7 @@ func (l *FeatureBuilder) applyGeometryLinestring(feature *geom.Feature) {
 	if l.coverage != nil && feature.BoundingBox == nil {
 		feature.BoundingBox = geom.BoundingBoxFromGeometryData(&feature.GeometryData)
 	}
-	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0], feature.BoundingBox[1]}, Max: vec2d.T{feature.BoundingBox[2], feature.BoundingBox[3]}}
+	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0][0], feature.BoundingBox[0][1]}, Max: vec2d.T{feature.BoundingBox[1][0], feature.BoundingBox[1][1]}}
 	if l.coverage == nil || l.coverage.Intersects(rect, l.srs) {
 		l.feat = geom.NewFeatureFromGeometryData(&feature.GeometryData)
 		l.feat.ID = feature.ID
@@ -44,7 +44,7 @@ func (l *FeatureBuilder) applyGeometryPolygon(feature *geom.Feature) {
 	if l.coverage != nil && feature.BoundingBox == nil {
 		feature.BoundingBox = geom.BoundingBoxFromGeometryData(&feature.GeometryData)
 	}
-	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0], feature.BoundingBox[1]}, Max: vec2d.T{feature.BoundingBox[2], feature.BoundingBox[3]}}
+	rect := vec2d.Rect{Min: vec2d.T{feature.BoundingBox[0][0], feature.BoundingBox[0][1]}, Max: vec2d.T{feature.BoundingBox[1][0], feature.BoundingBox[1][1]}}
 	if l.coverage == nil || l.coverage.Intersects(rect, l.srs) {
 		l.feat = geom.NewFeatureFromGeometryData(&feature.GeometryData)
 		l.feat.ID = feature.ID

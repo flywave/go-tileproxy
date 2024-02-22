@@ -84,22 +84,22 @@ func TestConvert(t *testing.T) {
 func TestGetGeotiff(t *testing.T) {
 	var bbox vec2d.Rect
 
-	srs32651 := geo.NewProj(32651)
+	// srs32651 := geo.NewProj(32651)
 	srs900913 := geo.NewProj(900913)
 	srs4326 := geo.NewProj(4326)
 
-	if true {
-		bbox = vec2d.Rect{
-			Min: vec2d.T{265000, 3996000},
-			Max: vec2d.T{270500, 4000500},
-		}
-		bbox = srs32651.TransformRectTo(srs4326, bbox, 16)
-	} else {
-		bbox = vec2d.Rect{
-			Min: vec2d.T{117.045, 34.760},
-			Max: vec2d.T{117.073, 34.799},
-		}
+	// if true {
+	// 	bbox = vec2d.Rect{
+	// 		Min: vec2d.T{265000, 3996000},
+	// 		Max: vec2d.T{270500, 4000500},
+	// 	}
+	// 	bbox = srs32651.TransformRectTo(srs4326, bbox, 16)
+	// } else {
+	bbox = vec2d.Rect{
+		Min: vec2d.T{120.69871065708321, 36.92324736988195},
+		Max: vec2d.T{120.7595254635922, 36.95216470748957},
 	}
+	// }
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
@@ -175,7 +175,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	raw, _ := io.Encode(tiledata)
 
-	f, _ := os.Create("./zhaoyang.webp")
+	f, _ := os.Create("./LAIYANG.webp")
 	f.Write(raw)
 	f.Close()
 
@@ -183,7 +183,7 @@ func TestGetGeotiff(t *testing.T) {
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile("./zhaoyang.tif", src, sbox, srs4326, tiledata.Size, nil)
+	cog.WriteTile("./LAIYANG.tif", src, sbox, srs4326, tiledata.Size, nil)
 }
 
 func TestGeoTIFF(t *testing.T) {

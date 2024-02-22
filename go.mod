@@ -8,7 +8,7 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
 	github.com/flywave/go-cog v0.0.0-20220209090615-63c2af73d539
-	github.com/flywave/go-geo v0.0.0-20220302083036-0cfa1df0f51f
+	github.com/flywave/go-geo v0.0.0-20220830054750-3c082ff4a2f2
 	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
 	github.com/flywave/go-geom v0.0.0-20220210023939-86f84322e71f
 	github.com/flywave/go-geos v0.0.0-20220312005430-b3e54ee96ed7
@@ -22,7 +22,7 @@ require (
 	github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21
 	github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
-	github.com/flywave/go3d v0.0.0-20220728100441-e65a6f6f7288
+	github.com/flywave/go3d v0.0.0-20231213061711-48d3c5834480
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc
 	github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704
@@ -47,8 +47,12 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
-	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
-	golang.org/x/net v0.0.0-20220127074510-2fabfed7e28f
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
+	golang.org/x/image v0.14.0
+	golang.org/x/net v0.6.0
+	golang.org/x/sys v0.5.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
+
+replace github.com/flywave/go-mbgeom => ../go-mbgeom
+
+replace github.com/flywave/go-geom => ../go-geom

@@ -379,10 +379,24 @@ func download_argis(x, y, z int, sourceName string) {
 }
 
 func TestStaImage(t *testing.T) {
+	// bbox := vec2d.Rect{
+	// 	Min: vec2d.T{112.7856445312500142, 36.2619922044566252},
+	// 	Max: vec2d.T{112.9394531250000426, 36.4389612408594488},
+	// }
+
 	bbox := vec2d.Rect{
-		Min: vec2d.T{112.7856445312500142, 36.2619922044566252},
-		Max: vec2d.T{112.9394531250000426, 36.4389612408594488},
+		Min: vec2d.T{112.65676956397095,
+			36.17771419551838},
+		Max: vec2d.T{113.08518787590776,
+			36.45899853558768},
 	}
+
+	// bbox := vec2d.Rect{
+	// 	Min: vec2d.T{111.62649644407276,
+	// 		35.56405463741939},
+	// 	Max: vec2d.T{114.29757796392914,
+	// 		37.20178874789754},
+	// }
 
 	srs900913 := geo.NewProj(900913)
 	srs4326 := geo.NewProj(4326)
@@ -398,7 +412,7 @@ func TestStaImage(t *testing.T) {
 
 	r1, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{256, 256}, srs4326)
 
-	for l := 5; l < 15; l++ {
+	for l := 5; l < 18; l++ {
 		r := r1
 		if l < 5 {
 			r = globalBox
@@ -439,4 +453,80 @@ func TestStaImage(t *testing.T) {
 
 		}
 	}
+}
+
+func TestMapboxTerrain(t *testing.T) {
+
+	bbox := vec2d.Rect{
+		Min: vec2d.T{111.62649644407276, 35.56405463741939},
+		Max: vec2d.T{114.29757796392914, 37.20178874789754},
+	}
+	fmt.Println((111.62649644407276+114.29757796392914)/2, (35.56405463741939+37.20178874789754)/2)
+
+	srs900913 := geo.NewProj(900913)
+	srs4326 := geo.NewProj(4326)
+
+	conf := geo.DefaultTileGridOptions()
+	conf[geo.TILEGRID_SRS] = srs900913
+	conf[geo.TILEGRID_RES_FACTOR] = 2.0
+	conf[geo.TILEGRID_TILE_SIZE] = []uint32{512, 512}
+	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
+	grid := geo.NewTileGrid(conf)
+
+	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
+
+	for l := 0; l < 14; l++ {
+		_, _, it, _ := grid.GetAffectedLevelTiles(r, l)
+		tilesCoord := [][3]int{}
+		minx, miny := 0, 0
+		for {
+			x, y, z, done := it.Next()
+
+			if minx == 0 || x < minx {
+				minx = x
+			}
+
+			if miny == 0 || y < miny {
+				miny = y
+			}
+
+			tilesCoord = append(tilesCoord, [3]int{x, y, z})
+
+			if done {
+				break
+			}
+		}
+
+		if len(tilesCoord) == 0 {
+			t.FailNow()
+		}
+
+		for i := range tilesCoord {
+			x, y, z := tilesCoord[i][0], tilesCoord[i][1], tilesCoord[i][2]
+
+			src := fmt.Sprintf("../cache_data/mpx_terrain/%d/%d/%d.webp", z, x, y)
+
+			if !fileExists(src) {
+				download_mpx_terrain(x, y, z, "../cache_data/mpx_terrain")
+			}
+
+		}
+	}
+}
+
+var (
+	mpx_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbGY5Y283N3IyZjB3M3ZyMGs4emJoYWNkIn0.MRcTQs3Z9OA0EQOB40xBqQ"
+)
+
+func download_mpx_terrain(x, y, z int, sourceName string) {
+	data := get_url(fmt.Sprintf(mpx_url, z, x, y))
+
+	dst := fmt.Sprintf("%s/%d/%d/%d.webp", sourceName, z, x, y)
+
+	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
+		fmt.Printf("mkdirAll error")
+	}
+	f, _ := os.Create(dst)
+	f.Write(data)
+	f.Close()
 }

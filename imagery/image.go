@@ -187,7 +187,7 @@ func (s *ImageSource) makeImageBuf() error {
 	return errors.New("image name is empty")
 }
 
-func imageToBuf(image image.Image, image_opts *ImageOptions, georef *geo.GeoReference) []byte {
+func imageToBuf(image image.Image, image_opts *ImageOptions, _ *geo.GeoReference) []byte {
 	fname := image_opts.Format.Extension()
 	buf := &bytes.Buffer{}
 	EncodeImage(fname, buf, image)

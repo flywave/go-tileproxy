@@ -4,6 +4,7 @@ import (
 	"io"
 	"unsafe"
 
+	"github.com/flywave/go-geoid"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
 	"github.com/flywave/go-geo"
@@ -67,6 +68,19 @@ func BorderModeFromString(border string) BorderMode {
 		return BORDER_BILATERAL
 	}
 	return BORDER_NONE
+}
+
+func VerticalDatumFromString(tp string) geoid.VerticalDatum {
+	if tp == "HAE" {
+		return geoid.HAE
+	} else if tp == "EGM84" {
+		return geoid.EGM84
+	} else if tp == "EGM96" {
+		return geoid.EGM96
+	} else if tp == "EGM2008" {
+		return geoid.EGM2008
+	}
+	return geoid.UNKNOWN
 }
 
 type TileData struct {

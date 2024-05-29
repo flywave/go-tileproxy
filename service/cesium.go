@@ -282,7 +282,7 @@ func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest)
 
 	layerjson.Bounds[0], layerjson.Bounds[1], layerjson.Bounds[2], layerjson.Bounds[3] = bbox.Min[0], bbox.Min[1], bbox.Max[0], bbox.Max[1]
 
-	layerjson.Format = "quantized-mesh-1.0" // c.GetFormat()
+	layerjson.Format = c.GetFormat() // quantized-mesh-1.0
 	layerjson.Name = md.Name
 
 	grid := geo.NewGeodeticTileGrid()

@@ -17,27 +17,25 @@ const (
 
 var (
 	cesiumTerrainDemSource = setting.CesiumTileSource{
-		CesiumTileSourcePart: setting.CesiumTileSourcePart{
-			AuthUrl:        CESIUM_AUTH_URL,
-			Url:            CESIUM_ASSETS_URL,
-			AssetId:        1,
-			Version:        "1.2.0",
-			AccessToken:    CESIUM_ACCESSTOKEN,
-			Grid:           "global_geodetic",
-			LayerjsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
-		Options: &setting.RasterOpts{Format: "terrain"},
+		AuthUrl:        CESIUM_AUTH_URL,
+		Url:            CESIUM_ASSETS_URL,
+		AssetId:        1,
+		Version:        "1.2.0",
+		AccessToken:    CESIUM_ACCESSTOKEN,
+		Grid:           "global_geodetic",
+		LayerjsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		Options:        &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumTerrainDemCache = setting.CacheSource{
-		CacheSourcePart: setting.CacheSourcePart{
-			Sources:       []string{"terrain"},
-			Name:          "terrain_cache",
-			Grid:          "global_geodetic",
-			Format:        "terrain",
-			RequestFormat: "terrain",
-			CacheInfo: &setting.CacheInfo{
-				Directory:       "./cache_data/terrain/",
-				DirectoryLayout: "tms",
-			}},
+		Sources:       []string{"terrain"},
+		Name:          "terrain_cache",
+		Grid:          "global_geodetic",
+		Format:        "terrain",
+		RequestFormat: "terrain",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/terrain/",
+			DirectoryLayout: "tms",
+		},
 		TileOptions: &setting.RasterOpts{Format: "terrain"},
 	}
 	cesiumService = setting.CesiumService{
@@ -76,8 +74,8 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	dataset.Service.ServeHTTP(w, req)
 }
 
-//http://127.0.0.1:8000/terrain_layer/layer.json
-//http://127.0.0.1:8000/terrain_layer/14/13733/6366.terrain?extensions=octvertexnormals-metadata&v=1.2.0
+// http://127.0.0.1:8000/terrain_layer/layer.json
+// http://127.0.0.1:8000/terrain_layer/14/13733/6366.terrain?extensions=octvertexnormals-metadata&v=1.2.0
 func main() {
 	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8001", nil)

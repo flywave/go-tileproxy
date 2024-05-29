@@ -54,6 +54,12 @@ func NewImageOptions(opt *ImageOpts) *imagery.ImageOptions {
 	if opt.Mode != "" {
 		image_opt.Mode = imagery.ImageModeFromString(opt.Mode)
 	}
+	if opt.Transparent != nil && *opt.Transparent && opt.Opacity != nil {
+		image_opt.Opacity = opt.Opacity
+	}
+	if opt.BgColor != nil {
+		image_opt.BgColor = color.RGBA{R: opt.BgColor[0], G: opt.BgColor[1], B: opt.BgColor[2], A: opt.BgColor[3]}
+	}
 	image_opt.EncodingOptions = opt.EncodingOptions
 	return image_opt
 }
@@ -73,6 +79,12 @@ func NewRasterOptions(opt *RasterOpts) *terrain.RasterOptions {
 	}
 	if opt.DataType != nil {
 		raster_opt.DataType = terrain.RasterTypeFromString(*opt.DataType)
+	}
+	if opt.HeightModel != nil {
+		raster_opt.HeightModel = terrain.VerticalDatumFromString(*opt.HeightModel)
+	}
+	if opt.HeightOffset != nil {
+		raster_opt.HeightOffset = *opt.HeightOffset
 	}
 	return raster_opt
 }
@@ -420,7 +432,7 @@ func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instanc
 func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvider {
 	dimensions := utils.NewDimensionsFromValues(l.Dimensions)
 
-	tileManager := instance.GetCache(l.TileSource)
+	tileManager := instance.GetCache(l.Source)
 
 	infoSources := []layer.InfoLayer{}
 	for _, info := range l.InfoSources {

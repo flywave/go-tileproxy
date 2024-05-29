@@ -22,14 +22,12 @@ const (
 type ServiceType string
 
 const (
-	NONE_SERVICE      ServiceType = "none"
-	WMS_SERVICE       ServiceType = "wms"
-	TMS_SERVICE       ServiceType = "tms"
-	WMTS_SERVICE      ServiceType = "wmts"
-	WMTS_REST_SERVICE ServiceType = "wmts_rest"
-	MAPBOX_RASTER     ServiceType = "mapbox_raster"
-	MAPBOX_VECTOR     ServiceType = "mapbox_vector"
-	CESIUM_SERVICE    ServiceType = "cesium"
+	NONE_SERVICE   ServiceType = "none"
+	WMS_SERVICE    ServiceType = "wms"
+	TMS_SERVICE    ServiceType = "tms"
+	WMTS_SERVICE   ServiceType = "wmts"
+	MAPBOX_SERVICE ServiceType = "mapbox"
+	CESIUM_SERVICE ServiceType = "cesium"
 )
 
 type CacheType string
@@ -120,15 +118,19 @@ type RasterOpts struct {
 	Nodata       *float64 `json:"nodata,omitempty"`
 	Interpolator *string  `json:"interpolator,omitempty"`
 	DataType     *string  `json:"data_type,omitempty"`
+	HeightModel  *string  `json:"height_model,omitempty"`
+	HeightOffset *float64 `json:"height_offset,omitempty"`
 }
 
 type ImageOpts struct {
 	Type             string                 `json:"type"`
 	Mode             string                 `json:"mode,omitempty"`
 	Transparent      *bool                  `json:"transparent,omitempty"`
+	Opacity          *float64               `json:"opacity,omitempty"`
 	ResamplingMethod string                 `json:"resampling_method,omitempty"`
 	Format           string                 `json:"format,omitempty"`
 	EncodingOptions  map[string]interface{} `json:"encoding_options,omitempty"`
+	BgColor          *[4]uint8              `json:"bgcolor,omitempty"`
 }
 
 type VectorOpts struct {
@@ -191,11 +193,6 @@ type Reproject struct {
 }
 
 type CacheSource struct {
-	CacheSourcePart
-	TileOptions interface{} `json:"tile_options,omitempty"`
-}
-
-type CacheSourcePart struct {
 	Type                 SourceType    `json:"type,omitempty"`
 	Sources              []string      `json:"sources,omitempty"`
 	Name                 string        `json:"name,omitempty"`
@@ -217,11 +214,11 @@ type CacheSourcePart struct {
 	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
 	ReprojectSrs         *Reproject    `json:"reproject,omitempty"`
 	QueryBuffer          *int          `json:"query_buffer,omitempty"`
+	TileOptions          interface{}   `json:"tile_options,omitempty"`
 }
 
 func (c *CacheSource) UnmarshalJSON(data []byte) error {
-	pt := &CacheSourcePart{}
-	err := json.Unmarshal(data, pt)
+	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
 	}
@@ -238,7 +235,6 @@ func (c *CacheSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.TileOptions = opt
-	c.CacheSourcePart = *pt
 	return nil
 }
 
@@ -314,26 +310,21 @@ type WMSSource struct {
 	AccessTokenName  *string           `json:"access_token_name,omitempty"`
 }
 
-type TileSourcePart struct {
-	SourceCommons
-	Type          SourceType `json:"type,omitempty"`
-	URLTemplate   string     `json:"url_template,omitempty"`
-	AccessToken   *string    `json:"access_token,omitempty"`
-	Transparent   *bool      `json:"transparent,omitempty"`
-	Grid          string     `json:"grid,omitempty"`
-	RequestFormat string     `json:"request_format,omitempty"`
-	Subdomains    []string   `json:"subdomains,omitempty"`
-	Origin        string     `json:"origin,omitempty"`
-}
-
 type TileSource struct {
-	TileSourcePart
-	Options interface{} `json:"options,omitempty"`
+	SourceCommons
+	Type          SourceType  `json:"type,omitempty"`
+	URLTemplate   string      `json:"url_template,omitempty"`
+	AccessToken   *string     `json:"access_token,omitempty"`
+	Transparent   *bool       `json:"transparent,omitempty"`
+	Grid          string      `json:"grid,omitempty"`
+	RequestFormat string      `json:"request_format,omitempty"`
+	Subdomains    []string    `json:"subdomains,omitempty"`
+	Origin        string      `json:"origin,omitempty"`
+	Options       interface{} `json:"options,omitempty"`
 }
 
 func (c *TileSource) UnmarshalJSON(data []byte) error {
-	p := &TileSourcePart{}
-	err := json.Unmarshal(data, p)
+	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
 	}
@@ -350,30 +341,24 @@ func (c *TileSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.Options = opt
-	c.TileSourcePart = *p
 	return nil
-}
-
-type MapboxTileSourcePart struct {
-	SourceCommons
-	Type            SourceType `json:"type,omitempty"`
-	Url             string     `json:"url,omitempty"`
-	Sku             string     `json:"sku,omitempty"`
-	AccessToken     string     `json:"access_token,omitempty"`
-	AccessTokenName string     `json:"access_token_name,omitempty"`
-	Grid            string     `json:"grid,omitempty"`
-	TilejsonUrl     string     `json:"tilejson_url,omitempty"`
-	TilejsonStore   *StoreInfo `json:"tilejson_store"`
 }
 
 type MapboxTileSource struct {
-	MapboxTileSourcePart
-	Options interface{} `json:"options,omitempty"`
+	SourceCommons
+	Type            SourceType  `json:"type,omitempty"`
+	Url             string      `json:"url,omitempty"`
+	Sku             string      `json:"sku,omitempty"`
+	AccessToken     string      `json:"access_token,omitempty"`
+	AccessTokenName string      `json:"access_token_name,omitempty"`
+	Grid            string      `json:"grid,omitempty"`
+	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
+	TilejsonStore   *StoreInfo  `json:"tilejson_store"`
+	Options         interface{} `json:"options,omitempty"`
 }
 
 func (c *MapboxTileSource) UnmarshalJSON(data []byte) error {
-	p := &MapboxTileSourcePart{}
-	err := json.Unmarshal(data, p)
+	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
 	}
@@ -390,31 +375,25 @@ func (c *MapboxTileSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.Options = opt
-	c.MapboxTileSourcePart = *p
 	return nil
 }
 
-type CesiumTileSourcePart struct {
-	SourceCommons
-	Type           SourceType `json:"type,omitempty"`
-	AuthUrl        string     `json:"auth_url,omitempty"`
-	Url            string     `json:"url,omitempty"`
-	TileUrl        string     `json:"tile_url,omitempty"`
-	Version        string     `json:"version,omitempty"`
-	AssetId        int        `json:"assetId,omitempty"`
-	AccessToken    string     `json:"access_token,omitempty"`
-	Grid           string     `json:"grid,omitempty"`
-	LayerjsonStore *StoreInfo `json:"layerjson_store"`
-}
-
 type CesiumTileSource struct {
-	CesiumTileSourcePart
-	Options interface{} `json:"options,omitempty"`
+	SourceCommons
+	Type           SourceType  `json:"type,omitempty"`
+	AuthUrl        string      `json:"auth_url,omitempty"`
+	Url            string      `json:"url,omitempty"`
+	TileUrl        string      `json:"tile_url,omitempty"`
+	Version        string      `json:"version,omitempty"`
+	AssetId        int         `json:"asset_id,omitempty"`
+	AccessToken    string      `json:"access_token,omitempty"`
+	Grid           string      `json:"grid,omitempty"`
+	LayerjsonStore *StoreInfo  `json:"layerjson_store"`
+	Options        interface{} `json:"options,omitempty"`
 }
 
 func (c *CesiumTileSource) UnmarshalJSON(data []byte) error {
-	p := &CesiumTileSourcePart{}
-	err := json.Unmarshal(data, &p)
+	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
 	}
@@ -431,7 +410,6 @@ func (c *CesiumTileSource) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.Options = opt
-	c.CesiumTileSourcePart = *p
 	return nil
 }
 
@@ -509,7 +487,7 @@ type TileLayer struct {
 	Name        string                   `json:"name,omitempty"`
 	Title       string                   `json:"title,omitempty"`
 	Description string                   `json:"description,omitempty"`
-	TileSource  string                   `json:"tile_source"`
+	Source      string                   `json:"source"`
 	InfoSources []string                 `json:"info_sources"`
 	Dimensions  map[string][]interface{} `json:"dimensions,omitempty"`
 }
@@ -638,7 +616,7 @@ type WMSService struct {
 	} `json:"online_resource"`
 	Fees                 *string                  `json:"fees,omitempty"`
 	AccessConstraints    *string                  `json:"access_constraints,omitempty"`
-	RootLayer            *WMSLayer                `json:"layer,omitempty"`
+	RootLayer            *WMSLayer                `json:"root_layer,omitempty"`
 	Layers               []WMSLayer               `json:"layers,omitempty"`
 	MaxTileAge           *int                     `json:"max_tile_age,omitempty"`
 	ExtendedCapabilities *WMSExtendedCapabilities `json:"extended_capabilities,omitempty"`

@@ -54,8 +54,8 @@ func (c *CesiumTileClient) IsAuth() bool {
 func (c *CesiumTileClient) Auth(tile_coord *[3]int) error {
 	url := c.buildAuthQuery()
 	c.AuthHeaders = make(http.Header)
-	c.AuthHeaders["origin"] = []string{"http:127.0.0.1/test.html"}
-	c.AuthHeaders["referer"] = []string{"http:127.0.0.1/test.html"}
+	c.AuthHeaders["origin"] = []string{"http://127.0.0.1/test.html"}
+	c.AuthHeaders["referer"] = []string{"http://127.0.0.1/test.html"}
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
 	if status == 200 {
 		type authResult struct {
@@ -137,10 +137,8 @@ func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
 		extensions = strings.Join(c.Extensions, "-")
 	}
 	url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
+	url = strings.Replace(url, "{version}", "v="+c.Version, 1)
 
-	if strings.Contains(url, "{version}") {
-		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
-	}
 	url = fmt.Sprintf("%d/%s", c.AssetId, url)
 	return fmt.Sprintf("%s/%s", c.BaseURL, url)
 }

@@ -16,76 +16,67 @@ const (
 )
 
 var (
-	mapboxMVTSource = setting.MapboxTileSource{MapboxTileSourcePart: setting.MapboxTileSourcePart{
+	mapboxMVTSource = setting.MapboxTileSource{
 		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Grid:          "global_webmercator",
 		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"}},
-		Options: &setting.VectorOpts{Format: "mvt", Extent: 4096},
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		Options:       &setting.VectorOpts{Format: "mvt", Extent: 4096},
 	}
 	mapboxRasterSource = setting.MapboxTileSource{
-		MapboxTileSourcePart: setting.MapboxTileSourcePart{
-			Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite/{z}/{x}/{y}.png",
-			AccessToken:   MAPBOX_ACCESSTOKEN,
-			Grid:          "global_webmercator",
-			TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
-			TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
-		},
-		Options: &setting.ImageOpts{Format: "png"},
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite/{z}/{x}/{y}.png",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Grid:          "global_webmercator",
+		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		Options:       &setting.ImageOpts{Format: "png"},
 	}
 	mapboxRasterDemSource = setting.MapboxTileSource{
-		MapboxTileSourcePart: setting.MapboxTileSourcePart{
-			Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
-			AccessToken:   MAPBOX_ACCESSTOKEN,
-			Sku:           "101XxiLvoFYxL",
-			Grid:          "global_webmercator",
-			TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
-			TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
-		},
-		Options: &setting.RasterOpts{Format: "webp"},
+		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Sku:           "101XxiLvoFYxL",
+		Grid:          "global_webmercator",
+		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
+		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		Options:       &setting.RasterOpts{Format: "webp"},
 	}
 
 	mapboxMVTCache = setting.CacheSource{
-		CacheSourcePart: setting.CacheSourcePart{
-			Sources:       []string{"mvt"},
-			Name:          "mvt_cache",
-			Grid:          "global_webmercator",
-			Format:        "mvt",
-			RequestFormat: "mvt",
-			CacheInfo: &setting.CacheInfo{
-				Directory:       "./cache_data/mvt",
-				DirectoryLayout: "tms",
-			},
+		Sources:       []string{"mvt"},
+		Name:          "mvt_cache",
+		Grid:          "global_webmercator",
+		Format:        "mvt",
+		RequestFormat: "mvt",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/mvt",
+			DirectoryLayout: "tms",
 		},
 		TileOptions: &setting.VectorOpts{Format: "mvt", Extent: 4096},
 	}
 
 	mapboxRasterCache = setting.CacheSource{
-		CacheSourcePart: setting.CacheSourcePart{
-			Sources:       []string{"raster"},
-			Name:          "raster_cache",
-			Grid:          "global_webmercator",
-			Format:        "png",
-			RequestFormat: "png",
-			CacheInfo: &setting.CacheInfo{
-				Directory:       "./cache_data/raster/",
-				DirectoryLayout: "tms",
-			},
+		Sources:       []string{"raster"},
+		Name:          "raster_cache",
+		Grid:          "global_webmercator",
+		Format:        "png",
+		RequestFormat: "png",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/raster/",
+			DirectoryLayout: "tms",
 		},
 		TileOptions: &setting.ImageOpts{Format: "png"},
 	}
 	mapboxRasterDemCache = setting.CacheSource{
-		CacheSourcePart: setting.CacheSourcePart{
-			Sources:       []string{"rasterdem"},
-			Name:          "rasterdem_cache",
-			Grid:          "global_webmercator",
-			Format:        "webp",
-			RequestFormat: "webp",
-			CacheInfo: &setting.CacheInfo{
-				Directory:       "./cache_data/rasterdem/",
-				DirectoryLayout: "tms",
-			}},
+		Sources:       []string{"rasterdem"},
+		Name:          "rasterdem_cache",
+		Grid:          "global_webmercator",
+		Format:        "webp",
+		RequestFormat: "webp",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/rasterdem/",
+			DirectoryLayout: "tms",
+		},
 		TileOptions: &setting.RasterOpts{Format: "webp"},
 	}
 	mapboxService = setting.MapboxService{
@@ -138,12 +129,12 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	dataset.Service.ServeHTTP(w, req)
 }
 
-//http://127.0.0.1:8000/mvt_layer/source.json
-//http://127.0.0.1:8000/mvt_layer/1/0/0.mvt
-//http://127.0.0.1:8000/raster_layer/source.json
-//http://127.0.0.1:8000/raster_layer/1/0/0.png
-//http://127.0.0.1:8000/rasterdem_layer/source.json
-//http://127.0.0.1:8000/rasterdem_layer/14/13733/6366.webp
+// http://127.0.0.1:8000/mvt_layer/source.json
+// http://127.0.0.1:8000/mvt_layer/1/0/0.mvt
+// http://127.0.0.1:8000/raster_layer/source.json
+// http://127.0.0.1:8000/raster_layer/1/0/0.png
+// http://127.0.0.1:8000/rasterdem_layer/source.json
+// http://127.0.0.1:8000/rasterdem_layer/14/13733/6366.webp
 func main() {
 	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8001", nil)

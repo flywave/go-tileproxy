@@ -15,7 +15,7 @@ require (
 	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
 	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20220214070417-b6d4cb228694
+	github.com/flywave/go-mapbox v0.0.0-20240524013656-2edbdfa14e7f
 	github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726
 	github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7
 	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
@@ -25,7 +25,7 @@ require (
 	github.com/flywave/go3d v0.0.0-20231213061711-48d3c5834480
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc
-	github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704
+	github.com/flywave/webp v1.1.1
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0

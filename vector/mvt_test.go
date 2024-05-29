@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,7 +13,9 @@ import (
 	"time"
 
 	"github.com/flywave/go-geo"
+	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
+	"github.com/flywave/go-mapbox/tileid"
 	m "github.com/flywave/go-mapbox/tileid"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
@@ -179,4 +182,15 @@ func TestGetMVT(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestWriteMVT(t *testing.T) {
+	tileid := tileid.TileID{X: int64(0), Y: int64(0), Z: uint64(1)}
+	data := []byte{}
+
+	conf := mvt.NewConfig("empty", tileid, mvt.ProtoType(PBF_PTOTO_MAPBOX))
+	conf.ExtentBool = false
+	data = append(data, mvt.WriteLayer([]*geom.Feature{}, conf)...)
+
+	ioutil.WriteFile("./empty.mvt", data, fs.ModePerm)
 }

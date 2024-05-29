@@ -14,11 +14,11 @@ import (
 type ServiceType uint32
 
 const (
-	MapboxService   ServiceType = 0
-	WMSService      ServiceType = 1
-	WMTSService     ServiceType = 2
-	WMTSRestService ServiceType = 3
-	TileService     ServiceType = 4
+	MapboxService ServiceType = 0
+	WMSService    ServiceType = 1
+	WMTSService   ServiceType = 2
+	TileService   ServiceType = 3
+	CesiumService ServiceType = 4
 )
 
 type Service struct {

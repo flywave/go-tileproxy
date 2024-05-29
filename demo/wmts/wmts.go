@@ -24,24 +24,20 @@ const (
 
 var (
 	wmtsTMSSource = setting.TileSource{
-		TileSourcePart: setting.TileSourcePart{
-			URLTemplate: WMTS_URL + "/normal/google3857/{tms_path}.png",
-			Grid:        "global_webmercator",
-			Subdomains:  []string{"1", "2", "3", "4"},
-		},
-		Options: &setting.ImageOpts{Format: "png"},
+		URLTemplate: WMTS_URL + "/normal/google3857/{tms_path}.png",
+		Grid:        "global_webmercator",
+		Subdomains:  []string{"1", "2", "3", "4"},
+		Options:     &setting.ImageOpts{Format: "png"},
 	}
 	wmtsTMSCache = setting.CacheSource{
-		CacheSourcePart: setting.CacheSourcePart{
-			Sources:       []string{"wmts"},
-			Name:          "wmts_cache",
-			Grid:          "global_webmercator",
-			Format:        "png",
-			RequestFormat: "png",
-			CacheInfo: &setting.CacheInfo{
-				Directory:       "./cache_data/wmts",
-				DirectoryLayout: "tms",
-			},
+		Sources:       []string{"wmts"},
+		Name:          "wmts_cache",
+		Grid:          "global_webmercator",
+		Format:        "png",
+		RequestFormat: "png",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/wmts",
+			DirectoryLayout: "tms",
 		},
 		TileOptions: &setting.ImageOpts{Format: "png"},
 	}
@@ -80,8 +76,8 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	dataset.Service.ServeHTTP(w, req)
 }
 
-//https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/11/710/1117.png
-//http://127.0.0.1:8000?service=WMTS&request=GetTile&version=1.0.0&layer=wmts_layer&style=&format=image/png&TileMatrixSet=GLOBAL_WEB_MERCATOR&TileMatrix=11&TileRow=1117&TileCol=710
+// https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/11/710/1117.png
+// http://127.0.0.1:8000?service=WMTS&request=GetTile&version=1.0.0&layer=wmts_layer&style=&format=image/png&TileMatrixSet=GLOBAL_WEB_MERCATOR&TileMatrix=11&TileRow=1117&TileCol=710
 func main() {
 	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8001", nil)

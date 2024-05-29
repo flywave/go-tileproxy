@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
 	whatwgUrl "github.com/nlnwa/whatwg-url/url"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/crawler"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 var (

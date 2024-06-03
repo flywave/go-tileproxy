@@ -12,7 +12,13 @@ type ArcGISSource struct {
 	WMSSource
 }
 
-func NewArcGISSource(client *client.ArcGISClient, image_opts *imagery.ImageOptions, coverage geo.Coverage, res_range *geo.ResolutionRange, supported_srs *geo.SupportedSRS, supported_formats []string) *ArcGISSource {
+func NewArcGISSource(
+	client *client.ArcGISClient,
+	image_opts *imagery.ImageOptions,
+	coverage geo.Coverage,
+	res_range *geo.ResolutionRange,
+	supported_srs *geo.SupportedSRS,
+	supported_formats []string) *ArcGISSource {
 	return &ArcGISSource{
 		WMSSource: WMSSource{
 			Client: client,

@@ -26,7 +26,6 @@ const (
 )
 
 const (
-	DefaultMaxTileLimit           = 500
 	DefaultConcurrentTileCreators = 2
 	DefaultMetaBuffer             = 80
 	DefaultMinimizeMetaRequests   = false

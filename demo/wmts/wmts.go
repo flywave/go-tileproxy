@@ -45,8 +45,8 @@ var (
 		Restful: setting.NewBool(true),
 		Layers: []setting.TileLayer{
 			{
-				TileSource: "wmts_cache",
-				Name:       "wmts_layer",
+				Source: "wmts_cache",
+				Name:   "wmts_layer",
 			},
 		},
 	}

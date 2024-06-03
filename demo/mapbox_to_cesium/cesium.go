@@ -19,11 +19,10 @@ var (
 	bilateral  string = "bilateral"
 
 	mapboxRasterDemSource = setting.MapboxTileSource{
-		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Sku:           "101XxiLvoFYxL",
 		Grid:          "global_webmercator_512",
-		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.RasterOpts{Format: "webp", Mode: &bilateral},
 	}

@@ -17,27 +17,24 @@ const (
 
 var (
 	mapboxMVTSource = setting.MapboxTileSource{
-		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Grid:          "global_webmercator",
-		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
 		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.VectorOpts{Format: "mvt", Extent: 4096},
 	}
 	mapboxRasterSource = setting.MapboxTileSource{
-		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite/{z}/{x}/{y}.png",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Grid:          "global_webmercator",
-		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
 		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.ImageOpts{Format: "png"},
 	}
 	mapboxRasterDemSource = setting.MapboxTileSource{
-		Url:           MAPBOX_TILE_URL + "/raster/v1/mapbox.mapbox-terrain-dem-v1/{z}/{x}/{y}.webp",
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Sku:           "101XxiLvoFYxL",
 		Grid:          "global_webmercator",
-		TilejsonUrl:   MAPBOX_TILE_URL + "/v4/mapbox.mapbox-terrain-dem-v1.json",
 		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.RasterOpts{Format: "webp"},
 	}

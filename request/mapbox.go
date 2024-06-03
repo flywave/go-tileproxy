@@ -28,22 +28,22 @@ func (r *MapboxRequest) GetRequestHandler() string {
 	return r.RequestHandlerName
 }
 
-type MapboxTileJSONRequest struct {
+type MapboxSourceJSONRequest struct {
 	MapboxRequest
 	TilesetID string
 	FileName  string
 	Secure    bool
 }
 
-func NewMapboxTileJSONRequest(hreq *http.Request, validate bool) *MapboxTileJSONRequest {
-	req := &MapboxTileJSONRequest{}
+func NewMapboxSourceJSONRequest(hreq *http.Request, validate bool) *MapboxSourceJSONRequest {
+	req := &MapboxSourceJSONRequest{}
 	req.init(hreq.Header, hreq.URL.Path, validate, hreq)
 	return req
 }
 
-func (r *MapboxTileJSONRequest) init(param interface{}, url string, validate bool, http *http.Request) {
+func (r *MapboxSourceJSONRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
-	r.RequestHandlerName = "tilejson"
+	r.RequestHandlerName = "source.json"
 	r.Version = "v4"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Secure = false
@@ -51,7 +51,7 @@ func (r *MapboxTileJSONRequest) init(param interface{}, url string, validate boo
 	r.initRequest()
 }
 
-func (r *MapboxTileJSONRequest) initRequest() error {
+func (r *MapboxSourceJSONRequest) initRequest() error {
 	match := r.ReqRegex.FindStringSubmatch(r.Http.URL.Path)
 	if len(match) == 0 {
 		return errors.New("url error")
@@ -162,8 +162,8 @@ func (r *MapboxTileRequest) initRequest() error {
 
 func MakeMapboxRequest(req *http.Request, validate bool) Request {
 	url := req.URL.String()
-	if strings.Contains(url, ".json") {
-		return NewMapboxTileJSONRequest(req, validate)
+	if strings.Contains(url, "source.json") {
+		return NewMapboxSourceJSONRequest(req, validate)
 	} else {
 		return NewMapboxTileRequest(req, validate)
 	}

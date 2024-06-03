@@ -24,7 +24,7 @@ var (
 		Srs:                []string{"EPSG:4326", "EPSG:900913", "EPSG:25832"},
 		BBoxSrs:            []setting.BBoxSrs{{Srs: "EPSG:4326"}},
 		ImageFormats:       []string{"image/jpeg", "image/png", "image/gif", "image/GeoTIFF", "image/tiff"},
-		Layers:             []setting.WMSLayer{{MapSources: []string{"osm_wms"}, Name: "osm", Title: "Omniscale OSM WMS - osm.omniscale.net"}},
+		Layers:             []setting.WMSLayer{{Sources: []string{"osm_wms"}, Name: "osm", Title: "Omniscale OSM WMS - osm.omniscale.net"}},
 		MaxOutputPixels:    setting.NewInt(2000 * 2000),
 		Strict:             setting.NewBool(true),
 		FeatureinfoFormats: []setting.FeatureinfoFormat{{Suffix: "text", MimeType: "text/plain"}, {Suffix: "html", MimeType: "text/html"}, {Suffix: "xml", MimeType: "text/xml"}},

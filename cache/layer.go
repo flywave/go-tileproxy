@@ -75,8 +75,8 @@ func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) 
 		maxx = math.Min(maxx, g.BBox.Max[0])
 		maxy += float64(queryBuffer) * res
 		maxy = math.Min(maxy, g.BBox.Max[1])
-
 	}
+
 	return vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
 }
 

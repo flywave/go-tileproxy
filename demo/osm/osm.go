@@ -36,8 +36,8 @@ var (
 	osmService = setting.TMSService{
 		Layers: []setting.TileLayer{
 			{
-				TileSource: "tms_cache",
-				Name:       "tms_layer",
+				Source: "tms_cache",
+				Name:   "tms_layer",
 			},
 		},
 	}

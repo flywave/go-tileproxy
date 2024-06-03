@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +22,7 @@ type CesiumClient struct {
 	AuthHeaders http.Header
 	Version     string
 	Extensions  []string
-	TileURL     string
+	TilesURL    []string
 }
 
 func (c *CesiumClient) buildAuthQuery() string {
@@ -32,13 +33,12 @@ type CesiumTileClient struct {
 	CesiumClient
 }
 
-func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, tileUrl string, ctx Context) *CesiumTileClient {
+func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, ctx Context) *CesiumTileClient {
 	return &CesiumTileClient{
 		CesiumClient: CesiumClient{
 			BaseClient:  BaseClient{ctx: ctx},
 			AuthURL:     authUrl,
 			BaseURL:     assetUrl,
-			TileURL:     tileUrl,
 			AssetId:     assetId,
 			AccessToken: token,
 			Version:     ver,
@@ -82,6 +82,12 @@ func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
 			return nil
 		}
 	}
+	if len(c.TilesURL) == 0 {
+		json := c.GetLayerJson()
+		if json == nil {
+			return nil
+		}
+	}
 	url := c.buildTileQuery(tile_coord)
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
 	if status == 200 {
@@ -104,7 +110,7 @@ func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
 		if ret != nil {
 			c.Version = ret.Version
 			c.Extensions = ret.Extensions
-			c.TileURL = ret.Tiles[0]
+			c.TilesURL = ret.Tiles[:]
 		}
 		return ret
 	}
@@ -117,28 +123,27 @@ func (c *CesiumTileClient) buildLayerJson() string {
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
-	var url string
-	if !strings.Contains(c.TileURL, "{z}") || !strings.Contains(c.TileURL, "{x}") || !strings.Contains(c.TileURL, "{y}") {
-		c.TileURL = "{z}/{x}/{y}.terrain?{extensions}&{version}"
+	url := c.TilesURL[rand.Intn(len(c.TilesURL)-1)]
+	if strings.Contains(url, "{z}") && strings.Contains(url, "{x}") && strings.Contains(url, "{y}") {
+		zstr := strconv.Itoa(tile_coord[2])
+		xstr := strconv.Itoa(tile_coord[0])
+		ystr := strconv.Itoa(tile_coord[1])
+
+		url = strings.Replace(url, "{z}", zstr, 1)
+		url = strings.Replace(url, "{x}", xstr, 1)
+		url = strings.Replace(url, "{y}", ystr, 1)
+
+		var extensions string
+		if len(c.Extensions) == 1 {
+			extensions = c.Extensions[0]
+		} else {
+			extensions = strings.Join(c.Extensions, "-")
+		}
+		url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
+		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
+
+		url = fmt.Sprintf("%d/%s", c.AssetId, url)
+		return fmt.Sprintf("%s/%s", c.BaseURL, url)
 	}
-	url = c.TileURL
-	zstr := strconv.Itoa(tile_coord[2])
-	xstr := strconv.Itoa(tile_coord[0])
-	ystr := strconv.Itoa(tile_coord[1])
-
-	url = strings.Replace(url, "{z}", zstr, 1)
-	url = strings.Replace(url, "{x}", xstr, 1)
-	url = strings.Replace(url, "{y}", ystr, 1)
-
-	var extensions string
-	if len(c.Extensions) == 1 {
-		extensions = c.Extensions[0]
-	} else {
-		extensions = strings.Join(c.Extensions, "-")
-	}
-	url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
-	url = strings.Replace(url, "{version}", "v="+c.Version, 1)
-
-	url = fmt.Sprintf("%d/%s", c.AssetId, url)
-	return fmt.Sprintf("%s/%s", c.BaseURL, url)
+	return ""
 }

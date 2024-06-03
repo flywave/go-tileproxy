@@ -21,7 +21,7 @@ type CesiumLayerJSONLayer interface {
 	GetLayerJSON(id string) *resource.LayerJson
 }
 
-type MapboxTileJSONLayer interface {
+type MapboxSourceJSONLayer interface {
 	GetTileJSON(id string) *resource.TileJSON
 }
 

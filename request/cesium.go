@@ -36,7 +36,7 @@ func NewCesiumLayerJSONRequest(hreq *http.Request, validate bool) *CesiumLayerJS
 
 func (r *CesiumLayerJSONRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
-	r.RequestHandlerName = "layer"
+	r.RequestHandlerName = "layer.json"
 	r.Version = "1.2.0"
 	r.ReqRegex = regexp.MustCompile(`^/(?P<asset_id>[^/]+)/layer.json`)
 	r.initRequest()
@@ -157,7 +157,7 @@ func (r *CesiumTileRequest) initRequest(query map[string][]string) error {
 
 func MakeCesiumRequest(req *http.Request, validate bool) Request {
 	url := req.URL.String()
-	if strings.Contains(url, ".json") {
+	if strings.Contains(url, "layer.json") {
 		return NewCesiumLayerJSONRequest(req, validate)
 	} else {
 		return NewCesiumTileRequest(req, validate)

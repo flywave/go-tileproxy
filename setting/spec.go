@@ -14,9 +14,9 @@ const (
 	NONE_SOURCE       SourceType = "none"
 	WMS_SOURCE        SourceType = "wms"
 	TILE_SOURCE       SourceType = "tile"
-	VECTORTILE_SOURCE SourceType = "vector_tile"
+	MAPBOXTILE_SOURCE SourceType = "mapbox"
 	ARCGIS_SOURCE     SourceType = "arcgis"
-	CESIUMTILE_SOURCE SourceType = "cesium_tile"
+	CESIUMTILE_SOURCE SourceType = "cesium"
 )
 
 type ServiceType string
@@ -35,6 +35,12 @@ type CacheType string
 const (
 	CACHE_TYPE_FILE   CacheType = "local"
 	CACHE_TYPE_CUSTOM CacheType = "custom"
+)
+
+type FilterType string
+
+const (
+	FILTER_TYPE_WATERMARK FilterType = "watermark"
 )
 
 const (
@@ -82,7 +88,6 @@ type GlobalsSetting struct {
 		MetaSize             []uint32 `json:"meta_size,omitempty"`
 		MetaBuffer           int      `json:"meta_buffer,omitempty"`
 		BulkMetaTiles        bool     `json:"bulk_meta_tiles,omitempty"`
-		MaxTileLimit         int      `json:"max_tile_limit,omitempty"`
 		MinimizeMetaRequests bool     `json:"minimize_meta_requests,omitempty"`
 	} `json:"cache,omitempty"`
 	Grid struct {
@@ -203,7 +208,6 @@ type CacheSource struct {
 	MetaSize             []uint32      `json:"meta_size,omitempty"`
 	MetaBuffer           *int          `json:"meta_buffer,omitempty"`
 	BulkMetaTiles        *bool         `json:"bulk_meta_tiles,omitempty"`
-	MaxTileLimit         *int          `json:"max_tile_limit,omitempty"`
 	MinimizeMetaRequests *bool         `json:"minimize_meta_requests,omitempty"`
 	Format               string        `json:"format,omitempty"`
 	RequestFormat        string        `json:"request_format,omitempty"`
@@ -288,7 +292,6 @@ func (s *SourceCommons) GetCoverage() *Coverage {
 
 type WMSImageOpts struct {
 	ImageOpts
-	Opacity                   *float64  `json:"opacity,omitempty"`
 	TransparentColor          *[4]uint8 `json:"transparent_color,omitempty"`
 	TransparentColorTolerance *float64  `json:"transparent_color_tolerance,omitempty"`
 }
@@ -315,11 +318,9 @@ type TileSource struct {
 	Type          SourceType  `json:"type,omitempty"`
 	URLTemplate   string      `json:"url_template,omitempty"`
 	AccessToken   *string     `json:"access_token,omitempty"`
-	Transparent   *bool       `json:"transparent,omitempty"`
 	Grid          string      `json:"grid,omitempty"`
 	RequestFormat string      `json:"request_format,omitempty"`
 	Subdomains    []string    `json:"subdomains,omitempty"`
-	Origin        string      `json:"origin,omitempty"`
 	Options       interface{} `json:"options,omitempty"`
 }
 
@@ -348,11 +349,11 @@ type MapboxTileSource struct {
 	SourceCommons
 	Type            SourceType  `json:"type,omitempty"`
 	Url             string      `json:"url,omitempty"`
+	Tiles           []string    `json:"tiles,omitempty"`
 	Sku             string      `json:"sku,omitempty"`
 	AccessToken     string      `json:"access_token,omitempty"`
 	AccessTokenName string      `json:"access_token_name,omitempty"`
 	Grid            string      `json:"grid,omitempty"`
-	TilejsonUrl     string      `json:"tilejson_url,omitempty"`
 	TilejsonStore   *StoreInfo  `json:"tilejson_store"`
 	Options         interface{} `json:"options,omitempty"`
 }
@@ -383,7 +384,6 @@ type CesiumTileSource struct {
 	Type           SourceType  `json:"type,omitempty"`
 	AuthUrl        string      `json:"auth_url,omitempty"`
 	Url            string      `json:"url,omitempty"`
-	TileUrl        string      `json:"tile_url,omitempty"`
 	Version        string      `json:"version,omitempty"`
 	AssetId        int         `json:"asset_id,omitempty"`
 	AccessToken    string      `json:"access_token,omitempty"`
@@ -439,6 +439,7 @@ type ArcGISSource struct {
 }
 
 type WaterMark struct {
+	Type     string    `json:"type"`
 	Text     string    `json:"text"`
 	FontSize *int      `json:"font_size,omitempty"`
 	Color    *[4]uint8 `json:"color,omitempty"`
@@ -676,7 +677,7 @@ type WMSLayerMetadata struct {
 
 type WMSLayer struct {
 	ScaleHints
-	MapSources         []string                 `json:"map_source"`
+	Sources            []string                 `json:"sources"`
 	FeatureinfoSources []string                 `json:"featureinfo_sources,omitempty"`
 	LegendSources      []string                 `json:"legend_sources,omitempty"`
 	Name               string                   `json:"name,omitempty"`

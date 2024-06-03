@@ -1,6 +1,7 @@
 package client
 
 import (
+	"math/rand"
 	"net/url"
 	"strconv"
 	"strings"
@@ -10,7 +11,7 @@ import (
 
 type MapboxClient struct {
 	BaseClient
-	BaseURL         string
+	TilesURL        []string
 	TilejsonURL     string
 	Sku             string
 	AccessToken     string
@@ -24,8 +25,12 @@ func (c *MapboxClient) buildQuery(url_ string) (string, error) {
 	}
 
 	q := u.Query()
-	q.Set(c.AccessTokenName, c.AccessToken)
-	q.Set("sku", c.Sku)
+	if c.AccessToken != "" {
+		q.Set(c.AccessTokenName, c.AccessToken)
+	}
+	if c.Sku != "" {
+		q.Set("sku", c.Sku)
+	}
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
@@ -34,12 +39,11 @@ type MapboxTileClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileClient(urlTemplate, tilejsonUrl, sku, token, tokenName string, ctx Context) *MapboxTileClient {
+func NewMapboxTileClient(url, sku, token, tokenName string, ctx Context) *MapboxTileClient {
 	return &MapboxTileClient{
 		MapboxClient: MapboxClient{
 			BaseClient:      BaseClient{ctx: ctx},
-			BaseURL:         urlTemplate,
-			TilejsonURL:     tilejsonUrl,
+			TilejsonURL:     url,
 			AccessToken:     token,
 			AccessTokenName: tokenName,
 			Sku:             sku,
@@ -48,6 +52,13 @@ func NewMapboxTileClient(urlTemplate, tilejsonUrl, sku, token, tokenName string,
 }
 
 func (c *MapboxTileClient) GetTile(tile_coord [3]int) []byte {
+	if len(c.TilesURL) == 0 {
+		json := c.GetTileJSON()
+		if json == nil {
+			return nil
+		}
+	}
+
 	url := c.buildTileQuery(tile_coord)
 	status, resp := c.httpClient().Open(url, nil, nil)
 	if status == 200 {
@@ -63,15 +74,18 @@ func (c *MapboxTileClient) GetTileJSON() *resource.TileJSON {
 	}
 	status, resp := c.httpClient().Open(url, nil, nil)
 	if status == 200 {
-		return resource.CreateTileJSON(resp)
+		ret := resource.CreateTileJSON(resp)
+		if ret != nil {
+			c.TilesURL = ret.Tiles[:]
+			return ret
+		}
 	}
 	return nil
 }
 
 func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
-	if strings.Contains(c.BaseURL, "{z}") && strings.Contains(c.BaseURL, "{x}") && strings.Contains(c.BaseURL, "{y}") {
-		url := c.BaseURL
-
+	url := c.TilesURL[rand.Intn(len(c.TilesURL)-1)]
+	if strings.Contains(url, "{z}") && strings.Contains(url, "{x}") && strings.Contains(url, "{y}") {
 		zstr := strconv.Itoa(tile_coord[2])
 		xstr := strconv.Itoa(tile_coord[0])
 		ystr := strconv.Itoa(tile_coord[1])
@@ -81,7 +95,6 @@ func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
 		url = strings.Replace(url, "{y}", ystr, 1)
 
 		url, _ = c.MapboxClient.buildQuery(url)
-
 		return url
 	}
 	return ""

@@ -18,7 +18,13 @@ type CesiumTileSource struct {
 	Cache         *resource.LayerJSONCache
 }
 
-func NewCesiumTileSource(grid *geo.TileGrid, c *client.CesiumTileClient, opts tile.TileOptions, creater tile.SourceCreater, cache *resource.LayerJSONCache) *CesiumTileSource {
+func NewCesiumTileSource(
+	grid *geo.TileGrid,
+	c *client.CesiumTileClient,
+	opts tile.TileOptions,
+	creater tile.SourceCreater,
+	cache *resource.LayerJSONCache,
+) *CesiumTileSource {
 	return &CesiumTileSource{
 		Grid:   grid,
 		Client: c,

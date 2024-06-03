@@ -47,7 +47,7 @@ func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 		s.MaxTileAge = &max
 	}
 	s.router = map[string]func(r request.Request) *Response{
-		"tilejson": func(r request.Request) *Response {
+		"source.json": func(r request.Request) *Response {
 			return s.GetTileJSON(r)
 		},
 		"tile": func(r request.Request) *Response {
@@ -61,7 +61,7 @@ func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 }
 
 func (s *MapboxService) GetTileJSON(req request.Request) *Response {
-	tilejson_request := req.(*request.MapboxTileJSONRequest)
+	tilejson_request := req.(*request.MapboxSourceJSONRequest)
 	err, layer := s.getLayer(tilejson_request.TilesetID, req)
 	if err != nil {
 		return err.Render()
@@ -160,7 +160,7 @@ type MapboxTileProvider struct {
 	empty_tile     []byte
 	type_          MapboxTileType
 	zoomRange      [2]int
-	tilejsonSource layer.MapboxTileJSONLayer
+	tilejsonSource layer.MapboxSourceJSONLayer
 	vectorLayers   []*resource.VectorLayer
 }
 
@@ -190,7 +190,7 @@ type MapboxTileOptions struct {
 	Type           MapboxTileType
 	Metadata       *MapboxLayerMetadata
 	TileManager    cache.Manager
-	TilejsonSource layer.MapboxTileJSONLayer
+	TilejsonSource layer.MapboxSourceJSONLayer
 	VectorLayers   []*resource.VectorLayer
 	ZoomRange      *[2]int
 }
@@ -310,7 +310,7 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())
 }
 
-func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxTileJSONRequest, md *MapboxLayerMetadata) []byte {
+func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxSourceJSONRequest, md *MapboxLayerMetadata) []byte {
 	url := req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
 	url = strings.ReplaceAll(url, "//", "/")
 	url = md.URL + url
@@ -329,14 +329,14 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 	return tilejson.GetData()
 }
 
-func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxTileJSONRequest) MapboxLayerMetadata {
+func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxSourceJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
 	strs := strings.Split(tms_request.Http.RequestURI, tms_request.TilesetID)
 	md.URL = c.tileManager.SiteURL() + strs[0]
 	return md
 }
 
-func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxTileJSONRequest) []byte {
+func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxSourceJSONRequest) []byte {
 	md := c.serviceMetadata(req)
 	if c.tilejsonSource != nil {
 		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)

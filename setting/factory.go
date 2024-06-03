@@ -158,6 +158,9 @@ func ConvertGridOpts(opt *GridOpts) *geo.TileGrid {
 	} else {
 		conf[geo.TILEGRID_TILE_SIZE] = DefaultTileSize[:]
 	}
+	if opt.ThresholdRes != nil {
+		conf[geo.TILEGRID_THRESHOLD_RES] = opt.ThresholdRes
+	}
 	if opt.InitialResMin != nil {
 		conf[geo.TILEGRID_INITIAL_RES_MIN] = *opt.InitialResMin
 	}
@@ -375,7 +378,7 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 
 	tilesource := instance.GetSource(l.TileJSON)
 
-	tilejsonSource, ok := tilesource.(layer.MapboxTileJSONLayer)
+	tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
 
 	metadata := &service.MapboxLayerMetadata{
 		Name:        l.Name,
@@ -533,7 +536,7 @@ func ConvertWMSLayer(l *WMSLayer, instance ProxyInstance) service.WMSLayer {
 	infos := make(map[string]layer.InfoLayer)
 	legends := make([]layer.LegendLayer, 0)
 
-	for _, name := range l.MapSources {
+	for _, name := range l.Sources {
 		s := instance.GetSource(name)
 		if s != nil {
 			mapLayers[name] = s
@@ -830,7 +833,7 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 		accessTokenName = s.AccessTokenName
 	}
 
-	c := client.NewMapboxTileClient(s.Url, s.TilejsonUrl, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
+	c := client.NewMapboxTileClient(s.Url, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
 
 	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), coverage, c, opts, creater, tcache)
 }
@@ -862,7 +865,7 @@ func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance
 
 	creater := cache.GetSourceCreater(opts)
 
-	c := client.NewCesiumTileClient(s.AuthUrl, s.Url, s.AssetId, s.AccessToken, s.Version, s.TileUrl, newCollectorContext(http))
+	c := client.NewCesiumTileClient(s.AuthUrl, s.Url, s.AssetId, s.AccessToken, s.Version, newCollectorContext(http))
 
 	return sources.NewCesiumTileSource(grid.(*geo.TileGrid), c, opts, creater, tcache)
 }

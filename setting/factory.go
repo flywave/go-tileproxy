@@ -2,7 +2,6 @@ package setting
 
 import (
 	"image/color"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -595,7 +594,7 @@ func newSupportedSrs(supportedSrs []string, preferred geo.PreferredSrcSRS) *geo.
 	return &geo.SupportedSRS{Srs: srs, Preferred: preferred}
 }
 
-func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting) *sources.WMSInfoSource {
+func LoadWMSInfoSource(s *WMSSource, globals *GlobalsSetting) *sources.WMSInfoSource {
 	if s.Opts.FeatureInfo == nil || !*s.Opts.FeatureInfo {
 		return nil
 	}
@@ -621,7 +620,7 @@ func LoadWMSInfoSource(s *WMSSource, basePath string, globals *GlobalsSetting) *
 			fi_format = s.Opts.FeatureinfoFormat
 		}
 
-		transformer = resource.NewXSLTransformer(path.Join(basePath, s.Opts.FeatureinfoXslt), &fi_format)
+		transformer = resource.NewXSLTransformer(s.Opts.FeatureinfoXslt, &fi_format)
 	}
 
 	fi_request := request.NewWMSFeatureInfoRequest(params, url, false, nil, false)
@@ -1149,10 +1148,10 @@ func LoadWMTSRestfulService(s *WMTSService, instance ProxyInstance) *service.WMT
 	return service.NewWMTSRestService(wopts)
 }
 
-func loadXSLTransformer(featureinfoXslt map[string]string, basePath string) map[string]*resource.XSLTransformer {
+func loadXSLTransformer(featureinfoXslt map[string]string) map[string]*resource.XSLTransformer {
 	fi_transformers := make(map[string]*resource.XSLTransformer)
 	for info_type, fi_xslt := range featureinfoXslt {
-		fi_transformers[info_type] = resource.NewXSLTransformer(path.Join(basePath, fi_xslt), nil)
+		fi_transformers[info_type] = resource.NewXSLTransformer(fi_xslt, nil)
 	}
 	return fi_transformers
 }
@@ -1167,7 +1166,7 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 	return extents
 }
 
-func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetting, basePath string) *service.WMSService {
+func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetting) *service.WMSService {
 	md := &service.WMSMetadata{
 		Title:       s.Title,
 		Abstract:    s.Abstract,
@@ -1223,7 +1222,7 @@ func LoadWMSService(s *WMSService, instance ProxyInstance, globals *GlobalsSetti
 		maxTileAge = &d
 	}
 
-	ftransformers := loadXSLTransformer(s.FeatureinfoXslt, basePath)
+	ftransformers := loadXSLTransformer(s.FeatureinfoXslt)
 
 	extents := extentsForSrs(s.BBoxSrs)
 

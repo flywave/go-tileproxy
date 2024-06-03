@@ -11,14 +11,13 @@ import (
 type TileProxy struct {
 	m               sync.RWMutex
 	Services        map[string]*Service
-	basePath        string
 	globals         *setting.GlobalsSetting
 	serviceReqRegex *regexp.Regexp
 }
 
 func (t *TileProxy) UpdateService(uuid string, d *setting.ProxyService, fac setting.CacheFactory) {
 	t.m.Lock()
-	t.Services[uuid] = NewService(d, t.basePath, t.globals, fac)
+	t.Services[uuid] = NewService(d, t.globals, fac)
 	t.m.Unlock()
 }
 
@@ -37,7 +36,7 @@ func (t *TileProxy) Reload(proxy []*setting.ProxyService, fac setting.CacheFacto
 	t.m.Lock()
 	t.Services = make(map[string]*Service)
 	for i := range proxy {
-		t.Services[proxy[i].UUID] = NewService(proxy[i], t.basePath, t.globals, fac)
+		t.Services[proxy[i].UUID] = NewService(proxy[i], t.globals, fac)
 	}
 	t.m.Unlock()
 }
@@ -75,8 +74,8 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewTileProxy(basePath string, globals *setting.GlobalsSetting, proxys []*setting.ProxyService, fac setting.CacheFactory) *TileProxy {
-	proxy := &TileProxy{basePath: basePath, globals: globals}
+func NewTileProxy(globals *setting.GlobalsSetting, proxys []*setting.ProxyService, fac setting.CacheFactory) *TileProxy {
+	proxy := &TileProxy{globals: globals}
 	proxy.Reload(proxys, fac)
 	return proxy
 }

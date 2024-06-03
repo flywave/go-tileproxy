@@ -33,7 +33,7 @@ type Service struct {
 	Caches        map[string]cache.Manager
 }
 
-func NewService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
+func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
 	ret := &Service{
 		UUID:          dataset.UUID,
 		Grids:         make(map[string]geo.Grid),
@@ -42,29 +42,29 @@ func NewService(dataset *setting.ProxyService, basePath string, globals *setting
 		InfoSources:   make(map[string]layer.InfoLayer),
 		LegendSources: make(map[string]layer.LegendLayer),
 	}
-	ret.load(dataset, basePath, globals, fac)
+	ret.load(dataset, globals, fac)
 	return ret
 }
 
-func (s *Service) load(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
-	s.loadGrids(dataset, basePath, globals)
-	s.loadSources(dataset, basePath, globals, fac)
-	s.loadCaches(dataset, basePath, globals, fac)
-	s.loadService(dataset, basePath, globals, fac)
+func (s *Service) load(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
+	s.loadGrids(dataset, globals)
+	s.loadSources(dataset, globals, fac)
+	s.loadCaches(dataset, globals, fac)
+	s.loadService(dataset, globals, fac)
 }
 
-func (s *Service) loadGrids(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting) {
+func (s *Service) loadGrids(dataset *setting.ProxyService, globals *setting.GlobalsSetting) {
 	for k, g := range dataset.Grids {
 		s.Grids[k] = setting.ConvertGridOpts(&g)
 	}
 }
 
-func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
+func (s *Service) loadSources(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	for k, src := range dataset.Sources {
 		switch source := src.(type) {
 		case *setting.WMSSource:
 			if source.Opts.FeatureInfo != nil && *source.Opts.FeatureInfo {
-				s.InfoSources[k] = setting.LoadWMSInfoSource(source, basePath, globals)
+				s.InfoSources[k] = setting.LoadWMSInfoSource(source, globals)
 			} else if source.Opts.LegendGraphic != nil && *source.Opts.LegendGraphic {
 				s.LegendSources[k] = setting.LoadWMSLegendsSource(source, globals, fac)
 			} else {
@@ -86,7 +86,7 @@ func (s *Service) loadSources(dataset *setting.ProxyService, basePath string, gl
 	}
 }
 
-func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
+func (s *Service) loadCaches(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	for k, c := range dataset.Caches {
 		switch cache := c.(type) {
 		case *setting.CacheSource:
@@ -102,12 +102,12 @@ func (s *Service) loadCaches(dataset *setting.ProxyService, basePath string, glo
 	}
 }
 
-func (s *Service) loadService(dataset *setting.ProxyService, basePath string, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
+func (s *Service) loadService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
 	switch srv := dataset.Service.(type) {
 	case *setting.TMSService:
 		s.Service = setting.LoadTMSService(srv, s)
 	case *setting.WMSService:
-		s.Service = setting.LoadWMSService(srv, s, globals, basePath)
+		s.Service = setting.LoadWMSService(srv, s, globals)
 	case *setting.MapboxService:
 		s.Service = setting.LoadMapboxService(srv, globals, s, fac)
 	case *setting.CesiumService:

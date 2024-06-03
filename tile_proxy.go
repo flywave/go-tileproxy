@@ -15,19 +15,19 @@ type TileProxy struct {
 	serviceReqRegex *regexp.Regexp
 }
 
-func (t *TileProxy) UpdateService(uuid string, d *setting.ProxyService, fac setting.CacheFactory) {
+func (t *TileProxy) UpdateService(id string, d *setting.ProxyService, fac setting.CacheFactory) {
 	t.m.Lock()
-	t.Services[uuid] = NewService(d, t.globals, fac)
+	t.Services[id] = NewService(d, t.globals, fac)
 	t.m.Unlock()
 }
 
-func (t *TileProxy) RemoveService(uuid string) {
+func (t *TileProxy) RemoveService(id string) {
 	var d *Service
 	t.m.Lock()
-	if d_, ok := t.Services[uuid]; ok {
+	if d_, ok := t.Services[id]; ok {
 		d = d_
 	}
-	delete(t.Services, uuid)
+	delete(t.Services, id)
 	t.m.Unlock()
 	d.Clean()
 }
@@ -36,7 +36,7 @@ func (t *TileProxy) Reload(proxy []*setting.ProxyService, fac setting.CacheFacto
 	t.m.Lock()
 	t.Services = make(map[string]*Service)
 	for i := range proxy {
-		t.Services[proxy[i].UUID] = NewService(proxy[i], t.globals, fac)
+		t.Services[proxy[i].Id] = NewService(proxy[i], t.globals, fac)
 	}
 	t.m.Unlock()
 }

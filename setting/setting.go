@@ -6,7 +6,7 @@ import (
 )
 
 type ProxyService struct {
-	UUID      string                 `json:"uuid,omitempty"`
+	Id        string                 `json:"id,omitempty"`
 	Service   interface{}            `json:"service,omitempty"`
 	Coverages map[string]Coverage    `json:"coverages,omitempty"`
 	Grids     map[string]GridOpts    `json:"grids,omitempty"`
@@ -14,9 +14,9 @@ type ProxyService struct {
 	Caches    map[string]interface{} `json:"caches,omitempty"`
 }
 
-func NewProxyService(uuid string) *ProxyService {
+func NewProxyService(id string) *ProxyService {
 	return &ProxyService{
-		UUID:      uuid,
+		Id:        id,
 		Coverages: make(map[string]Coverage),
 		Sources:   make(map[string]interface{}),
 		Caches:    make(map[string]interface{}),

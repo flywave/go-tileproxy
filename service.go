@@ -23,7 +23,7 @@ const (
 
 type Service struct {
 	setting.ProxyInstance
-	UUID          string
+	Id            string
 	Type          ServiceType
 	Service       service.Service
 	Grids         map[string]geo.Grid
@@ -35,7 +35,7 @@ type Service struct {
 
 func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
 	ret := &Service{
-		UUID:          dataset.UUID,
+		Id:            dataset.Id,
 		Grids:         make(map[string]geo.Grid),
 		Sources:       make(map[string]layer.Layer),
 		Caches:        make(map[string]cache.Manager),
@@ -47,13 +47,13 @@ func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, 
 }
 
 func (s *Service) load(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
-	s.loadGrids(dataset, globals)
+	s.loadGrids(dataset)
 	s.loadSources(dataset, globals, fac)
 	s.loadCaches(dataset, globals, fac)
 	s.loadService(dataset, globals, fac)
 }
 
-func (s *Service) loadGrids(dataset *setting.ProxyService, globals *setting.GlobalsSetting) {
+func (s *Service) loadGrids(dataset *setting.ProxyService) {
 	for k, g := range dataset.Grids {
 		s.Grids[k] = setting.ConvertGridOpts(&g)
 	}
@@ -124,8 +124,8 @@ func (s *Service) loadService(dataset *setting.ProxyService, globals *setting.Gl
 func (s *Service) Clean() {
 }
 
-func (s *Service) GetUUID() string {
-	return s.UUID
+func (s *Service) GetId() string {
+	return s.Id
 }
 
 func (s *Service) GetServiceType() ServiceType {

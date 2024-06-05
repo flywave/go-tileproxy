@@ -35,6 +35,10 @@ func (l *Legend) GetExtension() string {
 	return l.Options.Format.Extension()
 }
 
+func (r *Legend) GetFileName() string {
+	return fmt.Sprintf("legend-%d", r.Scale)
+}
+
 func (l *Legend) GetData() []byte {
 	if l.Source != nil {
 		return l.Source.GetBuffer(nil, nil)

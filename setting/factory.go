@@ -377,8 +377,6 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 
 	tilesource := instance.GetSource(l.TileJSON)
 
-	tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
-
 	metadata := &service.MapboxLayerMetadata{
 		Name:        l.Name,
 		Attribution: l.Attribution,
@@ -388,19 +386,23 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 	}
 
 	topts := &service.MapboxTileOptions{
-		Name:           l.Name,
-		Type:           tp,
-		Metadata:       metadata,
-		TileManager:    tileManager,
-		TilejsonSource: nil,
-		VectorLayers:   l.VectorLayers,
-		ZoomRange:      l.ZoomRange,
+		Name:            l.Name,
+		Type:            tp,
+		Metadata:        metadata,
+		TileManager:     tileManager,
+		TilejsonSource:  nil,
+		TileStatsSource: nil,
+		VectorLayers:    l.VectorLayers,
+		ZoomRange:       l.ZoomRange,
 	}
-
+	tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
 	if ok {
 		topts.TilejsonSource = tilejsonSource
 	}
-
+	tileStatsSource, ok := tilesource.(layer.MapboxTileStatsLayer)
+	if ok {
+		topts.TileStatsSource = tileStatsSource
+	}
 	return service.NewMapboxTileProvider(topts)
 }
 
@@ -821,9 +823,16 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	}
 	var tcache *resource.TileJSONCache
 	if fac != nil {
-		tcache = resource.NewTileJSONCache(fac.CreateStore(s.TilejsonStore))
+		tcache = resource.NewTileJSONCache(fac.CreateStore(s.ResourceStore))
 	} else {
-		tcache = resource.NewTileJSONCache(ConvertLocalStore(s.TilejsonStore))
+		tcache = resource.NewTileJSONCache(ConvertLocalStore(s.ResourceStore))
+	}
+
+	var scache *resource.TileStatsCache
+	if fac != nil {
+		scache = resource.NewTileStatsCache(fac.CreateStore(s.ResourceStore))
+	} else {
+		scache = resource.NewTileStatsCache(ConvertLocalStore(s.ResourceStore))
 	}
 
 	creater := cache.GetSourceCreater(opts)
@@ -832,9 +841,21 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 		accessTokenName = s.AccessTokenName
 	}
 
-	c := client.NewMapboxTileClient(s.Url, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
+	if s.TileStatsUrl == "" && strings.HasPrefix(s.Url, "https://api.mapbox.com/v4/") {
+		tileset := strings.TrimPrefix(s.Url, "https://api.mapbox.com/v4/")
 
-	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), coverage, c, opts, creater, tcache)
+		if strings.Contains(tileset, "?") {
+			tileset = strings.Split(tileset, "?")[0]
+		}
+
+		tileset = strings.TrimSuffix(tileset, ".json")
+
+		s.TileStatsUrl = "https://api.mapbox.com/tilestats/v1/mapbox/" + tileset
+	}
+
+	c := client.NewMapboxTileClient(s.Url, s.TileStatsUrl, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
+
+	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), coverage, c, opts, creater, tcache, scache)
 }
 
 func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *sources.CesiumTileSource {

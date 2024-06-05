@@ -73,6 +73,10 @@ func (r *TileJSON) SetStored() {
 	r.Stored = true
 }
 
+func (r *TileJSON) GetFileName() string {
+	return "source"
+}
+
 func (r *TileJSON) GetLocation() string {
 	return r.Location
 }
@@ -153,6 +157,22 @@ func NewTileJSONCache(store Store) *TileJSONCache {
 	return &TileJSONCache{store: store}
 }
 
+type TileStatsCache struct {
+	store Store
+}
+
+func (c *TileStatsCache) Save(r Resource) error {
+	return c.store.Save(r)
+}
+
+func (c *TileStatsCache) Load(r Resource) error {
+	return c.store.Load(r)
+}
+
+func NewTileStatsCache(store Store) *TileStatsCache {
+	return &TileStatsCache{store: store}
+}
+
 type GeoInfo struct {
 	Attr     string
 	Ty       string
@@ -182,22 +202,86 @@ func NewLayerAtrribute(tilesetId, sourceName string) *LayerAtrribute {
 	return &LayerAtrribute{TilesetId: tilesetId, Layer: sourceName}
 }
 
-type GeoStats struct {
-	Account   string            `json:"account"`
-	TilesetId string            `json:"tilesetid"`
-	Layers    []*LayerAtrribute `json:"layers"`
-}
-
-func NewGeoStats(tid string) *GeoStats {
-	att := &GeoStats{TilesetId: tid, Layers: make([]*LayerAtrribute, 0, 10)}
+func NewTileStats(tid string) *TileStats {
+	att := &TileStats{TilesetId: tid, Layers: make([]*LayerAtrribute, 0, 10)}
 	return att
 }
 
-func (att *GeoStats) ToJson() []byte {
+func (att *TileStats) ToJson() []byte {
 	var bt []byte
 	wr := bytes.NewBuffer(bt)
 	enc := json.NewEncoder(wr)
 	enc.SetEscapeHTML(false)
 	enc.Encode(att)
 	return wr.Bytes()
+}
+
+type TileStats struct {
+	Account    string            `json:"account"`
+	TilesetId  string            `json:"tilesetid"`
+	LayerCount uint64            `json:"layerCount"`
+	Layers     []*LayerAtrribute `json:"layers"`
+	Location   string            `json:"-"`
+	Stored     bool              `json:"-"`
+	StoreID    string            `json:"-"`
+}
+
+func (r *TileStats) GetExtension() string {
+	return "json"
+}
+
+func (r *TileStats) IsStored() bool {
+	return r.Stored
+}
+
+func (r *TileStats) SetStored() {
+	r.Stored = true
+}
+
+func (r *TileStats) GetFileName() string {
+	return "tilestats"
+}
+
+func (r *TileStats) GetLocation() string {
+	return r.Location
+}
+
+func (r *TileStats) SetLocation(l string) {
+	r.Location = l
+}
+
+func (r *TileStats) GetID() string {
+	return r.StoreID
+}
+
+func (r *TileStats) SetID(id string) {
+	r.StoreID = id
+}
+
+func (r *TileStats) Hash() []byte {
+	m := md5.New()
+	m.Write([]byte(r.StoreID))
+	return m.Sum(nil)
+}
+
+func (r *TileStats) GetData() []byte {
+	return r.ToJson()
+}
+
+func (r *TileStats) SetData(content []byte) {
+	reader := bytes.NewBuffer(content)
+	dec := json.NewDecoder(reader)
+	if err := dec.Decode(r); err != nil {
+		return
+	}
+}
+
+func CreateTileStats(content []byte) *TileStats {
+	tileStats := &TileStats{}
+	reader := bytes.NewBuffer(content)
+	dec := json.NewDecoder(reader)
+	if err := dec.Decode(tileStats); err != nil {
+		return nil
+	}
+	return tileStats
 }

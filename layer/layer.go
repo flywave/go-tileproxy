@@ -25,6 +25,10 @@ type MapboxSourceJSONLayer interface {
 	GetTileJSON(id string) *resource.TileJSON
 }
 
+type MapboxTileStatsLayer interface {
+	GetTileStats(id string) *resource.TileStats
+}
+
 type Layer interface {
 	GetMap(query *MapQuery) (tile.Source, error)
 	GetResolutionRange() *geo.ResolutionRange

@@ -25,11 +25,10 @@ func init() {
 
 var (
 	luokuangMVTSource = setting.MapboxTileSource{
-		Url:             LK_API_URL + "/emg/v2/map/tile?format=pbf&layer=basic&style=main&zoom={z}&x={x}&y={y}",
+		Url:             LK_API_URL + "/view/map/lkstreetv2.json",
 		AccessToken:     LK_ACCESSTOKEN,
 		AccessTokenName: "ak",
 		Grid:            "global_webmercator",
-		TilejsonUrl:     LK_API_URL + "/view/map/lkstreetv2.json",
 		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
 	}
@@ -82,7 +81,7 @@ func getProxyService() *setting.ProxyService {
 }
 
 func getService() *tileproxy.Service {
-	return tileproxy.NewService(getProxyService(), "../", &demo.Globals, nil)
+	return tileproxy.NewService(getProxyService(), &demo.Globals, nil)
 }
 
 var dataset *tileproxy.Service

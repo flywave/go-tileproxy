@@ -13,6 +13,7 @@ type MapboxClient struct {
 	BaseClient
 	TilesURL        []string
 	TilejsonURL     string
+	TileStatsURL    string
 	Sku             string
 	AccessToken     string
 	AccessTokenName string
@@ -39,11 +40,12 @@ type MapboxTileClient struct {
 	MapboxClient
 }
 
-func NewMapboxTileClient(url, sku, token, tokenName string, ctx Context) *MapboxTileClient {
+func NewMapboxTileClient(url, statsUrl, sku, token, tokenName string, ctx Context) *MapboxTileClient {
 	return &MapboxTileClient{
 		MapboxClient: MapboxClient{
 			BaseClient:      BaseClient{ctx: ctx},
 			TilejsonURL:     url,
+			TileStatsURL:    statsUrl,
 			AccessToken:     token,
 			AccessTokenName: tokenName,
 			Sku:             sku,
@@ -79,6 +81,18 @@ func (c *MapboxTileClient) GetTileJSON() *resource.TileJSON {
 			c.TilesURL = ret.Tiles[:]
 			return ret
 		}
+	}
+	return nil
+}
+
+func (c *MapboxTileClient) GetTileStats() *resource.TileStats {
+	url, err := c.buildQuery(c.TileStatsURL)
+	if err != nil {
+		return nil
+	}
+	status, resp := c.httpClient().Open(url, nil, nil)
+	if status == 200 {
+		return resource.CreateTileStats(resp)
 	}
 	return nil
 }

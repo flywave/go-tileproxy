@@ -166,7 +166,7 @@ func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo
 	return internal_layer, limit_to, nil
 }
 
-func (s *TileService) authorizeTileLayer(tile_layer Provider, tile_request *request.TileRequest) geo.Coverage {
+func (s *TileService) authorizeTileLayer(_ Provider, _ *request.TileRequest) geo.Coverage {
 	return nil
 }
 
@@ -205,7 +205,10 @@ func (s *TileService) GetCapabilities(req request.Request) *Response {
 
 func (s *TileService) serviceMetadata(tms_request *request.TileRequest) TileMetadata {
 	md := *s.Metadata
-	md.URL = tms_request.Http.URL.Host
+	url := tms_request.Http.URL
+	url.RawQuery = ""
+	url.Fragment = ""
+	md.URL = url.String()
 	return md
 }
 
@@ -448,7 +451,7 @@ type tileResponse struct {
 }
 
 func newTileResponse(tile *cache.Tile, format *tile.TileFormat, timestamp *time.Time, image_opts tile.TileOptions) *tileResponse {
-	return &tileResponse{buf: tile.GetSourceBuffer(format, image_opts), tile: tile, timestamp: &tile.Timestamp, size: int(tile.Size), cacheable: tile.Cacheable}
+	return &tileResponse{buf: tile.GetSourceBuffer(format, image_opts), tile: tile, timestamp: timestamp, size: int(tile.Size), cacheable: tile.Cacheable}
 }
 
 func (r *tileResponse) getBuffer() []byte {
@@ -587,7 +590,7 @@ func (tl *TileProvider) GetTileBBox(req request.TiledRequest, useProfiles bool, 
 	return nil, tl.grid.grid.TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, limit)
 }
 
-func (tl *TileProvider) checkedDimensions(request request.TiledRequest) utils.Dimensions {
+func (tl *TileProvider) checkedDimensions(_ request.TiledRequest) utils.Dimensions {
 	dimensions := make(utils.Dimensions)
 	for dimension, values := range tl.dimensions {
 		dimensions[dimension] = values

@@ -207,7 +207,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	return resp
 }
 
-func (s *WMSService) authorizedLayers(feature string, layers []string, ext *geo.MapExtent) ([]string, geo.Coverage) {
+func (s *WMSService) authorizedLayers(_ string, layers []string, _ *geo.MapExtent) ([]string, geo.Coverage) {
 	return layers, nil
 }
 

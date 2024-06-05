@@ -120,7 +120,7 @@ func NewTMSRequest(req *http.Request) *TMSRequest {
 func (r *TMSRequest) init() {
 	r.TileRequest.init()
 	r.CapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
-	r.RootRequestRegex = regexp.MustCompile(`/tms/?$`)
+	r.RootRequestRegex = regexp.MustCompile(`/tiles/?$`)
 	r.UseProfiles = true
 	r.RequestPrefix = "/tms"
 	r.Dimensions = make(map[string][]string)

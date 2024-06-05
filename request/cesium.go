@@ -25,7 +25,7 @@ func (r *CesiumRequest) GetRequestHandler() string {
 
 type CesiumLayerJSONRequest struct {
 	CesiumRequest
-	AssetID string
+	LayerName string
 }
 
 func NewCesiumLayerJSONRequest(hreq *http.Request, validate bool) *CesiumLayerJSONRequest {
@@ -38,7 +38,7 @@ func (r *CesiumLayerJSONRequest) init(param interface{}, url string, validate bo
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "layer.json"
 	r.Version = "1.2.0"
-	r.ReqRegex = regexp.MustCompile(`^/(?P<asset_id>[^/]+)/layer.json`)
+	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/layer.json`)
 	r.initRequest()
 }
 
@@ -59,8 +59,8 @@ func (r *CesiumLayerJSONRequest) initRequest() error {
 		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
-	if v, ok := result["asset_id"]; ok {
-		r.AssetID = v
+	if v, ok := result["layer_name"]; ok {
+		r.LayerName = v
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func (r *CesiumLayerJSONRequest) initRequest() error {
 
 type CesiumTileRequest struct {
 	CesiumRequest
-	AssetID    string
+	LayerName  string
 	Tile       []int
 	Extensions []string
 	Format     *tile.TileFormat
@@ -104,7 +104,7 @@ func (r *CesiumTileRequest) init(param interface{}, url string, validate bool, h
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
 	r.Version = "1.2.0"
-	r.ReqRegex = regexp.MustCompile(`^/(?P<asset_id>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
 	r.initRequest(query)
 }
 
@@ -128,8 +128,8 @@ func (r *CesiumTileRequest) initRequest(query map[string][]string) error {
 		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
-	if v, ok := result["asset_id"]; ok {
-		r.AssetID = v
+	if v, ok := result["layer_name"]; ok {
+		r.LayerName = v
 	}
 
 	if r.Tile == nil {

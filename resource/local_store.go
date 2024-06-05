@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"encoding/base64"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -21,8 +20,7 @@ func (c *LocalStore) Save(r Resource) error {
 	}
 
 	if r.GetLocation() == "" {
-		hash := r.Hash()
-		r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
+		r.SetLocation(path.Join(c.CacheDir, r.GetFileName()+"."+r.GetExtension()))
 	}
 
 	data := r.GetData()
@@ -37,8 +35,7 @@ func (c *LocalStore) Save(r Resource) error {
 }
 
 func (c *LocalStore) Load(r Resource) error {
-	hash := r.Hash()
-	r.SetLocation(path.Join(c.CacheDir, base64.RawURLEncoding.EncodeToString(hash)) + "." + r.GetExtension())
+	r.SetLocation(path.Join(c.CacheDir, r.GetFileName()+"."+r.GetExtension()))
 
 	if ok := utils.FileExists(r.GetLocation()); ok {
 		if f, err := os.Open(r.GetLocation()); err == nil {

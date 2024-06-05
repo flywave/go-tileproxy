@@ -17,8 +17,8 @@ var (
 )
 
 func TestMapboxTilejsonRequest(t *testing.T) {
-	reg := regexp.MustCompile(`(?P<version>[^/]+)/(?P<tileset_id>[^/]+)`)
-	match := reg.FindStringSubmatch(TEST_TILEJSON)
+	reg := regexp.MustCompile(`/(?P<tileset_name>[^/]+)/(?P<file_name>[^/]+).json`)
+	match := reg.FindStringSubmatch("http://flywave.com/api/v1/services/sxsxsx/layers/xxx/tilestats.json")
 	groupNames := reg.SubexpNames()
 	result := make(map[string]string)
 	for i, name := range groupNames {

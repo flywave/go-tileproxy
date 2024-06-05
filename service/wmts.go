@@ -249,7 +249,7 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	return NewResponse(resp, 200, mimetype)
 }
 
-func (s *WMTSService) authorizeTileLayer(tile_layer *TileProvider, tile_request request.Request, featureinfo bool) geo.Coverage {
+func (s *WMTSService) authorizeTileLayer(_ *TileProvider, _ request.Request, _ bool) geo.Coverage {
 	return nil
 }
 
@@ -261,11 +261,11 @@ func (s *WMTSService) authorizedTileLayers() []WMTSTileLayer {
 	return ret
 }
 
-func (s *WMTSService) checkRequestDimensions(tile_layer *TileProvider, request request.Request) *RequestError {
+func (s *WMTSService) checkRequestDimensions(_ *TileProvider, _ request.Request) *RequestError {
 	return nil
 }
 
-func (s *WMTSService) checkRequest(req request.Request, infoformat *string) *RequestError {
+func (s *WMTSService) checkRequest(req request.Request, _ *string) *RequestError {
 	switch wreq := req.(type) {
 	case *request.WMTS100TileRequest:
 		{

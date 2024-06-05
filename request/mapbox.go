@@ -21,7 +21,6 @@ type MapboxRequest struct {
 	RequestHandlerName string
 	AccessToken        string
 	ReqRegex           *regexp.Regexp
-	Version            string
 }
 
 func (r *MapboxRequest) GetRequestHandler() string {
@@ -30,7 +29,7 @@ func (r *MapboxRequest) GetRequestHandler() string {
 
 type MapboxSourceJSONRequest struct {
 	MapboxRequest
-	TilesetID string
+	LayerName string
 	FileName  string
 	Secure    bool
 }
@@ -44,10 +43,9 @@ func NewMapboxSourceJSONRequest(hreq *http.Request, validate bool) *MapboxSource
 func (r *MapboxSourceJSONRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "source.json"
-	r.Version = "v4"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Secure = false
-	r.ReqRegex = regexp.MustCompile(`^/(?P<tileset_id>[^/]+)/(?P<file_name>[^/]+).json`) //`^/(?P<version>[^/]+)/(?P<tileset_id>[^/]+).json`
+	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<file_name>[^/]+).json`)
 	r.initRequest()
 }
 
@@ -68,8 +66,8 @@ func (r *MapboxSourceJSONRequest) initRequest() error {
 		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
-	if v, ok := result["tileset_id"]; ok {
-		r.TilesetID = v
+	if v, ok := result["layer_name"]; ok {
+		r.LayerName = v
 	}
 
 	if v, ok := result["file_name"]; ok {
@@ -81,7 +79,7 @@ func (r *MapboxSourceJSONRequest) initRequest() error {
 
 type MapboxTileRequest struct {
 	MapboxRequest
-	TilesetID string
+	LayerName string
 	Tile      []int
 	Format    *tile.TileFormat
 	Retina    *int
@@ -113,10 +111,9 @@ func NewMapboxTileRequest(hreq *http.Request, validate bool) *MapboxTileRequest 
 func (r *MapboxTileRequest) init(param interface{}, url string, validate bool, http *http.Request) {
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
-	r.Version = "v4"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Retina = nil
-	r.ReqRegex = regexp.MustCompile(`^/(?P<tileset_id>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)(@(?P<retina>[^/]+)x)?\.(?P<format>\w+)`) //`^/(?P<version>[^/]+)/(?P<tileset_id>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)(@(?P<retina>[^/]+)x)?\.(?P<format>\w+)`
+	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)(@(?P<retina>[^/]+)x)?\.(?P<format>\w+)`)
 	r.initRequest()
 }
 
@@ -140,8 +137,8 @@ func (r *MapboxTileRequest) initRequest() error {
 		return fmt.Errorf("invalid request (%s)", r.Http.URL.Path)
 	}
 
-	if v, ok := result["tileset_id"]; ok {
-		r.TilesetID = v
+	if v, ok := result["layer_name"]; ok {
+		r.LayerName = v
 	}
 	if v, ok := result["retina"]; ok {
 		rt, _ := strconv.ParseInt(v, 10, 64)
@@ -162,7 +159,7 @@ func (r *MapboxTileRequest) initRequest() error {
 
 func MakeMapboxRequest(req *http.Request, validate bool) Request {
 	url := req.URL.String()
-	if strings.Contains(url, "source.json") {
+	if strings.Contains(url, "source.json") || strings.Contains(url, "tilestats.json") {
 		return NewMapboxSourceJSONRequest(req, validate)
 	} else {
 		return NewMapboxTileRequest(req, validate)

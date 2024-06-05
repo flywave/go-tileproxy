@@ -204,7 +204,6 @@ type CacheSource struct {
 	Grid                 string        `json:"grid,omitempty"`
 	LockDir              string        `json:"lock_dir,omitempty"`
 	LockRetryDelay       int           `json:"lock_retry_delay,omitempty"`
-	CacheDir             string        `json:"cache_dir,omitempty"`
 	MetaSize             []uint32      `json:"meta_size,omitempty"`
 	MetaBuffer           *int          `json:"meta_buffer,omitempty"`
 	BulkMetaTiles        *bool         `json:"bulk_meta_tiles,omitempty"`
@@ -350,11 +349,12 @@ type MapboxTileSource struct {
 	Type            SourceType  `json:"type,omitempty"`
 	Url             string      `json:"url,omitempty"`
 	Tiles           []string    `json:"tiles,omitempty"`
+	TileStatsUrl    string      `json:"tile_stats_url,omitempty"`
 	Sku             string      `json:"sku,omitempty"`
 	AccessToken     string      `json:"access_token,omitempty"`
 	AccessTokenName string      `json:"access_token_name,omitempty"`
 	Grid            string      `json:"grid,omitempty"`
-	TilejsonStore   *StoreInfo  `json:"tilejson_store"`
+	ResourceStore   *StoreInfo  `json:"resource_store"`
 	Options         interface{} `json:"options,omitempty"`
 }
 
@@ -484,7 +484,6 @@ type CesiumService struct {
 }
 
 type TileLayer struct {
-	ScaleHints
 	Name        string                   `json:"name,omitempty"`
 	Title       string                   `json:"title,omitempty"`
 	Description string                   `json:"description,omitempty"`

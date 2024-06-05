@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -62,7 +63,7 @@ func NewMapboxService(opts *MapboxServiceOptions) *MapboxService {
 
 func (s *MapboxService) GetTileJSON(req request.Request) *Response {
 	tilejson_request := req.(*request.MapboxSourceJSONRequest)
-	err, layer := s.getLayer(tilejson_request.TilesetID, req)
+	err, layer := s.getLayer(tilejson_request.LayerName, req)
 	if err != nil {
 		return err.Render()
 	}
@@ -70,9 +71,12 @@ func (s *MapboxService) GetTileJSON(req request.Request) *Response {
 	var data []byte
 	if tilejson_request.FileName == "source" {
 		data = tilelayer.RenderTileJson(tilejson_request)
-	} else {
-		st := resource.NewGeoStats(tilejson_request.TilesetID)
-		data = st.ToJson()
+	} else if tilejson_request.FileName == "tilestats" {
+		data = tilelayer.RenderTileStats(tilejson_request)
+		if data == nil {
+			st := resource.NewTileStats(tilejson_request.LayerName)
+			data = st.ToJson()
+		}
 	}
 	resp := NewResponse(data, 200, "application/json")
 	return resp
@@ -83,7 +87,7 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 	if tile_request.Origin == "" {
 		tile_request.Origin = "nw"
 	}
-	err, layer := s.getLayer(tile_request.TilesetID, req)
+	err, layer := s.getLayer(tile_request.LayerName, req)
 	if err != nil {
 		return err.Render()
 	}
@@ -153,15 +157,16 @@ type MapboxLayerMetadata struct {
 
 type MapboxTileProvider struct {
 	Provider
-	name           string
-	metadata       *MapboxLayerMetadata
-	tileManager    cache.Manager
-	extent         *geo.MapExtent
-	empty_tile     []byte
-	type_          MapboxTileType
-	zoomRange      [2]int
-	tilejsonSource layer.MapboxSourceJSONLayer
-	vectorLayers   []*resource.VectorLayer
+	name            string
+	metadata        *MapboxLayerMetadata
+	tileManager     cache.Manager
+	extent          *geo.MapExtent
+	empty_tile      []byte
+	type_           MapboxTileType
+	zoomRange       [2]int
+	tilejsonSource  layer.MapboxSourceJSONLayer
+	tileStatsSource layer.MapboxTileStatsLayer
+	vectorLayers    []*resource.VectorLayer
 }
 
 func GetMapboxTileType(tp string) MapboxTileType {
@@ -174,6 +179,7 @@ func GetMapboxTileType(tp string) MapboxTileType {
 	}
 	return MapboxVector
 }
+
 func MapboxTileTypeToString(tp MapboxTileType) string {
 	if tp == MapboxVector {
 		return "vector"
@@ -186,24 +192,26 @@ func MapboxTileTypeToString(tp MapboxTileType) string {
 }
 
 type MapboxTileOptions struct {
-	Name           string
-	Type           MapboxTileType
-	Metadata       *MapboxLayerMetadata
-	TileManager    cache.Manager
-	TilejsonSource layer.MapboxSourceJSONLayer
-	VectorLayers   []*resource.VectorLayer
-	ZoomRange      *[2]int
+	Name            string
+	Type            MapboxTileType
+	Metadata        *MapboxLayerMetadata
+	TileManager     cache.Manager
+	TilejsonSource  layer.MapboxSourceJSONLayer
+	TileStatsSource layer.MapboxTileStatsLayer
+	VectorLayers    []*resource.VectorLayer
+	ZoomRange       *[2]int
 }
 
 func NewMapboxTileProvider(opts *MapboxTileOptions) *MapboxTileProvider {
 	ret := &MapboxTileProvider{
-		name:           opts.Name,
-		type_:          opts.Type,
-		metadata:       opts.Metadata,
-		tileManager:    opts.TileManager,
-		extent:         geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
-		tilejsonSource: opts.TilejsonSource,
-		vectorLayers:   opts.VectorLayers,
+		name:            opts.Name,
+		type_:           opts.Type,
+		metadata:        opts.Metadata,
+		tileManager:     opts.TileManager,
+		extent:          geo.MapExtentFromGrid(opts.TileManager.GetGrid()),
+		tilejsonSource:  opts.TilejsonSource,
+		tileStatsSource: opts.TileStatsSource,
+		vectorLayers:    opts.VectorLayers,
 	}
 	if opts.ZoomRange != nil {
 		ret.zoomRange = *opts.ZoomRange
@@ -311,7 +319,7 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 }
 
 func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *request.MapboxSourceJSONRequest, md *MapboxLayerMetadata) []byte {
-	url := req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := req.LayerName + "/{z}/{x}/{y}." + c.GetFormat()
 	url = strings.ReplaceAll(url, "//", "/")
 	url = md.URL + url
 	tilejson.Tiles = []string{url}
@@ -331,15 +339,27 @@ func (c *MapboxTileProvider) convertTileJson(tilejson *resource.TileJSON, req *r
 
 func (c *MapboxTileProvider) serviceMetadata(tms_request *request.MapboxSourceJSONRequest) MapboxLayerMetadata {
 	md := *c.metadata
-	strs := strings.Split(tms_request.Http.RequestURI, tms_request.TilesetID)
+	strs := strings.Split(tms_request.Http.RequestURI, tms_request.LayerName)
 	md.URL = c.tileManager.SiteURL() + strs[0]
 	return md
+}
+
+func (c *MapboxTileProvider) RenderTileStats(req *request.MapboxSourceJSONRequest) []byte {
+	if c.tileStatsSource != nil {
+		states := c.tileStatsSource.GetTileStats(req.LayerName)
+		data, err := json.Marshal(states)
+		if err != nil {
+			return nil
+		}
+		return data
+	}
+	return nil
 }
 
 func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxSourceJSONRequest) []byte {
 	md := c.serviceMetadata(req)
 	if c.tilejsonSource != nil {
-		styles := c.tilejsonSource.GetTileJSON(req.TilesetID)
+		styles := c.tilejsonSource.GetTileJSON(req.LayerName)
 		styles.Name = c.name
 		return c.convertTileJson(styles, req, &md)
 	}
@@ -352,7 +372,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxSourceJSONRequest
 	tilejson.Center[0], tilejson.Center[1], tilejson.Center[2] = float32(bbox.Min[0]+(bbox.Max[0]-bbox.Min[0])/2), float32(bbox.Min[1]+(bbox.Max[1]-bbox.Min[1])/2), 0
 
 	tilejson.Format = c.GetFormat()
-	tilejson.ID = req.TilesetID
+	tilejson.ID = req.LayerName
 
 	tilejson.Name = md.Name
 	tilejson.MinZoom = uint32(math.Min(float64(c.zoomRange[0]), float64(c.zoomRange[1])))
@@ -375,7 +395,7 @@ func (c *MapboxTileProvider) RenderTileJson(req *request.MapboxSourceJSONRequest
 	tilejson.Version = "1.0.0"
 	tilejson.TilejsonVersion = "3.0.0"
 
-	url := md.URL + req.TilesetID + "/{z}/{x}/{y}." + c.GetFormat()
+	url := md.URL + req.LayerName + "/{z}/{x}/{y}." + c.GetFormat()
 
 	tilejson.VectorLayers = c.vectorLayers[:]
 

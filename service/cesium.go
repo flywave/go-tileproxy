@@ -57,7 +57,7 @@ func NewCesiumService(opts *CesiumServiceOptions) *CesiumService {
 
 func (s *CesiumService) GetLayerJSON(req request.Request) *Response {
 	tilejson_request := req.(*request.CesiumLayerJSONRequest)
-	err, layer := s.getLayer(tilejson_request.AssetID, req)
+	err, layer := s.getLayer(tilejson_request.LayerName, req)
 	if err != nil {
 		return err.Render()
 	}
@@ -71,7 +71,7 @@ func (s *CesiumService) GetLayerJSON(req request.Request) *Response {
 
 func (s *CesiumService) GetTile(req request.Request) *Response {
 	tile_request := req.(*request.CesiumTileRequest)
-	err, layer := s.getLayer(tile_request.AssetID, req)
+	err, layer := s.getLayer(tile_request.LayerName, req)
 	if err != nil {
 		return err.Render()
 	}
@@ -271,7 +271,7 @@ func (c *CesiumTileProvider) convertLayerJson(tilejson *resource.LayerJson, req 
 
 func (c *CesiumTileProvider) RenderTileJson(req *request.CesiumLayerJSONRequest) []byte {
 	if c.layerjsonSource != nil {
-		styles := c.layerjsonSource.GetLayerJSON(req.AssetID)
+		styles := c.layerjsonSource.GetLayerJSON(req.LayerName)
 		return c.convertLayerJson(styles, req)
 	}
 	md := c.serviceMetadata(req)

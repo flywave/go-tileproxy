@@ -48,6 +48,10 @@ func (r *LayerJson) SetStored() {
 	r.Stored = true
 }
 
+func (r *LayerJson) GetFileName() string {
+	return "layer"
+}
+
 func (r *LayerJson) GetLocation() string {
 	return r.Location
 }

@@ -9,8 +9,8 @@ import (
 
 var (
 	TILE_URL               = "http://tms.osgeo.org/tiles/1.0.0/landsat2000/1/8500/8500.png"
-	TILE_CAPABILITIES_URL  = "http://tms.osgeo.org/1.0.0/landsat2000"
-	TILE_ROOT_RESOURCE_URL = "http://tms.osgeo.org/tms/"
+	TILE_CAPABILITIES_URL  = "http://tms.osgeo.org/tiles/1.0.0/landsat2000"
+	TILE_ROOT_RESOURCE_URL = "http://tms.osgeo.org/tiles/"
 
 	TEST_URL = "/tiles/tms_layer/5/19/13.png"
 )
@@ -62,7 +62,7 @@ func TestTMSRequestParsing(t *testing.T) {
 		t.FailNow()
 	}
 
-	rootRequestRegex := regexp.MustCompile(`/tms/?$`)
+	rootRequestRegex := regexp.MustCompile(`/tiles/?$`)
 
 	root_match := rootRequestRegex.MatchString(TILE_ROOT_RESOURCE_URL)
 

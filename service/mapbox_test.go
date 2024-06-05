@@ -5,8 +5,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/flywave/go-mapbox/mvt"
 	vec2d "github.com/flywave/go3d/float64/vec2"
+
+	"github.com/flywave/go-mapbox/mvt"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
@@ -50,7 +51,7 @@ func TestMapboxServiceGetTile(t *testing.T) {
 
 	c := cache.NewLocalCache("./test_cache", "quadkey", ccreater)
 
-	tileClient := client.NewMapboxTileClient("http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf", "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8", "", "{token}", "access_token", ctx)
+	tileClient := client.NewMapboxTileClient("https://api.mapbox.com/v4/mapbox.mapbox-streets-v8.json", "https://api.mapbox.com/tilestats/v1/mapbox/mapbox.mapbox-streets-v8", "", "{token}", "access_token", ctx)
 
 	source := &sources.MapboxTileSource{Grid: grid, Client: tileClient, SourceCreater: ccreater}
 

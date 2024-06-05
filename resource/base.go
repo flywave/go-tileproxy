@@ -11,6 +11,7 @@ type Resource interface {
 	SetData([]byte)
 	IsStored() bool
 	SetStored()
+	GetFileName() string
 	GetLocation() string
 	SetLocation(l string)
 	GetID() string

@@ -13,13 +13,15 @@ import (
 
 type MapboxTileSource struct {
 	layer.MapLayer
-	Grid          *geo.TileGrid
-	Client        *client.MapboxTileClient
-	SourceCreater tile.SourceCreater
-	Cache         *resource.TileJSONCache
+	Grid           *geo.TileGrid
+	Client         *client.MapboxTileClient
+	SourceCreater  tile.SourceCreater
+	TileJSONCache  *resource.TileJSONCache
+	TileStatsCache *resource.TileStatsCache
 }
 
-func NewMapboxTileSource(grid *geo.TileGrid, coverage geo.Coverage, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater, cache *resource.TileJSONCache) *MapboxTileSource {
+func NewMapboxTileSource(grid *geo.TileGrid, coverage geo.Coverage, c *client.MapboxTileClient, opts tile.TileOptions, creater tile.SourceCreater,
+	tileJSONCache *resource.TileJSONCache, tileStatsCache *resource.TileStatsCache) *MapboxTileSource {
 	return &MapboxTileSource{
 		Grid:   grid,
 		Client: c,
@@ -27,19 +29,33 @@ func NewMapboxTileSource(grid *geo.TileGrid, coverage geo.Coverage, c *client.Ma
 			Options:  opts,
 			Coverage: coverage,
 		},
-		SourceCreater: creater,
-		Cache:         cache,
+		SourceCreater:  creater,
+		TileJSONCache:  tileJSONCache,
+		TileStatsCache: tileStatsCache,
 	}
 }
 
 func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {
 	ret := &resource.TileJSON{StoreID: id}
 
-	if s.Cache != nil && s.Cache.Load(ret) != nil {
+	if s.TileJSONCache != nil && s.TileJSONCache.Load(ret) != nil {
 		ret = s.Client.GetTileJSON()
 		if ret != nil {
 			ret.StoreID = id
-			s.Cache.Save(ret)
+			s.TileJSONCache.Save(ret)
+		}
+	}
+	return ret
+}
+
+func (s *MapboxTileSource) GetTileStats(id string) *resource.TileStats {
+	ret := &resource.TileStats{StoreID: id}
+
+	if s.TileStatsCache != nil && s.TileStatsCache.Load(ret) != nil {
+		ret = s.Client.GetTileStats()
+		if ret != nil {
+			ret.StoreID = id
+			s.TileStatsCache.Save(ret)
 		}
 	}
 	return ret

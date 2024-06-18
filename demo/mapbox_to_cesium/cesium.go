@@ -11,7 +11,7 @@ import (
 
 const (
 	MAPBOX_TILE_URL    = "https://api.mapbox.com"
-	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiaGF3a2luZzIyMTUiLCJhIjoiY2lqcDB3OGFnMDEwbXRva292emduaXhpcSJ9.QwZ6QKL_shDTOYNuVTYbUw"
+	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbGY5Y283N3IyZjB3M3ZyMGs4emJoYWNkIn0.MRcTQs3Z9OA0EQOB40xBqQ"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Sku:           "101XxiLvoFYxL",
 		Grid:          "global_webmercator_512",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		ResourceStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.RasterOpts{Format: "webp", Mode: &bilateral},
 	}
 	mapboxRasterDemCache = setting.CacheSource{

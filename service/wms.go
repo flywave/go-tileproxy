@@ -85,6 +85,11 @@ func NewWMSService(opts *WMSServiceOptions) *WMSService {
 		ret.Layers = ret.RootLayer.layers
 	}
 
+	if ret.MaxTileAge == nil {
+		t := time.Duration(0)
+		ret.MaxTileAge = &t
+	}
+
 	ret.router = map[string]func(r request.Request) *Response{
 		"map": func(r request.Request) *Response {
 			return ret.GetMap(r)
@@ -106,6 +111,22 @@ func NewWMSService(opts *WMSServiceOptions) *WMSService {
 	return ret
 }
 
+func computeZoom(size [2]uint32, bbx vec2d.Rect, proj geo.Proj) int {
+	g := geo.NewMercTileGrid()
+	proj2 := geo.NewProj("EPSG:3857")
+
+	ret := proj.TransformRectTo(proj2, bbx, 16)
+	res := ret.Width() / float64(size[0])
+	var z int
+	for i, r := range g.Resolutions {
+		if r < res {
+			z = i
+			break
+		}
+	}
+	return z
+}
+
 func (s *WMSService) GetMap(req request.Request) *Response {
 	err := s.checkMapRequest(req)
 	if err != nil {
@@ -115,7 +136,11 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	params := req.GetParams()
 	map_request := req.(*request.WMSMapRequest)
 	mapreq := request.NewWMSMapRequestParams(params)
-	query := &layer.MapQuery{BBox: mapreq.GetBBox(), Size: mapreq.GetSize(), Srs: geo.NewProj(mapreq.GetCrs()), Format: mapreq.GetFormat()}
+
+	bbox := mapreq.GetBBox()
+	srsProj := geo.NewProj(mapreq.GetCrs())
+	size := mapreq.GetSize()
+	query := &layer.MapQuery{BBox: bbox, Size: size, Srs: srsProj, Format: mapreq.GetFormat(), MetaSize: mapreq.GetMetaSize()}
 
 	if params.GetOne("tiled", "false") == "true" {
 		query.TiledOnly = true
@@ -127,18 +152,18 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	var sub_bbox vec2d.Rect
 
 	if _, ok := s.SrsExtents[mapreq.GetCrs()]; s.SrsExtents != nil && ok {
-		query_extent := &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewProj(mapreq.GetCrs())}
+		query_extent := &geo.MapExtent{BBox: bbox, Srs: srsProj}
 		if !s.SrsExtents[mapreq.GetCrs()].Contains(query_extent) {
 			limited_extent := s.SrsExtents[mapreq.GetCrs()].Intersection(query_extent)
 			if limited_extent == nil {
 				img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
 				img_opts.BgColor = mapreq.GetBGColor()
 				img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
-				tile := cache.GetEmptyTile(mapreq.GetSize(), img_opts)
+				tile := cache.GetEmptyTile(size, img_opts)
 				return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 			}
-			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(mapreq.GetBBox(), mapreq.GetSize(), limited_extent.BBox)
-			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: geo.NewProj(mapreq.GetCrs()), Format: mapreq.GetFormat()}
+			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(bbox, size, limited_extent.BBox)
+			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: srsProj, Format: mapreq.GetFormat()}
 		}
 	}
 
@@ -157,7 +182,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		keys = append(keys, k)
 	}
 
-	authorized_layers, coverage := s.authorizedLayers("map", keys, &geo.MapExtent{BBox: mapreq.GetBBox(), Srs: geo.NewProj(mapreq.GetCrs())})
+	authorized_layers, coverage := s.authorizedLayers("map", keys, &geo.MapExtent{BBox: bbox, Srs: srsProj})
 
 	s.filterActualLayers(actual_layers, mapreq.GetLayers(), authorized_layers)
 
@@ -166,6 +191,7 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		render_layers = append(render_layers, v)
 	}
 
+	query.TileId[2] = computeZoom(size, bbox, srsProj)
 	renderer := &LayerRenderer{layers: render_layers, query: query, params: mapreq}
 
 	merger := &imagery.LayerMerger{}

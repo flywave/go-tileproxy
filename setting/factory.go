@@ -2,6 +2,7 @@ package setting
 
 import (
 	"image/color"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -672,6 +673,10 @@ func LoadWMSLegendsSource(s *WMSSource, globals *GlobalsSetting, fac CacheFactor
 		lg_clients = append(lg_clients, client.NewWMSLegendClient(lg_request, s.AccessToken, s.AccessTokenName, newCollectorContext(http)))
 	}
 
+	if s.Store == nil {
+		s.Store = DefaultStoreInfo()
+	}
+
 	var cache *resource.LegendCache
 	if fac != nil {
 		cache = resource.NewLegendCache(fac.CreateStore(s.Store))
@@ -821,14 +826,19 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 	if s.Coverage != nil {
 		coverage = LoadCoverage(s.Coverage)
 	}
+
+	if s.ResourceStore == nil {
+		s.ResourceStore = DefaultStoreInfo()
+	}
+
 	var tcache *resource.TileJSONCache
+	var scache *resource.TileStatsCache
 	if fac != nil {
 		tcache = resource.NewTileJSONCache(fac.CreateStore(s.ResourceStore))
 	} else {
 		tcache = resource.NewTileJSONCache(ConvertLocalStore(s.ResourceStore))
 	}
 
-	var scache *resource.TileStatsCache
 	if fac != nil {
 		scache = resource.NewTileStatsCache(fac.CreateStore(s.ResourceStore))
 	} else {
@@ -874,6 +884,10 @@ func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance
 		http = s.Http
 	} else {
 		http = &globals.Http.HttpSetting
+	}
+
+	if s.LayerjsonStore == nil {
+		s.LayerjsonStore = DefaultStoreInfo()
 	}
 
 	var tcache *resource.LayerJSONCache
@@ -1181,6 +1195,12 @@ func extentsForSrs(bbox_srs []BBoxSrs) map[string]*geo.MapExtent {
 	extents := make(map[string]*geo.MapExtent)
 	for _, srs := range bbox_srs {
 		srs, bbox := srs.Srs, srs.BBox
+		if bbox[0] == 0.0 && bbox[1] == 0.0 && bbox[2] == 0.0 && bbox[3] == 0.0 {
+			bbox[0] = math.MaxFloat64
+			bbox[1] = math.MaxFloat64
+			bbox[2] = -math.MaxFloat64
+			bbox[3] = -math.MaxFloat64
+		}
 		e := &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{bbox[0], bbox[1]}, Max: vec2d.T{bbox[2], bbox[3]}}, Srs: geo.NewProj(srs)}
 		extents[srs] = e
 	}

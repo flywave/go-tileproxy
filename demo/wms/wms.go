@@ -9,22 +9,48 @@ import (
 	"github.com/flywave/go-tileproxy/setting"
 )
 
+const (
+	MAPBOX_API_URL     = "https://api.mapbox.com"
+	MAPBOX_TILE_URL    = "https://a.tiles.mapbox.com"
+	MAPBOX_ACCESSTOKEN = "pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbGY5Y283N3IyZjB3M3ZyMGs4emJoYWNkIn0.MRcTQs3Z9OA0EQOB40xBqQ"
+)
+
 var (
+	mapboxRasterSource = setting.MapboxTileSource{
+		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
+		AccessToken:   MAPBOX_ACCESSTOKEN,
+		Grid:          "global_webmercator",
+		ResourceStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		Options:       &setting.ImageOpts{Format: "png"},
+	}
+
+	mapboxRasterCache = setting.CacheSource{
+		Sources:       []string{"mapbox_source"},
+		Name:          "mapbox_raster_cache",
+		Grid:          "global_webmercator",
+		Format:        "png",
+		RequestFormat: "png",
+		CacheInfo: &setting.CacheInfo{
+			Directory:       "./cache_data/raster/",
+			DirectoryLayout: "tms",
+		},
+		TileOptions: &setting.ImageOpts{Format: "png"},
+	}
+
 	wmsTMSSource = setting.WMSSource{
 		Opts: setting.WMSSourceOpts{
 			Version: "1.1.1",
 			Map:     setting.NewBool(true),
 		},
 		Url:          "https://maps.omniscale.net/v2/demo/style.default/map?",
-		Layers:       []string{"osm"},
-		SupportedSrs: []string{"EPSG:31467", "EPSG:4326"},
+		Layers:       []string{"mapbox", "osm"},
+		SupportedSrs: []string{"EPSG:31467", "EPSG:4326", "EPSG:3857", "EPSG:21781"},
 	}
 
 	wmsService = setting.WMSService{
-		Srs:                []string{"EPSG:4326", "EPSG:900913", "EPSG:25832"},
-		BBoxSrs:            []setting.BBoxSrs{{Srs: "EPSG:4326"}},
+		Srs:                []string{"EPSG:4326", "EPSG:3857", "EPSG:25832", "EPSG:21781"},
 		ImageFormats:       []string{"image/jpeg", "image/png", "image/gif", "image/GeoTIFF", "image/tiff"},
-		Layers:             []setting.WMSLayer{{Sources: []string{"osm_wms"}, Name: "osm", Title: "Omniscale OSM WMS - osm.omniscale.net"}},
+		Layers:             []setting.WMSLayer{{Sources: []string{"mapbox_raster_cache"}, Name: "mapbox_raster_cache", Title: "mapbox_raster_cache"}, {Sources: []string{"osm_wms"}, Name: "osm", Title: "Omniscale OSM WMS - osm.omniscale.net"}},
 		MaxOutputPixels:    setting.NewInt(2000 * 2000),
 		Strict:             setting.NewBool(true),
 		FeatureinfoFormats: []setting.FeatureinfoFormat{{Suffix: "text", MimeType: "text/plain"}, {Suffix: "html", MimeType: "text/html"}, {Suffix: "xml", MimeType: "text/xml"}},
@@ -36,13 +62,16 @@ func getProxyService() *setting.ProxyService {
 	pd.Grids = demo.GridMap
 
 	pd.Sources["osm_wms"] = &wmsTMSSource
+	pd.Sources["mapbox_source"] = &mapboxRasterSource
+
+	pd.Caches["mapbox_raster_cache"] = &mapboxRasterCache
 
 	pd.Service = &wmsService
 	return pd
 }
 
 func getService() *tileproxy.Service {
-	return tileproxy.NewService(getProxyService(), "../", &demo.Globals, nil)
+	return tileproxy.NewService(getProxyService(), &demo.Globals, nil)
 }
 
 var dataset *tileproxy.Service

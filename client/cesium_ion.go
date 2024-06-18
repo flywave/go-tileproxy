@@ -118,12 +118,11 @@ func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
 }
 
 func (c *CesiumTileClient) buildLayerJson() string {
-	sub := fmt.Sprintf("%d/layer.json", c.AssetId)
-	return fmt.Sprintf("%s/%s", c.BaseURL, sub)
+	return fmt.Sprintf("%s/layer.json", c.BaseURL)
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
-	url := c.TilesURL[rand.Intn(len(c.TilesURL)-1)]
+	url := c.TilesURL[rand.Intn(len(c.TilesURL))]
 	if strings.Contains(url, "{z}") && strings.Contains(url, "{x}") && strings.Contains(url, "{y}") {
 		zstr := strconv.Itoa(tile_coord[2])
 		xstr := strconv.Itoa(tile_coord[0])
@@ -142,7 +141,7 @@ func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
 		url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
 		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
 
-		url = fmt.Sprintf("%d/%s", c.AssetId, url)
+		// url = fmt.Sprintf("%d/%s", c.AssetId, url)
 		return fmt.Sprintf("%s/%s", c.BaseURL, url)
 	}
 	return ""

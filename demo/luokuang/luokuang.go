@@ -29,7 +29,7 @@ var (
 		AccessToken:     LK_ACCESSTOKEN,
 		AccessTokenName: "ak",
 		Grid:            "global_webmercator",
-		TilejsonStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		ResourceStore:   &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:         &setting.VectorOpts{Format: "mvt", Extent: 4096, Proto: setting.NewInt(int(vector.PBF_PTOTO_LUOKUANG))},
 	}
 	luokuangMVTCache = setting.CacheSource{

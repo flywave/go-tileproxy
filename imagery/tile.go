@@ -95,7 +95,7 @@ func (t *TileSplitter) GetTile(crop_coord [2]int, tile_size [2]uint32) *ImageSou
 
 		dcresult.DrawImage(crop, geo.AbsInt(geo.MinInt(minx, 0)), geo.AbsInt(geo.MinInt(miny, 0)))
 
-		crop = result
+		crop = dcresult.Image()
 	} else {
 		crop = imaging.Crop(t.MetaImage, image.Rect(minx, miny, maxx, maxy))
 	}

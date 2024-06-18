@@ -98,7 +98,7 @@ func (c *MapboxTileClient) GetTileStats() *resource.TileStats {
 }
 
 func (c *MapboxTileClient) buildTileQuery(tile_coord [3]int) string {
-	url := c.TilesURL[rand.Intn(len(c.TilesURL)-1)]
+	url := c.TilesURL[rand.Intn(len(c.TilesURL))]
 	if strings.Contains(url, "{z}") && strings.Contains(url, "{x}") && strings.Contains(url, "{y}") {
 		zstr := strconv.Itoa(tile_coord[2])
 		xstr := strconv.Itoa(tile_coord[0])

@@ -137,6 +137,24 @@ func (r *WMSMapRequestParams) GetSize() [2]uint32 {
 	}
 }
 
+func (r *WMSMapRequestParams) GetMetaSize() [2]uint32 {
+	w, okw := r.params.Get("metax")
+	h, okh := r.params.Get("metay")
+	if !okw || !okh {
+		return [2]uint32{1, 1}
+	} else {
+		ws, err := strconv.ParseInt(w[0], 10, 64)
+		if err != nil {
+			return [2]uint32{1, 1}
+		}
+		hs, err := strconv.ParseInt(h[0], 10, 64)
+		if err != nil {
+			return [2]uint32{1, 1}
+		}
+		return [2]uint32{uint32(ws), uint32(hs)}
+	}
+}
+
 func (r *WMSMapRequestParams) SetSize(si [2]uint32) {
 	width := strconv.FormatInt(int64(si[0]), 10)
 	height := strconv.FormatInt(int64(si[1]), 10)
@@ -360,7 +378,7 @@ func (s *WMSMapRequest) ValidateFormat(image_formats []string) error {
 func (s *WMSMapRequest) ValidateSrs(srs []string) error {
 	params := &WMSMapRequestParams{params: s.Params}
 	ss := strings.ToUpper(params.GetCrs())
-	if utils.ContainsString(srs, ss) {
+	if !utils.ContainsString(srs, ss) {
 		return errors.New("unsupported srs: " + ss)
 	}
 	return nil

@@ -66,9 +66,9 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		return nil, errors.New("tile size of cache and tile source do not match")
 	}
 
-	if !s.Grid.Srs.Eq(query.Srs) {
-		return nil, errors.New("srs of cache and tile source do not match")
-	}
+	// if !s.Grid.Srs.Eq(query.Srs) {
+	// 	return nil, errors.New("srs of cache and tile source do not match")
+	// }
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
@@ -78,7 +78,7 @@ func (s *MapboxTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		return s.SourceCreater.CreateEmpty(query.Size, s.Options), nil
 	}
 
-	_, _, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, nil)
+	_, _, tiles, err := s.Grid.GetAffectedTiles(query.BBox, query.Size, query.Srs)
 
 	if err != nil {
 		return nil, err

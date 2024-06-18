@@ -20,14 +20,14 @@ var (
 		Url:           MAPBOX_TILE_URL + "/v4/mapbox.mapbox-streets-v8.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Grid:          "global_webmercator",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		ResourceStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.VectorOpts{Format: "mvt", Extent: 4096},
 	}
 	mapboxRasterSource = setting.MapboxTileSource{
 		Url:           MAPBOX_TILE_URL + "/v4/mapbox.satellite.json",
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Grid:          "global_webmercator",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		ResourceStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.ImageOpts{Format: "png"},
 	}
 	mapboxRasterDemSource = setting.MapboxTileSource{
@@ -35,7 +35,7 @@ var (
 		AccessToken:   MAPBOX_ACCESSTOKEN,
 		Sku:           "101XxiLvoFYxL",
 		Grid:          "global_webmercator",
-		TilejsonStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
+		ResourceStore: &setting.StoreInfo{Directory: "./cache_data/tilejson/"},
 		Options:       &setting.RasterOpts{Format: "webp"},
 	}
 

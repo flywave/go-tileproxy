@@ -220,7 +220,7 @@ type CacheSource struct {
 	TileOptions          interface{}   `json:"tile_options,omitempty"`
 }
 
-func (c *CacheSource) UnmarshalJSON(data []byte) error {
+func (c *CacheSource) FromJson(data []byte) error {
 	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
@@ -323,7 +323,7 @@ type TileSource struct {
 	Options       interface{} `json:"options,omitempty"`
 }
 
-func (c *TileSource) UnmarshalJSON(data []byte) error {
+func (c *TileSource) FromJson(data []byte) error {
 	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
@@ -358,7 +358,7 @@ type MapboxTileSource struct {
 	Options         interface{} `json:"options,omitempty"`
 }
 
-func (c *MapboxTileSource) UnmarshalJSON(data []byte) error {
+func (c *MapboxTileSource) FromJson(data []byte) error {
 	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
@@ -392,7 +392,7 @@ type CesiumTileSource struct {
 	Options        interface{} `json:"options,omitempty"`
 }
 
-func (c *CesiumTileSource) UnmarshalJSON(data []byte) error {
+func (c *CesiumTileSource) FromJson(data []byte) error {
 	err := json.Unmarshal(data, c)
 	if err != nil {
 		return err
@@ -692,4 +692,11 @@ type WMSLayer struct {
 type StoreInfo struct {
 	Type      CacheType `json:"type,omitempty"`
 	Directory string    `json:"directory,omitempty"`
+}
+
+func DefaultStoreInfo() *StoreInfo {
+	return &StoreInfo{
+		Type:      CACHE_TYPE_FILE,
+		Directory: "./cache",
+	}
 }

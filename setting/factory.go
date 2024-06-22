@@ -270,7 +270,10 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		}
 	}
 
-	tilegrid := grid.(*geo.TileGrid)
+	var tilegrid *geo.TileGrid
+	if grid != nil {
+		tilegrid = grid.(*geo.TileGrid)
+	}
 
 	var opts tile.TileOptions
 	switch o := c.TileOptions.(type) {
@@ -305,6 +308,14 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 	var query_buffer *int
 	if c.QueryBuffer != nil {
 		query_buffer = c.QueryBuffer
+	}
+
+	if format == "" {
+		format = string(opts.GetFormat())
+	}
+
+	if request_format_ext == "" {
+		request_format_ext = string(opts.GetFormat())
 	}
 
 	topts := &cache.TileManagerOptions{
@@ -375,8 +386,7 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 		tp = service.GetMapboxTileType(l.TileType)
 	}
 	tileManager := instance.GetCache(l.Source)
-
-	tilesource := instance.GetSource(l.TileJSON)
+	// tilesource := instance.GetSource(l.TileJSON)
 
 	metadata := &service.MapboxLayerMetadata{
 		Name:        l.Name,
@@ -396,23 +406,24 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 		VectorLayers:    l.VectorLayers,
 		ZoomRange:       l.ZoomRange,
 	}
-	tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
-	if ok {
-		topts.TilejsonSource = tilejsonSource
-	}
-	tileStatsSource, ok := tilesource.(layer.MapboxTileStatsLayer)
-	if ok {
-		topts.TileStatsSource = tileStatsSource
-	}
+
+	// tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
+	// if ok {
+	// 	topts.TilejsonSource = tilejsonSource
+	// }
+	// tileStatsSource, ok := tilesource.(layer.MapboxTileStatsLayer)
+	// if ok {
+	// 	topts.TileStatsSource = tileStatsSource
+	// }
 	return service.NewMapboxTileProvider(topts)
 }
 
 func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instance ProxyInstance) *service.CesiumTileProvider {
 	tileManager := instance.GetCache(l.Source)
 
-	layersource := instance.GetSource(l.LayerJSON)
+	// layersource := tileManager.GetSources()[0]
 
-	layerjsonSource, ok := layersource.(layer.CesiumLayerJSONLayer)
+	// layerjsonSource, ok := layersource.(layer.CesiumLayerJSONLayer)
 
 	metadata := &service.CesiumLayerMetadata{
 		Name:        l.Name,
@@ -427,9 +438,9 @@ func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instanc
 		ZoomRange:   l.ZoomRange,
 	}
 
-	if ok {
-		topts.LayerjsonSource = layerjsonSource
-	}
+	// if ok {
+	// 	topts.LayerjsonSource = layerjsonSource
+	// }
 
 	return service.NewCesiumTileProvider(topts)
 }
@@ -813,7 +824,11 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 		opts = NewVectorOptions(o)
 	}
 
+	var gd *geo.TileGrid
 	grid := instance.GetGrid(s.Grid)
+	if grid != nil {
+		gd = grid.(*geo.TileGrid)
+	}
 
 	var http *HttpSetting
 	if s.Http != nil {
@@ -865,7 +880,7 @@ func LoadMapboxTileSource(s *MapboxTileSource, globals *GlobalsSetting, instance
 
 	c := client.NewMapboxTileClient(s.Url, s.TileStatsUrl, s.Sku, s.AccessToken, accessTokenName, newCollectorContext(http))
 
-	return sources.NewMapboxTileSource(grid.(*geo.TileGrid), coverage, c, opts, creater, tcache, scache)
+	return sources.NewMapboxTileSource(gd, coverage, c, opts, creater, tcache, scache)
 }
 
 func LoadCesiumTileSource(s *CesiumTileSource, globals *GlobalsSetting, instance ProxyInstance, fac CacheFactory) *sources.CesiumTileSource {

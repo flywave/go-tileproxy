@@ -38,9 +38,8 @@ func NewCesiumTileSource(
 
 func (s *CesiumTileSource) GetLayerJSON(id string) *resource.LayerJson {
 	ret := &resource.LayerJson{StoreID: id}
-
 	if s.Cache != nil && s.Cache.Load(ret) != nil {
-		ret = s.Client.GetLayerJson()
+		ret, _ = s.Client.GetLayerJson()
 		if ret != nil {
 			ret.StoreID = id
 			s.Cache.Save(ret)
@@ -80,5 +79,8 @@ func (s *CesiumTileSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	x, y, z, _ := tiles.Next()
 
 	resp := s.Client.GetTile([3]int{x, y, z})
+	if len(resp) == 0 {
+		return nil, errors.New("data is nil")
+	}
 	return s.SourceCreater.Create(resp, [3]int{x, y, z}), nil
 }

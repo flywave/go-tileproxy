@@ -273,7 +273,7 @@ func (t *MapboxTileProvider) GetFormatMimeType() string {
 }
 
 func (t *MapboxTileProvider) GetFormat() string {
-	return t.tileManager.GetRequestFormat()
+	return t.tileManager.GetFormat()
 }
 
 func (t *MapboxTileProvider) GetTileBBox(req request.TiledRequest, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {
@@ -297,7 +297,13 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 	if string(*tile_request.Format) != tl.GetFormat() {
 		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 	}
+
 	tile_coord := tile_request.Tile
+
+	if tl.GetMaxZoom() < tile_coord[2] || tl.GetMinZoom() > tile_coord[2] {
+		return NewRequestError("Zoom out of range", "Zoom out of range", &MapboxExceptionHandler{}, tile_request, false, nil), nil
+	}
+
 	var tile_bbox vec2d.Rect
 	if coverage != nil {
 		tile_bbox = tl.GetGrid().TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, false)

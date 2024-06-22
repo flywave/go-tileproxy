@@ -67,6 +67,8 @@ func ProxyServer(w http.ResponseWriter, req *http.Request) {
 	dataset.Service.ServeHTTP(w, req)
 }
 
+// http://127.0.0.1:8001/tiles/tms_layer/0/0/0.png
+// http://127.0.0.1:8001/tms/tms_layer/0/0/0.png
 func main() {
 	http.HandleFunc("/", ProxyServer)
 	err := http.ListenAndServe(":8001", nil)

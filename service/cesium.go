@@ -17,6 +17,15 @@ import (
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
+type CesiumExceptionHandler struct {
+	ExceptionHandler
+}
+
+func (h *CesiumExceptionHandler) Render(request_error *RequestError) *Response {
+	status_code := 500
+	return NewResponse([]byte(request_error.Message), status_code, "application/json")
+}
+
 type CesiumMetadata struct {
 	Name string
 	URL  string
@@ -233,9 +242,14 @@ func (t *CesiumTileProvider) emptyResponse() TileResponse {
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.CesiumTileRequest)
 	if string(*tile_request.Format) != tl.GetRequestFormat() {
-		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
+		return NewRequestError("Not Found", "Not_Found", &CesiumExceptionHandler{}, tile_request, false, nil), nil
 	}
+
 	tile_coord := tile_request.Tile
+	if tl.GetMaxZoom() < tile_coord[2] || tl.GetMinZoom() > tile_coord[2] {
+		return NewRequestError("Zoom out of range", "Zoom out of range", &CesiumExceptionHandler{}, tile_request, false, nil), nil
+	}
+
 	var tile_bbox vec2d.Rect
 	if coverage != nil {
 		tile_bbox = tl.GetGrid().TileBBox([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, false)

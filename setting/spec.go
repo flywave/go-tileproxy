@@ -233,11 +233,13 @@ func (c *CacheSource) FromJson(data []byte) error {
 		return err
 	}
 
-	opt, err := TileOptionUnmarshal(tmp.TileOptions)
-	if err != nil {
-		return err
+	if tmp.TileOptions != nil {
+		opt, err := TileOptionUnmarshal(tmp.TileOptions)
+		if err != nil {
+			return err
+		}
+		c.TileOptions = opt
 	}
-	c.TileOptions = opt
 	return nil
 }
 
@@ -371,11 +373,13 @@ func (c *MapboxTileSource) FromJson(data []byte) error {
 		return err
 	}
 
-	opt, err := TileOptionUnmarshal(tmp.Options)
-	if err != nil {
-		return err
+	if tmp.Options != nil {
+		opt, err := TileOptionUnmarshal(tmp.Options)
+		if err != nil {
+			return err
+		}
+		c.Options = opt
 	}
-	c.Options = opt
 	return nil
 }
 
@@ -405,11 +409,13 @@ func (c *CesiumTileSource) FromJson(data []byte) error {
 		return err
 	}
 
-	opt, err := TileOptionUnmarshal(tmp.Options)
-	if err != nil {
-		return err
+	if tmp.Options != nil {
+		opt, err := TileOptionUnmarshal(tmp.Options)
+		if err != nil {
+			return err
+		}
+		c.Options = opt
 	}
-	c.Options = opt
 	return nil
 }
 

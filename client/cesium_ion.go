@@ -31,6 +31,7 @@ func (c *CesiumClient) buildAuthQuery() string {
 
 type CesiumTileClient struct {
 	CesiumClient
+	json *resource.LayerJson
 }
 
 func NewCesiumTileClient(authUrl string, assetUrl string, assetId int, token string, ver string, ctx Context) *CesiumTileClient {
@@ -51,7 +52,7 @@ func (c *CesiumTileClient) IsAuth() bool {
 	return c.AuthToken != ""
 }
 
-func (c *CesiumTileClient) Auth(tile_coord *[3]int) error {
+func (c *CesiumTileClient) Auth() error {
 	url := c.buildAuthQuery()
 	c.AuthHeaders = make(http.Header)
 	c.AuthHeaders["origin"] = []string{"http://127.0.0.1/test.html"}
@@ -75,18 +76,35 @@ func (c *CesiumTileClient) Auth(tile_coord *[3]int) error {
 	return errors.New(string(resp))
 }
 
-func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
+func (c *CesiumTileClient) auth() error {
 	if !c.IsAuth() {
-		err := c.Auth(&tile_coord)
+		err := c.Auth()
 		if err != nil {
 			return nil
 		}
 	}
 	if len(c.TilesURL) == 0 {
-		json := c.GetLayerJson()
+		json := c.getLayerJson()
 		if json == nil {
 			return nil
 		}
+		c.json = json
+	}
+	return nil
+}
+
+func (c *CesiumTileClient) GetLayerJson() (*resource.LayerJson, error) {
+	err := c.auth()
+	if err != nil {
+		return nil, errors.New("json is nil")
+	}
+	return c.json, nil
+}
+
+func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
+	err := c.auth()
+	if err != nil {
+		return nil
 	}
 	url := c.buildTileQuery(tile_coord)
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
@@ -96,13 +114,7 @@ func (c *CesiumTileClient) GetTile(tile_coord [3]int) []byte {
 	return nil
 }
 
-func (c *CesiumTileClient) GetLayerJson() *resource.LayerJson {
-	if !c.IsAuth() {
-		err := c.Auth(nil)
-		if err != nil {
-			return nil
-		}
-	}
+func (c *CesiumTileClient) getLayerJson() *resource.LayerJson {
 	url := c.buildLayerJson()
 	status, resp := c.httpClient().Open(url, nil, c.AuthHeaders)
 	if status == 200 {

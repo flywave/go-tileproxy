@@ -257,9 +257,7 @@ func (t *TileWalker) walk(cur_bbox vec2d.Rect, levels []int, currentLevel int, a
 
 		if handleTiles != nil {
 			t.count += 1
-			if !t.pool.Process(t.task.NewWork(handleTiles), t.taskProgress) {
-				return nil, false
-			} else {
+			if t.pool.Process(t.task.NewWork(handleTiles), t.taskProgress) {
 				t.taskProgress.Update(len(handleTiles))
 			}
 		}

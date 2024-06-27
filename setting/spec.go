@@ -247,7 +247,11 @@ func TileOptionUnmarshal(obj interface{}) (interface{}, error) {
 	bt, _ := json.Marshal(obj)
 	mp := make(map[string]interface{})
 	json.Unmarshal(bt, &mp)
-	switch mp["type"].(string) {
+	ty, ok := mp["type"]
+	if !ok {
+		return nil, errors.New("options lost type")
+	}
+	switch ty.(string) {
 	case TILE_OPTION_IMAGE:
 		opt := &ImageOpts{}
 		json.Unmarshal(bt, opt)

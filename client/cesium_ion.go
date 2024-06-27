@@ -120,7 +120,7 @@ func (c *CesiumTileClient) getLayerJson() *resource.LayerJson {
 	if status == 200 {
 		ret := resource.CreateLayerJson(resp)
 		if ret != nil {
-			c.Version = ret.Version
+			// c.Version = ret.Version
 			c.Extensions = ret.Extensions
 			c.TilesURL = ret.Tiles[:]
 		}
@@ -130,7 +130,7 @@ func (c *CesiumTileClient) getLayerJson() *resource.LayerJson {
 }
 
 func (c *CesiumTileClient) buildLayerJson() string {
-	return fmt.Sprintf("%s/layer.json", c.BaseURL)
+	return fmt.Sprintf("%s/%d/CesiumWorldTerrain/v%s/layer.json", c.BaseURL, c.AssetId, c.Version)
 }
 
 func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
@@ -151,9 +151,9 @@ func (c *CesiumTileClient) buildTileQuery(tile_coord [3]int) string {
 			extensions = strings.Join(c.Extensions, "-")
 		}
 		url = strings.Replace(url, "{extensions}", "extensions="+extensions, 1)
-		url = strings.Replace(url, "{version}", "v="+c.Version, 1)
+		url = strings.Replace(url, "{version}", c.Version, 1)
 
-		// url = fmt.Sprintf("%d/%s", c.AssetId, url)
+		url = fmt.Sprintf("%d/CesiumWorldTerrain/v%s/%s", c.AssetId, c.Version, url)
 		return fmt.Sprintf("%s/%s", c.BaseURL, url)
 	}
 	return ""

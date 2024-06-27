@@ -11,7 +11,7 @@ import (
 
 const (
 	CESIUM_AUTH_URL    = "https://api.cesium.com"
-	CESIUM_ASSETS_URL  = "https://assets.cesium.com"
+	CESIUM_ASSETS_URL  = "https://assets.ion.cesium.com/us-east-1/asset_depot/1/CesiumWorldTerrain/v1.2"
 	CESIUM_ACCESSTOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNWFkYjc1Ny04ODZkLTQ5NmItOTMyYy05ZWQyZTkwYWVlNjIiLCJpZCI6NTk3NTYsImlhdCI6MTY0NDIwMjEzNH0.iUeNB_nAKhVIq5LMwQjrNlV1LFko_N5DQeLUk7e-naw"
 )
 
@@ -44,7 +44,7 @@ var (
 				Source:    "terrain_cache",
 				Name:      "terrain_layer",
 				LayerJSON: "terrain",
-				ZoomRange: &[2]int{0, 13},
+				ZoomRange: &[2]int{0, 20},
 			},
 		},
 	}

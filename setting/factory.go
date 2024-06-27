@@ -294,12 +294,12 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 	}
 
 	var reprojectSrcSrs geo.Proj
-	if c.ReprojectSrs != nil {
+	if c.ReprojectSrs != nil && c.ReprojectSrs.SrcSrs != "" {
 		reprojectSrcSrs = geo.NewProj(c.ReprojectSrs.SrcSrs)
 	}
 
 	var reprojectDstSrs geo.Proj
-	if c.ReprojectSrs != nil {
+	if c.ReprojectSrs != nil && c.ReprojectSrs.DestSrs != "" {
 		if c.ReprojectSrs.DestSrs != "" {
 			reprojectDstSrs = geo.NewProj(c.ReprojectSrs.DestSrs)
 		}
@@ -386,7 +386,9 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 		tp = service.GetMapboxTileType(l.TileType)
 	}
 	tileManager := instance.GetCache(l.Source)
-	// tilesource := instance.GetSource(l.TileJSON)
+	if tileManager == nil {
+		return nil
+	}
 
 	metadata := &service.MapboxLayerMetadata{
 		Name:        l.Name,
@@ -407,24 +409,14 @@ func ConvertMapboxTileLayer(l *MapboxTileLayer, globals *GlobalsSetting, instanc
 		ZoomRange:       l.ZoomRange,
 	}
 
-	// tilejsonSource, ok := tilesource.(layer.MapboxSourceJSONLayer)
-	// if ok {
-	// 	topts.TilejsonSource = tilejsonSource
-	// }
-	// tileStatsSource, ok := tilesource.(layer.MapboxTileStatsLayer)
-	// if ok {
-	// 	topts.TileStatsSource = tileStatsSource
-	// }
 	return service.NewMapboxTileProvider(topts)
 }
 
 func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instance ProxyInstance) *service.CesiumTileProvider {
 	tileManager := instance.GetCache(l.Source)
-
-	// layersource := tileManager.GetSources()[0]
-
-	// layerjsonSource, ok := layersource.(layer.CesiumLayerJSONLayer)
-
+	if tileManager == nil {
+		return nil
+	}
 	metadata := &service.CesiumLayerMetadata{
 		Name:        l.Name,
 		Attribution: l.Attribution,
@@ -438,10 +430,6 @@ func ConvertCesiumTileLayer(l *CesiumTileLayer, globals *GlobalsSetting, instanc
 		ZoomRange:   l.ZoomRange,
 	}
 
-	// if ok {
-	// 	topts.LayerjsonSource = layerjsonSource
-	// }
-
 	return service.NewCesiumTileProvider(topts)
 }
 
@@ -449,6 +437,9 @@ func ConvertTileLayer(l *TileLayer, instance ProxyInstance) *service.TileProvide
 	dimensions := utils.NewDimensionsFromValues(l.Dimensions)
 
 	tileManager := instance.GetCache(l.Source)
+	if tileManager == nil {
+		return nil
+	}
 
 	infoSources := []layer.InfoLayer{}
 	for _, info := range l.InfoSources {

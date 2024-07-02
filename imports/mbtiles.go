@@ -104,14 +104,12 @@ func (a *MBTilesImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile
 		return nil, err
 	}
 
-	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
-		gzipFile := bytes.NewBuffer(data)
-		gzipReader, _ := gzip.NewReader(gzipFile)
-		defer gzipReader.Close()
-		data, err = ioutil.ReadAll(gzipReader)
-		if err != nil {
-			return nil, err
-		}
+	gzipFile := bytes.NewBuffer(data)
+	gzipReader, _ := gzip.NewReader(gzipFile)
+	defer gzipReader.Close()
+	data, err = ioutil.ReadAll(gzipReader)
+	if err != nil {
+		return nil, err
 	}
 
 	tile := cache.NewTile(t)
@@ -141,7 +139,7 @@ func (a *MBTilesImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {
 		return &imagery.ImageOptions{Format: tile.TileFormat(format)}
 	case "webp":
 		return &imagery.ImageOptions{Format: tile.TileFormat(format)}
-	case "pbf":
+	case "pbf", "mvt":
 		return &vector.VectorOptions{Format: tile.TileFormat("mvt")}
 	}
 	return nil

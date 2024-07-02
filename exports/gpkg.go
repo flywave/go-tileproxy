@@ -70,13 +70,13 @@ func (a *GeoPackageExport) StoreTile(t *cache.Tile, srcGrid *geo.TileGrid) error
 		return err
 	}
 
-	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
-		var in bytes.Buffer
-		w := gzip.NewWriter(&in)
-		w.Write(data)
-		w.Close()
-		data = in.Bytes()
-	}
+	// if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
+	var in bytes.Buffer
+	w := gzip.NewWriter(&in)
+	w.Write(data)
+	w.Close()
+	data = in.Bytes()
+	// }
 
 	if err := a.db.StoreTile(a.Name, dc[2], dc[0], dc[1], data); err != nil {
 		return err

@@ -70,6 +70,10 @@ func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, p
 }
 
 func (t *TileWalker) Analytic() int {
+	cover := t.task.GetCoverage()
+	if cover == nil {
+		return 0
+	}
 	bbox := t.task.GetCoverage().GetExtent().BBoxFor(t.manager.GetGrid().Srs)
 	levels := t.task.GetLevels()
 	sort.Ints(levels)
@@ -132,6 +136,9 @@ func (t *TileWalker) analytic(cur_bbox vec2d.Rect, levels []int, currentLevel in
 }
 
 func (t *TileWalker) Walk() {
+	if t.task.GetCoverage() == nil {
+		return
+	}
 	if t.taskProgress != nil {
 		t.taskProgress.totalTiles = t.Analytic()
 	}

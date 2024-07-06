@@ -79,19 +79,22 @@ var (
 	mapboxService = setting.MapboxService{
 		Layers: []setting.MapboxTileLayer{
 			{
-				Source:   "mvt_cache",
-				Name:     "mvt_layer",
-				TileJSON: "mvt",
+				Source:    "mvt_cache",
+				Name:      "mvt_layer",
+				TileJSON:  "mvt",
+				ZoomRange: &[2]int{0, 20},
 			},
 			{
-				Source:   "raster_cache",
-				Name:     "raster_layer",
-				TileJSON: "raster",
+				Source:    "raster_cache",
+				Name:      "raster_layer",
+				TileJSON:  "raster",
+				ZoomRange: &[2]int{0, 20},
 			},
 			{
-				Source:   "rasterdem_cache",
-				Name:     "rasterdem_layer",
-				TileJSON: "rasterdem",
+				Source:    "rasterdem_cache",
+				Name:      "rasterdem_layer",
+				TileJSON:  "rasterdem",
+				ZoomRange: &[2]int{0, 20},
 			},
 		},
 	}

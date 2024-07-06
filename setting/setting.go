@@ -31,7 +31,53 @@ func CreateProxyServiceFromJSON(content []byte) *ProxyService {
 	if err := dec.Decode(set); err != nil {
 		return nil
 	}
+	set.Service = covertService(set.Service)
 	return set
+}
+
+func covertService(ser interface{}) interface{} {
+	if s, ok := ser.(map[string]interface{}); ok {
+		ty := s["type"].(string)
+		data, _ := json.Marshal(ser)
+		switch ty {
+		case string(CESIUM_SERVICE):
+			sv := &CesiumService{}
+			err := json.Unmarshal(data, sv)
+			if err != nil {
+				return ser
+			}
+			return sv
+		case string(MAPBOX_SERVICE):
+			sv := &MapboxService{}
+			err := json.Unmarshal(data, sv)
+			if err != nil {
+				return ser
+			}
+			return sv
+		case string(WMS_SERVICE):
+			sv := &WMSService{}
+			err := json.Unmarshal(data, sv)
+			if err != nil {
+				return ser
+			}
+			return sv
+		case string(WMTS_SERVICE):
+			sv := &WMTSService{}
+			err := json.Unmarshal(data, sv)
+			if err != nil {
+				return ser
+			}
+			return sv
+		case string(TMS_SERVICE):
+			sv := &TMSService{}
+			err := json.Unmarshal(data, sv)
+			if err != nil {
+				return ser
+			}
+			return sv
+		}
+	}
+	return ser
 }
 
 func (gs *ProxyService) ToJSON() []byte {

@@ -215,6 +215,8 @@ func NewMapboxTileProvider(opts *MapboxTileOptions) *MapboxTileProvider {
 	}
 	if opts.ZoomRange != nil {
 		ret.zoomRange = *opts.ZoomRange
+	} else {
+		ret.zoomRange = [2]int{0, 20}
 	}
 	return ret
 }

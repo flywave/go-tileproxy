@@ -7,15 +7,15 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
-	github.com/flywave/go-cog v0.0.0-20220209090615-63c2af73d539
-	github.com/flywave/go-geo v0.0.0-20220830054750-3c082ff4a2f2
+	github.com/flywave/go-cog v0.0.0-20250314092301-4673589220b8
+	github.com/flywave/go-geo v0.0.0-20250314091853-e818cb9de299
 	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
 	github.com/flywave/go-geom v0.0.0-20220210023939-86f84322e71f
 	github.com/flywave/go-geos v0.0.0-20220312005430-b3e54ee96ed7
 	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
 	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
-	github.com/flywave/go-mapbox v0.0.0-20240524013656-2edbdfa14e7f
+	github.com/flywave/go-mapbox v0.0.0-20250314092441-27874854ad1b
 	github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726
 	github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7
 	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
@@ -56,3 +56,5 @@ require (
 replace github.com/flywave/go-mbgeom => ../go-mbgeom
 
 replace github.com/flywave/go-geom => ../go-geom
+
+replace github.com/flywave/go-geo => ../go-geo

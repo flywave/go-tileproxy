@@ -9,7 +9,7 @@ import (
 
 func TestArcGISRequest(t *testing.T) {
 	param := http.Header{
-		"layers": []string{"foo"},
+		"LAYERS": []string{"foo"},
 	}
 	req := NewArcGISRequest(param, "/MapServer/export?map=foo")
 
@@ -47,7 +47,7 @@ func TestArcGISRequest(t *testing.T) {
 
 	ls := rp.GetLayers()
 
-	if len(ls) != 1 && ls[0] != "foo" {
+	if len(ls) != 1 || ls[0] != "foo" {
 		t.FailNow()
 	}
 
@@ -55,7 +55,7 @@ func TestArcGISRequest(t *testing.T) {
 
 	ls = rp.GetLayers()
 
-	if len(ls) != 2 && ls[1] != "bar" {
+	if len(ls) != 2 || ls[1] != "bar" {
 		t.FailNow()
 	}
 
@@ -68,7 +68,7 @@ func TestArcGISRequest(t *testing.T) {
 
 func TestArcGISIdentifyRequest(t *testing.T) {
 	param := http.Header{
-		"layers": []string{"foo"},
+		"LAYERS": []string{"foo"},
 	}
 	req := NewArcGISIdentifyRequest(param, "/MapServer/export?map=foo")
 
@@ -118,7 +118,7 @@ func TestArcGISIdentifyRequest(t *testing.T) {
 
 	ls := rp.GetLayers()
 
-	if len(ls) != 1 && ls[0] != "foo" {
+	if len(ls) != 1 || ls[0] != "foo" {
 		t.FailNow()
 	}
 
@@ -126,7 +126,7 @@ func TestArcGISIdentifyRequest(t *testing.T) {
 
 	ls = rp.GetLayers()
 
-	if len(ls) != 2 && ls[1] != "bar" {
+	if len(ls) != 2 || ls[1] != "bar" {
 		t.FailNow()
 	}
 

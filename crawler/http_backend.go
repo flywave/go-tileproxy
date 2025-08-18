@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -69,7 +68,6 @@ func (r *LimitRule) Init() error {
 }
 
 func (h *httpBackend) Init(jar http.CookieJar) {
-	rand.Seed(time.Now().UnixNano())
 	h.Client = &http.Client{
 		Jar:     jar,
 		Timeout: 10 * time.Second,
@@ -123,9 +121,9 @@ func (h *httpBackend) Cache(request *http.Request, bodySize int, checkHeadersFun
 	if err != nil || resp.StatusCode >= 500 {
 		return resp, err
 	}
-	if _, err := os.Stat(dir); err != nil {
-		if err := os.MkdirAll(dir, 0750); err != nil {
-			return resp, err
+	if _, cerr := os.Stat(dir); cerr != nil {
+		if eerr := os.MkdirAll(dir, 0750); eerr != nil {
+			return resp, eerr
 		}
 	}
 	file, err := os.Create(filename + "~")
@@ -180,7 +178,7 @@ func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc c
 		}
 		defer bodyReader.(*gzip.Reader).Close()
 	}
-	body, err := ioutil.ReadAll(bodyReader)
+	body, err := io.ReadAll(bodyReader)
 	if err != nil {
 		return nil, err
 	}

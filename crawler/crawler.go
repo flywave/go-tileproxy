@@ -423,8 +423,8 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 	if proxyURL, ok := req.Context().Value(ProxyURLKey).(string); ok {
 		request.ProxyURL = proxyURL
 	}
-	if err := c.handleOnError(response, err, request, ctx); err != nil {
-		return err
+	if cerr := c.handleOnError(response, err, request, ctx); cerr != nil {
+		return cerr
 	}
 	atomic.AddUint32(&c.responseCount, 1)
 	response.Ctx = ctx
@@ -467,7 +467,7 @@ func (c *Collector) isDomainAllowed(domain string) bool {
 			return false
 		}
 	}
-	if c.AllowedDomains == nil || len(c.AllowedDomains) == 0 {
+	if len(c.AllowedDomains) == 0 {
 		return true
 	}
 	for _, d2 := range c.AllowedDomains {

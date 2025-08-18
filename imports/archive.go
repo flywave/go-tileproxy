@@ -38,7 +38,7 @@ func NewArchiveImport(fileName string, opts tile.TileOptions) (*ArchiveImport, e
 }
 
 func (a *ArchiveImport) Open() error {
-	p, err := ioutil.TempDir(os.TempDir(), "import-")
+	p, err := os.MkdirTemp(os.TempDir(), "import-")
 
 	if err != nil {
 		return err

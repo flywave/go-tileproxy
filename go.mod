@@ -13,7 +13,7 @@ require (
 	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
 	github.com/flywave/go-geom v0.0.0-20250607125323-f685bf20f12c
 	github.com/flywave/go-geos v0.0.0-20220312005430-b3e54ee96ed7
-	github.com/flywave/go-gpkg v0.0.0-20211215020551-c4e5f7d53419
+	github.com/flywave/go-gpkg v0.0.0-20220505053116-3682bbf4ea48
 	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20250314092441-27874854ad1b
@@ -26,7 +26,7 @@ require (
 	github.com/flywave/go3d v0.0.0-20250314015505-bf0fda02e242
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc
-	github.com/flywave/webp v1.1.1
+	github.com/flywave/webp v1.1.2
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -84,3 +84,5 @@ replace github.com/flywave/go-geoid => ../go-geoid
 replace github.com/flywave/go-proj => ../go-proj
 
 replace github.com/flywave/go-xslt => ../go-xslt
+
+replace github.com/flywave/go-geos => ../go-geos

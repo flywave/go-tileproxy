@@ -40,7 +40,7 @@ func (l *LayerMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rec
 		layer_opts := layer_img.GetTileOptions().(*ImageOptions)
 		if ((layer_opts != nil && layer_opts.Transparent != nil && !*layer_opts.Transparent) ||
 			(layer_opts.Transparent != nil && *image_opts.Transparent)) &&
-			(size != nil || (size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1])) &&
+			(size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1]) &&
 			(layer_coverage != nil && !layer_coverage.IsClip()) && coverage != nil {
 			return layer_img
 		}
@@ -177,6 +177,9 @@ func splitImage(img image.Image, mode ImageMode) (cha [][]uint32, rect image.Rec
 		numcha = 4
 	case GRAY:
 		numcha = 1
+	case AUTO:
+		// Default to RGB for AUTO mode
+		numcha = 3
 	}
 	si := rect.Bounds().Dx() * rect.Bounds().Dy()
 	cha = make([][]uint32, numcha)
@@ -187,16 +190,17 @@ func splitImage(img image.Image, mode ImageMode) (cha [][]uint32, rect image.Rec
 		for x := 0; x < rect.Bounds().Dx(); x++ {
 			c := img.At(x, y)
 			r, g, b, a := c.RGBA()
-			if numcha == 4 {
+			switch numcha {
+			case 4:
 				cha[0][y*rect.Bounds().Dx()+x] = r
 				cha[1][y*rect.Bounds().Dx()+x] = g
 				cha[2][y*rect.Bounds().Dx()+x] = b
 				cha[3][y*rect.Bounds().Dx()+x] = a
-			} else if numcha == 3 {
+			case 3:
 				cha[0][y*rect.Bounds().Dx()+x] = r
 				cha[1][y*rect.Bounds().Dx()+x] = g
 				cha[2][y*rect.Bounds().Dx()+x] = b
-			} else if numcha == 1 {
+			case 1:
 				cha[0][y*rect.Bounds().Dx()+x] = r
 			}
 		}
@@ -208,10 +212,14 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 	var out image.Image
 	switch mode {
 	case RGB:
+		out = image.NewNRGBA(rect)
 	case RGBA:
 		out = image.NewNRGBA(rect)
 	case GRAY:
 		out = image.NewGray(rect)
+	case AUTO:
+		// Default to RGB for AUTO mode
+		out = image.NewNRGBA(rect)
 	}
 	for y := 0; y < rect.Bounds().Dy(); y++ {
 		for x := 0; x < rect.Bounds().Dx(); x++ {
@@ -226,7 +234,7 @@ func mergeImage(mode ImageMode, rect image.Rectangle, bands [][]uint32) image.Im
 					outt.Set(x, y, c)
 				}
 			case *image.Gray:
-				c := color.Gray{Y: uint8(bands[3][off])}
+				c := color.Gray{Y: uint8(bands[0][off])}
 				outt.Set(x, y, c)
 			}
 		}
@@ -256,22 +264,40 @@ func (l *BandMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rect
 			src_img_bands = append(src_img_bands, nil)
 			continue
 		}
-		bands, src_image_rect = splitImage(img, l.Mode)
+		// Handle AUTO mode for splitImage
+		split_mode := l.Mode
+		if split_mode == AUTO {
+			if image_opts.Transparent != nil && *image_opts.Transparent {
+				split_mode = RGBA
+			} else {
+				split_mode = RGB
+			}
+		}
+		bands, src_image_rect = splitImage(img, split_mode)
 		src_img_bands = append(src_img_bands, bands)
 	}
 
-	tmp_mode := l.Mode
+	tmp_mode := image_opts.Mode
+	// Handle AUTO mode by determining appropriate mode
+	if tmp_mode == AUTO {
+		if image_opts.Transparent != nil && *image_opts.Transparent {
+			tmp_mode = RGBA
+		} else {
+			tmp_mode = RGB
+		}
+	}
 
 	var result_bands [][]uint32
 
-	if tmp_mode == RGBA {
+	switch tmp_mode {
+	case RGBA:
 		result_bands = make([][]uint32, 4)
-	} else if tmp_mode == RGB {
+	case RGB:
 		result_bands = make([][]uint32, 3)
-	} else if tmp_mode == GRAY {
+	case GRAY:
 		result_bands = make([][]uint32, 1)
-	} else {
-		panic(fmt.Sprintf("unsupported destination mode %d", image_opts.Mode))
+	default:
+		panic(fmt.Sprintf("unsupported destination mode %d (original mode: %d, transparent: %v)", tmp_mode, image_opts.Mode, image_opts.Transparent))
 	}
 
 	for _, op := range l.Ops {
@@ -351,10 +377,14 @@ func ConcatLegends(legends []tile.Source, mode ImageMode, format tile.TileFormat
 	var img image.Image
 	switch mode {
 	case RGB:
+		img = image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
 	case RGBA:
 		img = image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
 	case GRAY:
 		img = image.NewGray(image.Rect(0, 0, int(size[0]), int(size[1])))
+	case AUTO:
+		// Default to RGB for AUTO mode
+		img = image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
 	}
 	for y := 0; y < int(size[0]); y++ {
 		for x := 0; x < int(size[1]); x++ {

@@ -57,6 +57,8 @@ func TestWKTMask(t *testing.T) {
 	}
 
 	imaging.Save(result.GetTile().(image.Image), "./test.png")
+
+	defer os.Remove("./test.png")
 }
 
 func TestGeosMask(t *testing.T) {

@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -178,7 +177,7 @@ func (s *ImageSource) makeImageBuf() error {
 		if err != nil {
 			return err
 		}
-		s.buf, err = ioutil.ReadAll(f)
+		s.buf, err = io.ReadAll(f)
 		if err != nil {
 			return err
 		}
@@ -384,9 +383,10 @@ func ImagingBlend(imIn1, imIn2 image.Image, alpha float64) image.Image {
 		return nil
 	}
 
-	if alpha == 0.0 {
+	switch alpha {
+	case 0.0:
 		return imaging.Clone(imIn1)
-	} else if alpha == 1.0 {
+	case 1.0:
 		return imaging.Clone(imIn2)
 	}
 

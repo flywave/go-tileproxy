@@ -137,17 +137,18 @@ func tile_location_arcgiscache(tile *Tile, cache_dir string, file_ext string, cr
 }
 
 func LocationPaths(layout string) (func(*Tile, string, string, bool) string, func(int, string) string, error) {
-	if layout == "tc" {
+	switch layout {
+	case "tc":
 		return tile_location_tc, level_location, nil
-	} else if layout == "mp" {
+	case "mp":
 		return tile_location_mp, level_location, nil
-	} else if layout == "tms" {
+	case "tms":
 		return tile_location_tms, level_location, nil
-	} else if layout == "reverse_tms" {
+	case "reverse_tms":
 		return tile_location_reverse_tms, nil, nil
-	} else if layout == "quadkey" {
+	case "quadkey":
 		return tile_location_quadkey, no_level_location, nil
-	} else if layout == "arcgis" {
+	case "arcgis":
 		return tile_location_arcgiscache, level_location_arcgiscache, nil
 	}
 	return nil, nil, fmt.Errorf("unknown directory_layout \"%s\"", layout)

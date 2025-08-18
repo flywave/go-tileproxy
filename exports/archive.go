@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -116,7 +115,7 @@ func (a *ArchiveExport) Close() error {
 	md := a.buildMetadata()
 	data, _ := json.Marshal(md)
 
-	p, err := ioutil.TempFile(os.TempDir(), "metadata-")
+	p, err := os.CreateTemp(os.TempDir(), "metadata-")
 
 	if err != nil {
 		return err
@@ -232,7 +231,7 @@ func (a *ArchiveExport) writeTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
 
 	name := a.TileLocation(&dstTile)
 
-	p, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*-%s", path.Base(name)))
+	p, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("*-%s", path.Base(name)))
 
 	if err != nil {
 		return err

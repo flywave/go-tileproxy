@@ -113,7 +113,13 @@ func (a *GeoPackageImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.T
 
 	if a.GetExtension() == "pbf" || a.GetExtension() == "mvt" {
 		gzipFile := bytes.NewBuffer(data)
-		gzipReader, _ := gzip.NewReader(gzipFile)
+		gzipReader, err := gzip.NewReader(gzipFile)
+		if err != nil {
+			// 如果数据不是gzip格式，直接使用原始数据
+			tile := cache.NewTile(t)
+			tile.Source = a.creater.Create(data, tile.Coord)
+			return tile, nil
+		}
 		defer gzipReader.Close()
 		data, err = ioutil.ReadAll(gzipReader)
 		if err != nil {

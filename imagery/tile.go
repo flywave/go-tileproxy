@@ -137,11 +137,30 @@ func imageTileOffset(srcbox vec2d.Rect, src_srs geo.Proj, src_size [2]uint32, ds
 }
 
 func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bbox vec2d.Rect, src_srs geo.Proj, req_bbox vec2d.Rect, req_srs geo.Proj, out_size [2]uint32, src_opts, dest_opts *ImageOptions) tile.Source {
+	// Handle AUTO mode for source and destination options
+	src_opts_copy := *src_opts
+	if src_opts_copy.Mode == AUTO {
+		if src_opts_copy.Transparent != nil && *src_opts_copy.Transparent {
+			src_opts_copy.Mode = RGBA
+		} else {
+			src_opts_copy.Mode = RGB
+		}
+	}
+	
+	dest_opts_copy := *dest_opts
+	if dest_opts_copy.Mode == AUTO {
+		if dest_opts_copy.Transparent != nil && *dest_opts_copy.Transparent {
+			dest_opts_copy.Mode = RGBA
+		} else {
+			dest_opts_copy.Mode = RGB
+		}
+	}
+
 	rr := NewTileMerger(tile_grid, tile_size)
 
-	result := rr.Merge(tiles, src_opts)
+	result := rr.Merge(tiles, &src_opts_copy)
 
-	sp := NewTileSplitter(result, dest_opts)
+	sp := NewTileSplitter(result, &dest_opts_copy)
 
 	off := imageTileOffset(src_bbox, src_srs, [2]uint32{uint32(tile_grid[0] * int(tile_size[0])), uint32(tile_grid[1] * int(tile_size[1]))}, req_bbox, req_srs)
 

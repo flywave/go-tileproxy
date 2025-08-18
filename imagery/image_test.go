@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -20,7 +19,7 @@ var (
 )
 
 func createTmpImageFile(size [2]uint32) string {
-	fd, err := ioutil.TempFile("", "test-*.png")
+	fd, err := os.CreateTemp("", "test-*.png")
 	if err != nil {
 		fmt.Println(err)
 	}

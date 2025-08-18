@@ -69,9 +69,10 @@ func (s *MapboxService) GetTileJSON(req request.Request) *Response {
 	}
 	tilelayer := layer.(*MapboxTileProvider)
 	var data []byte
-	if tilejson_request.FileName == "source" {
+	switch tilejson_request.FileName {
+	case "source":
 		data = tilelayer.RenderTileJson(tilejson_request)
-	} else if tilejson_request.FileName == "tilestats" {
+	case "tilestats":
 		data = tilelayer.RenderTileStats(tilejson_request)
 		if data == nil {
 			st := resource.NewTileStats(tilejson_request.LayerName)
@@ -104,8 +105,8 @@ func (s *MapboxService) GetTile(req request.Request) *Response {
 
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*MapboxTileProvider)
-		err, bbox := layer.GetTileBBox(tile_request, false, false)
-		if err != nil {
+		cerr, bbox := layer.GetTileBBox(tile_request, false, false)
+		if cerr != nil {
 			return nil
 		}
 		query_extent := &geo.MapExtent{Srs: tilelayer.GetSrs(), BBox: bbox}
@@ -170,22 +171,24 @@ type MapboxTileProvider struct {
 }
 
 func GetMapboxTileType(tp string) MapboxTileType {
-	if tp == "vector" {
+	switch tp {
+	case "vector":
 		return MapboxVector
-	} else if tp == "raster" {
+	case "raster":
 		return MapboxRaster
-	} else if tp == "raster-dem" {
+	case "raster-dem":
 		return MapboxRasterDem
 	}
 	return MapboxVector
 }
 
 func MapboxTileTypeToString(tp MapboxTileType) string {
-	if tp == MapboxVector {
+	switch tp {
+	case MapboxVector:
 		return "vector"
-	} else if tp == MapboxRaster {
+	case MapboxRaster:
 		return "raster"
-	} else if tp == MapboxRasterDem {
+	case MapboxRasterDem:
 		return "raster-dem"
 	}
 	return "vector"

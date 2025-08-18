@@ -17,11 +17,12 @@ const (
 )
 
 func ImageModeFromString(m string) ImageMode {
-	if m == "rgb" {
+	switch m {
+	case "rgb":
 		return RGB
-	} else if m == "rgba" {
+	case "rgba":
 		return RGBA
-	} else if m == "gray" {
+	case "gray":
 		return GRAY
 	}
 	return AUTO

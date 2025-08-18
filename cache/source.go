@@ -3,7 +3,6 @@ package cache
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -132,7 +131,7 @@ func EncodeTile(opts tile.TileOptions, tile [3]int, data tile.Source) ([]byte, e
 }
 
 func DecodeTile(opts tile.TileOptions, tile [3]int, reader io.Reader) (tile.Source, error) {
-	data, _ := ioutil.ReadAll(reader)
+	data, _ := io.ReadAll(reader)
 	switch opt := opts.(type) {
 	case *imagery.ImageOptions:
 		return imagery.CreateImageSourceFromBufer(data, opt), nil

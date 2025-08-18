@@ -94,6 +94,16 @@ func SavePBF(w io.Writer, coord [3]int, proto mvt.ProtoType, vts Vector) error {
 		conf.ExtentBool = false
 		data = append(data, mvt.WriteLayer(feats, conf)...)
 	}
+	
+	// For empty vector tiles, create a minimal valid MVT tile
+	// This ensures we always return a non-nil buffer for empty tiles
+	if len(data) == 0 {
+		// Return a minimal valid empty MVT tile structure
+		// This is a basic MVT tile with no layers but valid protobuf structure
+		emptyTile := []byte{0x1a, 0x00} // Minimal valid empty MVT tile
+		_, err := w.Write(emptyTile)
+		return err
+	}
 
 	_, err := w.Write(data)
 	return err

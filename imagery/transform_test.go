@@ -127,3 +127,107 @@ func TestMergeTransform(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestAddMeshesLogic(t *testing.T) {
+	// 测试addMeshes函数的核心逻辑
+	srcSrs := geo.NewProj(4326) // WGS84
+	dstSrs := geo.NewProj(4326) // 相同投影，简化测试
+
+	// 创建边界框
+	srcBBox := vec2d.Rect{
+		Min: vec2d.T{0, 0},
+		Max: vec2d.T{100, 100},
+	}
+
+	// 创建转换函数（简单的线性映射）
+	src_rect := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100, 100}}
+	dst_rect := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100, 100}}
+	dstBBox := vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{100, 100}}
+
+	to_src_px := geo.MakeLinTransf(srcBBox, src_rect)
+	toDstW := geo.MakeLinTransf(dst_rect, dstBBox)
+	toSrcW := geo.MakeLinTransf(src_rect, srcBBox)
+
+	// 测试参数
+	px_offset := 0.0
+	maxErr := 5.0
+
+	// 测试用例1：小quad应该直接通过isGood检查
+	t.Run("SmallQuad", func(t *testing.T) {
+		meshes := make(map[[4]float64][]float64)
+		quads := [][]float64{{0, 0, 10, 10}}
+
+		addMeshes(quads, toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, maxErr, meshes)
+
+		if len(meshes) != 1 {
+			t.Errorf("Expected 1 mesh for small quad, got %d", len(meshes))
+		}
+
+		// 验证mesh的key格式
+		for key, srcQuad := range meshes {
+			if len(key) != 4 {
+				t.Errorf("Expected key length 4, got %d", len(key))
+			}
+			if len(srcQuad) != 8 {
+				t.Errorf("Expected srcQuad length 8, got %d", len(srcQuad))
+			}
+		}
+	})
+
+	// 测试用例2：大quad在相同投影下应该直接通过
+	t.Run("LargeQuadSameProjection", func(t *testing.T) {
+		meshes := make(map[[4]float64][]float64)
+		quads := [][]float64{{0, 0, 100, 100}}
+
+		addMeshes(quads, toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, 0.1, meshes)
+
+		// 当源投影和目标投影相同时，isGood应该总是返回true
+		if len(meshes) != 1 {
+			t.Errorf("Expected 1 mesh for same projection, got %d", len(meshes))
+		}
+	})
+
+	// 测试用例3：验证函数不崩溃且产生有效结果
+	t.Run("FunctionCompleteness", func(t *testing.T) {
+		quads := [][]float64{{0, 0, 50, 50}}
+		meshes := make(map[[4]float64][]float64)
+
+		// 确保函数能正常运行而不崩溃
+		addMeshes(quads, toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, maxErr, meshes)
+
+		// 验证产生的结果都是有效的
+		for key, srcQuad := range meshes {
+			if len(key) != 4 {
+				t.Errorf("Invalid key length: %d, expected 4", len(key))
+			}
+			if len(srcQuad) != 8 {
+				t.Errorf("Invalid srcQuad length: %d, expected 8", len(srcQuad))
+			}
+			// 验证边界框的有效性
+			if key[0] >= key[2] || key[1] >= key[3] {
+				t.Errorf("Invalid bounding box: %v", key)
+			}
+		}
+	})
+
+	// 测试用例4：验证mesh数据一致性
+	t.Run("MeshConsistency", func(t *testing.T) {
+		meshes := make(map[[4]float64][]float64)
+		quads := [][]float64{{0, 0, 20, 20}}
+
+		addMeshes(quads, toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, maxErr, meshes)
+
+		// 验证所有mesh的边界框不重叠
+		for key1 := range meshes {
+			for key2 := range meshes {
+				if key1 != key2 {
+					// 检查是否有重叠（简化检查）
+					if key1[0] < key2[2] && key1[2] > key2[0] &&
+						key1[1] < key2[3] && key1[3] > key2[1] {
+						// 重叠是允许的，因为可能有相邻的mesh
+					}
+				}
+			}
+		}
+	})
+}

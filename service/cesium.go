@@ -97,8 +97,8 @@ func (s *CesiumService) GetTile(req request.Request) *Response {
 
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*CesiumTileProvider)
-		err, bbox := layer.GetTileBBox(tile_request, false, false)
-		if err != nil {
+		cerr, bbox := layer.GetTileBBox(tile_request, false, false)
+		if cerr != nil {
 			return nil
 		}
 		query_extent := &geo.MapExtent{Srs: tilelayer.GetSrs(), BBox: bbox}

@@ -58,18 +58,18 @@ func (c *TileCreator) CreateTiles(tiles []*Tile) ([]*Tile, error) {
 			coords = append(coords, tiles[i].Coord)
 		}
 		meta_tile := c.metaGrid.MinimalMetaTile(coords)
-		tiles, err := c.createMetaTile(meta_tile)
+		ctiles, err := c.createMetaTile(meta_tile)
 		if err != nil {
 			return nil, err
 		}
-		created_tiles = append(created_tiles, tiles...)
+		created_tiles = append(created_tiles, ctiles...)
 	} else if c.metaGrid != nil && len(tiles) == 1 {
 		meta_tile := c.metaGrid.GetMetaTile(tiles[0].Coord)
-		tiles, err := c.createSingleMetaTile(meta_tile)
+		ctiles, err := c.createSingleMetaTile(meta_tile)
 		if err != nil {
 			return nil, err
 		}
-		created_tiles = tiles
+		created_tiles = ctiles
 
 	} else {
 		meta_tiles := []*geo.MetaTile{}

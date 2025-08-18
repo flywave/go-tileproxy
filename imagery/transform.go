@@ -138,13 +138,13 @@ func isGood(quad, srcQuad []float64, toDstW func([]float64) []float64, toSrcW fu
 
 func addMeshes(quads [][]float64, toDstW func([]float64) []float64, to_src_px func([]float64) []float64, toSrcW func([]float64) []float64, srcSrs geo.Proj, dstSrs geo.Proj, px_offset float64, maxErr float64, meshes map[[4]float64][]float64) {
 	for _, quad := range quads {
-		quad, srcQuad := dstQuadToSrc(quad, toDstW, to_src_px, srcSrs, dstSrs, px_offset)
-		key := [4]float64{quad[0], quad[1], quad[2], quad[3]}
-		if isGood(quad, srcQuad, toDstW, toSrcW, srcSrs, dstSrs, maxErr) {
+		transformedQuad, srcQuad := dstQuadToSrc(quad, toDstW, to_src_px, srcSrs, dstSrs, px_offset)
+		key := [4]float64{transformedQuad[0], transformedQuad[1], transformedQuad[2], transformedQuad[3]}
+		if isGood(transformedQuad, srcQuad, toDstW, toSrcW, srcSrs, dstSrs, maxErr) {
 			meshes[key] = srcQuad
-		} else {
-			addMeshes(divideQuad(quad), toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, maxErr, meshes)
+			continue
 		}
+		addMeshes(divideQuad(transformedQuad), toDstW, to_src_px, toSrcW, srcSrs, dstSrs, px_offset, maxErr, meshes)
 	}
 }
 

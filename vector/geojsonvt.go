@@ -76,7 +76,11 @@ func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc Vector) err
 		_, err := w.Write([]byte(json))
 		return err
 	}
-	return nil
+	
+	// For empty vector tiles, return valid empty GeoJSON
+	emptyGeoJSON := `{}`
+	_, err := w.Write([]byte(emptyGeoJSON))
+	return err
 }
 
 func project(line [][]int16, x0 float64, y0 float64, size float64) [][]float64 {

@@ -75,6 +75,7 @@ func TestTileManager(t *testing.T) {
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "quadkey", ccreater)
+	defer os.RemoveAll("./test_cache")
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -138,7 +139,6 @@ func TestTileManager(t *testing.T) {
 		t.FailNow()
 	}
 
-	os.RemoveAll("./test_cache")
 }
 
 func TestTileManagerMinimalMetaRequests(t *testing.T) {
@@ -158,6 +158,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "quadkey", ccreater)
+	defer os.RemoveAll("./test_cache")
 
 	param := http.Header{
 		"layers": []string{"foo"},
@@ -194,8 +195,6 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 	if tiles == nil || err != nil {
 		t.FailNow()
 	}
-
-	os.RemoveAll("./test_cache")
 }
 
 type requestInfo struct {
@@ -230,6 +229,7 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "quadkey", ccreater)
+	defer os.RemoveAll("./test_cache")
 
 	locker := &DummyTileLocker{}
 
@@ -260,8 +260,6 @@ func TestTileManagerMultipleSources(t *testing.T) {
 	if tiles == nil || err != nil {
 		t.FailNow()
 	}
-
-	os.RemoveAll("./test_cache")
 }
 
 func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
@@ -273,6 +271,7 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "quadkey", ccreater)
+	defer os.RemoveAll("./test_cache")
 
 	locker := &DummyTileLocker{}
 
@@ -303,8 +302,6 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 	if tiles == nil || err != nil {
 		t.FailNow()
 	}
-
-	os.RemoveAll("./test_cache")
 }
 
 func TestTileManagerBulkMetaTiles(t *testing.T) {
@@ -316,6 +313,7 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	ccreater := &mockImageSourceCreater{imageopts: imageopts}
 
 	c := NewLocalCache("./test_cache", "quadkey", ccreater)
+	defer os.RemoveAll("./test_cache")
 
 	locker := &DummyTileLocker{}
 
@@ -346,6 +344,4 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 	if tiles == nil || err != nil {
 		t.FailNow()
 	}
-
-	os.RemoveAll("./test_cache")
 }

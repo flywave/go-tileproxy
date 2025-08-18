@@ -2,9 +2,9 @@ package crawler
 
 import (
 	"fmt"
-	"io/ioutil"
 	"mime"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -19,7 +19,7 @@ type Response struct {
 }
 
 func (r *Response) Save(fileName string) error {
-	return ioutil.WriteFile(fileName, r.Body, 0644)
+	return os.WriteFile(fileName, r.Body, 0644)
 }
 
 func (r *Response) FileName() string {

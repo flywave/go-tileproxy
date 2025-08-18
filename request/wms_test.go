@@ -11,7 +11,7 @@ import (
 
 func TestWMSMapRequest(t *testing.T) {
 	param := http.Header{
-		"layers": []string{"foo"},
+		"LAYERS": []string{"foo"},
 	}
 	req := NewWMSMapRequest(param, "/service?map=foo", false, nil, false)
 
@@ -29,7 +29,7 @@ func TestWMSMapRequest(t *testing.T) {
 
 	ls := rp.GetLayers()
 
-	if len(ls) != 1 && ls[0] != "foo" {
+	if len(ls) != 1 || ls[0] != "foo" {
 		t.FailNow()
 	}
 
@@ -37,7 +37,7 @@ func TestWMSMapRequest(t *testing.T) {
 
 	ls = rp.GetLayers()
 
-	if len(ls) != 2 && ls[1] != "bar" {
+	if len(ls) != 2 || ls[1] != "bar" {
 		t.FailNow()
 	}
 
@@ -87,7 +87,7 @@ func TestWMSMapRequest(t *testing.T) {
 
 func TestWMSLegendGraphicRequest(t *testing.T) {
 	param := http.Header{
-		"layer": []string{"foo"},
+		"LAYER": []string{"foo"},
 	}
 	req := NewWMSLegendGraphicRequest(param, "/service?map=foo", false, nil, false)
 	rp := req.GetRequestParams()
@@ -119,14 +119,14 @@ func TestWMSLegendGraphicRequest(t *testing.T) {
 
 func TestWMSFeatureInfoRequest(t *testing.T) {
 	param := http.Header{
-		"layers": []string{"foo"},
+		"LAYERS": []string{"foo"},
 	}
 	req := NewWMSFeatureInfoRequest(param, "/service?map=foo", false, nil, false)
 	rp := req.GetRequestParams()
 
 	ls := rp.GetLayers()
 
-	if len(ls) != 1 && ls[0] != "foo" {
+	if len(ls) != 1 || ls[0] != "foo" {
 		t.FailNow()
 	}
 
@@ -134,7 +134,7 @@ func TestWMSFeatureInfoRequest(t *testing.T) {
 
 	ls = rp.GetLayers()
 
-	if len(ls) != 2 && ls[1] != "bar" {
+	if len(ls) != 2 || ls[1] != "bar" {
 		t.FailNow()
 	}
 

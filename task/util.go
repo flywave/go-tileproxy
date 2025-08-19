@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"time"
@@ -174,7 +173,7 @@ func (s *LocalProgressStore) load() map[string]interface{} {
 			return nil
 		}
 		defer f.Close()
-		d, err := ioutil.ReadAll(f)
+		d, err := io.ReadAll(f)
 		if err != nil {
 			return nil
 		}

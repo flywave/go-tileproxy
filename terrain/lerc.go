@@ -3,7 +3,6 @@ package terrain
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 
 	"github.com/flywave/go-lerc"
 	"github.com/flywave/go-tileproxy/tile"
@@ -33,7 +32,7 @@ func NewLercRasterSource(mode BorderMode, maxZError float64, options tile.TileOp
 }
 
 func LoadLerc(r io.Reader) (interface{}, lerc.BlobInfo, error) {
-	src, err := ioutil.ReadAll(r)
+	src, err := io.ReadAll(r)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -109,16 +108,18 @@ func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
 		return nil, err
 	}
 	off := 0
-	if d.Mode == BORDER_UNILATERAL {
+	switch d.Mode {
+	case BORDER_UNILATERAL:
 		off = 1
-	} else if d.Mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		off = 2
 	}
 
 	row, col := int(blobInfo.Rows()), int(blobInfo.Cols())
 
 	tiledata := NewTileData([2]uint32{uint32(col - off), uint32(row - off)}, d.Mode)
-	if d.Mode == BORDER_UNILATERAL {
+	switch d.Mode {
+	case BORDER_UNILATERAL:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 {
@@ -134,7 +135,7 @@ func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
 				}
 			}
 		}
-	} else if d.Mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 && x < col-1 && y < row-1 {
@@ -158,7 +159,7 @@ func (d *LercIO) Decode(r io.Reader) (*TileData, error) {
 				}
 			}
 		}
-	} else {
+	default:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				tiledata.Set(x, y, getValue(vec, y, x, col))

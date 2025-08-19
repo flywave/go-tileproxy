@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"math"
 
 	"github.com/flywave/go-geom"
@@ -49,7 +48,7 @@ func (i *GeoJSONVTIO) Encode(data Vector) ([]byte, error) {
 }
 
 func LoadGeoJSONVT(r io.Reader, tile [3]int, opts *VectorOptions) Vector {
-	jsondata, _ := ioutil.ReadAll(r)
+	jsondata, _ := io.ReadAll(r)
 	geojson := geojsonvt.ParseFeatureCollections(string(jsondata))
 	ret := make(Vector)
 
@@ -76,7 +75,7 @@ func SaveGeoJSONVT(w io.Writer, tile [3]int, opts *VectorOptions, fc Vector) err
 		_, err := w.Write([]byte(json))
 		return err
 	}
-	
+
 	// For empty vector tiles, return valid empty GeoJSON
 	emptyGeoJSON := `{}`
 	_, err := w.Write([]byte(emptyGeoJSON))

@@ -13,7 +13,11 @@ func TestVectorTransformer(t *testing.T) {
 
 	tran := NewVectorTransformer(pgcj02, srs4326)
 
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)})
+	source := NewMVTSource(
+		[3]int{1686, 776, 11},
+		PBF_PTOTO_LUOKUANG,
+		&VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)},
+	)
 
 	source.SetSource("../data/tile.pbf")
 	tile := source.GetTile()
@@ -26,7 +30,4 @@ func TestVectorTransformer(t *testing.T) {
 		newfeats[k] = tran.Apply(f)
 	}
 
-	if newfeats == nil {
-		t.FailNow()
-	}
 }

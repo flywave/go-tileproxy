@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 
@@ -85,7 +84,7 @@ func (s *RasterSource) GetTileData() *TileData {
 			if err != nil {
 				return nil
 			}
-			s.buf, err = ioutil.ReadAll(f)
+			s.buf, err = io.ReadAll(f)
 			if err != nil {
 				return nil
 			}
@@ -193,6 +192,16 @@ func (s *RasterSource) GetTileOptions() tile.TileOptions {
 func (s *RasterSource) caclulatePixelSize(georef *geo.GeoReference) {
 	if s.pixelSize == nil {
 		s.pixelSize = []float64{0, 0}
+		data := s.GetTileData()
+		if data == nil {
+			// 如果没有数据，使用默认大小
+			s.pixelSize[0] = (georef.GetBBox().Max[0] - georef.GetBBox().Min[0]) / 256.0
+			s.pixelSize[1] = (georef.GetBBox().Max[1] - georef.GetBBox().Min[1]) / 256.0
+			return
+		}
+		if s.size == nil {
+			s.size = data.Size[:]
+		}
 		s.pixelSize[0] = (georef.GetBBox().Max[0] - georef.GetBBox().Min[0]) / float64(s.size[0])
 		s.pixelSize[1] = (georef.GetBBox().Max[1] - georef.GetBBox().Min[1]) / float64(s.size[1])
 	}
@@ -230,15 +239,29 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 		georef = s.georef
 	}
 
+	data := s.GetTileData()
+	if data == nil {
+		return 0
+	}
+
 	if s.pixelSize == nil {
 		s.caclulatePixelSize(georef)
 	}
 
 	opt := s.Options.(*RasterOptions)
-
 	noData := opt.Nodata
 
 	var yPixel, xPixel, xInterpolationAmount, yInterpolationAmount float64
+
+	// 确保size已初始化
+	if s.size == nil {
+		s.size = data.Size[:]
+	}
+
+	// 确保size不为0
+	if s.size[0] == 0 || s.size[1] == 0 {
+		return 0
+	}
 
 	dataEndLat := georef.GetOrigin()[1] + float64(s.pixelSize[1])*float64(s.size[1])
 
@@ -292,6 +315,9 @@ func (s *RasterSource) GetElevation(lon, lat float64, georef *geo.GeoReference, 
 
 func (s *RasterSource) getElevation(x, y int) float64 {
 	data := s.GetTileData()
+	if data == nil {
+		return 0
+	}
 	if x >= int(data.Size[0]) {
 		x = int(data.Size[0] - 1)
 	}
@@ -305,10 +331,7 @@ func (s *RasterSource) getElevation(x, y int) float64 {
 	if y < 0 {
 		y = 0
 	}
-	if data != nil {
-		return data.Get(x, y)
-	}
-	return 0
+	return data.Get(x, y)
 }
 
 func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
@@ -335,12 +358,22 @@ func (s *RasterSource) Resample(georef *geo.GeoReference, grid *Grid) error {
 		interpolator = &BilinearInterpolator{}
 	}
 
+	// 检查坐标数组是否为空
+	if len(grid.Coordinates) == 0 {
+		return errors.New("grid coordinates is empty")
+	}
+
 	for i := range grid.Coordinates {
+		if len(grid.Coordinates[i]) < 3 {
+			continue // 跳过不完整的坐标
+		}
 		coord := grid.Coordinates[i]
 		lon, lat := coord[0], coord[1]
 		if !grid.srs.Eq(georef.GetSrs()) {
 			d := grid.srs.TransformTo(georef.GetSrs(), []vec2d.T{{lon, lat}})
-			lon, lat = d[0][0], d[0][1]
+			if len(d) > 0 {
+				lon, lat = d[0][0], d[0][1]
+			}
 		}
 		grid.Coordinates[i][2] = s.GetElevation(lon, lat, georef, interpolator)
 	}

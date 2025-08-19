@@ -18,26 +18,47 @@ type WMTSCapabilities struct {
 }
 
 func formatResourceTemplate(layer WMTSTileLayer, tpl string, service *WMTSMetadata) string {
-	p := map[string]string{"Format": layer.GetFormat(), "Layer": layer.GetName()}
-
-	if strings.Contains(tpl, "{InfoFormat}") {
-		tpl = strings.Replace(tpl, "{InfoFormat}", "{{ .InfoFormat }}", 1)
+	p := map[string]string{
+		"Format":     layer.GetFormat(),
+		"Layer":      layer.GetName(),
+		"Style":      "default",
+		"TileMatrix": "{TileMatrix}",
+		"TileRow":    "{TileRow}",
+		"TileCol":    "{TileCol}",
+		"InfoFormat": "{InfoFormat}",
 	}
 
-	if strings.Contains(tpl, "{Layer}") {
-		tpl = strings.Replace(tpl, "{Layer}", "{{ .Layer }}", 1)
-	}
+	tpl = strings.Replace(tpl, "{InfoFormat}", "{{ .InfoFormat }}", 1)
+	tpl = strings.Replace(tpl, "{Layer}", "{{ .Layer }}", 1)
+	tpl = strings.Replace(tpl, "{Format}", "{{ .Format }}", 1)
+	tpl = strings.Replace(tpl, "{Style}", "{{ .Style }}", 1)
+	tpl = strings.Replace(tpl, "{TileMatrix}", "{{ .TileMatrix }}", 1)
+	tpl = strings.Replace(tpl, "{TileRow}", "{{ .TileRow }}", 1)
+	tpl = strings.Replace(tpl, "{TileCol}", "{{ .TileCol }}", 1)
 
-	tmpl, _ := template.New("url").Parse(tpl)
+	tmpl, err := template.New("url").Parse(tpl)
+	if err != nil {
+		return strings.TrimSuffix(service.URL, "/") + "/" + strings.TrimPrefix(tpl, "/")
+	}
 
 	out := &bytes.Buffer{}
+	if err := tmpl.Execute(out, p); err != nil {
+		return strings.TrimSuffix(service.URL, "/") + "/" + strings.TrimPrefix(tpl, "/")
+	}
 
-	_ = tmpl.Execute(out, p)
-
-	return service.URL + string(out.Bytes())
+	result := out.String()
+	if result == "" {
+		return strings.TrimSuffix(service.URL, "/")
+	}
+	
+	return strings.TrimSuffix(service.URL, "/") + "/" + strings.TrimPrefix(result, "/")
 }
 
 func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
+	if c.Service == nil {
+		return []byte("<Capabilities></Capabilities>")
+	}
+
 	resp := wmts100.GetCapabilitiesResponse{}
 	resp.Namespaces.Xmlns = "http://www.opengis.net/wmts/1.0"
 	resp.Namespaces.XmlnsOws = "http://www.opengis.net/ows/1.1"
@@ -68,47 +89,37 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	}
 
 	url := c.Service.URL
+	if url == "" {
+		url = "http://localhost"
+	}
 
 	if resp.OperationsMetadata == nil {
 		resp.OperationsMetadata = &wmts100.OperationsMetadata{}
 	}
 
-	op := wmts100.Operation{}
-	op.Name = "GetCapabilities"
-	get := &wmts100.Get{}
-	get.Href = url
-	get.Constraint.Name = "GetEncoding"
-	get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, "KVP")
-	op.DCP.HTTP.Get = get
-	resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
-
-	op = wmts100.Operation{}
-	op.Name = "GetTile"
-	get = &wmts100.Get{}
-	get.Href = url
-	get.Constraint.Name = "GetEncoding"
-	get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, "KVP")
-	op.DCP.HTTP.Get = get
-	resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
-
-	op = wmts100.Operation{}
-	op.Name = "GetFeatureInfo"
-	get = &wmts100.Get{}
-	get.Href = url
-	get.Constraint.Name = "GetEncoding"
-	get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, "KVP")
-	op.DCP.HTTP.Get = get
-	resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
+	operations := []string{"GetCapabilities", "GetTile", "GetFeatureInfo"}
+	for _, opName := range operations {
+		op := wmts100.Operation{}
+		op.Name = opName
+		get := &wmts100.Get{}
+		get.Href = url
+		get.Constraint.Name = "GetEncoding"
+		get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, "KVP")
+		op.DCP.HTTP.Get = get
+		resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
+	}
 
 	contents := &resp.Contents
 	for _, l := range c.Layers {
 		layer := wmts100.Layer{}
 		layer.Title = l.GetTitle()
+		layer.Abstract = l.GetName()
 
 		bbox := l.LLBBox()
-
-		layer.WGS84BoundingBox.LowerCorner = [2]float64{bbox.Min[0], bbox.Min[1]}
-		layer.WGS84BoundingBox.UpperCorner = [2]float64{bbox.Max[0], bbox.Max[1]}
+		if bbox.Min[0] != 0 || bbox.Min[1] != 0 || bbox.Max[0] != 0 || bbox.Max[1] != 0 {
+			layer.WGS84BoundingBox.LowerCorner = [2]float64{bbox.Min[0], bbox.Min[1]}
+			layer.WGS84BoundingBox.UpperCorner = [2]float64{bbox.Max[0], bbox.Max[1]}
+		}
 
 		layer.Identifier = l.GetName()
 		layer.Style = append(layer.Style, wmts100.Style{Identifier: "default"})
@@ -144,11 +155,14 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 		resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 	}
 
-	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"
+	resp.ServiceMetadataURL.Href = strings.TrimSuffix(url, "/") + "/1.0.0/WMTSCapabilities.xml"
 
-	si, _ := xml.MarshalIndent(resp, "", "")
+	output, err := xml.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		return []byte("<Capabilities></Capabilities>")
+	}
 
-	return si
+	return output
 }
 
 func newWMTSCapabilities(md *WMTSMetadata, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {

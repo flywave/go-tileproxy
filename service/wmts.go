@@ -147,8 +147,8 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 	limited_to := s.authorizeTileLayer(tp, tile_request, false)
 
 	decorateTile := func(image tile.Source) tile.Source {
-		err, bbox := tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
-		if err != nil {
+		cerr, bbox := tile_layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
+		if cerr != nil {
 			return nil
 		}
 		query_extent := &geo.MapExtent{Srs: tile_layer.GetGrid().Srs, BBox: bbox}

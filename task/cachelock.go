@@ -2,7 +2,6 @@ package task
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -29,7 +28,7 @@ type LocalCacheLocker struct {
 }
 
 func (l *LocalCacheLocker) getTempFileName(name string) string {
-	tmpFileFh, _ := ioutil.TempFile(os.TempDir(), fmt.Sprintf("cache-flock-%s-", name))
+	tmpFileFh, _ := os.CreateTemp(os.TempDir(), fmt.Sprintf("cache-flock-%s-", name))
 	tmpFileFh.Close()
 	tmpFile := tmpFileFh.Name()
 	os.Remove(tmpFile)

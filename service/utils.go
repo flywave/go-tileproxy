@@ -6,7 +6,7 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-func wms100Format(format string) string {
+func WMS100Format(format string) string {
 	sub_type := strings.Split(format, "/")[1]
 	sub_type = strings.ToUpper(sub_type)
 	if utils.ContainsString([]string{"PNG", "TIFF", "GIF", "JPEG"}, sub_type) {
@@ -16,14 +16,14 @@ func wms100Format(format string) string {
 	}
 }
 
-func wms100InfoFormat(format string) string {
+func WMS100InfoFormat(format string) string {
 	if format == "application/vnd.ogc.gml" || format == "text/xml" {
 		return "GML.1"
 	}
 	return "MIME"
 }
 
-func wms111MetaDataType(type_ string) string {
+func WMS111MetaDataType(type_ string) string {
 	if type_ == "ISO19115:2003" {
 		return "TC211"
 	}

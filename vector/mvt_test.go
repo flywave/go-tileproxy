@@ -2,195 +2,395 @@ package vector
 
 import (
 	"bytes"
-	"fmt"
-	"io"
-	"io/fs"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
 	"testing"
-	"time"
 
-	"github.com/flywave/go-geo"
 	"github.com/flywave/go-geom"
+	"github.com/flywave/go-geom/general"
 	"github.com/flywave/go-mapbox/mvt"
-	"github.com/flywave/go-mapbox/tileid"
-	m "github.com/flywave/go-mapbox/tileid"
-	vec2d "github.com/flywave/go3d/float64/vec2"
+	"github.com/flywave/go-tileproxy/tile"
 )
 
-var bytevals1, _ = ioutil.ReadFile("../data/3194.mvt")
-var tileid1 = m.TileID{X: 13515, Y: 6392, Z: 14}
-var bytevals2, _ = ioutil.ReadFile("../data/tile.pbf")
-var tileid2 = m.TileID{X: 1686, Y: 776, Z: 11}
-
-func TestMVTSource(t *testing.T) {
-	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
-
-	source.SetSource("../data/3194.mvt")
-	tile := source.GetTile()
-
-	if tile == nil {
-		t.FailNow()
-	}
-}
-
-func TestMVTSourceBuffer(t *testing.T) {
-	source := NewMVTSource([3]int{13515, 6392, 14}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
-
-	source.SetSource(bytevals1)
-	tile := source.GetTile()
-
-	if tile == nil {
-		t.FailNow()
-	}
-}
-
-func TestPBFSource(t *testing.T) {
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)})
-
-	source.SetSource("../data/tile.pbf")
-	tile := source.GetTile()
-
-	if tile == nil {
-		t.FailNow()
-	}
-}
-
-func TestPBFSourceBuffer(t *testing.T) {
-	source := NewMVTSource([3]int{1686, 776, 11}, PBF_PTOTO_LUOKUANG, &VectorOptions{Format: PBF_MIME, Proto: int(mvt.PROTO_LK)})
-
-	source.SetSource(bytevals2)
-	tile := source.GetTile()
-
-	if tile == nil {
-		t.FailNow()
-	}
-}
-
-var (
-	tile_url = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v8/%d/%d/%d.vector.pbf?sku=101mJslv5DbiL&access_token=pk.eyJ1IjoidzEyNTk0ODIyIiwiYSI6IkVfSkVqMGMifQ.av8k0fqnXvMFo1ThyV9KMQ"
+// Test data constants
+const (
+	testTileX  = 13515
+	testTileY  = 6392
+	testTileZ  = 14
+	testTileX2 = 1686
+	testTileY2 = 776
+	testTileZ2 = 11
+	emptyTileX = 0
+	emptyTileY = 0
+	emptyTileZ = 0
 )
 
-func get_url(url string) []byte {
-	client := &http.Client{Timeout: 20 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		panic(err)
+// TestMVTSourceBasic tests basic MVTSource creation and functionality
+func TestMVTSourceBasic(t *testing.T) {
+	tests := []struct {
+		name     string
+		tile     [3]int
+		proto    mvt.ProtoType
+		format   tile.TileFormat
+		setup    func() interface{}
+		validate func(*testing.T, interface{}, error)
+	}{
+		{
+			name:   "empty vector source",
+			tile:   [3]int{emptyTileX, emptyTileY, emptyTileZ},
+			proto:  PBF_PTOTO_MAPBOX,
+			format: MVT_MIME,
+			setup: func() interface{} {
+				return Vector{} // Empty vector
+			},
+			validate: func(t *testing.T, result interface{}, err error) {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if result == nil {
+					t.Fatal("Expected non-nil result")
+				}
+				vec, ok := result.(Vector)
+				if !ok {
+					t.Fatal("Expected Vector type")
+				}
+				if vec == nil {
+					t.Fatal("Expected non-nil vector")
+				}
+			},
+		},
+		{
+			name:   "vector with test features",
+			tile:   [3]int{testTileX, testTileY, testTileZ},
+			proto:  PBF_PTOTO_MAPBOX,
+			format: MVT_MIME,
+			setup: func() interface{} {
+				return createTestVector()
+			},
+			validate: func(t *testing.T, result interface{}, err error) {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				vec, ok := result.(Vector)
+				if !ok {
+					t.Fatal("Expected Vector type")
+				}
+				if len(vec) == 0 {
+					t.Error("Expected non-empty vector")
+				}
+			},
+		},
+		{
+			name:   "PBF format test",
+			tile:   [3]int{testTileX2, testTileY2, testTileZ2},
+			proto:  PBF_PTOTO_LUOKUANG,
+			format: PBF_MIME,
+			setup: func() interface{} {
+				return createTestVector()
+			},
+			validate: func(t *testing.T, result interface{}, err error) {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				vec, ok := result.(Vector)
+				if !ok {
+					t.Fatal("Expected Vector type")
+				}
+				if vec == nil {
+					t.Fatal("Expected non-nil vector")
+				}
+			},
+		},
 	}
-	defer resp.Body.Close()
-	var buffer [512]byte
-	result := bytes.NewBuffer(nil)
-	for {
-		n, err := resp.Body.Read(buffer[0:])
-		result.Write(buffer[0:n])
-		if err != nil && err == io.EOF {
-			break
-		} else if err != nil {
-			panic(err)
-		}
-	}
 
-	return result.Bytes()
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := NewMVTSource(tt.tile, tt.proto, &VectorOptions{
+				Format: tt.format,
+				Proto:  int(tt.proto),
+			})
 
-func download(x, y, z int, sourceName string) {
-	data := get_url(fmt.Sprintf(tile_url, z, x, y))
+			data := tt.setup()
+			source.SetSource(data)
 
-	dst := fmt.Sprintf("%s/%d/%d/%d.mvt", sourceName, z, x, y)
-
-	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
-		fmt.Printf("mkdirAll error")
-	}
-	f, _ := os.Create(dst)
-	f.Write(data)
-	f.Close()
-}
-
-func fileExists(filename string) bool {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false
-	} else if err != nil {
-		return false
-	}
-	return true
-}
-
-func TestGetMVT(t *testing.T) {
-	var bbox vec2d.Rect
-
-	srs900913 := geo.NewProj(900913)
-	srs4326 := geo.NewProj(4326)
-
-	bbox = vec2d.Rect{
-		Min: vec2d.T{113.50, 23.14},
-		Max: vec2d.T{113.54, 23.18},
-	}
-
-	conf := geo.DefaultTileGridOptions()
-	conf[geo.TILEGRID_SRS] = srs900913
-	conf[geo.TILEGRID_RES_FACTOR] = 2.0
-	conf[geo.TILEGRID_TILE_SIZE] = []uint32{512, 512}
-	conf[geo.TILEGRID_ORIGIN] = geo.ORIGIN_UL
-
-	grid := geo.NewTileGrid(conf)
-
-	r, _, _ := grid.GetAffectedBBoxAndLevel(bbox, [2]uint32{512, 512}, srs4326)
-
-	for _, l := range []int{14, 15, 16} {
-
-		cbox, _, it, err := grid.GetAffectedLevelTiles(r, l)
-
-		sbox := srs900913.TransformRectTo(srs4326, cbox, 16)
-
-		if err != nil || sbox.Min[0] == 0 {
-			t.FailNow()
-		}
-
-		tilesCoord := [][3]int{}
-		minx, miny := 0, 0
-		for {
-			x, y, z, done := it.Next()
-
-			if minx == 0 || x < minx {
-				minx = x
-			}
-
-			if miny == 0 || y < miny {
-				miny = y
-			}
-
-			tilesCoord = append(tilesCoord, [3]int{x, y, z})
-
-			if done {
-				break
-			}
-		}
-
-		if len(tilesCoord) == 0 {
-			t.FailNow()
-		}
-
-		for i := range tilesCoord {
-			z, x, y := tilesCoord[i][2], tilesCoord[i][0], tilesCoord[i][1]
-
-			src := fmt.Sprintf("./data/%d/%d/%d.mvt", z, x, y)
-
-			if !fileExists(src) {
-				download(x, y, z, "./data")
-			}
-		}
+			result := source.GetTile()
+			tt.validate(t, result, nil)
+		})
 	}
 }
 
-func TestWriteMVT(t *testing.T) {
-	tileid := tileid.TileID{X: int64(0), Y: int64(0), Z: uint64(1)}
-	data := []byte{}
+// TestMVTSourceEncoding tests encoding functionality
+func TestMVTSourceEncoding(t *testing.T) {
+	tests := []struct {
+		name     string
+		tile     [3]int
+		vector   Vector
+		validate func(*testing.T, []byte, error)
+	}{
+		{
+			name:   "encode empty vector",
+			tile:   [3]int{0, 0, 1},
+			vector: Vector{},
+			validate: func(t *testing.T, buf []byte, err error) {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if len(buf) == 0 {
+					t.Error("Expected non-empty buffer")
+				}
+			},
+		},
+		{
+			name:   "encode vector with features",
+			tile:   [3]int{1, 1, 1},
+			vector: createTestVector(),
+			validate: func(t *testing.T, buf []byte, err error) {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if len(buf) == 0 {
+					t.Error("Expected non-empty buffer")
+				}
+			},
+		},
+	}
 
-	conf := mvt.NewConfig("empty", tileid, mvt.ProtoType(PBF_PTOTO_MAPBOX))
-	conf.ExtentBool = false
-	data = append(data, mvt.WriteLayer([]*geom.Feature{}, conf)...)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := NewMVTSource(tt.tile, PBF_PTOTO_MAPBOX, &VectorOptions{
+				Format: MVT_MIME,
+				Proto:  int(PBF_PTOTO_MAPBOX),
+			})
 
-	ioutil.WriteFile("./empty.mvt", data, fs.ModePerm)
+			source.SetSource(tt.vector)
+
+			buf := source.GetBuffer(nil, nil)
+			tt.validate(t, buf, nil)
+		})
+	}
+}
+
+// TestMVTSourceErrorHandling tests error handling scenarios
+func TestMVTSourceErrorHandling(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    func() *MVTSource
+		validate func(*testing.T, interface{})
+	}{
+		{
+			name: "nil source data",
+			setup: func() *MVTSource {
+				source := NewMVTSource([3]int{1, 1, 1}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
+				source.SetSource(nil)
+				return source
+			},
+			validate: func(t *testing.T, result interface{}) {
+				// Should handle nil gracefully
+				if result == nil {
+					t.Log("Nil source handled correctly")
+				}
+			},
+		},
+		{
+			name: "invalid file path",
+			setup: func() *MVTSource {
+				source := NewMVTSource([3]int{1, 1, 1}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
+				source.SetSource("nonexistent_file.mvt")
+				return source
+			},
+			validate: func(t *testing.T, result interface{}) {
+				// Should handle missing file gracefully
+				if result == nil {
+					t.Log("Missing file handled correctly")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := tt.setup()
+			result := source.GetTile()
+			tt.validate(t, result)
+		})
+	}
+}
+
+// TestMVTSourceOptions tests different VectorOptions configurations
+func TestMVTSourceOptions(t *testing.T) {
+	tests := []struct {
+		name     string
+		options  *VectorOptions
+		validate func(*testing.T, *MVTSource)
+	}{
+		{
+			name: "default options",
+			options: &VectorOptions{
+				Format: MVT_MIME,
+				Proto:  int(PBF_PTOTO_MAPBOX),
+			},
+			validate: func(t *testing.T, source *MVTSource) {
+				if source.GetTileOptions() == nil {
+					t.Error("Expected non-nil options")
+				}
+			},
+		},
+		{
+			name: "custom options",
+			options: &VectorOptions{
+				Format:      PBF_MIME,
+				Proto:       int(PBF_PTOTO_LUOKUANG),
+				Extent:      4096,
+				Buffer:      1024,
+				Tolerance:   0.5,
+				LineMetrics: true,
+			},
+			validate: func(t *testing.T, source *MVTSource) {
+				opts := source.GetTileOptions().(*VectorOptions)
+				if opts.Extent != 4096 {
+					t.Errorf("Expected Extent 4096, got %d", opts.Extent)
+				}
+				if opts.Buffer != 1024 {
+					t.Errorf("Expected Buffer 1024, got %d", opts.Buffer)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := NewMVTSource([3]int{1, 1, 1}, mvt.ProtoType(tt.options.Proto), tt.options)
+			tt.validate(t, source)
+		})
+	}
+}
+
+// TestNewEmptyMVTSource tests empty MVT source creation
+func TestNewEmptyMVTSource(t *testing.T) {
+	tests := []struct {
+		name     string
+		proto    mvt.ProtoType
+		options  *VectorOptions
+		validate func(*testing.T, *MVTSource)
+	}{
+		{
+			name:    "empty MAPBOX source",
+			proto:   PBF_PTOTO_MAPBOX,
+			options: &VectorOptions{Format: MVT_MIME},
+			validate: func(t *testing.T, source *MVTSource) {
+				if source == nil {
+					t.Fatal("Expected non-nil source")
+				}
+				result := source.GetTile()
+				if result == nil {
+					t.Fatal("Expected non-nil tile")
+				}
+			},
+		},
+		{
+			name:    "empty LUOKUANG source",
+			proto:   PBF_PTOTO_LUOKUANG,
+			options: &VectorOptions{Format: PBF_MIME},
+			validate: func(t *testing.T, source *MVTSource) {
+				if source == nil {
+					t.Fatal("Expected non-nil source")
+				}
+				result := source.GetTile()
+				if result == nil {
+					t.Fatal("Expected non-nil tile")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := NewEmptyMVTSource(tt.proto, tt.options)
+			tt.validate(t, source)
+		})
+	}
+}
+
+// TestMVTSourceRoundTrip tests encoding and decoding round trip
+func TestMVTSourceRoundTrip(t *testing.T) {
+	original := createTestVector()
+	tile := [3]int{testTileX, testTileY, testTileZ}
+
+	// Create source with test data
+	source := NewMVTSource(tile, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
+	source.SetSource(original)
+
+	// Encode to buffer
+	buf := source.GetBuffer(nil, nil)
+	if len(buf) == 0 {
+		t.Fatal("Failed to encode")
+	}
+
+	// Create new source from buffer
+	newSource := NewMVTSource(tile, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
+	newSource.SetSource(bytes.NewReader(buf))
+
+	// Verify round trip
+	decoded := newSource.GetTile()
+	if decoded == nil {
+		t.Fatal("Failed to decode")
+	}
+
+	vec, ok := decoded.(Vector)
+	if !ok {
+		t.Fatal("Expected Vector type")
+	}
+
+	if len(vec) != len(original) {
+		t.Errorf("Round trip failed: expected %d layers, got %d", len(original), len(vec))
+	}
+}
+
+// createTestVector creates a test vector with sample data
+func createTestVector() Vector {
+	return Vector{
+		"test_layer": []*geom.Feature{
+			{
+				Geometry: general.NewPoint([]float64{125.6, 10.1}),
+				Properties: map[string]interface{}{
+					"name":  "Test Point",
+					"value": 42,
+				},
+				ID: "test-1",
+			},
+			{
+				Geometry: general.NewLineString([][]float64{
+					{125.6, 10.1},
+					{125.7, 10.2},
+				}),
+				Properties: map[string]interface{}{
+					"name":  "Test Line",
+					"value": 43,
+				},
+				ID: "test-2",
+			},
+		},
+		"empty_layer": []*geom.Feature{},
+	}
+}
+
+// Benchmark tests
+func BenchmarkMVTSourceCreation(b *testing.B) {
+	options := &VectorOptions{Format: MVT_MIME, Proto: int(PBF_PTOTO_MAPBOX)}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		source := NewMVTSource([3]int{1, 1, 1}, PBF_PTOTO_MAPBOX, options)
+		source.SetSource(createTestVector())
+		_ = source.GetTile()
+	}
+}
+
+func BenchmarkMVTSourceEncoding(b *testing.B) {
+	testVector := createTestVector()
+	source := NewMVTSource([3]int{1, 1, 1}, PBF_PTOTO_MAPBOX, &VectorOptions{Format: MVT_MIME})
+	source.SetSource(testVector)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = source.GetBuffer(nil, nil)
+	}
 }

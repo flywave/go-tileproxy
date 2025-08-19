@@ -42,9 +42,10 @@ type Grid struct {
 
 func NewGrid(width, height int, mode BorderMode) *Grid {
 	off := 0
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		off = 1
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		off = 2
 	}
 	return &Grid{Width: width + off, Height: height + off, Border: mode, Count: width * height, Minimum: 15000, Maximum: -15000}
@@ -79,10 +80,11 @@ func CaclulateRasterGrid(width, height int, opts *RasterOptions, georef *geo.Geo
 	startY := 0
 	endX := width
 	endY := height
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		endX += 1
 		endY += 1
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		startX = -1
 		startY = -1
 		endX += 1
@@ -116,10 +118,11 @@ func CaclulateTerrainGrid(width, height int, opts *RasterOptions, georef *geo.Ge
 	startY := 0.0
 	endX := float64(width)
 	endY := float64(height)
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		endX += 1
 		endY += 1
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		startX -= 1
 		startY -= 1
 		endX += 1
@@ -178,7 +181,8 @@ func (h *Grid) Value(row, column int) float64 {
 
 func (h *Grid) getBBox(mode BorderMode) vec3d.Box {
 	row, col := h.Height, h.Width
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		r := vec3d.Box{Min: vec3d.MaxVal, Max: vec3d.MinVal}
 		for x := 1; x < col; x++ {
 			for y := 1; y < row; y++ {
@@ -186,7 +190,7 @@ func (h *Grid) getBBox(mode BorderMode) vec3d.Box {
 			}
 		}
 		return r
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		r := vec3d.Box{Min: vec3d.MaxVal, Max: vec3d.MinVal}
 		for x := 1; x < col-1; x++ {
 			for y := 1; y < row-1; y++ {
@@ -194,16 +198,17 @@ func (h *Grid) getBBox(mode BorderMode) vec3d.Box {
 			}
 		}
 		return r
-	} else {
+	default:
 		return h.GetBBox()
 	}
 }
 
 func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 	off := 0
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		off = 1
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		off = 2
 	}
 
@@ -217,7 +222,8 @@ func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 
 	row, col := h.Height, h.Width
 
-	if mode == BORDER_UNILATERAL {
+	switch mode {
+	case BORDER_UNILATERAL:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 {
@@ -233,7 +239,7 @@ func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 				}
 			}
 		}
-	} else if mode == BORDER_BILATERAL {
+	case BORDER_BILATERAL:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				if x > 0 && y > 0 && x < col-1 && y < row-1 {
@@ -257,7 +263,7 @@ func (h *Grid) GetTileDate(mode BorderMode) *TileData {
 				}
 			}
 		}
-	} else {
+	default:
 		for x := 0; x < col; x++ {
 			for y := 0; y < row; y++ {
 				tiledata.Set(x, y, h.Value(y, x))

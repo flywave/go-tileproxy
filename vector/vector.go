@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/flywave/go-geo"
@@ -120,7 +119,7 @@ func (s *VectorSource) GetTile() interface{} {
 			if err != nil {
 				return nil
 			}
-			s.buf, err = ioutil.ReadAll(f)
+			s.buf, err = io.ReadAll(f)
 			if err != nil {
 				return nil
 			}

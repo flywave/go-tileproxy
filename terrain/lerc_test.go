@@ -22,4 +22,6 @@ func TestLerc(t *testing.T) {
 	f, _ = os.Create("./data.atm")
 	f.Write(data)
 	f.Close()
+
+	defer os.Remove("./data.atm")
 }

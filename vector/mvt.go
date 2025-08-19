@@ -3,7 +3,6 @@ package vector
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 
 	"github.com/flywave/go-geom"
 	"github.com/flywave/go-mapbox/mvt"
@@ -68,7 +67,7 @@ func ConvertPBFToGeom(p Vector) *geom.FeatureCollection {
 
 func LoadPBF(r io.Reader, coord [3]int, proto mvt.ProtoType) Vector {
 	pbf := make(Vector)
-	pbfdata, _ := ioutil.ReadAll(r)
+	pbfdata, _ := io.ReadAll(r)
 	tileid := tileid.TileID{X: int64(coord[0]), Y: int64(coord[1]), Z: uint64(coord[2])}
 	tile, _ := mvt.NewTile(pbfdata, mvt.ProtoType(proto))
 
@@ -94,7 +93,7 @@ func SavePBF(w io.Writer, coord [3]int, proto mvt.ProtoType, vts Vector) error {
 		conf.ExtentBool = false
 		data = append(data, mvt.WriteLayer(feats, conf)...)
 	}
-	
+
 	// For empty vector tiles, create a minimal valid MVT tile
 	// This ensures we always return a non-nil buffer for empty tiles
 	if len(data) == 0 {

@@ -27,7 +27,7 @@ func (d *dimension) GetValue() []interface{} {
 }
 
 func (d *dimension) GetFirstValue() interface{} {
-	if d.values != nil && len(d.values) > 0 {
+	if len(d.values) > 0 {
 		return d.values[0]
 	}
 	return ""

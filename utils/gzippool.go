@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"sync"
 )
 
@@ -32,7 +31,7 @@ func NewGzipPool(n int) (*gzipPool, error) {
 }
 
 func (p *gzipPool) grow() error {
-	gz, err := gzip.NewWriterLevel(ioutil.Discard, p.gzipCompression)
+	gz, err := gzip.NewWriterLevel(io.Discard, p.gzipCompression)
 	if err != nil {
 		return fmt.Errorf("can't init gzip compression: %s", err)
 	}
@@ -65,7 +64,7 @@ func (p *gzipPool) Put(gz *gzip.Writer) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	gz.Reset(ioutil.Discard)
+	gz.Reset(io.Discard)
 
 	p.top = &gzipPoolEntry{gz: gz, next: p.top}
 }

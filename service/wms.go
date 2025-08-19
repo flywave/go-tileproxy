@@ -762,7 +762,9 @@ func NewWMSGroupLayer(opts *WMSGroupLayerOptions) *WMSGroupLayer {
 	ret := &WMSGroupLayer{WMSLayerBase: WMSLayerBase{name: opts.Name, title: opts.Title, metadata: opts.Metadata, isActive: is_active, layers: opts.Layers, hasLegend: has_legend, queryable: queryable}, this: opts.This}
 
 	all_layers := cloneLayers(opts.Layers)
-	all_layers[opts.This.GetName()] = opts.This
+	if opts.This != nil {
+		all_layers[opts.This.GetName()] = opts.This
+	}
 
 	ret.extent = mergeLayerExtents(all_layers)
 	ret.resRange = mergeLayerResRanges(all_layers)

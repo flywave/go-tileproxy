@@ -106,4 +106,5 @@ func TestRasterMerger(t *testing.T) {
 	f.Write(raw)
 	f.Close()
 
+	defer os.Remove("./smtd.webp")
 }

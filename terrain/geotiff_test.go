@@ -179,11 +179,15 @@ func TestGetGeotiff(t *testing.T) {
 	f.Write(raw)
 	f.Close()
 
+	defer os.Remove("./LAIYANG.webp")
+
 	rect := image.Rect(0, 0, int(tiledata.Size[0]), int(tiledata.Size[1]))
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
 	cog.WriteTile("./LAIYANG.tif", src, sbox, srs4326, tiledata.Size, nil)
+
+	defer os.Remove("./LAIYANG.tif")
 }
 
 func TestGeoTIFF(t *testing.T) {
@@ -249,4 +253,6 @@ func TestGeoTIFF(t *testing.T) {
 	if tiledata2 == nil {
 		t.FailNow()
 	}
+
+	defer os.Remove("./data.tiff")
 }

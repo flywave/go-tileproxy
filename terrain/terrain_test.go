@@ -144,6 +144,8 @@ func TestGeo(t *testing.T) {
 
 	cog.WriteTile("./test.tif", src, realbbox, srs4326, newSize, nil)
 
+	defer os.Remove("./test.tif")
+
 	topts := &RasterOptions{Format: tile.TileFormat("terrain"), MaxError: 2}
 
 	source, err := GenTerrainSource(smtd, topts)
@@ -155,10 +157,12 @@ func TestGeo(t *testing.T) {
 	f, _ := os.Create("./data.terrain")
 	f.Write(buff)
 	f.Close()
+	defer os.Remove("./data.terrain")
 
 	if t1 == nil && err != nil {
 		t.FailNow()
 	}
+
 }
 
 func TestGenTerrainSourceFromDem(t *testing.T) {
@@ -222,10 +226,12 @@ func TestGenTerrainSourceFromDem(t *testing.T) {
 	f, _ = os.Create("./data.terrain")
 	f.Write(buff)
 	f.Close()
+	defer os.Remove("./data.terrain")
 
 	if t1 == nil && err != nil {
 		t.FailNow()
 	}
+
 }
 
 func TestGenTerrainSourceFromLerc(t *testing.T) {
@@ -265,6 +271,7 @@ func TestGenTerrainSourceFromLerc(t *testing.T) {
 	f, _ = os.Create("./data.terrain")
 	f.Write(buff)
 	f.Close()
+	defer os.Remove("./data.terrain")
 
 	if t1 == nil && err != nil {
 		t.FailNow()

@@ -141,14 +141,19 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	service.Name = "WMS"
 	service.Title = c.service.Title
 	service.Abstract = c.service.Abstract
+
+	// 初始化KeywordList
 	if len(c.service.KeywordList) > 0 {
 		service.KeywordList = &wms130.Keywords{}
 		for i := range c.service.KeywordList {
 			service.KeywordList.Keyword = append(service.KeywordList.Keyword, c.service.KeywordList[i])
 		}
 	}
+
 	url := c.service.URL
 
+	// 初始化OnlineResource
+	service.OnlineResource = wms130.OnlineResource{}
 	if c.service.OnlineResource.Href != nil {
 		service.OnlineResource.Href = c.service.OnlineResource.Href
 	} else {
@@ -161,10 +166,14 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		service.OnlineResource.Xlink = c.service.OnlineResource.Xlink
 	}
 
+	// 初始化ContactInformation
 	if c.service.Contact != nil {
 		service.ContactInformation = *c.service.Contact
+	} else {
+		service.ContactInformation = wms130.ContactInformation{}
 	}
 
+	// 设置费用和约束
 	if c.service.Fees != nil {
 		service.Fees = *c.service.Fees
 	} else {
@@ -176,107 +185,178 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 		service.AccessConstraints = "none"
 	}
 
-	var max_output_size []int
+	// 初始化可选约束
+	service.OptionalConstraints = wms130.OptionalConstraints{}
 	if c.maxOutputPixels > 0 {
 		output_size := int(math.Sqrt(float64(c.maxOutputPixels)))
-		max_output_size = []int{output_size, output_size}
-	}
-
-	if max_output_size != nil {
-		service.OptionalConstraints.MaxWidth = max_output_size[0]
-		service.OptionalConstraints.MaxHeight = max_output_size[1]
+		service.OptionalConstraints.MaxWidth = output_size
+		service.OptionalConstraints.MaxHeight = output_size
 	}
 
 	capabilities := &cam.Capabilities.WMSCapabilities
 
+	// 初始化请求结构体
+	capabilities.Request = wms130.Request{}
+	capabilities.Request.GetCapabilities = wms130.RequestType{}
 	capabilities.Request.GetCapabilities.Format = []string{"text/xml"}
+	capabilities.Request.GetCapabilities.DCPType = &wms130.DCPType{}
+	capabilities.Request.GetCapabilities.DCPType.HTTP = struct {
+		Get  *wms130.Method `xml:"Get" yaml:"get"`
+		Post *wms130.Method `xml:"Post" yaml:"post"`
+	}{
+		Get:  &wms130.Method{},
+		Post: &wms130.Method{},
+	}
 	capabilities.Request.GetCapabilities.DCPType.HTTP.Get = &wms130.Method{}
+	capabilities.Request.GetCapabilities.DCPType.HTTP.Get.OnlineResource = wms130.OnlineResource{}
 	capabilities.Request.GetCapabilities.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
+	capabilities.Request.GetMap = wms130.RequestType{}
 	if len(c.imageFormats) > 0 {
 		capabilities.Request.GetMap.Format = c.imageFormats[:]
 	}
+	capabilities.Request.GetMap.DCPType = &wms130.DCPType{}
+	capabilities.Request.GetMap.DCPType.HTTP = struct {
+		Get  *wms130.Method `xml:"Get" yaml:"get"`
+		Post *wms130.Method `xml:"Post" yaml:"post"`
+	}{
+		Get:  &wms130.Method{},
+		Post: &wms130.Method{},
+	}
 	capabilities.Request.GetMap.DCPType.HTTP.Get = &wms130.Method{}
+	capabilities.Request.GetMap.DCPType.HTTP.Get.OnlineResource = wms130.OnlineResource{}
 	capabilities.Request.GetMap.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
 	if len(c.infoFormats) > 0 {
 		capabilities.Request.GetFeatureInfo = &wms130.RequestType{}
 		capabilities.Request.GetFeatureInfo.Format = c.infoFormats[:]
+	} else {
+		capabilities.Request.GetFeatureInfo = &wms130.RequestType{}
+	}
+	capabilities.Request.GetFeatureInfo.DCPType = &wms130.DCPType{}
+	capabilities.Request.GetFeatureInfo.DCPType.HTTP = struct {
+		Get  *wms130.Method `xml:"Get" yaml:"get"`
+		Post *wms130.Method `xml:"Post" yaml:"post"`
+	}{
+		Get:  &wms130.Method{},
+		Post: &wms130.Method{},
 	}
 	capabilities.Request.GetFeatureInfo.DCPType.HTTP.Get = &wms130.Method{}
+	capabilities.Request.GetFeatureInfo.DCPType.HTTP.Get.OnlineResource = wms130.OnlineResource{}
 	capabilities.Request.GetFeatureInfo.DCPType.HTTP.Get.OnlineResource.Xlink = &url
 
+	capabilities.Exception = wms130.ExceptionType{}
 	capabilities.Exception.Format = []string{"XML", "INIMAGE", "BLANK"}
 
 	if c.service.Extended != nil {
 		capabilities.ExtendedCapabilities = c.service.Extended
 	}
 
-	for _, l := range c.rootLayer.layers {
-		layer := &wms130.Layer{}
-		name := l.GetName()
-		layer.Name = &name
-		layer.Title = l.GetTitle()
-		layer.Queryable = geo.NewInt(1)
-		metadata := l.GetMetadata()
-
-		layer.Abstract = metadata.Abstract
-		layer.KeywordList = metadata.KeywordList
-
-		for i := range c.srs.Srs {
-			SrsCode := c.srs.Srs[i].GetSrsCode()
-			epsg_num := geo.GetEpsgNum(SrsCode)
-			crs := wms130.CRS{Code: epsg_num}
-			layer.CRS = append(layer.CRS, crs)
+	if c.rootLayer != nil {
+		// 收集所有要处理的图层
+		layersToProcess := []WMSLayer{}
+		
+		// 如果rootLayer有This字段，优先处理
+		if c.rootLayer.this != nil {
+			layersToProcess = append(layersToProcess, c.rootLayer.this)
 		}
-
-		bbox := c.layerLLBBox(l)
-		gbbox := &wms130.EXGeographicBoundingBox{}
-		gbbox.WestBoundLongitude = bbox.Min[0]
-		gbbox.EastBoundLongitude = bbox.Min[1]
-		gbbox.SouthBoundLatitude = bbox.Max[0]
-		gbbox.NorthBoundLatitude = bbox.Max[1]
-
-		layer.EXGeographicBoundingBox = gbbox
-
-		bbox1 := &wms130.LayerBoundingBox{}
-		bbox1.CRS = "CRS:84"
-		bbox1.Minx = bbox.Min[0]
-		bbox1.Miny = bbox.Min[1]
-		bbox1.Maxx = bbox.Max[0]
-		bbox1.Maxy = bbox.Max[1]
-
-		layer.BoundingBox = append(layer.BoundingBox, bbox1)
-
-		srsmap := c.layerSrsBBox(l, true)
-
-		for k := range srsmap {
-			bbox1 := &wms130.LayerBoundingBox{}
-			bbox1.CRS = k
-			bbox1.Minx = srsmap[k].Min[0]
-			bbox1.Miny = srsmap[k].Min[1]
-			bbox1.Maxx = srsmap[k].Max[0]
-			bbox1.Maxy = srsmap[k].Max[1]
-
-			layer.BoundingBox = append(layer.BoundingBox, bbox1)
+		
+		// 处理Layers映射中的图层
+		if c.rootLayer.layers != nil {
+			for _, l := range c.rootLayer.layers {
+				if l != nil {
+					// 避免重复添加this图层
+					if c.rootLayer.this == nil || l.GetName() != c.rootLayer.this.GetName() {
+						layersToProcess = append(layersToProcess, l)
+					}
+				}
+			}
 		}
-
-		if metadata != nil {
-			if metadata.AuthorityURL != nil {
-				layer.AuthorityURL = metadata.AuthorityURL
+		
+		// 处理所有收集到的图层
+		for _, l := range layersToProcess {
+			layer := wms130.Layer{}
+			name := l.GetName()
+			if name != "" {
+				layer.Name = &name
+			}
+			layer.Title = l.GetTitle()
+			layer.Queryable = geo.NewInt(1)
+			
+			metadata := l.GetMetadata()
+			if metadata != nil {
+				if metadata.Abstract != "" {
+					layer.Abstract = metadata.Abstract
+				}
+				if metadata.KeywordList != nil {
+					layer.KeywordList = metadata.KeywordList
+				}
 			}
 
-			if metadata.Identifier != nil {
-				layer.Identifier = metadata.Identifier
+			if c.srs != nil && len(c.srs.Srs) > 0 {
+				for i := range c.srs.Srs {
+					if c.srs.Srs[i] == nil {
+						continue
+					}
+					SrsCode := c.srs.Srs[i].GetSrsCode()
+					epsg_num := geo.GetEpsgNum(SrsCode)
+					if epsg_num > 0 {
+						crs := wms130.CRS{Code: epsg_num}
+						layer.CRS = append(layer.CRS, crs)
+					}
+				}
 			}
 
-			if len(metadata.MetadataURL) > 0 {
-				layer.MetadataURL = append(layer.MetadataURL, metadata.MetadataURL...)
+			bbox := c.layerLLBBox(l)
+			if len(bbox.Min) >= 2 && len(bbox.Max) >= 2 {
+				gbbox := &wms130.EXGeographicBoundingBox{}
+				gbbox.WestBoundLongitude = bbox.Min[0]
+				gbbox.EastBoundLongitude = bbox.Max[0]
+				gbbox.SouthBoundLatitude = bbox.Min[1]
+				gbbox.NorthBoundLatitude = bbox.Max[1]
+				layer.EXGeographicBoundingBox = gbbox
+
+				bbox1 := &wms130.LayerBoundingBox{}
+				bbox1.CRS = "CRS:84"
+				bbox1.Minx = bbox.Min[0]
+				bbox1.Miny = bbox.Min[1]
+				bbox1.Maxx = bbox.Max[0]
+				bbox1.Maxy = bbox.Max[1]
+				layer.BoundingBox = append(layer.BoundingBox, bbox1)
 			}
 
-			if len(metadata.Style) > 0 {
-				layer.Style = append(layer.Style, metadata.Style...)
+			srsmap := c.layerSrsBBox(l, true)
+			for k, v := range srsmap {
+				if len(v.Min) >= 2 && len(v.Max) >= 2 {
+					bbox1 := &wms130.LayerBoundingBox{}
+					bbox1.CRS = k
+					bbox1.Minx = v.Min[0]
+					bbox1.Miny = v.Min[1]
+					bbox1.Maxx = v.Max[0]
+					bbox1.Maxy = v.Max[1]
+					layer.BoundingBox = append(layer.BoundingBox, bbox1)
+				}
 			}
+
+			if metadata != nil {
+				if metadata.AuthorityURL != nil {
+					layer.AuthorityURL = metadata.AuthorityURL
+				}
+
+				if metadata.Identifier != nil {
+					layer.Identifier = metadata.Identifier
+				}
+
+				if len(metadata.MetadataURL) > 0 {
+					layer.MetadataURL = append(layer.MetadataURL, metadata.MetadataURL...)
+				}
+
+				if len(metadata.Style) > 0 {
+					layer.Style = append(layer.Style, metadata.Style...)
+				}
+			}
+
+			cam.Capabilities.Layer = append(cam.Capabilities.Layer, layer)
 		}
 	}
 

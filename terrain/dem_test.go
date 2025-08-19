@@ -45,4 +45,6 @@ func TestDem(t *testing.T) {
 	f, _ = os.Create("./data.webp")
 	f.Write(raw)
 	f.Close()
+
+	defer os.Remove("./data.webp")
 }

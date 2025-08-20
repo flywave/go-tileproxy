@@ -247,7 +247,7 @@ func (m *Context) determineCenter(bounds vec2d.Rect) vec2d.T {
 }
 
 func (m *Context) adjustCenter(center vec2d.T, srs geo.Proj, zoom int) vec2d.T {
-	if m.objects == nil || len(m.objects) == 0 {
+	if len(m.objects) == 0 {
 		return center
 	}
 
@@ -539,7 +539,7 @@ func (m *Context) renderLayer(gc *gg.Context, zoom int, trans *Transformer, prov
 						t.offx = xx * int(m.grid.TileSize[0])
 						t.offy = yy * int(m.grid.TileSize[1])
 						fetchedTiles <- t
-					} else if err != nil {
+					} else {
 						log.Printf("Error downloading tile file: %s (Ignored)", err)
 					}
 				}(&wg, coord, xx, yy)

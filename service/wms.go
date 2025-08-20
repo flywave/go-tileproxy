@@ -238,8 +238,6 @@ func (s *WMSService) authorizedLayers(_ string, layers []string, _ *geo.MapExten
 }
 
 func (s *WMSService) GetCapabilities(req request.Request) *Response {
-	map_request := req.(*request.WMSRequest)
-
 	service := s.serviceMetadata(req, s.Metadata)
 	root_layer := s.authorizedCapabilityLayers()
 
@@ -261,10 +259,13 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 
 	image_formats := []string{}
 	for k := range s.ImageFormats {
-		image_formats = append(info_formats, k)
+		image_formats = append(image_formats, k)
 	}
 
 	cap := newCapabilities(&service, root_layer, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
+
+	// 创建一个新的WMSRequest用于渲染
+	map_request := &request.WMSRequest{}
 	result := cap.render(map_request)
 
 	return NewResponse(result, 200, "application/xml")
@@ -398,10 +399,26 @@ func (s *WMSService) checkMapRequest(req request.Request) *RequestError {
 }
 
 func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError {
-	mapreq := req.(*request.WMSMapRequest)
-	errr := s.validateLayers(req)
-	if errr != nil {
-		return errr
+	var mapreq *request.WMSMapRequest
+	
+	// 根据请求类型获取MapRequest
+	switch v := req.(type) {
+	case *request.WMSFeatureInfoRequest:
+		// 从WMSFeatureInfoRequest创建WMSMapRequest
+		mapreq = &request.WMSMapRequest{
+			WMSRequest: request.WMSRequest{
+				BaseRequest: v.BaseRequest,
+			},
+		}
+	case *request.WMSMapRequest:
+		mapreq = v
+	default:
+		return NewRequestError("invalid request type for feature info", "", &WMS130ExceptionHandler{}, req, false, nil)
+	}
+	
+	err := s.validateLayers(req)
+	if err != nil {
+		return err
 	}
 
 	srss := []string{}
@@ -409,9 +426,9 @@ func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError 
 		srss = append(srss, s.GetSrsCode())
 	}
 
-	err := mapreq.ValidateSrs(srss)
-	if err != nil {
-		return NewRequestError(err.Error(), "", &WMS130ExceptionHandler{}, req, false, nil)
+	// 处理ValidateSrs返回的错误
+	if srsErr := mapreq.ValidateSrs(srss); srsErr != nil {
+		return NewRequestError(srsErr.Error(), "", &WMS130ExceptionHandler{}, req, false, nil)
 	}
 	return nil
 }
@@ -466,9 +483,19 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 }
 
 func (s *WMSService) serviceMetadata(tms_request request.Request, metadata *WMSMetadata) WMSMetadata {
-	req := tms_request.(*request.BaseRequest)
 	md := *metadata
-	md.URL = req.Http.URL.Host
+
+	// 安全地获取URL
+	if baseReq, ok := tms_request.(*request.BaseRequest); ok && baseReq.Http != nil && baseReq.Http.URL != nil {
+		md.URL = baseReq.Http.URL.Host
+	} else if wmsReq, ok := tms_request.(*request.WMSRequest); ok && wmsReq.Http != nil && wmsReq.Http.URL != nil {
+		md.URL = wmsReq.Http.URL.Host
+	} else if capReq, ok := tms_request.(*request.WMSCapabilitiesRequest); ok && capReq.Http != nil && capReq.Http.URL != nil {
+		md.URL = capReq.Http.URL.Host
+	} else {
+		md.URL = "localhost"
+	}
+
 	if s.RootLayer.hasLegend {
 		md.HasLegend = true
 	} else {

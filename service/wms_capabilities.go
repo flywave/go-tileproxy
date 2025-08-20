@@ -112,13 +112,14 @@ func limitSrsExtents(srs_extents map[string]*geo.MapExtent, supported_srs *geo.S
 	}
 
 	for srs := range srs_extents {
-		notin := true
+		in := false
 		for i := range supported_srs.Srs {
 			if supported_srs.Srs[i].GetSrsCode() == srs {
-				notin = false
+				in = true
+				break
 			}
 		}
-		if !notin {
+		if !in {
 			delete(srs_extents, srs)
 		}
 	}
@@ -145,9 +146,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	// 初始化KeywordList
 	if len(c.service.KeywordList) > 0 {
 		service.KeywordList = &wms130.Keywords{}
-		for i := range c.service.KeywordList {
-			service.KeywordList.Keyword = append(service.KeywordList.Keyword, c.service.KeywordList[i])
-		}
+		service.KeywordList.Keyword = append(service.KeywordList.Keyword, c.service.KeywordList...)
 	}
 
 	url := c.service.URL
@@ -255,12 +254,12 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	if c.rootLayer != nil {
 		// 收集所有要处理的图层
 		layersToProcess := []WMSLayer{}
-		
+
 		// 如果rootLayer有This字段，优先处理
 		if c.rootLayer.this != nil {
 			layersToProcess = append(layersToProcess, c.rootLayer.this)
 		}
-		
+
 		// 处理Layers映射中的图层
 		if c.rootLayer.layers != nil {
 			for _, l := range c.rootLayer.layers {
@@ -272,7 +271,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 				}
 			}
 		}
-		
+
 		// 处理所有收集到的图层
 		for _, l := range layersToProcess {
 			layer := wms130.Layer{}
@@ -282,7 +281,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 			}
 			layer.Title = l.GetTitle()
 			layer.Queryable = geo.NewInt(1)
-			
+
 			metadata := l.GetMetadata()
 			if metadata != nil {
 				if metadata.Abstract != "" {

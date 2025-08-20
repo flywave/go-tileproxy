@@ -189,6 +189,10 @@ func (r *Response) GetContentType() string {
 	return ""
 }
 
+func (r *Response) GetBuffer() []byte {
+	return r.response
+}
+
 func (r *Response) Write(w http.ResponseWriter) {
 	theader := w.Header()
 	for k, v := range r.headers {

@@ -132,3 +132,157 @@ func TestDirectMapLayer(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestMapLayerBasic(t *testing.T) {
+	// 测试MapLayer的基本功能
+	opts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
+	layer := NewMapLayer(opts)
+
+	if layer.GetResolutionRange() != nil {
+		t.Errorf("Expected nil resolution range for new MapLayer")
+	}
+
+	if layer.IsSupportMetaTiles() != false {
+		t.Errorf("Expected false for SupportMetaTiles by default")
+	}
+
+	if layer.GetCoverage() != nil {
+		t.Errorf("Expected nil coverage for new MapLayer")
+	}
+
+	if layer.GetExtent() != nil {
+		t.Errorf("Expected nil extent for new MapLayer")
+	}
+
+	if layer.GetOptions() != opts {
+		t.Errorf("Expected same options")
+	}
+
+	// 测试CheckResRange
+	query := &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{1, 1}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(4326)}
+	if err := layer.CheckResRange(query); err != nil {
+		t.Errorf("Expected no error when ResRange is nil")
+	}
+
+	// 测试CombinedLayer
+	other := &mockSource{}
+	combined := layer.CombinedLayer(other, query)
+	if combined != nil {
+		t.Errorf("Expected nil from MapLayer.CombinedLayer")
+	}
+}
+
+func TestLimitedLayer(t *testing.T) {
+	// 创建mock layer
+	mock := &mockSource{}
+	coverage := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, geo.NewProj(4326), false)
+	limited := &LimitedLayer{layer: mock, coverage: coverage}
+
+	// 测试基本功能 - 确保方法不panic
+	_ = limited.GetCoverage()
+	_ = limited.IsSupportMetaTiles()
+	_ = limited.GetResolutionRange()
+	_ = limited.GetExtent()
+	_ = limited.GetOptions()
+
+	// 测试CombinedLayer
+	otherMock := &mockSource{}
+	otherLimited := &LimitedLayer{layer: otherMock, coverage: coverage}
+	
+	// 测试CombinedLayer不panic
+	_ = limited.CombinedLayer(otherLimited, &MapQuery{})
+}
+
+func TestMergeLayerResRanges(t *testing.T) {
+	// 测试空切片
+	empty := MergeLayerResRanges([]Layer{})
+	if empty != nil {
+		t.Errorf("Expected nil for empty layer slice")
+	}
+
+	// 测试单个图层
+	single := &mockSource{}
+	_ = MergeLayerResRanges([]Layer{single})
+
+	// 测试多个图层
+	layer1 := &mockSource{}
+	layer2 := &mockSource{}
+	_ = MergeLayerResRanges([]Layer{layer1, layer2})
+}
+
+func TestMergeLayerExtents(t *testing.T) {
+	// 测试空切片
+	empty := MergeLayerExtents([]Layer{})
+	if empty == nil {
+		t.Errorf("Expected non-nil extent for empty layer slice")
+	}
+
+	// 测试单个图层
+	single := &mockSource{}
+	_ = MergeLayerExtents([]Layer{single})
+
+	// 测试多个图层
+	layer1 := &mockSource{}
+	layer2 := &mockSource{}
+	_ = MergeLayerExtents([]Layer{layer1, layer2})
+}
+
+// 测试接口实现
+func TestLayerInterface(t *testing.T) {
+	var _ Layer = (*MapLayer)(nil)
+	var _ Layer = (*LimitedLayer)(nil)
+	var _ Layer = (*ResolutionConditional)(nil)
+	var _ Layer = (*SRSConditional)(nil)
+	var _ Layer = (*DirectMapLayer)(nil)
+
+	// 测试mockSource实现Layer接口
+	var _ Layer = (*mockSource)(nil)
+	var _ Layer = (*mockRequestSource)(nil)
+}
+
+// 测试带ResRange的MapLayer
+func TestMapLayerWithResRange(t *testing.T) {
+	opts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
+	layer := NewMapLayer(opts)
+
+	// 设置分辨率范围
+	minRes := 1.0
+	maxRes := 100.0
+	resRange := geo.NewResolutionRange(&minRes, &maxRes)
+	layer.ResRange = resRange
+
+	// 测试分辨率检查
+	query := &MapQuery{BBox: vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{1000, 1000}}, Size: [2]uint32{100, 100}, Srs: geo.NewProj(3857)}
+
+	// 这里我们期望CheckResRange返回nil，因为实际的分辨率计算可能很复杂
+	// 主要测试的是方法调用不panic
+	_ = layer.CheckResRange(query)
+}
+
+// 测试带Extent的MapLayer
+func TestMapLayerWithExtent(t *testing.T) {
+	opts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
+	layer := NewMapLayer(opts)
+
+	// 设置范围
+	extent := &geo.MapExtent{BBox: vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}, Srs: geo.NewProj(4326)}
+	layer.Extent = extent
+
+	if layer.GetExtent() != extent {
+		t.Errorf("Expected same extent")
+	}
+}
+
+// 测试带Coverage的MapLayer
+func TestMapLayerWithCoverage(t *testing.T) {
+	opts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
+	layer := NewMapLayer(opts)
+
+	// 设置覆盖范围
+	coverage := geo.NewBBoxCoverage(vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}}, geo.NewProj(4326), false)
+	layer.Coverage = coverage
+
+	if layer.GetCoverage() != coverage {
+		t.Errorf("Expected same coverage")
+	}
+}

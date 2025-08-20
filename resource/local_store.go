@@ -2,7 +2,7 @@ package resource
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 
@@ -25,7 +25,7 @@ func (c *LocalStore) Save(r Resource) error {
 
 	data := r.GetData()
 
-	if err := ioutil.WriteFile(r.GetLocation(), data, 0777); err != nil {
+	if err := os.WriteFile(r.GetLocation(), data, 0777); err != nil {
 		return err
 	}
 
@@ -39,7 +39,7 @@ func (c *LocalStore) Load(r Resource) error {
 
 	if ok := utils.FileExists(r.GetLocation()); ok {
 		if f, err := os.Open(r.GetLocation()); err == nil {
-			bufs, e := ioutil.ReadAll(f)
+			bufs, e := io.ReadAll(f)
 			if e != nil {
 				return e
 			}

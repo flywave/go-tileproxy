@@ -86,9 +86,6 @@ func TestMapboxTileSource(t *testing.T) {
 		client := client.NewMapboxTileClient("https://api.mapbox.com/v4/mapbox.mapbox-streets-v8.json", "https://api.mapbox.com/tilestats/v1/mapbox/mapbox-streets-v8", "", "{token}", "access_token", ctx)
 		source := &MapboxTileSource{Grid: grid, Client: client, SourceCreater: creater}
 
-		if source == nil {
-			t.Fatal("MapboxTileSource should not be nil")
-		}
 		if source.Grid != grid {
 			t.Fatal("source.Grid should equal grid")
 		}

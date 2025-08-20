@@ -130,7 +130,11 @@ func (r *BaseRequest) init(param interface{}, url string, validate bool, ht *htt
 			r.Params = make(RequestParams)
 			r.Params.init(pr)
 		} else if pr, ok := param.(http.Header); ok {
-			r.Params = RequestParams(pr)
+			r.Params = make(RequestParams)
+			for k, v := range pr {
+				upkey := strings.ToUpper(k)
+				r.Params[upkey] = v
+			}
 		}
 	}
 	r.Url = url

@@ -91,26 +91,40 @@ func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMT
 }
 
 func (s *WMTSService) serviceMetadata(tms_request request.Request) WMTSMetadata {
-	req := tms_request.(*request.BaseRequest)
 	md := *s.Metadata
-	md.URL = req.Http.URL.Host
+	switch req := tms_request.(type) {
+	case *request.WMTS100CapabilitiesRequest:
+		md.URL = req.Http.URL.Host
+	case *request.WMTS100TileRequest:
+		md.URL = req.Http.URL.Host
+	case *request.WMTS100FeatureInfoRequest:
+		md.URL = req.Http.URL.Host
+	}
 	return md
 }
 
 func (s *WMTSService) GetCapabilities(req request.Request) *Response {
-	tile_request := req.(*request.WMTS100CapabilitiesRequest)
+	req_params, ok := req.(*request.WMTS100CapabilitiesRequest)
+	if !ok || req_params == nil {
+		resp := NewRequestError("invalid WMTS capabilities request", "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
 
-	service := s.serviceMetadata(tile_request)
+	service := s.serviceMetadata(req_params)
 	layers := s.authorizedTileLayers()
 
 	cap := newWMTSCapabilities(&service, layers, s.MatrixSets, s.InfoFormats)
-	result := cap.render(tile_request)
+	result := cap.render(req_params)
 
 	return NewResponse(result, 200, "application/xml")
 }
 
 func (s *WMTSService) GetTile(req request.Request) *Response {
-	tile_request := req.(*request.WMTS100TileRequest)
+	tile_request, ok := req.(*request.WMTS100TileRequest)
+	if !ok || tile_request == nil {
+		resp := NewRequestError("invalid WMTS tile request", "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
 	s.checkRequest(tile_request, nil)
 
 	params := request.NewWMTSTileRequestParams(tile_request.Params)
@@ -180,7 +194,11 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	infos := []resource.FeatureInfoDoc{}
-	info_request := req.(*request.WMTS100FeatureInfoRequest)
+	info_request, ok := req.(*request.WMTS100FeatureInfoRequest)
+	if !ok || info_request == nil {
+		resp := NewRequestError("invalid WMTS feature info request", "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
 
 	params := request.NewWMTSFeatureInfoRequestParams(info_request.Params)
 
@@ -480,6 +498,9 @@ func NewTileMatrixSet(grid *geo.TileGrid) *TileMatrixSet {
 
 func (s *TileMatrixSet) GetTileMatrices() []map[string]string {
 	ret := []map[string]string{}
+	if s.grid == nil {
+		return ret
+	}
 	for level, res := range s.grid.Resolutions {
 		m := make(map[string]string)
 		tile_coord := s.grid.OriginTile(level, geo.ORIGIN_UL)

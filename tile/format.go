@@ -22,11 +22,11 @@ var (
 
 type TileFormat string
 
-func (i *TileFormat) MimeType() string {
-	if strings.Contains(string(*i), "/") {
-		return string(*i)
+func (i TileFormat) MimeType() string {
+	if strings.Contains(string(i), "/") {
+		return string(i)
 	}
-	return mimeMaps[string(*i)]
+	return mimeMaps[string(i)]
 }
 
 func (i *TileFormat) Extension() string {

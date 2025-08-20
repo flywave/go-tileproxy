@@ -3,7 +3,7 @@ package imports
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 
@@ -29,7 +29,6 @@ type ArchiveImport struct {
 	coverage     geo.Coverage
 	creater      tile.SourceCreater
 	tileLocation func(*cache.Tile, string, string, bool) string
-	middlePath   string
 }
 
 func NewArchiveImport(fileName string, opts tile.TileOptions) (*ArchiveImport, error) {
@@ -73,7 +72,7 @@ func (a *ArchiveImport) Open() error {
 	}
 	defer mdf.Close()
 
-	mddata, err := ioutil.ReadAll(mdf)
+	mddata, err := io.ReadAll(mdf)
 	if err != nil {
 		return err
 	}
@@ -161,14 +160,28 @@ func (a *ArchiveImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile
 }
 
 func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error) {
-	var errs error
 	tiles := cache.NewTileCollection(nil)
+	var errs error
+	
 	for _, tc := range t {
-		if t, err := a.LoadTileCoord(tc, grid); err != nil {
-			errs = err
-		} else if t != nil {
-			tiles.SetItem(t)
+		if tile, err := a.LoadTileCoord(tc, grid); err != nil {
+			// 只记录错误，但不立即返回，允许其他瓦片继续加载
+			if errs == nil {
+				errs = err
+			}
+		} else if tile != nil {
+			tiles.SetItem(tile)
 		}
+	}
+	
+	// 如果有成功加载的瓦片，就不返回错误
+	if len(tiles.GetSlice()) > 0 {
+		return tiles, nil
+	}
+	
+	// 只有当所有瓦片都加载失败时才返回错误
+	if errs == nil {
+		errs = errors.New("no tiles were loaded")
 	}
 	return tiles, errs
 }

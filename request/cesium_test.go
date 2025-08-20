@@ -6,8 +6,6 @@ import (
 )
 
 var (
-	authUrl = "https://api.cesium.com/v1/assets/1/endpoint?access_token="
-
 	TEST_LAYERJSON    = "/1/layer.json"
 	TEST_TERRAIN_TILE = "/1/0/1/0.terrain?extensions=octvertexnormals-metadata&v=1.2.0"
 )

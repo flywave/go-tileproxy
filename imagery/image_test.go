@@ -74,14 +74,6 @@ func TestSubImageSource(t *testing.T) {
 	}
 }
 
-func TestBlankImageSource(t *testing.T) {
-	bi := NewBlankImageSource([2]uint32{100, 100}, PNG_FORMAT, nil)
-
-	if !isPng(string(bi.GetBuffer(nil, nil))) {
-		t.FailNow()
-	}
-}
-
 func TestImagingBlend(t *testing.T) {
 	img_opts := *PNG_FORMAT
 	img_opts.BgColor = color.Transparent

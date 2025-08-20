@@ -338,8 +338,8 @@ func (c *TileSource) FromJson(data []byte) error {
 		Options interface{} `json:"options,omitempty"`
 	}{}
 
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
+	if cerr := json.Unmarshal(data, &tmp); cerr != nil {
+		return cerr
 	}
 
 	opt, err := TileOptionUnmarshal(tmp.Options)

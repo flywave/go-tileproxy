@@ -38,7 +38,7 @@ func (d TextFeatureInfoDoc) Combine(docs []FeatureInfoDoc) FeatureInfoDoc {
 			docstrs = append(docstrs, d.ToString())
 		}
 	}
-	result := strings.Join(docstrs, "/n")
+	result := strings.Join(docstrs, "\n")
 	return NewTextFeatureInfoDoc(result)
 }
 

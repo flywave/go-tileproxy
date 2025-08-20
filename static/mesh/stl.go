@@ -1,7 +1,7 @@
 package mesh
 
 import (
-	_ "github.com/hschendel/stl"
+	_ "github.com/flywave/go-stl"
 )
 
 type StlWriter struct {

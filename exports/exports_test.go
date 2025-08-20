@@ -70,7 +70,7 @@ func TestMBTilesExport(t *testing.T) {
 	grid := geo.NewTileGrid(opts)
 	imageopts := &imagery.ImageOptions{Format: tile.TileFormat("png")}
 
-	filename := "./export.mbtils"
+	filename := "./export.mbtiles"
 
 	export, err := NewMBTilesExport(filename, grid, imageopts)
 
@@ -85,5 +85,5 @@ func TestMBTilesExport(t *testing.T) {
 
 	export.Close()
 
-	os.Remove("./export.mbtils")
+	os.Remove("./export.mbtiles")
 }

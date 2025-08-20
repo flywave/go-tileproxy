@@ -50,7 +50,7 @@ func formatResourceTemplate(layer WMTSTileLayer, tpl string, service *WMTSMetada
 	if result == "" {
 		return strings.TrimSuffix(service.URL, "/")
 	}
-	
+
 	return strings.TrimSuffix(service.URL, "/") + "/" + strings.TrimPrefix(result, "/")
 }
 
@@ -116,7 +116,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 		layer.Abstract = l.GetName()
 
 		bbox := l.LLBBox()
-		if bbox.Min[0] != 0 || bbox.Min[1] != 0 || bbox.Max[0] != 0 || bbox.Max[1] != 0 {
+		if bbox.Width() != 0 && bbox.Height() != 0 {
 			layer.WGS84BoundingBox.LowerCorner = [2]float64{bbox.Min[0], bbox.Min[1]}
 			layer.WGS84BoundingBox.UpperCorner = [2]float64{bbox.Max[0], bbox.Max[1]}
 		}
@@ -214,9 +214,10 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 		layer.Title = l.GetTitle()
 
 		bbox := l.LLBBox()
-
-		layer.WGS84BoundingBox.LowerCorner = [2]float64{bbox.Min[0], bbox.Min[1]}
-		layer.WGS84BoundingBox.UpperCorner = [2]float64{bbox.Max[0], bbox.Max[1]}
+		if bbox.Min[0] != 0 || bbox.Min[1] != 0 || bbox.Max[0] != 0 || bbox.Max[1] != 0 {
+			layer.WGS84BoundingBox.LowerCorner = [2]float64{bbox.Min[0], bbox.Min[1]}
+			layer.WGS84BoundingBox.UpperCorner = [2]float64{bbox.Max[0], bbox.Max[1]}
+		}
 
 		layer.Identifier = l.GetName()
 		layer.Style = append(layer.Style, wmts100.Style{Identifier: "default"})
@@ -229,6 +230,8 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 		for _, g := range l.GetGrids() {
 			layer.TileMatrixSetLink = append(layer.TileMatrixSetLink, wmts100.TileMatrixSetLink{TileMatrixSet: g.Name})
 		}
+
+		layer.ResourceURL = &wmts100.ResourceURL{}
 
 		layer.ResourceURL.Format = l.GetFormatMimeType()
 		layer.ResourceURL.ResourceType = "tile"
@@ -255,6 +258,8 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 		}
 		contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
 	}
+
+	resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 
 	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"
 

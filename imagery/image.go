@@ -321,6 +321,10 @@ func (s *BlankImageSource) GetImage() image.Image {
 	return s.image
 }
 
+func (s *BlankImageSource) GetTile() interface{} {
+	return s.GetImage()
+}
+
 func (s *BlankImageSource) GetBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {
 	if s.buf == nil {
 		var image_opts *ImageOptions

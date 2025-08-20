@@ -1,7 +1,7 @@
 package mesh
 
 import (
-	_ "github.com/qmuntal/gltf"
+	_ "github.com/flywave/gltf"
 )
 
 type GltfWriter struct {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
-	"io/ioutil"
+	"io"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -113,7 +113,7 @@ func (a *MBTilesImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile
 		return tile, nil
 	}
 	defer gzipReader.Close()
-	data, err = ioutil.ReadAll(gzipReader)
+	data, err = io.ReadAll(gzipReader)
 	if err != nil {
 		return nil, err
 	}

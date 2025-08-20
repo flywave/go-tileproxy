@@ -1,6 +1,6 @@
 module github.com/flywave/go-tileproxy
 
-go 1.23.0
+go 1.24
 
 toolchain go1.24.4
 
@@ -8,6 +8,7 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
+	github.com/flywave/gltf v0.20.4-0.20250726101904-8f7bf4ed58d3
 	github.com/flywave/go-cog v0.0.0-20250314092301-4673589220b8
 	github.com/flywave/go-geo v0.0.0-20250314091853-e818cb9de299
 	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
@@ -21,9 +22,10 @@ require (
 	github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7
 	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
 	github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21
+	github.com/flywave/go-stl v0.0.0-20250818070638-f2c3dee7ad76
 	github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
-	github.com/flywave/go3d v0.0.0-20250314015505-bf0fda02e242
+	github.com/flywave/go3d v0.0.0-20250816053852-aed5d825659f
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc
 	github.com/flywave/webp v1.1.2
@@ -31,13 +33,10 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/tiff v0.0.0-20161109161721-4b31f3041d9a
-	github.com/hpinc/go3mf v0.24.0
-	github.com/hschendel/stl v1.0.4
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/nlnwa/whatwg-url v0.1.0
-	github.com/qmuntal/gltf v0.20.3
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/image v0.28.0
 	golang.org/x/net v0.40.0
@@ -51,6 +50,7 @@ require (
 	github.com/devork/geom v0.0.5 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e // indirect
+	github.com/go-test/deep v1.0.7 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hhrutter/lzw v0.0.0-20190829144645-6f07a24e8650 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
@@ -64,7 +64,6 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.12 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/qmuntal/opc v0.7.11 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/willf/bitset v1.1.10 // indirect

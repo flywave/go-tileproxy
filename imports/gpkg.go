@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
-	"io/ioutil"
+	"io"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-gpkg"
@@ -121,7 +121,7 @@ func (a *GeoPackageImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.T
 			return tile, nil
 		}
 		defer gzipReader.Close()
-		data, err = ioutil.ReadAll(gzipReader)
+		data, err = io.ReadAll(gzipReader)
 		if err != nil {
 			return nil, err
 		}

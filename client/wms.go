@@ -32,11 +32,12 @@ func NewWMSClient(req *request.WMSMapRequest, accessToken *string, accessTokenNa
 
 func (c *WMSClient) Retrieve(query *layer.MapQuery, format *tile.TileFormat) []byte {
 	var requestMethod string
-	if c.HttpMethod == "POST" {
+	switch c.HttpMethod {
+	case "POST":
 		requestMethod = "POST"
-	} else if c.HttpMethod == "GET" {
+	case "GET":
 		requestMethod = "GET"
-	} else {
+	default:
 		if _, ok := c.RequestTemplate.GetParams().Get("sld_body"); ok {
 			requestMethod = "POST"
 		} else {

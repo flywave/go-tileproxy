@@ -11,7 +11,7 @@ import (
 )
 
 func TestWatermark(t *testing.T) {
-	imagery.SetFontPath("../images/fonts/")
+	imagery.SetFontPath("../fonts/")
 
 	tc := NewTile([3]int{0, 0, 0})
 	filter := NewWatermark("flywave.net", nil, nil, nil, nil)

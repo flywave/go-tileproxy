@@ -68,7 +68,7 @@ type mockSourceCreater struct {
 }
 
 func (c *mockSourceCreater) GetExtension() string {
-	return "mvt"
+	return "png"
 }
 
 func (c *mockSourceCreater) CreateEmpty(size [2]uint32, opts tile.TileOptions) tile.Source {
@@ -128,13 +128,14 @@ var (
 )
 
 func TestPath(t *testing.T) {
+	creater := &mockSourceCreater{}
 	for _, p := range paths {
-		cache := NewLocalCache("/tmp/foo", p.key, nil)
+		cache := NewLocalCache("/tmp/foo", p.key, creater)
 
 		abs, _ := filepath.Abs(cache.TileLocation(NewTile(p.coord), false))
 
 		if abs != p.path {
-			t.FailNow()
+			t.Errorf("Path mismatch for layout %s, coord %v: expected %s, got %s", p.key, p.coord, p.path, abs)
 		}
 	}
 }
@@ -164,8 +165,9 @@ var (
 )
 
 func TestLevelPath(t *testing.T) {
+	creater := &mockSourceCreater{}
 	for _, p := range levelPaths {
-		cache := NewLocalCache("/tmp/foo", p.key, nil)
+		cache := NewLocalCache("/tmp/foo", p.key, creater)
 
 		abs, _ := filepath.Abs(cache.LevelLocation(p.level))
 

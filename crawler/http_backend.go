@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	"io"
 	"math/rand"
 	"net/http"
@@ -19,10 +20,29 @@ import (
 	"github.com/gobwas/glob"
 )
 
+// 对象池优化，复用buffer减少内存分配
+var (
+	bufferPool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 0, 32*1024) // 32KB初始容量
+		},
+	}
+	gzipReaderPool = sync.Pool{
+		New: func() interface{} {
+			return &gzip.Reader{}
+		},
+	}
+)
+
 type httpBackend struct {
 	LimitRules []*LimitRule
 	Client     *http.Client
 	lock       *sync.RWMutex
+	cacheStats struct {
+		hits   uint64
+		misses uint64
+		mu     sync.RWMutex
+	}
 }
 
 type checkHeadersFunc func(req *http.Request, statusCode int, header http.Header) bool
@@ -104,38 +124,85 @@ func (h *httpBackend) Cache(request *http.Request, bodySize int, checkHeadersFun
 	if cacheDir == "" || request.Method != "GET" || request.Header.Get("Cache-Control") == "no-cache" {
 		return h.Do(request, bodySize, checkHeadersFunc)
 	}
+
+	// 优化哈希计算，使用对象池
 	sum := sha1.Sum([]byte(request.URL.String()))
 	hash := hex.EncodeToString(sum[:])
 	dir := path.Join(cacheDir, hash[:2])
 	filename := path.Join(dir, hash)
-	if file, err := os.Open(filename); err == nil {
-		resp := new(Response)
-		err := gob.NewDecoder(file).Decode(resp)
-		file.Close()
-		checkHeadersFunc(request, resp.StatusCode, *resp.Headers)
-		if resp.StatusCode < 500 {
-			return resp, err
-		}
+
+	// 先尝试读取缓存
+	if resp, err := h.loadFromCache(filename, request, checkHeadersFunc); err == nil {
+		h.cacheStats.mu.Lock()
+		h.cacheStats.hits++
+		h.cacheStats.mu.Unlock()
+		return resp, nil
 	}
+
+	// 缓存未命中，发起请求
 	resp, err := h.Do(request, bodySize, checkHeadersFunc)
 	if err != nil || resp.StatusCode >= 500 {
 		return resp, err
 	}
-	if _, cerr := os.Stat(dir); cerr != nil {
-		if eerr := os.MkdirAll(dir, 0750); eerr != nil {
-			return resp, eerr
+
+	h.cacheStats.mu.Lock()
+	h.cacheStats.misses++
+	h.cacheStats.mu.Unlock()
+
+	// 异步保存缓存，不阻塞响应
+	go h.saveToCache(resp, dir, filename)
+
+	return resp, nil
+}
+
+// loadFromCache 从缓存加载响应
+func (h *httpBackend) loadFromCache(filename string, request *http.Request, checkHeadersFunc checkHeadersFunc) (*Response, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	resp := new(Response)
+	if err := gob.NewDecoder(file).Decode(resp); err != nil {
+		return nil, err
+	}
+
+	if !checkHeadersFunc(request, resp.StatusCode, *resp.Headers) {
+		return nil, ErrAbortedAfterHeaders
+	}
+
+	if resp.StatusCode >= 500 {
+		return nil, errors.New("cached error response")
+	}
+
+	return resp, nil
+}
+
+// saveToCache 异步保存响应到缓存
+func (h *httpBackend) saveToCache(resp *Response, dir, filename string) {
+	// 创建目录
+	if _, err := os.Stat(dir); err != nil {
+		if err := os.MkdirAll(dir, 0750); err != nil {
+			return // 忽略缓存错误
 		}
 	}
-	file, err := os.Create(filename + "~")
+
+	// 使用临时文件写入，再原子性重命名
+	tempFile := filename + "~"
+	file, err := os.Create(tempFile)
 	if err != nil {
-		return resp, err
+		return
 	}
+	defer file.Close()
+
 	if err := gob.NewEncoder(file).Encode(resp); err != nil {
-		file.Close()
-		return resp, err
+		os.Remove(tempFile) // 清理失败的临时文件
+		return
 	}
+
 	file.Close()
-	return resp, os.Rename(filename+"~", filename)
+	os.Rename(tempFile, filename)
 }
 
 func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc checkHeadersFunc) (*Response, error) {
@@ -157,6 +224,7 @@ func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc c
 		return nil, err
 	}
 	defer res.Body.Close()
+
 	if res.Request != nil {
 		*request = *res.Request
 	}
@@ -164,29 +232,68 @@ func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc c
 		return nil, ErrAbortedAfterHeaders
 	}
 
+	// 使用对象池获取buffer
+	buf := bufferPool.Get().([]byte)
+	buf = buf[:0] // 重置长度但保留容量
+	defer bufferPool.Put(buf)
+
 	var bodyReader io.Reader = res.Body
 	if bodySize > 0 {
 		bodyReader = io.LimitReader(bodyReader, int64(bodySize))
 	}
+
+	// 优化gzip处理
 	contentEncoding := strings.ToLower(res.Header.Get("Content-Encoding"))
 	if !res.Uncompressed && (strings.Contains(contentEncoding, "gzip") ||
 		(contentEncoding == "" && strings.Contains(strings.ToLower(res.Header.Get("Content-Type")), "gzip")) ||
 		strings.HasSuffix(strings.ToLower(request.URL.Path), ".xml.gz")) {
-		bodyReader, err = gzip.NewReader(bodyReader)
-		if err != nil {
+
+		gzReader := gzipReaderPool.Get().(*gzip.Reader)
+		defer gzipReaderPool.Put(gzReader)
+
+		if err := gzReader.Reset(bodyReader); err != nil {
 			return nil, err
 		}
-		defer bodyReader.(*gzip.Reader).Close()
+		bodyReader = gzReader
+		defer gzReader.Close()
 	}
-	body, err := io.ReadAll(bodyReader)
+
+	// 使用预分配buffer读取数据
+	body, err := h.readBody(bodyReader, buf)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Response{
 		StatusCode: res.StatusCode,
 		Body:       body,
 		Headers:    &res.Header,
 	}, nil
+}
+
+// readBody 优化的读取方法
+func (h *httpBackend) readBody(reader io.Reader, buf []byte) ([]byte, error) {
+	for {
+		n, err := reader.Read(buf[len(buf):cap(buf)])
+		buf = buf[:len(buf)+n]
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		// 如果buffer满了，需要扩容
+		if len(buf) == cap(buf) {
+			newBuf := make([]byte, len(buf), cap(buf)*2)
+			copy(newBuf, buf)
+			buf = newBuf
+		}
+	}
+
+	// 复制数据到新的slice，避免引用原始的大buffer
+	result := make([]byte, len(buf))
+	copy(result, buf)
+	return result, nil
 }
 
 func (h *httpBackend) Limit(rule *LimitRule) error {

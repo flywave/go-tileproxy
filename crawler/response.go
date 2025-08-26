@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Response struct {
@@ -16,6 +17,9 @@ type Response struct {
 	Headers    *http.Header
 	Trace      *HTTPTrace
 	UserData   interface{}
+	// 性能优化：缓存文件名
+	fileName string
+	once     sync.Once
 }
 
 func (r *Response) Save(fileName string) error {
@@ -23,12 +27,27 @@ func (r *Response) Save(fileName string) error {
 }
 
 func (r *Response) FileName() string {
-	_, params, err := mime.ParseMediaType(r.Headers.Get("Content-Disposition"))
-	if fName, ok := params["filename"]; ok && err == nil {
-		return SanitizeFileName(fName)
+	r.once.Do(func() {
+		r.fileName = r.calculateFileName()
+	})
+	return r.fileName
+}
+
+// calculateFileName 计算文件名，只调用一次
+func (r *Response) calculateFileName() string {
+	if r.Headers != nil {
+		_, params, err := mime.ParseMediaType(r.Headers.Get("Content-Disposition"))
+		if fName, ok := params["filename"]; ok && err == nil {
+			return SanitizeFileName(fName)
+		}
 	}
-	if r.Request.URL.RawQuery != "" {
-		return SanitizeFileName(fmt.Sprintf("%s_%s", r.Request.URL.Path, r.Request.URL.RawQuery))
+
+	if r.Request != nil && r.Request.URL != nil {
+		if r.Request.URL.RawQuery != "" {
+			return SanitizeFileName(fmt.Sprintf("%s_%s", r.Request.URL.Path, r.Request.URL.RawQuery))
+		}
+		return SanitizeFileName(strings.TrimPrefix(r.Request.URL.Path, "/"))
 	}
-	return SanitizeFileName(strings.TrimPrefix(r.Request.URL.Path, "/"))
+
+	return "unknown"
 }

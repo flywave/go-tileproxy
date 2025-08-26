@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
@@ -52,6 +51,15 @@ type Collector struct {
 	backend                  *httpBackend
 	wg                       *sync.WaitGroup
 	lock                     *sync.RWMutex
+	// 性能优化字段
+	requestPool sync.Pool
+	contextPool sync.Pool
+	stats       struct {
+		errorCount   uint32
+		successCount uint32
+		cacheHits    uint32
+		cacheMisses  uint32
+	}
 }
 
 type RequestCallback func(*Request)
@@ -233,6 +241,24 @@ func (c *Collector) Init() {
 	c.ID = atomic.AddUint32(&collectorCounter, 1)
 	c.TraceHTTP = false
 	c.Context = context.Background()
+
+	// 初始化对象池
+	c.requestPool = sync.Pool{
+		New: func() interface{} {
+			return &Request{}
+		},
+	}
+	c.contextPool = sync.Pool{
+		New: func() interface{} {
+			return NewContext()
+		},
+	}
+
+	// 预分配callback slices
+	c.requestCallbacks = make([]RequestCallback, 0, 4)
+	c.responseCallbacks = make([]ResponseCallback, 0, 4)
+	c.responseHeadersCallbacks = make([]ResponseHeadersCallback, 0, 4)
+	c.errorCallbacks = make([]ErrorCallback, 0, 4)
 }
 
 func (c *Collector) Visit(URL string, userData interface{}, hdr http.Header) error {
@@ -306,6 +332,12 @@ func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, c
 		return err
 	}
 
+	// 确保 ctx 不为 nil
+	if ctx == nil {
+		ctx = c.contextPool.Get().(*Context)
+		defer c.contextPool.Put(ctx)
+	}
+
 	if hdr == nil {
 		hdr = http.Header{}
 	}
@@ -314,7 +346,7 @@ func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, c
 	}
 	rc, ok := requestData.(io.ReadCloser)
 	if !ok && requestData != nil {
-		rc = ioutil.NopCloser(requestData)
+		rc = io.NopCloser(requestData)
 	}
 
 	host := parsedURL.Host
@@ -351,21 +383,21 @@ func setRequestBody(req *http.Request, body io.Reader) {
 			buf := v.Bytes()
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := bytes.NewReader(buf)
-				return ioutil.NopCloser(r), nil
+				return io.NopCloser(r), nil
 			}
 		case *bytes.Reader:
 			req.ContentLength = int64(v.Len())
 			snapshot := *v
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := snapshot
-				return ioutil.NopCloser(&r), nil
+				return io.NopCloser(&r), nil
 			}
 		case *strings.Reader:
 			req.ContentLength = int64(v.Len())
 			snapshot := *v
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := snapshot
-				return ioutil.NopCloser(&r), nil
+				return io.NopCloser(&r), nil
 			}
 		}
 		if req.GetBody != nil && req.ContentLength == 0 {
@@ -377,10 +409,13 @@ func setRequestBody(req *http.Request, body io.Reader) {
 
 func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ctx *Context, userData interface{}, hdr http.Header, req *http.Request) error {
 	defer c.wg.Done()
-	if ctx == nil {
-		ctx = NewContext()
-	}
-	request := &Request{
+
+	// 使用对象池获取Request
+	request := c.requestPool.Get().(*Request)
+	defer c.requestPool.Put(request)
+
+	// 重置Request对象
+	*request = Request{
 		URL:       req.URL,
 		Headers:   &req.Header,
 		Ctx:       ctx,
@@ -389,6 +424,7 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 		Body:      requestData,
 		collector: c,
 		ID:        atomic.AddUint32(&c.requestCount, 1),
+		UserData:  userData,
 	}
 
 	c.handleOnRequest(request)
@@ -410,6 +446,7 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 		hTrace = &HTTPTrace{}
 		req = hTrace.WithTrace(req)
 	}
+
 	origURL := req.URL
 	checkHeadersFunc := func(req *http.Request, statusCode int, headers http.Header) bool {
 		if req.URL != origURL {
@@ -419,20 +456,27 @@ func (c *Collector) fetch(u, method string, depth int, requestData io.Reader, ct
 		c.handleOnResponseHeaders(&Response{Ctx: ctx, Request: request, StatusCode: statusCode, Headers: &headers})
 		return !request.abort
 	}
+
 	response, err := c.backend.Cache(req, c.MaxBodySize, checkHeadersFunc, c.CacheDir)
 	if proxyURL, ok := req.Context().Value(ProxyURLKey).(string); ok {
 		request.ProxyURL = proxyURL
 	}
+
 	if cerr := c.handleOnError(response, err, request, ctx); cerr != nil {
+		atomic.AddUint32(&c.stats.errorCount, 1)
 		return cerr
 	}
-	atomic.AddUint32(&c.responseCount, 1)
-	response.Ctx = ctx
-	response.Request = request
-	response.Trace = hTrace
-	response.UserData = userData
 
-	c.handleOnResponse(response)
+	atomic.AddUint32(&c.responseCount, 1)
+	atomic.AddUint32(&c.stats.successCount, 1)
+
+	if response != nil {
+		response.Ctx = ctx
+		response.Request = request
+		response.Trace = hTrace
+		response.UserData = userData
+		c.handleOnResponse(response)
+	}
 
 	if err != nil {
 		c.handleOnError(response, err, request, ctx)

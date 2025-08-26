@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/tile"
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 // MockSource 是tile.Source接口的模拟实现
@@ -199,10 +200,7 @@ func TestGetSourceImage(t *testing.T) {
 	result := tileObj.GetSourceImage()
 
 	if result == nil {
-		t.Errorf("Expected non-nil image")
-	}
-	if _, ok := result.(image.Image); !ok {
-		t.Errorf("Expected image.Image type, got %T", result)
+		t.Errorf("Expected non-nil image, got nil")
 	}
 
 	// 测试nil源

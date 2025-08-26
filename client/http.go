@@ -79,28 +79,31 @@ func (c *CollectorClient) GetCollector() *crawler.Collector {
 	return c.Collector
 }
 
-func (c *CollectorClient) Open(u string, data []byte, hdr http.Header) (statusCode int, body []byte) {
-	if data == nil {
-		fut := newFuture()
-		err := c.Collector.Visit(u, fut, hdr)
-		if err != nil {
-			return 500, nil
-		}
-		reqult := fut.GetResult()
-		if reqult == nil {
-			return 500, nil
-		}
-		return reqult.StatusCode, reqult.Body
-	} else {
-		fut := newFuture()
-		err := c.Collector.PostRaw(u, data, fut)
-		if err != nil {
-			return 500, nil
-		}
-		reqult := fut.GetResult()
-		if reqult == nil {
-			return 500, nil
-		}
-		return reqult.StatusCode, reqult.Body
+// executeRequest 执行请求并处理结果的公共逻辑
+func (c *CollectorClient) executeRequest(fut *Future) (statusCode int, body []byte) {
+	result := fut.GetResult()
+	if result == nil {
+		return 500, nil
 	}
+	return result.StatusCode, result.Body
+}
+
+func (c *CollectorClient) Open(u string, data []byte, hdr http.Header) (statusCode int, body []byte) {
+	fut := newFuture()
+	var err error
+
+	// 根据是否有数据选择不同的请求方法
+	if data == nil {
+		err = c.Collector.Visit(u, fut, hdr)
+	} else {
+		err = c.Collector.PostRaw(u, data, fut)
+	}
+
+	// 统一的错误处理
+	if err != nil {
+		return 500, nil
+	}
+
+	// 统一的结果处理
+	return c.executeRequest(fut)
 }

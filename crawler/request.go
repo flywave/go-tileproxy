@@ -7,8 +7,16 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"sync/atomic"
 )
+
+// 字符串池用于复用常用字符串buffer
+var stringBuilderPool = sync.Pool{
+	New: func() interface{} {
+		return &strings.Builder{}
+	},
+}
 
 type Request struct {
 	URL                       *url.URL
@@ -61,16 +69,28 @@ func (r *Request) AbsoluteURL(u string) string {
 	if strings.HasPrefix(u, "#") {
 		return ""
 	}
+
+	// 优化：如果已经是绝对URL，直接返回
+	if strings.HasPrefix(u, "http://") || strings.HasPrefix(u, "https://") {
+		return u
+	}
+
 	var base *url.URL
 	if r.baseURL != nil {
 		base = r.baseURL
 	} else {
 		base = r.URL
 	}
+
+	if base == nil {
+		return u
+	}
+
 	absURL, err := base.Parse(u)
 	if err != nil {
 		return ""
 	}
+
 	absURL.Fragment = ""
 	if absURL.Scheme == "//" {
 		absURL.Scheme = r.URL.Scheme

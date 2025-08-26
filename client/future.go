@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
@@ -13,47 +14,96 @@ type Future struct {
 	result     *crawler.Response
 	resultchan chan *crawler.Response
 	error_     error
-	l          sync.Mutex
+	once       sync.Once
+	mu         sync.RWMutex
 }
 
 func (f *Future) GetResult() *crawler.Response {
-	f.l.Lock()
+	// 快速检查是否已完成（使用读锁）
+	f.mu.RLock()
 	if f.finished {
-		return f.result
+		result := f.result
+		f.mu.RUnlock()
+		return result
 	}
-	f.l.Unlock()
+	f.mu.RUnlock()
 
-	f.resultchan = make(chan *crawler.Response, 1)
+	// 使用sync.Once确保channel只初始化一次
+	f.once.Do(func() {
+		f.mu.Lock()
+		if !f.finished && f.resultchan == nil {
+			f.resultchan = make(chan *crawler.Response, 1)
+		}
+		f.mu.Unlock()
+	})
 
-	ticker := time.NewTicker(time.Second * 60)
+	// 创建带超时的context
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
 	select {
-	case <-ticker.C:
-		f.finished = true
-		f.result = nil
-		f.error_ = errors.New("timeout")
+	case <-ctx.Done():
+		f.mu.Lock()
+		if !f.finished {
+			f.finished = true
+			f.result = nil
+			f.error_ = errors.New("timeout")
+			// 安全关闭channel
+			if f.resultchan != nil {
+				close(f.resultchan)
+				f.resultchan = nil
+			}
+		}
+		f.mu.Unlock()
 		return nil
-	case f.result = <-f.resultchan:
-		f.finished = true
-		f.error_ = nil
-		close(f.resultchan)
-		f.resultchan = nil
-		return f.result
+	case result := <-f.resultchan:
+		f.mu.Lock()
+		if !f.finished {
+			f.finished = true
+			f.result = result
+			f.error_ = nil
+			// 安全关闭channel
+			if f.resultchan != nil {
+				close(f.resultchan)
+				f.resultchan = nil
+			}
+		}
+		f.mu.Unlock()
+		return result
 	}
 }
 
 func (f *Future) setResult(result *crawler.Response) {
-	f.l.Lock()
-	defer f.l.Unlock()
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	// 检查是否已完成
 	if f.finished {
 		return
 	}
+
+	// 如果channel存在且未关闭，尝试发送结果
 	if f.resultchan != nil {
-		f.resultchan <- result
+		select {
+		case f.resultchan <- result:
+			// 成功发送
+		default:
+			// channel可能已满或已关闭，直接设置结果
+			f.result = result
+			f.finished = true
+		}
 	} else {
+		// 直接设置结果
 		f.result = result
+		f.finished = true
 	}
 }
 
 func newFuture() *Future {
-	return &Future{finished: false, result: nil, resultchan: nil}
+	return &Future{
+		finished:   false,
+		result:     nil,
+		resultchan: nil,
+		error_:     nil,
+	}
 }

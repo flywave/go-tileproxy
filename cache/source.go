@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -123,11 +124,36 @@ func EncodeTile(opts tile.TileOptions, tile [3]int, data tile.Source) ([]byte, e
 	case *imagery.ImageOptions:
 		return data.GetBuffer(nil, opts), nil
 	case *terrain.RasterOptions:
-		return terrain.EncodeRaster(opt, data.GetTile().(*terrain.TileData))
+		// Check if data implements the terrain-specific interface with GetTileData
+		if rasterSource, ok := data.(interface{ GetTileData() *terrain.TileData }); ok {
+			tileData := rasterSource.GetTileData()
+			if tileData == nil {
+				return nil, errors.New("terrain tile data is nil")
+			}
+			buf, err := terrain.EncodeRaster(opt, tileData)
+			if err != nil {
+				return nil, fmt.Errorf("terrain encode error: %w", err)
+			}
+			return buf, nil
+		}
+		// Fallback to GetTile() if GetTileData() isn't available
+		tileData, ok := data.GetTile().(*terrain.TileData)
+		if !ok {
+			return nil, errors.New("invalid terrain tile data")
+		}
+		buf, err := terrain.EncodeRaster(opt, tileData)
+		if err != nil {
+			return nil, fmt.Errorf("terrain encode error: %w", err)
+		}
+		return buf, nil
 	case *vector.VectorOptions:
-		return vector.EncodeVector(opt, tile, data.GetTile().(vector.Vector))
+		vectorData, ok := data.GetTile().(vector.Vector)
+		if !ok {
+			return nil, errors.New("invalid vector tile data")
+		}
+		return vector.EncodeVector(opt, tile, vectorData)
 	}
-	return nil, errors.New("error")
+	return nil, errors.New("unsupported tile options type")
 }
 
 func DecodeTile(opts tile.TileOptions, tile [3]int, reader io.Reader) (tile.Source, error) {

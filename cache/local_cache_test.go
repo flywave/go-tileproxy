@@ -184,6 +184,7 @@ func TestNewLocalCache_DifferentLayouts(t *testing.T) {
 		cache := NewLocalCache(tmpDir, layout, creater)
 		if cache == nil {
 			t.Errorf("Expected non-nil LocalCache for layout %s", layout)
+			return
 		}
 		if cache.tileLocation == nil {
 			t.Errorf("Expected tileLocation function to be set for layout %s", layout)

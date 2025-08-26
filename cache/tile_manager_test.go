@@ -36,10 +36,16 @@ func (c *mockClient) Open(url string, data []byte, hdr http.Header) (statusCode 
 
 func create_cached_tile(tile [3]int, data []byte, cache *LocalCache, timestamp *time.Time) {
 	loc := cache.TileLocation(NewTile(tile), true)
-	if f, err := os.Create(loc); err != nil {
-		f.Write(data)
-		f.Close()
+	// 修复逻辑错误：只有在文件创建成功时才写入数据和关闭文件
+	f, err := os.Create(loc)
+	if err != nil {
+		// 如果创建文件失败，直接返回
+		return
 	}
+	// 确保文件被关闭
+	defer f.Close()
+	// 写入数据
+	f.Write(data)
 
 	if timestamp != nil {
 		os.Chtimes(loc, *timestamp, *timestamp)
@@ -108,13 +114,13 @@ func TestTileManager(t *testing.T) {
 	manager := NewTileManager(topts)
 
 	if manager.IsStale([3]int{0, 0, 1}, nil) {
-		t.FailNow()
+		t.Fatalf("Expected tile [0, 0, 1] not to be stale, but it is")
 	}
 
 	create_cached_tile([3]int{0, 0, 1}, imagedata.Bytes(), c, nil)
 
 	if manager.IsStale([3]int{0, 0, 1}, nil) {
-		t.FailNow()
+		t.Fatalf("Expected tile [0, 0, 1] not to be stale after creation, but it is")
 	}
 
 	exp := time.Now().Add(time.Duration(3600))
@@ -124,21 +130,20 @@ func TestTileManager(t *testing.T) {
 	manager.expireTimestamp = &now
 
 	if !manager.IsStale([3]int{0, 0, 1}, nil) {
-		t.FailNow()
+		t.Fatalf("Expected tile [0, 0, 1] to be stale after setting expire timestamp, but it is not")
 	}
 
 	manager.RemoveTileCoords([][3]int{{0, 0, 0}, {0, 0, 1}})
 
 	if manager.IsCached([3]int{0, 0, 1}, nil) {
-		t.FailNow()
+		t.Fatalf("Expected tile [0, 0, 1] to be removed, but it is still cached")
 	}
 
-	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 2}, {2, 0, 2}}, nil, false)
+	tiles, err := manager.LoadTileCoords([][3]int{{0, 0, 2}, {2, 0, 2}}, nil, false)
 
 	if tiles == nil || err != nil {
-		t.FailNow()
+		t.Fatalf("Expected to load tiles successfully, got err: %v, tiles: %v", err, tiles)
 	}
-
 }
 
 func TestTileManagerMinimalMetaRequests(t *testing.T) {
@@ -190,7 +195,7 @@ func TestTileManagerMinimalMetaRequests(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
+	tiles, err := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
 
 	if tiles == nil || err != nil {
 		t.FailNow()
@@ -255,7 +260,7 @@ func TestTileManagerMultipleSources(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
+	tiles, err := manager.LoadTileCoords([][3]int{{0, 0, 2}}, nil, false)
 
 	if tiles == nil || err != nil {
 		t.FailNow()
@@ -297,7 +302,7 @@ func TestTileManagerMultipleSourcesWithMetaTiles(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	err, tiles := manager.LoadTileCoords([][3]int{{0, 0, 1}, {1, 0, 1}}, nil, false)
+	tiles, err := manager.LoadTileCoords([][3]int{{0, 0, 1}, {1, 0, 1}}, nil, false)
 
 	if tiles == nil || err != nil {
 		t.FailNow()
@@ -339,7 +344,7 @@ func TestTileManagerBulkMetaTiles(t *testing.T) {
 
 	manager := NewTileManager(topts)
 
-	err, tiles := manager.LoadTileCoords([][3]int{{1, 0, 2}, {2, 0, 2}}, nil, false)
+	tiles, err := manager.LoadTileCoords([][3]int{{1, 0, 2}, {2, 0, 2}}, nil, false)
 
 	if tiles == nil || err != nil {
 		t.FailNow()

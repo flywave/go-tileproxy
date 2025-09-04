@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	tile_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja3pjOXRqcWkybWY3MnVwaGxkbTgzcXAwIn0._tCv9fpOyCT4O_Tdpl6h0w"
+	tile_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbWY2Mjc1ejIwYmpkMmlxcW1vcmNldmFnIn0.4KMSdkV8JFAZjOYRhqCAhg"
 )
 
 func get_url(url string) []byte {
@@ -84,22 +84,22 @@ func TestConvert(t *testing.T) {
 func TestGetGeotiff(t *testing.T) {
 	var bbox vec2d.Rect
 
-	// srs32651 := geo.NewProj(32651)
+	srs32651 := geo.NewProj(32651)
 	srs900913 := geo.NewProj(900913)
 	srs4326 := geo.NewProj(4326)
 
-	// if true {
-	// 	bbox = vec2d.Rect{
-	// 		Min: vec2d.T{265000, 3996000},
-	// 		Max: vec2d.T{270500, 4000500},
-	// 	}
-	// 	bbox = srs32651.TransformRectTo(srs4326, bbox, 16)
-	// } else {
-	bbox = vec2d.Rect{
-		Min: vec2d.T{120.69871065708321, 36.92324736988195},
-		Max: vec2d.T{120.7595254635922, 36.95216470748957},
+	if true {
+		bbox = vec2d.Rect{
+			Min: vec2d.T{265000, 3996000},
+			Max: vec2d.T{270500, 4000500},
+		}
+		bbox = srs32651.TransformRectTo(srs4326, bbox, 16)
+	} else {
+		bbox = vec2d.Rect{
+			Min: vec2d.T{120.69871065708321, 36.92324736988195},
+			Max: vec2d.T{120.7595254635922, 36.95216470748957},
+		}
 	}
-	// }
 
 	conf := geo.DefaultTileGridOptions()
 	conf[geo.TILEGRID_SRS] = srs900913
@@ -175,19 +175,19 @@ func TestGetGeotiff(t *testing.T) {
 
 	raw, _ := io.Encode(tiledata)
 
-	f, _ := os.Create("./LAIYANG.webp")
+	f, _ := os.Create("./data.webp")
 	f.Write(raw)
 	f.Close()
 
-	defer os.Remove("./LAIYANG.webp")
+	defer os.Remove("./data.webp")
 
 	rect := image.Rect(0, 0, int(tiledata.Size[0]), int(tiledata.Size[1]))
 
 	src := cog.NewSource(tiledata.Datas, &rect, cog.CTLZW)
 
-	cog.WriteTile("./LAIYANG.tif", src, sbox, srs4326, tiledata.Size, nil)
+	cog.WriteTile("./data.tif", src, sbox, srs4326, tiledata.Size, nil)
 
-	defer os.Remove("./LAIYANG.tif")
+	defer os.Remove("./data.tif")
 }
 
 func TestGeoTIFF(t *testing.T) {

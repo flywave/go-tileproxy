@@ -184,7 +184,7 @@ func EncodeQuatMesh(data *TileData, options *RasterOptions) (*qmt.QuantizedMeshT
 
 	rd.SetXYPos(tsf[0], ypos, tsf[1])
 
-	mesh1 := tin.GenerateTinMesh(rd, options.MaxError)
+	_, mesh1 := tin.GenerateTinMesh(rd, options.MaxError, &tin.GeoConfig{})
 	mk := tin.NewTileMaker(mesh1)
 
 	faceTemp := "f %d %d %d \n"

@@ -83,3 +83,5 @@ replace github.com/flywave/go-proj => ../go-proj
 replace github.com/flywave/go-xslt => ../go-xslt
 
 replace github.com/flywave/go-geos => ../go-geos
+
+replace github.com/flywave/go-tin => ../go-tin

@@ -48,8 +48,6 @@ github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21 h1:YRqqA
 github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21/go.mod h1:Cm+gTfx6E3tyRioEZywWyMNWwRf9NaBUezGmpq1SypQ=
 github.com/flywave/go-stl v0.0.0-20250818070638-f2c3dee7ad76 h1:zwgkaN3wUdOg/tZF+buz6UJsFU8paJp96nGaO6tZMDo=
 github.com/flywave/go-stl v0.0.0-20250818070638-f2c3dee7ad76/go.mod h1:cBGuHNXnPHNc4PH+uqkqPoTvdym4wpTXNZnVOnHHbYs=
-github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb h1:yQwn/w3bt0I2WjVQmZS1yt7J0013A1vjMzQD4sokwkE=
-github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb/go.mod h1:0hyQ9vusB4J5rKXkvlqa1umPsE3Z7fjTKRYFXvvZbPg=
 github.com/flywave/go3d v0.0.0-20210529142521-14eb5aca1290/go.mod h1:QbQZlarSgCPYFAmoTduiDUd4JCnolimXUswTAnSrFWY=
 github.com/flywave/go3d v0.0.0-20211208020909-d2697502845a/go.mod h1:0/K6WtaMwhhVJb84xWStt+ALQl2EdvzW2oJqz+330GU=
 github.com/flywave/go3d v0.0.0-20220209071216-2c50e8b3e7ff/go.mod h1:0/K6WtaMwhhVJb84xWStt+ALQl2EdvzW2oJqz+330GU=

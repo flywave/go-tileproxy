@@ -8,21 +8,17 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/deckarep/golang-set v1.8.0
 	github.com/flywave/gg v1.3.1-0.20210910115449-fe7fd154baa2
-	github.com/flywave/gltf v0.20.4-0.20250726101904-8f7bf4ed58d3
 	github.com/flywave/go-cog v0.0.0-20250314092301-4673589220b8
 	github.com/flywave/go-geo v0.0.0-20250314091853-e818cb9de299
 	github.com/flywave/go-geoid v0.0.0-20220306024153-21126c4758a2
 	github.com/flywave/go-geom v0.0.0-20250607125323-f685bf20f12c
 	github.com/flywave/go-geos v0.0.0-20220312005430-b3e54ee96ed7
 	github.com/flywave/go-gpkg v0.0.0-20220505053116-3682bbf4ea48
-	github.com/flywave/go-gpx v1.2.2-0.20211027141055-7fa376dde073
 	github.com/flywave/go-lerc v0.0.0-20210724083528-61c70a1b0bc9
 	github.com/flywave/go-mapbox v0.0.0-20250314092441-27874854ad1b
 	github.com/flywave/go-mbgeom v0.0.0-20220407004130-9a9ce7702726
-	github.com/flywave/go-obj v0.0.0-20210526030750-7674effc90f7
 	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
 	github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21
-	github.com/flywave/go-stl v0.0.0-20250818070638-f2c3dee7ad76
 	github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb
 	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
 	github.com/flywave/go3d v0.0.0-20250816053852-aed5d825659f
@@ -49,7 +45,6 @@ require (
 	github.com/devork/geom v0.0.5 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/flywave/go-pbf v0.0.0-20210701015929-a3bdb1f6728e // indirect
-	github.com/go-test/deep v1.0.7 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hhrutter/lzw v0.0.0-20190829144645-6f07a24e8650 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
@@ -66,7 +61,6 @@ require (
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/text v0.26.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

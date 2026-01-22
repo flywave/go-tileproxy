@@ -253,7 +253,7 @@ func TestWMSSource(t *testing.T) {
 				t.Logf("CombinedLayer panic: %v - 这是预期的行为", r)
 			}
 		}()
-		
+
 		combined := source1.CombinedLayer(source2, query)
 		if combined == nil {
 			t.Log("CombinedLayer returned nil - 这是预期的行为")

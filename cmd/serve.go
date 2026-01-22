@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,6 +11,8 @@ import (
 	"github.com/flywave/go-tileproxy/setting"
 	"github.com/spf13/cobra"
 )
+
+const maxConfigSize = 10 * 1024 * 1024
 
 var (
 	configFile string
@@ -61,6 +64,15 @@ func runServer() error {
 }
 
 func loadConfig(path string) (*setting.ProxyService, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat config file: %w", err)
+	}
+
+	if info.Size() > maxConfigSize {
+		return nil, errors.New("config file too large (max 10MB)")
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)

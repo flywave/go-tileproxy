@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -50,6 +51,7 @@ type WMSService struct {
 	MaxOutputPixels     int
 	MaxTileAge          *time.Duration
 	FeatureTransformers map[string]*resource.XSLTransformer
+	mu                  sync.RWMutex
 }
 
 type WMSServiceOptions struct {
@@ -168,8 +170,13 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	}
 
 	actual_layers := make(map[string]layer.Layer)
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	for _, layer_name := range mapreq.GetLayers() {
-		l := s.Layers[layer_name]
+		l, ok := s.Layers[layer_name]
+		if !ok {
+			continue
+		}
 		if l.rendersQuery(query) {
 			for layer_name, map_layers := range l.mapLayersForQuery(query) {
 				actual_layers[layer_name] = map_layers
@@ -200,7 +207,10 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		return err.Render()
 	}
 
-	img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
+	img_opts, ok := s.ImageFormats[mapreq.GetFormatMimeType()]
+	if !ok {
+		return NewRequestError("unsupported image format", "", &WMS130ExceptionHandler{}, req, false, nil).Render()
+	}
 	img_opts.BgColor = mapreq.GetBGColor()
 	img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
 	si := mapreq.GetSize()
@@ -366,8 +376,10 @@ func (s *WMSService) checkMapRequest(req request.Request) *RequestError {
 	mapreq := req.(*request.WMSMapRequest)
 	mapparams := request.NewWMSMapRequestParams(req.GetParams())
 	si := mapparams.GetSize()
-	if s.MaxOutputPixels != -1 && (si[0]*si[1]) > uint32(s.MaxOutputPixels) {
-		return NewRequestError("image size too large", "", &WMS130ExceptionHandler{}, req, false, nil)
+	if s.MaxOutputPixels != -1 {
+		if si[0] > 0 && uint64(s.MaxOutputPixels)/uint64(si[0]) < uint64(si[1]) {
+			return NewRequestError("image size too large", "", &WMS130ExceptionHandler{}, req, false, nil)
+		}
 	}
 
 	errr := s.validateLayers(req)

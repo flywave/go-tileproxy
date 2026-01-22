@@ -132,7 +132,9 @@ func TestPath(t *testing.T) {
 	for _, p := range paths {
 		cache := NewLocalCache("/tmp/foo", p.key, creater)
 
-		abs, _ := filepath.Abs(cache.TileLocation(NewTile(p.coord), false))
+		location, _ := cache.TileLocation(NewTile(p.coord), false)
+
+		abs, _ := filepath.Abs(location)
 
 		if abs != p.path {
 			t.Errorf("Path mismatch for layout %s, coord %v: expected %s, got %s", p.key, p.coord, p.path, abs)

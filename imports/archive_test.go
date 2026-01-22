@@ -164,10 +164,10 @@ func TestArchiveImportTileLocation(t *testing.T) {
 
 	// 创建一个测试瓦片
 	tile := cache.NewTile([3]int{0, 0, 0})
-	location := importInstance.TileLocation(tile)
+	location, err := importInstance.TileLocation(tile)
 
-	if location == "" {
-		t.Error("Expected valid tile location")
+	if err != nil {
+		t.Errorf("Failed to get tile location: %v", err)
 	}
 
 	// 验证路径包含临时目录

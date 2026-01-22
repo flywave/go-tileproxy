@@ -70,7 +70,7 @@ func TestGeoJSONVTSource(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			source := NewGeoJSONVTSource(tt.tile, tt.options)
-			
+
 			// Use empty vector to avoid C++ library issues
 			source.SetSource(Vector{})
 
@@ -98,7 +98,7 @@ func TestNewEmptyGeoJSONVTSource(t *testing.T) {
 	}
 
 	source := NewEmptyGeoJSONVTSource(options)
-	
+
 	result := source.GetTile()
 	if result == nil {
 		t.Fatal("Expected non-nil empty vector")
@@ -140,7 +140,7 @@ func TestTileBounds(t *testing.T) {
 			if len(bounds) != 4 {
 				t.Fatalf("Expected 4 bounds values, got %d", len(bounds))
 			}
-			
+
 			const epsilon = 1e-6
 			for i := 0; i < 4; i++ {
 				if abs(bounds[i]-tt.expected[i]) > epsilon {
@@ -162,7 +162,7 @@ func abs(x float64) float64 {
 // Benchmark tests
 func BenchmarkNewGeoJSONVTSource(b *testing.B) {
 	options := &VectorOptions{Extent: 4096, Buffer: 1024}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		source := NewGeoJSONVTSource([3]int{1, 1, 1}, options)
@@ -173,7 +173,7 @@ func BenchmarkNewGeoJSONVTSource(b *testing.B) {
 
 func BenchmarkNewEmptyGeoJSONVTSource(b *testing.B) {
 	options := &VectorOptions{Extent: 4096, Buffer: 1024}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = NewEmptyGeoJSONVTSource(options)

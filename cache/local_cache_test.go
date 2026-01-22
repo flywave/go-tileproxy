@@ -200,7 +200,7 @@ func TestLocalCache_TileLocation(t *testing.T) {
 	cache := NewLocalCache(tmpDir, "tms", creater)
 
 	tile := NewTile([3]int{1, 2, 3})
-	location := cache.TileLocation(tile, false)
+	location, _ := cache.TileLocation(tile, false)
 
 	expectedPattern := filepath.Join(tmpDir, "3", "1", "2.png")
 	if location != expectedPattern {
@@ -216,7 +216,7 @@ func TestLocalCache_TileLocation_CreateDir(t *testing.T) {
 	cache := NewLocalCache(tmpDir, "tms", creater)
 
 	tile := NewTile([3]int{1, 2, 3})
-	location := cache.TileLocation(tile, true)
+	location, _ := cache.TileLocation(tile, true)
 
 	// Check if directory structure was created
 	dir := filepath.Dir(location)
@@ -258,7 +258,7 @@ func TestLocalCache_StoreTile(t *testing.T) {
 	}
 
 	// Check if file was created
-	location := cache.TileLocation(tile, false)
+	location, _ := cache.TileLocation(tile, false)
 	if !utils.FileExists(location) {
 		t.Error("Expected tile file to be created")
 	}
@@ -290,7 +290,7 @@ func TestLocalCache_StoreTile_AlreadyStored(t *testing.T) {
 	}
 
 	// Should not create file since tile is already stored
-	location := cache.TileLocation(tile, false)
+	location, _ := cache.TileLocation(tile, false)
 	if utils.FileExists(location) {
 		t.Error("Expected no file to be created for already stored tile")
 	}
@@ -482,7 +482,7 @@ func TestLocalCache_StoreTiles(t *testing.T) {
 
 	// Check all files were created
 	for i, tile := range tiles.tiles {
-		location := cache.TileLocation(tile, false)
+		location, _ := cache.TileLocation(tile, false)
 		if !utils.FileExists(location) {
 			t.Errorf("Expected tile file %d to be created", i)
 		}
@@ -511,7 +511,7 @@ func TestLocalCache_RemoveTile(t *testing.T) {
 	tile := createTestTile([3]int{1, 2, 3}, testData)
 	cache.StoreTile(tile)
 
-	location := cache.TileLocation(tile, false)
+	location, _ := cache.TileLocation(tile, false)
 	if !utils.FileExists(location) {
 		t.Fatal("Expected tile file to exist before removal")
 	}
@@ -562,7 +562,7 @@ func TestLocalCache_RemoveTiles(t *testing.T) {
 
 	// Verify all files exist
 	for _, tile := range tiles.tiles {
-		location := cache.TileLocation(tile, false)
+		location, _ := cache.TileLocation(tile, false)
 		if !utils.FileExists(location) {
 			t.Fatal("Expected tile file to exist before removal")
 		}
@@ -575,7 +575,7 @@ func TestLocalCache_RemoveTiles(t *testing.T) {
 
 	// Check all files were removed
 	for i, tile := range tiles.tiles {
-		location := cache.TileLocation(tile, false)
+		location, _ := cache.TileLocation(tile, false)
 		if utils.FileExists(location) {
 			t.Errorf("Expected tile file %d to be removed", i)
 		}
@@ -770,7 +770,7 @@ func TestLocalCache_Store_ReplaceSymlink(t *testing.T) {
 
 	// Create a test tile
 	tile := createTestTile([3]int{1, 2, 3}, []byte("test data"))
-	location := cache.TileLocation(tile, true)
+	location, _ := cache.TileLocation(tile, true)
 
 	// Create a symlink at the tile location
 	targetFile := filepath.Join(tmpDir, "target.png")

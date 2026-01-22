@@ -1,3 +1,4 @@
+//go:build !aix && !windows
 // +build !aix,!windows
 
 package flock

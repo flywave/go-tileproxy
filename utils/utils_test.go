@@ -10,7 +10,7 @@ import (
 
 func TestFileExists(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	tests := []struct {
 		name     string
 		setup    func() string
@@ -224,7 +224,7 @@ func TestHexColor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := HexColor(tt.input)
-			
+
 			// 比较RGB值，允许小的浮点误差
 			if !colorsEqual(result, tt.expected) {
 				t.Errorf("HexColor() = %v, want %v", result, tt.expected)

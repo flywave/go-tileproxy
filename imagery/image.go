@@ -38,27 +38,45 @@ func stringIn(str string, slice []string) bool {
 }
 
 func isJpeg(h string) bool {
+	if len(h) < 10 {
+		return false
+	}
 	return h[6:10] == "JFIF"
 }
 
 func isPng(h string) bool {
+	if len(h) < 8 {
+		return false
+	}
 	return h[:8] == "\211PNG\r\n\032\n"
 }
 
 func isGif(h string) bool {
+	if len(h) < 6 {
+		return false
+	}
 	header := h[:6]
 	return stringIn(header, []string{"GIF87a", "GIF89a"})
 }
 
 func isTiff(h string) bool {
+	if len(h) < 2 {
+		return false
+	}
 	return stringIn(h[:2], []string{"MM", "II"})
 }
 
 func isWEBP(h string) bool {
+	if len(h) < 15 {
+		return false
+	}
 	return h[:15] == "RIFF????WEBPVP8"
 }
 
 func PeekImageFormat(buf string) string {
+	if len(buf) < 2 {
+		return ""
+	}
 	if isJpeg(buf) {
 		return "jpeg"
 	} else if isPng(buf) {

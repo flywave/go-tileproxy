@@ -21,6 +21,10 @@ type BaseService struct {
 }
 
 func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+
 	path := r.URL.Path
 	if path == "/health" || path == "/health/" {
 		s.healthCheckHandler(w, r)

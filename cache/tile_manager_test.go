@@ -35,7 +35,7 @@ func (c *mockClient) Open(url string, data []byte, hdr http.Header) (statusCode 
 }
 
 func create_cached_tile(tile [3]int, data []byte, cache *LocalCache, timestamp *time.Time) {
-	loc := cache.TileLocation(NewTile(tile), true)
+	loc, _ := cache.TileLocation(NewTile(tile), true)
 	// 修复逻辑错误：只有在文件创建成功时才写入数据和关闭文件
 	f, err := os.Create(loc)
 	if err != nil {

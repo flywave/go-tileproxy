@@ -1,4 +1,5 @@
-//+build aix
+//go:build aix
+// +build aix
 
 package flock
 

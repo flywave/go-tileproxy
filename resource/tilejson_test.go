@@ -578,7 +578,7 @@ func TestLayerAtrribute(t *testing.T) {
 			t.Errorf("Layer = %v, want %v", layer.Layer, "test-layer")
 		}
 		// Note: NewLayerAtrribute doesn't initialize Attributes slice
-	// This is expected behavior based on the actual implementation
+		// This is expected behavior based on the actual implementation
 	})
 
 	t.Run("LayerAtrributeFields", func(t *testing.T) {

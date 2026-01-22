@@ -34,7 +34,7 @@ type ArchiveExport struct {
 	boundsSrs    geo.Proj
 	minZoom      int
 	maxZoom      int
-	tileLocation func(*cache.Tile, string, string, bool) string
+	tileLocation cache.TileLocationFunc
 }
 
 func tileFormatToMBTileFormat(t tile.TileFormat) mbtiles.TileFormat {
@@ -180,7 +180,7 @@ func (a *ArchiveExport) buildMetadata() *mbtiles.Metadata {
 	return md
 }
 
-func (a *ArchiveExport) TileLocation(tile *cache.Tile) string {
+func (a *ArchiveExport) TileLocation(tile *cache.Tile) (string, error) {
 	tile.Location = ""
 	return a.tileLocation(tile, "", a.GetExtension(), false)
 }
@@ -229,7 +229,10 @@ func (a *ArchiveExport) writeTile(t *cache.Tile, srcGrid *geo.TileGrid) error {
 		return err
 	}
 
-	name := a.TileLocation(&dstTile)
+	name, err := a.TileLocation(&dstTile)
+	if err != nil {
+		return err
+	}
 
 	p, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("*-%s", path.Base(name)))
 

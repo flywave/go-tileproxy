@@ -28,7 +28,7 @@ type ArchiveImport struct {
 	grid         *geo.TileGrid
 	coverage     geo.Coverage
 	creater      tile.SourceCreater
-	tileLocation func(*cache.Tile, string, string, bool) string
+	tileLocation func(*cache.Tile, string, string, bool) (string, error)
 }
 
 func NewArchiveImport(fileName string, opts tile.TileOptions) (*ArchiveImport, error) {
@@ -142,16 +142,21 @@ func (a *ArchiveImport) GetZoomLevels() []int {
 
 func (a *ArchiveImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile, error) {
 	dc, err := cache.TransformCoord(t, grid, a.grid)
-
 	if err != nil {
 		return nil, err
 	}
 
 	tile := cache.NewTile(dc)
-	location := a.TileLocation(tile)
+	location, err := a.TileLocation(tile)
+	if err != nil {
+		return nil, err
+	}
 
 	if utils.FileExists(location) {
-		data, _ := os.ReadFile(location)
+		data, err := os.ReadFile(location)
+		if err != nil {
+			return nil, err
+		}
 		tile.Source = a.creater.Create(data, tile.Coord)
 		tile.Coord = t
 		return tile, nil
@@ -162,7 +167,7 @@ func (a *ArchiveImport) LoadTileCoord(t [3]int, grid *geo.TileGrid) (*cache.Tile
 func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.TileCollection, error) {
 	tiles := cache.NewTileCollection(nil)
 	var errs error
-	
+
 	for _, tc := range t {
 		if tile, err := a.LoadTileCoord(tc, grid); err != nil {
 			// 只记录错误，但不立即返回，允许其他瓦片继续加载
@@ -173,23 +178,18 @@ func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.T
 			tiles.SetItem(tile)
 		}
 	}
-	
-	// 如果有成功加载的瓦片，就不返回错误
-	if len(tiles.GetSlice()) > 0 {
-		return tiles, nil
+
+	if len(tiles.GetSlice()) == 0 {
+		if errs == nil {
+			errs = errors.New("no tiles were loaded")
+		}
+		return nil, errs
 	}
-	
-	// 只有当所有瓦片都加载失败时才返回错误
-	if errs == nil {
-		errs = errors.New("no tiles were loaded")
-	}
-	return tiles, errs
+	return tiles, nil
 }
 
-func (a *ArchiveImport) TileLocation(tile *cache.Tile) string {
-	ph := a.tileLocation(tile, "", a.GetExtension(), false)
-	tile.Location = ""
-	return path.Join(a.tempDir, ph)
+func (a *ArchiveImport) TileLocation(tile *cache.Tile) (string, error) {
+	return a.tileLocation(tile, "", a.GetExtension(), false)
 }
 
 func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {

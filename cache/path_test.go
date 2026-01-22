@@ -173,7 +173,7 @@ func TestTileLocationTc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_tc(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_tc(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, filepath.FromSlash(tt.expected))
 			if result != expectedPath {
@@ -228,7 +228,7 @@ func TestTileLocationMp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_mp(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_mp(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, filepath.FromSlash(tt.expected))
 			if result != expectedPath {
@@ -282,7 +282,7 @@ func TestTileLocationTms(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_tms(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_tms(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, filepath.FromSlash(tt.expected))
 			if result != expectedPath {
@@ -336,7 +336,7 @@ func TestTileLocationReverseTms(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_reverse_tms(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_reverse_tms(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, filepath.FromSlash(tt.expected))
 			if result != expectedPath {
@@ -397,7 +397,7 @@ func TestTileLocationQuadkey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_quadkey(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_quadkey(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, tt.expected)
 			if result != expectedPath {
@@ -458,7 +458,7 @@ func TestTileLocationArcgisCache(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tile := createTestTileForPath(tt.coord)
-			result := tile_location_arcgiscache(tile, tmpDir, tt.fileExt, tt.createDir)
+			result, _ := tile_location_arcgiscache(tile, tmpDir, tt.fileExt, tt.createDir)
 
 			expectedPath := filepath.Join(tmpDir, filepath.FromSlash(tt.expected))
 			if result != expectedPath {
@@ -484,10 +484,10 @@ func TestTileLocationCaching(t *testing.T) {
 	tile := createTestTileForPath([3]int{1, 2, 3})
 
 	// First call should set the location
-	result1 := tile_location_tms(tile, tmpDir, "png", false)
+	result1, _ := tile_location_tms(tile, tmpDir, "png", false)
 
 	// Second call should return cached location
-	result2 := tile_location_tms(tile, tmpDir, "jpg", false) // Different extension
+	result2, _ := tile_location_tms(tile, tmpDir, "jpg", false) // Different extension
 
 	if result1 != result2 {
 		t.Errorf("Expected cached location to be returned. First: %q, Second: %q", result1, result2)
@@ -584,7 +584,7 @@ func TestLocationPathsIntegration(t *testing.T) {
 			// Test tile function
 			if tileFunc != nil {
 				tile := createTestTileForPath(coord)
-				result := tileFunc(tile, tmpDir, "png", true)
+				result, _ := tileFunc(tile, tmpDir, "png", true)
 
 				if result == "" {
 					t.Error("Tile function returned empty string")

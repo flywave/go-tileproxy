@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 	"image"
+	"sync"
 	"time"
 
 	"github.com/flywave/go-geo"
@@ -17,6 +18,7 @@ type Tile struct {
 	Cacheable bool
 	Size      int64
 	Timestamp time.Time
+	mu        sync.RWMutex
 }
 
 func NewTile(coord [3]int) *Tile {

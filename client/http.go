@@ -42,8 +42,14 @@ func createCollector(config *Config) *crawler.Collector {
 		Parallelism: config.Threads,
 		RandomDelay: time.Duration(config.RandomDelay) * time.Second,
 	})
+
+	tlsConfig := &tls.Config{InsecureSkipVerify: config.SkipSSL}
+	if config.SkipSSL {
+		log.Println("WARNING: SSL verification is disabled. This is insecure and should only be used in development/testing environments. Never disable SSL verification in production!")
+	}
+
 	sc.WithTransport(&http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: config.SkipSSL},
+		TLSClientConfig: tlsConfig,
 		Proxy:           http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   120 * time.Second,

@@ -12,7 +12,7 @@ import (
 type LocalCache struct {
 	Cache
 	cacheDir      string
-	tileLocation  func(*Tile, string, string, bool) string
+	tileLocation  TileLocationFunc
 	levelLocation func(int, string) string
 	creater       tile.SourceCreater
 	readBufPool   sync.Pool
@@ -35,7 +35,7 @@ func NewLocalCache(cache_dir string, directory_layout string, creater tile.Sourc
 	return c
 }
 
-func (c *LocalCache) TileLocation(tile *Tile, create_dir bool) string {
+func (c *LocalCache) TileLocation(tile *Tile, create_dir bool) (string, error) {
 	return c.tileLocation(tile, c.cacheDir, c.creater.GetExtension(), create_dir)
 }
 
@@ -48,7 +48,10 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 		return nil
 	}
 
-	location := c.TileLocation(tile, false)
+	location, err := c.TileLocation(tile, false)
+	if err != nil {
+		return err
+	}
 
 	if utils.FileExists(location) {
 		if withMetadata {
@@ -66,7 +69,7 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 
 func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, len(tiles.tiles))
+	errChan := make(chan error, len(tiles.tiles)+100)
 	semaphore := make(chan struct{}, 10)
 
 	for _, tile := range tiles.tiles {
@@ -80,7 +83,12 @@ func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			location := c.TileLocation(t, false)
+			location, err := c.TileLocation(t, false)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
 			if !utils.FileExists(location) {
 				errChan <- errors.New("not found")
 				return
@@ -90,16 +98,15 @@ func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 				c.LoadTileMetadata(t)
 			}
 
-			buf := c.readBufPool.Get().([]byte)
-			defer c.readBufPool.Put(buf)
-
 			data, err := os.ReadFile(location)
 			if err != nil {
 				errChan <- err
 				return
 			}
 
+			t.mu.Lock()
 			t.Source = c.creater.Create(data, t.Coord)
+			t.mu.Unlock()
 		}(tile)
 	}
 
@@ -117,21 +124,21 @@ func (c *LocalCache) StoreTile(tile *Tile) error {
 	if tile.Stored {
 		return nil
 	}
-	tile_loc := c.TileLocation(tile, true)
+	tile_loc, err := c.TileLocation(tile, true)
+	if err != nil {
+		return err
+	}
 	return c.store(tile, tile_loc)
 }
 
 func (c *LocalCache) store(tile *Tile, location string) error {
-	if ok, _ := utils.IsSymlink(location); ok {
-		os.Remove(location)
-	}
 	data := tile.Source.GetBuffer(nil, nil)
-	return os.WriteFile(location, data, os.ModePerm)
+	return os.WriteFile(location, data, 0644)
 }
 
 func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, len(tiles.tiles))
+	errChan := make(chan error, len(tiles.tiles)+100)
 	semaphore := make(chan struct{}, 10)
 
 	for _, tile := range tiles.tiles {
@@ -145,16 +152,18 @@ func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			tile_loc := c.TileLocation(t, true)
-			if ok, _ := utils.IsSymlink(tile_loc); ok {
-				os.Remove(tile_loc)
-			}
-
-			data := t.Source.GetBuffer(nil, nil)
-			if err := os.WriteFile(tile_loc, data, os.ModePerm); err != nil {
+			tile_loc, err := c.TileLocation(t, true)
+			if err != nil {
 				errChan <- err
 				return
 			}
+
+			data := t.Source.GetBuffer(nil, nil)
+			if err := os.WriteFile(tile_loc, data, 0644); err != nil {
+				errChan <- err
+				return
+			}
+			t.Stored = true
 		}(tile)
 	}
 
@@ -169,7 +178,10 @@ func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 }
 
 func (c *LocalCache) RemoveTile(tile *Tile) error {
-	location := c.TileLocation(tile, false)
+	location, err := c.TileLocation(tile, false)
+	if err != nil {
+		return err
+	}
 	return os.Remove(location)
 }
 
@@ -185,7 +197,10 @@ func (c *LocalCache) RemoveTiles(tiles *TileCollection) error {
 
 func (c *LocalCache) IsCached(tile *Tile) bool {
 	if tile.IsMissing() {
-		location := c.TileLocation(tile, false)
+		location, err := c.TileLocation(tile, false)
+		if err != nil {
+			return false
+		}
 		if utils.FileExists(location) {
 			return true
 		} else {
@@ -197,7 +212,10 @@ func (c *LocalCache) IsCached(tile *Tile) bool {
 }
 
 func (c *LocalCache) LoadTileMetadata(tile *Tile) error {
-	location := c.TileLocation(tile, false)
+	location, err := c.TileLocation(tile, false)
+	if err != nil {
+		return err
+	}
 	stats, err := os.Stat(location)
 	if err != nil {
 		return err

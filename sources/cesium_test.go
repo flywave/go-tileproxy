@@ -6,12 +6,12 @@ import (
 	"image/png"
 	"testing"
 
-	vec2d "github.com/flywave/go3d/float64/vec2"
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/client"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
+	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 // mockCesiumTileClient 是一个模拟的CesiumTileClient
@@ -90,18 +90,18 @@ type mockSource struct {
 	coord [3]int
 }
 
-func (m *mockSource) GetType() tile.TileType                             { return tile.TILE_IMAGERY }
-func (m *mockSource) GetSource() interface{}                             { return m.data }
-func (m *mockSource) SetSource(src interface{})                          {}
-func (m *mockSource) GetFileName() string                                { return "mock" }
-func (m *mockSource) GetSize() [2]uint32                                { return [2]uint32{256, 256} }
+func (m *mockSource) GetType() tile.TileType                                          { return tile.TILE_IMAGERY }
+func (m *mockSource) GetSource() interface{}                                          { return m.data }
+func (m *mockSource) SetSource(src interface{})                                       {}
+func (m *mockSource) GetFileName() string                                             { return "mock" }
+func (m *mockSource) GetSize() [2]uint32                                              { return [2]uint32{256, 256} }
 func (m *mockSource) GetBuffer(format *tile.TileFormat, opts tile.TileOptions) []byte { return m.data }
-func (m *mockSource) GetTile() interface{}                               { return m.coord }
-func (m *mockSource) GetCacheable() *tile.CacheInfo                      { return nil }
-func (m *mockSource) SetCacheable(c *tile.CacheInfo)                     {}
-func (m *mockSource) SetTileOptions(options tile.TileOptions)            {}
-func (m *mockSource) GetTileOptions() tile.TileOptions                   { return nil }
-func (m *mockSource) GetGeoReference() *geo.GeoReference                 { return nil }
+func (m *mockSource) GetTile() interface{}                                            { return m.coord }
+func (m *mockSource) GetCacheable() *tile.CacheInfo                                   { return nil }
+func (m *mockSource) SetCacheable(c *tile.CacheInfo)                                  {}
+func (m *mockSource) SetTileOptions(options tile.TileOptions)                         {}
+func (m *mockSource) GetTileOptions() tile.TileOptions                                { return nil }
+func (m *mockSource) GetGeoReference() *geo.GeoReference                              { return nil }
 
 // TestCesiumTileSource 是CesiumTileSource的完整测试套件
 func TestCesiumTileSource(t *testing.T) {
@@ -111,7 +111,7 @@ func TestCesiumTileSource(t *testing.T) {
 		conf[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 		conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
 		grid := geo.NewTileGrid(conf)
-		
+
 		mockCreater := &mockSourceCreater{}
 		options := &mockTileOptions{}
 
@@ -131,7 +131,7 @@ func TestCesiumTileSource(t *testing.T) {
 		conf[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 		conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
 		grid := geo.NewTileGrid(conf)
-		
+
 		mockCreater := &mockSourceCreater{}
 		options := &mockTileOptions{}
 
@@ -162,7 +162,7 @@ func TestCesiumTileSource(t *testing.T) {
 		conf[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 		conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
 		grid := geo.NewTileGrid(conf)
-		
+
 		mockCreater := &mockSourceCreater{}
 		options := &mockTileOptions{}
 
@@ -185,7 +185,7 @@ func TestCesiumTileSource(t *testing.T) {
 		conf[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 		conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
 		grid := geo.NewTileGrid(conf)
-		
+
 		mockCreater := &mockSourceCreater{}
 		options := &mockTileOptions{}
 
@@ -243,7 +243,7 @@ func TestCesiumTileSource(t *testing.T) {
 		conf[geo.TILEGRID_BBOX] = vec2d.Rect{Min: vec2d.T{-180, -90}, Max: vec2d.T{180, 90}}
 		conf[geo.TILEGRID_TILE_SIZE] = []uint32{256, 256}
 		grid := geo.NewTileGrid(conf)
-		
+
 		mockCreater := &mockSourceCreater{}
 		options := &mockTileOptions{}
 
@@ -256,7 +256,7 @@ func TestCesiumTileSource(t *testing.T) {
 					t.Logf("捕获panic: %v", r)
 				}
 			}()
-			
+
 			_, err := source.GetMap(nil)
 			if err == nil {
 				t.Log("nil查询参数处理")

@@ -72,7 +72,7 @@ func (p RequestParams) QueryString() string {
 	kv_pairs := []string{}
 	for key, values := range p {
 		value := strings.Join(values, ",")
-		kv_pairs = append(kv_pairs, key+"="+url.QueryEscape(value))
+		kv_pairs = append(kv_pairs, url.QueryEscape(key)+"="+url.QueryEscape(value))
 	}
 	return strings.Join(kv_pairs, "&")
 }
@@ -169,7 +169,7 @@ func (r *BaseRequest) QueryString() string {
 		} else {
 			val = v[0]
 		}
-		kv_pairs = append(kv_pairs, k+"="+url.QueryEscape(val))
+		kv_pairs = append(kv_pairs, url.QueryEscape(k)+"="+url.QueryEscape(val))
 	}
 
 	return strings.Join(kv_pairs, "&")

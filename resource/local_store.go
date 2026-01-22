@@ -25,7 +25,7 @@ func (c *LocalStore) Save(r Resource) error {
 
 	data := r.GetData()
 
-	if err := os.WriteFile(r.GetLocation(), data, 0777); err != nil {
+	if err := os.WriteFile(r.GetLocation(), data, 0644); err != nil {
 		return err
 	}
 
@@ -39,6 +39,7 @@ func (c *LocalStore) Load(r Resource) error {
 
 	if ok := utils.FileExists(r.GetLocation()); ok {
 		if f, err := os.Open(r.GetLocation()); err == nil {
+			defer f.Close()
 			bufs, e := io.ReadAll(f)
 			if e != nil {
 				return e
@@ -55,7 +56,7 @@ func (c *LocalStore) Load(r Resource) error {
 
 func NewLocalStore(cache_dir string) *LocalStore {
 	if !utils.FileExists(cache_dir) {
-		os.MkdirAll(cache_dir, 0777)
+		os.MkdirAll(cache_dir, 0755)
 	}
 	return &LocalStore{CacheDir: cache_dir}
 }

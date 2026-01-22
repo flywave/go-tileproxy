@@ -271,11 +271,11 @@ func TestMemFileSeek(t *testing.T) {
 
 	t.Run("seek current", func(t *testing.T) {
 		memFile := NewMemFile(data) // Reset
-		
+
 		// Read 6 bytes first
 		buf := make([]byte, 6)
 		memFile.Read(buf)
-		
+
 		// Seek relative to current position
 		pos, err := memFile.Seek(-1, io.SeekCurrent)
 		if err != nil {
@@ -284,7 +284,7 @@ func TestMemFileSeek(t *testing.T) {
 		if pos != 5 {
 			t.Errorf("Seek() pos = %d, want 5", pos)
 		}
-		
+
 		buf = make([]byte, 6)
 		n, err := memFile.Read(buf)
 		if err != nil {

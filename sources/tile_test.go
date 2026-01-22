@@ -14,7 +14,7 @@ import (
 func TestTileSource(t *testing.T) {
 	// 创建有效的PNG测试数据
 	tileData := []byte{137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 63, 248, 0, 0, 0, 12, 73, 68, 65, 84, 8, 215, 99, 248, 255, 255, 63, 0, 5, 254, 2, 254, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130}
-	
+
 	mock := &mockClient{code: 200, body: tileData}
 	ctx := &mockContext{c: mock}
 
@@ -29,7 +29,7 @@ func TestTileSource(t *testing.T) {
 
 	t.Run("基本创建和属性验证", func(t *testing.T) {
 		source := &TileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
-		
+
 		if source.Grid != grid {
 			t.Fatal("source.Grid should equal grid")
 		}
@@ -43,7 +43,7 @@ func TestTileSource(t *testing.T) {
 
 	t.Run("成功获取瓦片", func(t *testing.T) {
 		source := &TileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
-		
+
 		box := grid.TileBBox([3]int{0, 0, 1}, false)
 		query := &layer.MapQuery{
 			BBox:   box,
@@ -67,7 +67,7 @@ func TestTileSource(t *testing.T) {
 
 	t.Run("瓦片大小不匹配错误", func(t *testing.T) {
 		source := &TileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
-		
+
 		box := grid.TileBBox([3]int{0, 0, 1}, false)
 		query := &layer.MapQuery{
 			BBox:   box,
@@ -87,7 +87,7 @@ func TestTileSource(t *testing.T) {
 
 	t.Run("SRS不匹配错误", func(t *testing.T) {
 		source := &TileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
-		
+
 		box := grid.TileBBox([3]int{0, 0, 1}, false)
 		query := &layer.MapQuery{
 			BBox:   box,
@@ -107,7 +107,7 @@ func TestTileSource(t *testing.T) {
 
 	t.Run("BBOX不对齐错误", func(t *testing.T) {
 		source := &TileSource{Grid: grid, Client: tileClient, SourceCreater: creater}
-		
+
 		// 创建一个不对齐的BBOX
 		box := vec2d.Rect{Min: vec2d.T{-180.1, -90.1}, Max: vec2d.T{-179.9, -89.9}}
 		query := &layer.MapQuery{
@@ -131,9 +131,9 @@ func TestTileSource(t *testing.T) {
 		emptyMock := &mockClient{code: 200, body: nil}
 		emptyCtx := &mockContext{c: emptyMock}
 		emptyClient := client.NewTileClient(grid, urlTemplate, nil, emptyCtx)
-		
+
 		source := &TileSource{Grid: grid, Client: emptyClient, SourceCreater: creater}
-		
+
 		box := grid.TileBBox([3]int{0, 0, 1}, false)
 		query := &layer.MapQuery{
 			BBox:   box,
@@ -156,9 +156,9 @@ func TestTileSource(t *testing.T) {
 		var coverage geo.Coverage = nil // 使用nil作为coverage
 		var opts tile.TileOptions = nil // TileOptions是接口类型
 		resRange := &geo.ResolutionRange{}
-		
+
 		source := NewTileSource(grid, tileClient, coverage, opts, resRange, creater)
-		
+
 		if source == nil {
 			t.Fatal("NewTileSource should not return nil")
 		}

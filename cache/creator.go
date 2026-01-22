@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
@@ -119,7 +120,13 @@ func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := c.manager.Lock(lockCtx, t, func() error {
+	err := c.manager.Lock(lockCtx, t, func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic in createSingleTile: %v", r)
+			}
+		}()
+
 		if !c.IsCached(t.Coord) {
 			source, err := c.querySources(query)
 			if err != nil {
@@ -211,7 +218,13 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := c.manager.Lock(lockCtx, main_tile, func() error {
+	err := c.manager.Lock(lockCtx, main_tile, func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic in createMetaTile: %v", r)
+			}
+		}()
+
 		flag := true
 
 		for _, t := range metaTile.GetTiles() {
@@ -273,7 +286,13 @@ func (c *TileCreator) createSingleMetaTile(metaTile *geo.MetaTile) ([]*Tile, err
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := c.manager.Lock(lockCtx, main_tile, func() error {
+	err := c.manager.Lock(lockCtx, main_tile, func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic in createSingleMetaTile: %v", r)
+			}
+		}()
+
 		if !c.IsCached(main_tile.Coord) {
 			metaTileImage, err := c.querySources(query)
 			if err != nil {
@@ -326,7 +345,13 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) ([]*Tile, erro
 	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err := c.manager.Lock(lockCtx, main_tile, func() error {
+	err := c.manager.Lock(lockCtx, main_tile, func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic in createBulkMetaTile: %v", r)
+			}
+		}()
+
 		flag := true
 
 		for _, t := range meta_tile.GetTiles() {

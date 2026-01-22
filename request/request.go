@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"unicode"
 )
 
 type ParamPair []string
@@ -71,10 +72,34 @@ func (p RequestParams) Set(key string, val []string) {
 func (p RequestParams) QueryString() string {
 	kv_pairs := []string{}
 	for key, values := range p {
+		if !isValidParamName(key) {
+			continue
+		}
+		if len(values) == 0 {
+			continue
+		}
 		value := strings.Join(values, ",")
+		if len(value) > 1000 {
+			value = value[:1000]
+		}
 		kv_pairs = append(kv_pairs, url.QueryEscape(key)+"="+url.QueryEscape(value))
 	}
 	return strings.Join(kv_pairs, "&")
+}
+
+func isValidParamName(name string) bool {
+	if name == "" {
+		return false
+	}
+	if len(name) > 100 {
+		return false
+	}
+	for _, r := range name {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '-' && r != '_' {
+			return false
+		}
+	}
+	return true
 }
 
 func (p RequestParams) copy() RequestParams {

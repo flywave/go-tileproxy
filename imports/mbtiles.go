@@ -53,7 +53,7 @@ func (a *MBTilesImport) Open() error {
 	a.creater = cache.GetSourceCreater(a.options)
 
 	if a.options == nil || a.grid == nil || a.coverage == nil || a.creater == nil {
-		return errors.New("count open mbtiles")
+		return errors.New("cannot open mbtiles")
 	}
 
 	return nil

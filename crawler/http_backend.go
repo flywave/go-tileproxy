@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -35,10 +36,11 @@ var (
 )
 
 type httpBackend struct {
-	LimitRules []*LimitRule
-	Client     *http.Client
-	lock       *sync.RWMutex
-	cacheStats struct {
+	LimitRules  []*LimitRule
+	Client      *http.Client
+	lock        *sync.RWMutex
+	maxBodySize int
+	cacheStats  struct {
 		hits   uint64
 		misses uint64
 		mu     sync.RWMutex
@@ -93,6 +95,7 @@ func (h *httpBackend) Init(jar http.CookieJar) {
 		Timeout: 10 * time.Second,
 	}
 	h.lock = &sync.RWMutex{}
+	h.maxBodySize = 10 * 1024 * 1024 // 10MB default max body size
 }
 
 func (r *LimitRule) Match(domain string) bool {
@@ -249,13 +252,16 @@ func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc c
 		strings.HasSuffix(strings.ToLower(request.URL.Path), ".xml.gz")) {
 
 		gzReader := gzipReaderPool.Get().(*gzip.Reader)
-		defer gzipReaderPool.Put(gzReader)
 
 		if err := gzReader.Reset(bodyReader); err != nil {
+			gzipReaderPool.Put(gzReader)
 			return nil, err
 		}
 		bodyReader = gzReader
-		defer gzReader.Close()
+		defer func() {
+			gzReader.Close()
+			gzipReaderPool.Put(gzReader)
+		}()
 	}
 
 	// 使用预分配buffer读取数据
@@ -274,6 +280,11 @@ func (h *httpBackend) Do(request *http.Request, bodySize int, checkHeadersFunc c
 // readBody 优化的读取方法
 func (h *httpBackend) readBody(reader io.Reader, buf []byte) ([]byte, error) {
 	for {
+		// 如果已经达到最大大小，停止读取
+		if h.maxBodySize > 0 && len(buf) >= h.maxBodySize {
+			return nil, fmt.Errorf("body size exceeds maximum limit of %d bytes", h.maxBodySize)
+		}
+
 		n, err := reader.Read(buf[len(buf):cap(buf)])
 		buf = buf[:len(buf)+n]
 		if err != nil {
@@ -284,7 +295,11 @@ func (h *httpBackend) readBody(reader io.Reader, buf []byte) ([]byte, error) {
 		}
 		// 如果buffer满了，需要扩容
 		if len(buf) == cap(buf) {
-			newBuf := make([]byte, len(buf), cap(buf)*2)
+			newCap := cap(buf) * 2
+			if h.maxBodySize > 0 && newCap > h.maxBodySize {
+				newCap = h.maxBodySize
+			}
+			newBuf := make([]byte, len(buf), newCap)
 			copy(newBuf, buf)
 			buf = newBuf
 		}

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kennygrant/sanitize"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 	tms100 "github.com/flywave/ogc-osgeo/pkg/tms100"
@@ -124,6 +127,10 @@ func (s *TileService) internalLayer(tile_request *request.TileRequest) Provider 
 		name = tile_request.Layer
 	}
 
+	if !isValidLayerName(name) {
+		return nil
+	}
+
 	if l, ok := s.Layers[name]; ok {
 		return l
 	}
@@ -145,10 +152,35 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	} else {
 		name = tile_request.Layer
 	}
+	if !isValidLayerName(name) {
+		return nil
+	}
 	if l, ok := s.Layers[name]; ok {
 		return l
 	}
 	return nil
+}
+
+func isValidLayerName(name string) bool {
+	if name == "" {
+		return false
+	}
+
+	if len(name) > 256 {
+		return false
+	}
+
+	allowedPattern := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+	if !allowedPattern.MatchString(name) {
+		return false
+	}
+
+	sanitized := sanitize.BaseName(name)
+	if sanitized != name {
+		return false
+	}
+
+	return true
 }
 
 func (s *TileService) getLayer(tile_request *request.TileRequest) (Provider, geo.Coverage, *RequestError) {

@@ -93,9 +93,24 @@ func (r *TileRequest) initRequest() error {
 		r.Dimensions["_layer_spec"] = []string{result["layer_spec"]}
 	}
 	if r.Tile == nil {
-		x, _ := strconv.ParseInt(result["x"], 10, 64)
-		y, _ := strconv.ParseInt(result["y"], 10, 64)
-		z, _ := strconv.ParseInt(result["z"], 10, 64)
+		x, err := strconv.ParseInt(result["x"], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid tile x coordinate: %w", err)
+		}
+		y, err := strconv.ParseInt(result["y"], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid tile y coordinate: %w", err)
+		}
+		z, err := strconv.ParseInt(result["z"], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid tile z coordinate: %w", err)
+		}
+		if x < 0 || y < 0 || z < 0 {
+			return fmt.Errorf("tile coordinates must be non-negative: x=%d, y=%d, z=%d", x, y, z)
+		}
+		if z > 30 {
+			return fmt.Errorf("tile zoom level exceeds maximum of 30: z=%d", z)
+		}
 		r.Tile = []int{int(x), int(y), int(z)}
 	}
 	if format, ok := result["format"]; r.Format == nil && ok {

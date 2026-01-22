@@ -15,23 +15,59 @@ type TileLocker interface {
 
 type FileTileLocker struct {
 	TileLocker
-	f          *flock.Flock
+	basePath   string
 	retryDelay time.Duration
+	lockMap    map[string]*flock.Flock
+	mu         sync.Mutex
 }
 
-func NewFileTileLocker(path string, retryDelay time.Duration) TileLocker {
-	return &FileTileLocker{f: flock.NewFlock(path), retryDelay: retryDelay}
+func NewFileTileLocker(basePath string, retryDelay time.Duration) TileLocker {
+	if retryDelay == 0 {
+		retryDelay = 100 * time.Millisecond
+	}
+	return &FileTileLocker{
+		basePath:   basePath,
+		retryDelay: retryDelay,
+		lockMap:    make(map[string]*flock.Flock),
+	}
 }
 
 func (l *FileTileLocker) Lock(ctx context.Context, tile *Tile, run func() error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
+
+	key := fmt.Sprintf("%d_%d_%d", tile.Coord[0], tile.Coord[1], tile.Coord[2])
+	lockPath := l.basePath + "-" + key + ".lock"
+
+	l.mu.Lock()
+	f, exists := l.lockMap[key]
+	if !exists {
+		f = flock.NewFlock(lockPath)
+		l.lockMap[key] = f
+	}
+	l.mu.Unlock()
+
+	lockedCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
 	for {
-		if err := run(); err != nil {
-			return err
+		select {
+		case <-lockedCtx.Done():
+			return lockedCtx.Err()
+		default:
+			if ok, err := f.TryLock(); err != nil {
+				return fmt.Errorf("failed to acquire file lock: %w", err)
+			} else if ok {
+				defer func() {
+					if unlockErr := f.Unlock(); unlockErr != nil {
+						fmt.Printf("warning: failed to unlock tile lock: %v\n", unlockErr)
+					}
+				}()
+				return run()
+			}
+			time.Sleep(l.retryDelay)
 		}
-		return nil
 	}
 }
 
@@ -57,7 +93,8 @@ func (l *InMemoryTileLocker) Lock(ctx context.Context, tile *Tile, run func() er
 	key := fmt.Sprintf("%d_%d_%d", tile.Coord[0], tile.Coord[1], tile.Coord[2])
 
 	l.mu.Lock()
-	if _, locked := l.locks[key]; locked {
+	_, locked := l.locks[key]
+	if locked {
 		ch := make(chan struct{})
 		l.waitChs[key] = append(l.waitChs[key], ch)
 		l.mu.Unlock()
@@ -65,24 +102,36 @@ func (l *InMemoryTileLocker) Lock(ctx context.Context, tile *Tile, run func() er
 		select {
 		case <-ch:
 		case <-ctx.Done():
+			l.mu.Lock()
+			channels := l.waitChs[key]
+			for i, c := range channels {
+				if c == ch {
+					l.waitChs[key] = append(channels[:i], channels[i+1:]...)
+					break
+				}
+			}
+			l.mu.Unlock()
 			return ctx.Err()
 		}
 
 		l.mu.Lock()
-		defer l.mu.Unlock()
-	} else {
-		l.locks[key] = struct{}{}
-		l.mu.Unlock()
-		defer func() {
-			l.mu.Lock()
-			delete(l.locks, key)
-			for _, ch := range l.waitChs[key] {
-				close(ch)
-			}
-			delete(l.waitChs, key)
+		if _, locked := l.locks[key]; locked {
 			l.mu.Unlock()
-		}()
+			return fmt.Errorf("inconsistent lock state for key %s", key)
+		}
 	}
+	l.locks[key] = struct{}{}
+	l.mu.Unlock()
+
+	defer func() {
+		l.mu.Lock()
+		delete(l.locks, key)
+		for _, ch := range l.waitChs[key] {
+			close(ch)
+		}
+		delete(l.waitChs, key)
+		l.mu.Unlock()
+	}()
 
 	return run()
 }

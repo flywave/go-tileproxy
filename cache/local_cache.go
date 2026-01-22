@@ -2,7 +2,9 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/flywave/go-tileproxy/tile"
@@ -16,6 +18,7 @@ type LocalCache struct {
 	levelLocation func(int, string) string
 	creater       tile.SourceCreater
 	readBufPool   sync.Pool
+	maxBufferSize int
 }
 
 func NewLocalCache(cache_dir string, directory_layout string, creater tile.SourceCreater) *LocalCache {
@@ -23,8 +26,9 @@ func NewLocalCache(cache_dir string, directory_layout string, creater tile.Sourc
 		os.MkdirAll(cache_dir, os.ModePerm)
 	}
 	c := &LocalCache{
-		cacheDir: cache_dir,
-		creater:  creater,
+		cacheDir:      cache_dir,
+		creater:       creater,
+		maxBufferSize: 10 * 1024 * 1024, // 10MB default max buffer size
 	}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
 	c.readBufPool = sync.Pool{
@@ -113,11 +117,15 @@ func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 	wg.Wait()
 	close(errChan)
 
-	var errs error
+	var errs []string
 	for err := range errChan {
-		errs = err
+		errs = append(errs, err.Error())
 	}
-	return errs
+
+	if len(errs) > 0 {
+		return fmt.Errorf("multiple errors encountered (%d): %s", len(errs), strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 func (c *LocalCache) StoreTile(tile *Tile) error {
@@ -170,11 +178,15 @@ func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 	wg.Wait()
 	close(errChan)
 
-	var errs error
+	var errs []string
 	for err := range errChan {
-		errs = err
+		errs = append(errs, err.Error())
 	}
-	return errs
+
+	if len(errs) > 0 {
+		return fmt.Errorf("multiple errors encountered (%d): %s", len(errs), strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 func (c *LocalCache) RemoveTile(tile *Tile) error {

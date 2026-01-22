@@ -5,7 +5,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
+	"strings"
 )
 
 func level_location(level int, cache_dir string) string {
@@ -49,6 +51,38 @@ func ensure_directory(location string) error {
 	return nil
 }
 
+func validateCachePath(cacheDir, filePath string) error {
+	if cacheDir == "" || filePath == "" {
+		return fmt.Errorf("cache directory or file path is empty")
+	}
+
+	absCacheDir, err := filepath.Abs(cacheDir)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for cache directory: %w", err)
+	}
+
+	absFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for file: %w", err)
+	}
+
+	relPath, err := filepath.Rel(absCacheDir, absFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to get relative path: %w", err)
+	}
+
+	if runtime.GOOS == "windows" {
+		relPath = filepath.ToSlash(relPath)
+		absCacheDir = filepath.ToSlash(absCacheDir)
+	}
+
+	if strings.HasPrefix(relPath, "..") {
+		return fmt.Errorf("path traversal attempt detected: %s is outside cache directory %s", filePath, cacheDir)
+	}
+
+	return nil
+}
+
 func tile_location_tc(tile *Tile, cache_dir string, file_ext string, create_dir bool) (string, error) {
 	if tile.Location == "" {
 		x, y, z := tile.Coord[0], tile.Coord[1], tile.Coord[2]
@@ -65,6 +99,9 @@ func tile_location_tc(tile *Tile, cache_dir string, file_ext string, create_dir 
 			fmt.Sprintf("%03d.%s", (int(y) % 1000), file_ext)}
 		tile.Location = path.Join(parts...)
 		tile.Location = filepath.Clean(tile.Location)
+	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
 	}
 	if create_dir {
 		dir := path.Dir(tile.Location)
@@ -90,6 +127,9 @@ func tile_location_mp(tile *Tile, cache_dir string, file_ext string, create_dir 
 		tile.Location = path.Join(parts...)
 		tile.Location = filepath.Clean(tile.Location)
 	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
+	}
 	if create_dir {
 		dir := path.Dir(tile.Location)
 		if err := ensure_directory(dir); err != nil {
@@ -110,6 +150,9 @@ func tile_location_tms(tile *Tile, cache_dir string, file_ext string, create_dir
 			strconv.Itoa(x), strconv.Itoa(y)+"."+file_ext)
 		tile.Location = filepath.Clean(tile.Location)
 	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
+	}
 	if create_dir {
 		dir := path.Dir(tile.Location)
 		if err := ensure_directory(dir); err != nil {
@@ -127,6 +170,9 @@ func tile_location_reverse_tms(tile *Tile, cache_dir string, file_ext string, cr
 		}
 		tile.Location = path.Join(cache_dir, strconv.Itoa(y), strconv.Itoa(x), strconv.Itoa(z)+"."+file_ext)
 		tile.Location = filepath.Clean(tile.Location)
+	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
 	}
 	if create_dir {
 		dir := path.Dir(tile.Location)
@@ -162,6 +208,9 @@ func tile_location_quadkey(tile *Tile, cache_dir string, file_ext string, create
 			cache_dir, quadKey+"."+file_ext)
 		tile.Location = filepath.Clean(tile.Location)
 	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
+	}
 	if create_dir {
 		dir := path.Dir(tile.Location)
 		if err := ensure_directory(dir); err != nil {
@@ -180,6 +229,9 @@ func tile_location_arcgiscache(tile *Tile, cache_dir string, file_ext string, cr
 		parts := []string{cache_dir, fmt.Sprintf("L%02d", z), fmt.Sprintf("R%08x", y), fmt.Sprintf("C%08x.%s", x, file_ext)}
 		tile.Location = path.Join(parts...)
 		tile.Location = filepath.Clean(tile.Location)
+	}
+	if err := validateCachePath(cache_dir, tile.Location); err != nil {
+		return "", err
 	}
 	if create_dir {
 		dir := path.Dir(tile.Location)

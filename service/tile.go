@@ -127,10 +127,6 @@ func (s *TileService) internalLayer(tile_request *request.TileRequest) Provider 
 		name = tile_request.Layer
 	}
 
-	if !isValidLayerName(name) {
-		return nil
-	}
-
 	if l, ok := s.Layers[name]; ok {
 		return l
 	}

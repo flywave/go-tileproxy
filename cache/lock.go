@@ -48,27 +48,15 @@ func (l *FileTileLocker) Lock(ctx context.Context, tile *Tile, run func() error)
 	}
 	l.mu.Unlock()
 
-	lockedCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
-
-	for {
-		select {
-		case <-lockedCtx.Done():
-			return lockedCtx.Err()
-		default:
-			if ok, err := f.TryLock(); err != nil {
-				return fmt.Errorf("failed to acquire file lock: %w", err)
-			} else if ok {
-				defer func() {
-					if unlockErr := f.Unlock(); unlockErr != nil {
-						fmt.Printf("warning: failed to unlock tile lock: %v\n", unlockErr)
-					}
-				}()
-				return run()
-			}
-			time.Sleep(l.retryDelay)
-		}
+	locked, err := f.TryLockContext(ctx, l.retryDelay)
+	if err != nil {
+		return fmt.Errorf("failed to acquire file lock: %w", err)
 	}
+	if !locked {
+		return ctx.Err()
+	}
+
+	return run()
 }
 
 type InMemoryTileLocker struct {

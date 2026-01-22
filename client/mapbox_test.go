@@ -49,7 +49,7 @@ func (c *mapboxTestContext) Client() HttpClient {
 
 func TestNewMapboxTileClient(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	client := NewMapboxTileClient(
 		"http://test.com/tilejson",
 		"http://test.com/stats",
@@ -58,27 +58,27 @@ func TestNewMapboxTileClient(t *testing.T) {
 		"access_token",
 		ctx,
 	)
-	
+
 	if client == nil {
 		t.Fatal("NewMapboxTileClient returned nil")
 	}
-	
+
 	if client.TilejsonURL != "http://test.com/tilejson" {
 		t.Errorf("Expected TilejsonURL to be 'http://test.com/tilejson', got '%s'", client.TilejsonURL)
 	}
-	
+
 	if client.TileStatsURL != "http://test.com/stats" {
 		t.Errorf("Expected TileStatsURL to be 'http://test.com/stats', got '%s'", client.TileStatsURL)
 	}
-	
+
 	if client.AccessToken != "test_token" {
 		t.Errorf("Expected AccessToken to be 'test_token', got '%s'", client.AccessToken)
 	}
-	
+
 	if client.AccessTokenName != "access_token" {
 		t.Errorf("Expected AccessTokenName to be 'access_token', got '%s'", client.AccessTokenName)
 	}
-	
+
 	if client.Sku != "test_sku" {
 		t.Errorf("Expected Sku to be 'test_sku', got '%s'", client.Sku)
 	}
@@ -119,7 +119,7 @@ func TestMapboxClientBuildQuery(t *testing.T) {
 				AccessToken:     "test_token",
 				AccessTokenName: "access_token",
 			},
-			url:     "://invalid-url",
+			url:      "://invalid-url",
 			expected: "",
 			wantErr:  true,
 		},
@@ -138,7 +138,7 @@ func TestMapboxClientBuildQuery(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := tt.client.buildQuery(tt.url)
-			
+
 			if tt.wantErr {
 				if err == nil {
 					t.Error("Expected error but got none")
@@ -203,7 +203,7 @@ func TestMapboxTileClientBuildTileQuery(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.client.buildTileQuery(tt.coord)
-			
+
 			if result != tt.expected {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}
@@ -213,7 +213,7 @@ func TestMapboxTileClientBuildTileQuery(t *testing.T) {
 
 func TestMapboxTileClientGetTile(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	client := NewMapboxTileClient(
 		"http://test.com/tilejson",
 		"http://test.com/stats",
@@ -222,26 +222,26 @@ func TestMapboxTileClientGetTile(t *testing.T) {
 		"access_token",
 		ctx,
 	)
-	
+
 	// 设置mock响应
 	ctx.client.addResponse("http://test.com/tilejson?access_token=test_token", 200, []byte(`{"tiles":["http://test.com/{z}/{x}/{y}.png"]}`))
 	ctx.client.addResponse("http://test.com/3/1/2.png?access_token=test_token", 200, []byte("tile_data"))
-	
+
 	// 测试空TilesURL的情况 - 应该通过GetTileJSON获取
 	tile := client.GetTile([3]int{1, 2, 3})
 	if tile == nil {
 		t.Error("GetTile returned nil")
 	}
-	
+
 	if string(tile) != "tile_data" {
 		t.Errorf("Expected 'tile_data', got '%s'", string(tile))
 	}
-	
+
 	// 验证TilesURL已被设置
 	if len(client.TilesURL) == 0 {
 		t.Error("TilesURL was not populated")
 	}
-	
+
 	// 再次测试，现在TilesURL已设置
 	tile2 := client.GetTile([3]int{1, 2, 3})
 	if tile2 == nil {
@@ -251,7 +251,7 @@ func TestMapboxTileClientGetTile(t *testing.T) {
 
 func TestMapboxTileClientGetTileJSON(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	client := NewMapboxTileClient(
 		"http://test.com/tilejson",
 		"http://test.com/stats",
@@ -260,19 +260,19 @@ func TestMapboxTileClientGetTileJSON(t *testing.T) {
 		"access_token",
 		ctx,
 	)
-	
+
 	// 设置mock响应
 	ctx.client.addResponse("http://test.com/tilejson?access_token=test_token", 200, []byte(`{"tiles":["http://test.com/{z}/{x}/{y}.png"]}`))
-	
+
 	tileJSON := client.GetTileJSON()
 	if tileJSON == nil {
 		t.Error("GetTileJSON returned nil")
 	}
-	
+
 	if len(client.TilesURL) == 0 {
 		t.Error("TilesURL was not populated from tileJSON")
 	}
-	
+
 	if client.TilesURL[0] != "http://test.com/{z}/{x}/{y}.png" {
 		t.Errorf("Expected TilesURL to contain 'http://test.com/{z}/{x}/{y}.png', got '%s'", client.TilesURL[0])
 	}
@@ -280,7 +280,7 @@ func TestMapboxTileClientGetTileJSON(t *testing.T) {
 
 func TestMapboxTileClientGetTileStats(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	client := NewMapboxTileClient(
 		"http://test.com/tilejson",
 		"http://test.com/stats",
@@ -289,10 +289,10 @@ func TestMapboxTileClientGetTileStats(t *testing.T) {
 		"access_token",
 		ctx,
 	)
-	
+
 	// 设置mock响应
 	ctx.client.addResponse("http://test.com/stats?access_token=test_token", 200, []byte(`{"tilestats":{}}`))
-	
+
 	tileStats := client.GetTileStats()
 	if tileStats == nil {
 		t.Error("GetTileStats returned nil")
@@ -301,7 +301,7 @@ func TestMapboxTileClientGetTileStats(t *testing.T) {
 
 func TestMapboxTileClientErrorHandling(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	client := NewMapboxTileClient(
 		"invalid-url",
 		"invalid-url",
@@ -310,18 +310,18 @@ func TestMapboxTileClientErrorHandling(t *testing.T) {
 		"access_token",
 		ctx,
 	)
-	
+
 	// 测试无效URL的处理
 	tileJSON := client.GetTileJSON()
 	if tileJSON != nil {
 		t.Error("Expected nil for invalid tilejson URL")
 	}
-	
+
 	tileStats := client.GetTileStats()
 	if tileStats != nil {
 		t.Error("Expected nil for invalid stats URL")
 	}
-	
+
 	// 测试404响应的处理
 	ctx.client.addResponse("http://nonexistent.com/tilejson?access_token=test_token", 404, nil)
 	tileJSON = client.GetTileJSON()
@@ -332,7 +332,7 @@ func TestMapboxTileClientErrorHandling(t *testing.T) {
 
 func TestMapboxTileClientEdgeCases(t *testing.T) {
 	ctx := &mapboxTestContext{client: newMapboxTestClient()}
-	
+
 	// 测试空配置
 	client := NewMapboxTileClient(
 		"",
@@ -342,12 +342,12 @@ func TestMapboxTileClientEdgeCases(t *testing.T) {
 		"",
 		ctx,
 	)
-	
+
 	// 空配置应该能正常创建
 	if client == nil {
 		t.Fatal("NewMapboxTileClient with empty config returned nil")
 	}
-	
+
 	// 测试空token和sku
 	client2 := NewMapboxTileClient(
 		"http://test.com/tilejson",
@@ -357,7 +357,7 @@ func TestMapboxTileClientEdgeCases(t *testing.T) {
 		"",
 		ctx,
 	)
-	
+
 	result, err := client2.buildQuery("http://test.com/tilejson")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)

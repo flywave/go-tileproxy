@@ -9,6 +9,12 @@ import (
 	"github.com/flywave/go-tileproxy/crawler"
 )
 
+var defaultFutureTimeout = 30 * time.Second
+
+func SetDefaultFutureTimeout(timeout time.Duration) {
+	defaultFutureTimeout = timeout
+}
+
 type Future struct {
 	finished   bool
 	result     *crawler.Response
@@ -16,10 +22,10 @@ type Future struct {
 	error_     error
 	once       sync.Once
 	mu         sync.RWMutex
+	timeout    time.Duration
 }
 
 func (f *Future) GetResult() *crawler.Response {
-	// 快速检查是否已完成（使用读锁）
 	f.mu.RLock()
 	if f.finished {
 		result := f.result
@@ -28,7 +34,6 @@ func (f *Future) GetResult() *crawler.Response {
 	}
 	f.mu.RUnlock()
 
-	// 使用sync.Once确保channel只初始化一次
 	f.once.Do(func() {
 		f.mu.Lock()
 		if !f.finished && f.resultchan == nil {
@@ -37,8 +42,12 @@ func (f *Future) GetResult() *crawler.Response {
 		f.mu.Unlock()
 	})
 
-	// 创建带超时的context
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	timeout := defaultFutureTimeout
+	if f.timeout > 0 {
+		timeout = f.timeout
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	select {
@@ -48,7 +57,6 @@ func (f *Future) GetResult() *crawler.Response {
 			f.finished = true
 			f.result = nil
 			f.error_ = errors.New("timeout")
-			// 安全关闭channel
 			if f.resultchan != nil {
 				close(f.resultchan)
 				f.resultchan = nil
@@ -62,7 +70,6 @@ func (f *Future) GetResult() *crawler.Response {
 			f.finished = true
 			f.result = result
 			f.error_ = nil
-			// 安全关闭channel
 			if f.resultchan != nil {
 				close(f.resultchan)
 				f.resultchan = nil
@@ -77,23 +84,18 @@ func (f *Future) setResult(result *crawler.Response) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	// 检查是否已完成
 	if f.finished {
 		return
 	}
 
-	// 如果channel存在且未关闭，尝试发送结果
 	if f.resultchan != nil {
 		select {
 		case f.resultchan <- result:
-			// 成功发送
 		default:
-			// channel可能已满或已关闭，直接设置结果
 			f.result = result
 			f.finished = true
 		}
 	} else {
-		// 直接设置结果
 		f.result = result
 		f.finished = true
 	}
@@ -105,5 +107,16 @@ func newFuture() *Future {
 		result:     nil,
 		resultchan: nil,
 		error_:     nil,
+		timeout:    defaultFutureTimeout,
+	}
+}
+
+func newFutureWithTimeout(timeout time.Duration) *Future {
+	return &Future{
+		finished:   false,
+		result:     nil,
+		resultchan: nil,
+		error_:     nil,
+		timeout:    timeout,
 	}
 }

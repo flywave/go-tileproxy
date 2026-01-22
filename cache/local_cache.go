@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/flywave/go-tileproxy/tile"
 	"github.com/flywave/go-tileproxy/utils"
@@ -14,14 +15,23 @@ type LocalCache struct {
 	tileLocation  func(*Tile, string, string, bool) string
 	levelLocation func(int, string) string
 	creater       tile.SourceCreater
+	readBufPool   sync.Pool
 }
 
 func NewLocalCache(cache_dir string, directory_layout string, creater tile.SourceCreater) *LocalCache {
 	if !utils.FileExists(cache_dir) {
 		os.MkdirAll(cache_dir, os.ModePerm)
 	}
-	c := &LocalCache{cacheDir: cache_dir, creater: creater}
+	c := &LocalCache{
+		cacheDir: cache_dir,
+		creater:  creater,
+	}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
+	c.readBufPool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 0, 256*1024)
+		},
+	}
 	return c
 }
 
@@ -55,11 +65,50 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 }
 
 func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
-	var errs error
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(tiles.tiles))
+	semaphore := make(chan struct{}, 10)
+
 	for _, tile := range tiles.tiles {
-		if err := c.LoadTile(tile, withMetadata); err != nil {
-			errs = err
+		if !tile.IsMissing() {
+			continue
 		}
+
+		wg.Add(1)
+		go func(t *Tile) {
+			defer wg.Done()
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			location := c.TileLocation(t, false)
+			if !utils.FileExists(location) {
+				errChan <- errors.New("not found")
+				return
+			}
+
+			if withMetadata {
+				c.LoadTileMetadata(t)
+			}
+
+			buf := c.readBufPool.Get().([]byte)
+			defer c.readBufPool.Put(buf)
+
+			data, err := os.ReadFile(location)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			t.Source = c.creater.Create(data, t.Coord)
+		}(tile)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	var errs error
+	for err := range errChan {
+		errs = err
 	}
 	return errs
 }
@@ -81,11 +130,40 @@ func (c *LocalCache) store(tile *Tile, location string) error {
 }
 
 func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
-	var errs error
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(tiles.tiles))
+	semaphore := make(chan struct{}, 10)
+
 	for _, tile := range tiles.tiles {
-		if err := c.StoreTile(tile); err != nil {
-			errs = err
+		if tile.Stored {
+			continue
 		}
+
+		wg.Add(1)
+		go func(t *Tile) {
+			defer wg.Done()
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			tile_loc := c.TileLocation(t, true)
+			if ok, _ := utils.IsSymlink(tile_loc); ok {
+				os.Remove(tile_loc)
+			}
+
+			data := t.Source.GetBuffer(nil, nil)
+			if err := os.WriteFile(tile_loc, data, os.ModePerm); err != nil {
+				errChan <- err
+				return
+			}
+		}(tile)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	var errs error
+	for err := range errChan {
+		errs = err
 	}
 	return errs
 }

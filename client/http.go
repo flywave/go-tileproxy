@@ -51,6 +51,7 @@ func createCollector(config *Config) *crawler.Collector {
 			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   10,
 		IdleConnTimeout:       120 * time.Second,
 		TLSHandshakeTimeout:   30 * time.Second,
 		ExpectContinueTimeout: 10 * time.Second,

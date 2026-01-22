@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unsafe"
 
 	mapset "github.com/deckarep/golang-set"
 
@@ -245,7 +244,7 @@ func (r *WMTS100FeatureInfoRequest) init(param interface{}, url string, validate
 
 func (r *WMTS100FeatureInfoRequest) MakeRequest() map[string]interface{} {
 	ret := r.WMTS100TileRequest.MakeRequest()
-	params := (*WMTSFeatureInfoRequestParams)(unsafe.Pointer(&r.Params))
+	params := r.GetRequestParams()
 
 	ret["infoformat"], _ = params.params.Get("infoformat")
 	ret["pos"] = params.GetPos()

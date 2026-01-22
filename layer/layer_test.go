@@ -188,7 +188,7 @@ func TestLimitedLayer(t *testing.T) {
 	// 测试CombinedLayer
 	otherMock := &mockSource{}
 	otherLimited := &LimitedLayer{layer: otherMock, coverage: coverage}
-	
+
 	// 测试CombinedLayer不panic
 	_ = limited.CombinedLayer(otherLimited, &MapQuery{})
 }

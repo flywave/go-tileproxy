@@ -86,6 +86,7 @@ func (s *TerrainSource) GetQuantizedMeshTile() *qmt.QuantizedMeshTile {
 			if err != nil {
 				return nil
 			}
+			defer f.Close()
 			s.buf, err = io.ReadAll(f)
 			if err != nil {
 				return nil

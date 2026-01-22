@@ -177,6 +177,7 @@ func (s *ImageSource) makeImageBuf() error {
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 		s.buf, err = io.ReadAll(f)
 		if err != nil {
 			return err

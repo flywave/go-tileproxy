@@ -3,7 +3,10 @@ package setting
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 )
+
+const MaxJSONSize = 10 * 1024 * 1024 // 10MB
 
 type ProxyService struct {
 	Id        string                 `json:"id,omitempty"`
@@ -24,15 +27,19 @@ func NewProxyService(id string) *ProxyService {
 	}
 }
 
-func CreateProxyServiceFromJSON(content []byte) *ProxyService {
+func CreateProxyServiceFromJSON(content []byte) (*ProxyService, error) {
+	if len(content) > MaxJSONSize {
+		return nil, errors.New("JSON size exceeds maximum limit")
+	}
 	set := &ProxyService{}
 	reader := bytes.NewBuffer(content)
 	dec := json.NewDecoder(reader)
+	dec.DisallowUnknownFields()
 	if err := dec.Decode(set); err != nil {
-		return nil
+		return nil, err
 	}
 	set.Service = covertService(set.Service)
-	return set
+	return set, nil
 }
 
 func covertService(ser interface{}) interface{} {

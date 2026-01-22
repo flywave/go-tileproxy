@@ -13,12 +13,18 @@ type TileProxy struct {
 	Services        map[string]*Service
 	globals         *setting.GlobalsSetting
 	serviceReqRegex *regexp.Regexp
+	serviceCache    map[string]*Service
+	serviceCacheMu  sync.RWMutex
 }
 
 func (t *TileProxy) UpdateService(id string, d *setting.ProxyService, fac setting.CacheFactory) {
 	t.m.Lock()
 	t.Services[id] = NewService(d, t.globals, fac)
 	t.m.Unlock()
+
+	t.serviceCacheMu.Lock()
+	t.serviceCache[id] = t.Services[id]
+	t.serviceCacheMu.Unlock()
 }
 
 func (t *TileProxy) RemoveService(id string) {
@@ -29,6 +35,11 @@ func (t *TileProxy) RemoveService(id string) {
 	}
 	delete(t.Services, id)
 	t.m.Unlock()
+
+	t.serviceCacheMu.Lock()
+	delete(t.serviceCache, id)
+	t.serviceCacheMu.Unlock()
+
 	d.Clean()
 }
 
@@ -39,6 +50,10 @@ func (t *TileProxy) Reload(proxy []*setting.ProxyService, fac setting.CacheFacto
 		t.Services[proxy[i].Id] = NewService(proxy[i], t.globals, fac)
 	}
 	t.m.Unlock()
+
+	t.serviceCacheMu.Lock()
+	t.serviceCache = make(map[string]*Service)
+	t.serviceCacheMu.Unlock()
 }
 
 func (t *TileProxy) parseServiceId(r *http.Request) string {
@@ -64,18 +79,31 @@ func (s *TileProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	s.m.Lock()
-	if d, ok := s.Services[serviceId]; ok {
-		s.m.Unlock()
-		d.ServeHTTP(w, r)
-	} else {
-		s.m.Unlock()
-		w.WriteHeader(404)
+
+	s.serviceCacheMu.RLock()
+	d, ok := s.serviceCache[serviceId]
+	s.serviceCacheMu.RUnlock()
+
+	if !ok {
+		s.m.RLock()
+		d, ok = s.Services[serviceId]
+		s.m.RUnlock()
+
+		if ok {
+			s.serviceCacheMu.Lock()
+			s.serviceCache[serviceId] = d
+			s.serviceCacheMu.Unlock()
+		} else {
+			w.WriteHeader(404)
+			return
+		}
 	}
+
+	d.ServeHTTP(w, r)
 }
 
 func NewTileProxy(globals *setting.GlobalsSetting, proxys []*setting.ProxyService, fac setting.CacheFactory) *TileProxy {
-	proxy := &TileProxy{globals: globals}
+	proxy := &TileProxy{globals: globals, serviceCache: make(map[string]*Service)}
 	proxy.Reload(proxys, fac)
 	return proxy
 }

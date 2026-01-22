@@ -51,13 +51,13 @@ func (q *MapQuery) Eq(o *MapQuery) bool {
 }
 
 func (q *MapQuery) DimensionsForParams(params map[string]string) map[string]string {
-	keys := []string{}
+	lowerKeys := make(map[string]bool, len(params))
 	for k := range params {
-		keys = append(keys, strings.ToLower(k))
+		lowerKeys[strings.ToLower(k)] = true
 	}
 	result := make(map[string]string)
 	for k, v := range q.Dimensions {
-		if utils.ContainsString(keys, k) {
+		if lowerKeys[k] {
 			result[k] = utils.ValueToString(v.GetFirstValue())
 		}
 	}

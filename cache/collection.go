@@ -1,8 +1,13 @@
 package cache
 
-import "github.com/flywave/go-tileproxy/imagery"
+import (
+	"sync"
+
+	"github.com/flywave/go-tileproxy/imagery"
+)
 
 type TileCollection struct {
+	mu        sync.RWMutex
 	tiles     []*Tile
 	tilesDict map[[3]int]*Tile
 }
@@ -24,16 +29,22 @@ func NewTileCollection(tileCoords [][3]int) *TileCollection {
 }
 
 func (c *TileCollection) SetItem(tile *Tile) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.tiles = append(c.tiles, tile)
 	c.tilesDict[tile.Coord] = tile
 }
 
 func (c *TileCollection) UpdateItem(i int, tile *Tile) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.tiles[i] = tile
 	c.tilesDict[tile.Coord] = tile
 }
 
 func (c *TileCollection) GetItem(idx_or_coord interface{}) *Tile {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	switch v := idx_or_coord.(type) {
 	case [3]int:
 		if t, ok := c.tilesDict[v]; ok {
@@ -48,6 +59,8 @@ func (c *TileCollection) GetItem(idx_or_coord interface{}) *Tile {
 }
 
 func (c *TileCollection) Contains(idx_or_coord interface{}) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	switch v := idx_or_coord.(type) {
 	case [3]int:
 		_, ok := c.tilesDict[v]
@@ -59,18 +72,26 @@ func (c *TileCollection) Contains(idx_or_coord interface{}) bool {
 }
 
 func (c *TileCollection) Empty() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return len(c.tiles) == 0
 }
 
 func (c *TileCollection) GetSlice() []*Tile {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.tiles
 }
 
 func (c *TileCollection) GetMap() map[[3]int]*Tile {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.tilesDict
 }
 
 func (c *TileCollection) AllBlank() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	r := true
 	for _, t := range c.tiles {
 		if _, ok := t.Source.(*imagery.BlankImageSource); !ok {

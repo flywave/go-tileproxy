@@ -368,7 +368,7 @@ func (s *WMSMapRequest) ValidateStyles() error {
 func (s *WMSMapRequest) ValidateFormat(image_formats []string) error {
 	params := &WMSMapRequestParams{params: s.Params}
 	format := params.GetFormat()
-	if utils.ContainsString(image_formats, string(format)) {
+	if !utils.ContainsString(image_formats, string(format)) {
 		params.SetFormat("image/png")
 		return errors.New("unsupported image format: " + string(format))
 	}

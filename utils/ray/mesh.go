@@ -62,7 +62,7 @@ func (m *RayMesh) Init() {
 	}
 
 	m.Triangles = make([]Triangle, len(m.Faces))
-	if m.BBox != nil {
+	if m.BBox == nil {
 		m.BBox = m.GetBBox()
 	}
 	m.tree = m.newKDtree(m.BBox, allIndices, 0)

@@ -146,7 +146,7 @@ func Resample(tiles []tile.Source, tile_grid [2]int, tile_size [2]uint32, src_bb
 			src_opts_copy.Mode = RGB
 		}
 	}
-	
+
 	dest_opts_copy := *dest_opts
 	if dest_opts_copy.Mode == AUTO {
 		if dest_opts_copy.Transparent != nil && *dest_opts_copy.Transparent {

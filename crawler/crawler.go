@@ -51,10 +51,11 @@ type Collector struct {
 	backend                  *httpBackend
 	wg                       *sync.WaitGroup
 	lock                     *sync.RWMutex
-	// 性能优化字段
-	requestPool sync.Pool
-	contextPool sync.Pool
-	stats       struct {
+	requestPool              sync.Pool
+	contextPool              sync.Pool
+	workerPool               chan struct{}
+	maxWorkers               int
+	stats                    struct {
 		errorCount   uint32
 		successCount uint32
 		cacheHits    uint32
@@ -242,7 +243,6 @@ func (c *Collector) Init() {
 	c.TraceHTTP = false
 	c.Context = context.Background()
 
-	// 初始化对象池
 	c.requestPool = sync.Pool{
 		New: func() interface{} {
 			return &Request{}
@@ -254,7 +254,9 @@ func (c *Collector) Init() {
 		},
 	}
 
-	// 预分配callback slices
+	c.maxWorkers = 100
+	c.workerPool = make(chan struct{}, c.maxWorkers)
+
 	c.requestCallbacks = make([]RequestCallback, 0, 4)
 	c.responseCallbacks = make([]ResponseCallback, 0, 4)
 	c.responseHeadersCallbacks = make([]ResponseHeadersCallback, 0, 4)
@@ -369,7 +371,11 @@ func (c *Collector) scrape(u, method string, depth int, requestData io.Reader, c
 	u = parsedURL.String()
 	c.wg.Add(1)
 	if c.Async {
-		go c.fetch(u, method, depth, requestData, ctx, userData, hdr, req)
+		go func() {
+			c.workerPool <- struct{}{}
+			defer func() { <-c.workerPool }()
+			c.fetch(u, method, depth, requestData, ctx, userData, hdr, req)
+		}()
 		return nil
 	}
 	return c.fetch(u, method, depth, requestData, ctx, userData, hdr, req)
@@ -594,6 +600,14 @@ func (c *Collector) SetCookieJar(j http.CookieJar) {
 
 func (c *Collector) SetRequestTimeout(timeout time.Duration) {
 	c.backend.Client.Timeout = timeout
+}
+
+func (c *Collector) SetMaxWorkers(maxWorkers int) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.maxWorkers = maxWorkers
+	newPool := make(chan struct{}, maxWorkers)
+	c.workerPool = newPool
 }
 
 func (c *Collector) SetProxy(proxyURL string) error {

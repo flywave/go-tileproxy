@@ -130,8 +130,8 @@ func TestMapboxService_GetTileJSON(t *testing.T) {
 func TestMapboxService_GetTile(t *testing.T) {
 	// 创建mock grid
 	grid := geo.NewTileGrid(map[string]interface{}{
-		"srs":      geo.NewProj("EPSG:3857"),
-		"bbox":     []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
+		"srs":       geo.NewProj("EPSG:3857"),
+		"bbox":      []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
 		"tile_size": []uint32{256, 256},
 		"origin":    geo.ORIGIN_NW,
 	})
@@ -273,8 +273,8 @@ func TestMapboxService_GetTile(t *testing.T) {
 func TestMapboxService_GetTile_WithVector(t *testing.T) {
 	// 创建mock grid
 	grid := geo.NewTileGrid(map[string]interface{}{
-		"srs":      geo.NewProj("EPSG:3857"),
-		"bbox":     []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
+		"srs":       geo.NewProj("EPSG:3857"),
+		"bbox":      []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
 		"tile_size": []uint32{256, 256},
 		"origin":    geo.ORIGIN_NW,
 	})
@@ -342,8 +342,8 @@ func TestMapboxService_GetTile_WithVector(t *testing.T) {
 func TestMapboxService_GetTile_WithRasterDem(t *testing.T) {
 	// 创建mock grid
 	grid := geo.NewTileGrid(map[string]interface{}{
-		"srs":      geo.NewProj("EPSG:3857"),
-		"bbox":     []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
+		"srs":       geo.NewProj("EPSG:3857"),
+		"bbox":      []float64{-20037508.34, -20037508.34, 20037508.34, 20037508.34},
 		"tile_size": []uint32{256, 256},
 		"origin":    geo.ORIGIN_NW,
 	})

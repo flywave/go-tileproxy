@@ -1,0 +1,71 @@
+{
+  "id": "mapbox-proxy",
+  "service": {
+    "type": "mapbox",
+    "layers": [
+      {
+        "source": "mapbox_raster_cache",
+        "name": "raster",
+        "tilejson": "raster",
+        "zoom_range": [0, 18]
+      },
+      {
+        "source": "mapbox_vector_cache",
+        "name": "streets",
+        "tilejson": "streets",
+        "zoom_range": [0, 18]
+      }
+    ]
+  },
+  "grids": {
+    "global_webmercator": {
+      "name": "GLOBAL_WEB_MERCATOR",
+      "srs": "EPSG:3857",
+      "origin": "ul"
+    }
+  },
+  "sources": {
+    "mapbox_raster": {
+      "type": "mapbox",
+      "req": {
+        "url": "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.pngraw",
+        "grid": "global_webmercator",
+        "format": "png"
+      },
+      "transparent": false
+    },
+    "mapbox_vector": {
+      "type": "mapbox",
+      "req": {
+        "url": "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
+        "grid": "global_webmercator",
+        "format": "mvt"
+      },
+      "transparent": true
+    }
+  },
+  "caches": {
+    "mapbox_raster_cache": {
+      "sources": ["mapbox_raster"],
+      "name": "mapbox_raster_cache",
+      "grid": "global_webmercator",
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/mapbox/raster",
+        "directory_layout": "tms"
+      }
+    },
+    "mapbox_vector_cache": {
+      "sources": ["mapbox_vector"],
+      "name": "mapbox_vector_cache",
+      "grid": "global_webmercator",
+      "format": "mvt",
+      "request_format": "pbf",
+      "cache": {
+        "directory": "./cache/mapbox/vector",
+        "directory_layout": "tms"
+      }
+    }
+  }
+}

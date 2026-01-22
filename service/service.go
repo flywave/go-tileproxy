@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/flywave/go-geo"
@@ -20,6 +21,12 @@ type BaseService struct {
 }
 
 func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	if path == "/health" || path == "/health/" {
+		s.healthCheckHandler(w, r)
+		return
+	}
+
 	req := s.RequestParser(r)
 	if req == nil {
 		w.WriteHeader(404)
@@ -33,6 +40,8 @@ func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.WriteHeader(404)
 		}
+	} else {
+		w.WriteHeader(404)
 	}
 }
 
@@ -45,4 +54,15 @@ func (s *BaseService) RequestParser(r *http.Request) request.Request {
 
 func (s *BaseService) DecorateTile(image tile.Source, service string, layers []string, query_extent *geo.MapExtent) tile.Source {
 	return image
+}
+
+func (s *BaseService) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	healthStatus := map[string]string{
+		"status": "healthy",
+	}
+
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(map[string]interface{}{"health": healthStatus})
 }

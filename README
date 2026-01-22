@@ -1,1 +1,160 @@
-# Tile proxy For GO
+# go-tileproxy
+
+A high-performance tile proxy server written in Go, supporting multiple tile services and formats with caching capabilities.
+
+## Features
+
+- **Multiple Service Types**: Support for WMS, WMTS, Mapbox Vector Tiles, XYZ/OSM tiles, Cesium 3D Tiles, and ArcGIS REST services
+- **Tile Formats**: PNG, JPEG, WebP, MVT, PBF, GeoJSON, Terrain, LERC
+- **Caching System**: Local file-based cache with multiple layout options (TMS, Quadkey, ArcGIS, MapProxy)
+- **Image Processing**: Tile merging, transformation, masking, and blank tile generation
+- **Import/Export**: Support for MBTiles, GeoPackage, and COG formats
+- **Reprojection**: Automatic tile reprojection between coordinate systems
+- **Concurrent Processing**: Thread-safe operations with optimized performance
+
+## Supported Services
+
+- **MapboxService**: Mapbox Vector Tiles specification
+- **WMSService**: Web Map Service (OGC standard) with GetMap and GetFeatureInfo support
+- **WMTSService**: Web Map Tile Service (OGC standard)
+- **TileService**: Standard XYZ/OSM tile services
+- **CesiumService**: Cesium 3D Tiles specification
+- **ArcGISService**: ArcGIS REST tile services
+
+## Supported Tile Types
+
+- `TILE_IMAGERY`: Raster image tiles (PNG, JPEG, WebP)
+- `TILE_VECTOR`: Vector tiles (MVT, PBF, GeoJSON)
+- `TILE_DEM`: Digital elevation model tiles (quantized mesh, terrain)
+
+## Requirements
+
+- Go 1.24 or higher
+
+## Installation
+
+```bash
+go get github.com/flywave/go-tileproxy
+```
+
+## Usage
+
+### Basic Example
+
+```go
+package main
+
+import (
+    "net/http"
+    
+    "github.com/flywave/go-tileproxy"
+    "github.com/flywave/go-tileproxy/setting"
+)
+
+func main() {
+    // Load configuration
+    globals := &setting.GlobalsSetting{}
+    services := []*setting.ProxyService{}
+    cacheFactory := &setting.DefaultCacheFactory{}
+    
+    // Create tile proxy
+    proxy := tileproxy.NewTileProxy(globals, services, cacheFactory)
+    
+    // Start HTTP server
+    http.ListenAndServe(":8080", proxy)
+}
+```
+
+### Running from Command Line
+
+```bash
+# Build the project
+go build ./...
+
+# Run tests
+go test ./...
+
+# Run the server
+go run ./cmd/main.go
+```
+
+## Building
+
+```bash
+# Build all packages
+go build ./...
+
+# Build executable
+go build -o tileproxy ./cmd
+```
+
+## Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -cover ./...
+
+# Run tests for a specific package
+go test ./cache
+go test ./service
+
+# Run with verbose output
+go test -v ./...
+```
+
+## Linting
+
+```bash
+# Format code
+go fmt ./...
+
+# Run vet
+go vet ./...
+```
+
+## Project Structure
+
+- `cache`: Cache management and local storage
+- `client`: HTTP clients for different service types
+- `service`: Service implementations for each protocol
+- `layer`: Layer abstractions and source management
+- `imagery`: Image processing and tile manipulation
+- `terrain`: Terrain and DEM tile handling
+- `vector`: Vector tile processing
+- `sources`: Source implementations (WMS, ArcGIS, Mapbox, etc.)
+- `request`: Request parsing and routing
+- `imports`: Import handlers (MBTiles, GeoPackage, archives)
+- `exports`: Export handlers (MBTiles, GeoPackage, COG)
+- `setting`: Configuration and settings management
+- `tile`: Tile definitions and options
+- `utils`: Utility functions
+
+## Configuration
+
+The proxy uses a configuration-based approach where services, sources, caches, and grids are defined through settings. Each service can have:
+
+- Multiple data sources (WMS, tile servers, etc.)
+- Cache configurations with different layouts
+- Grid definitions for projections and tile matrices
+- Legend and feature info support where applicable
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+Please ensure:
+- Code follows the project's style guidelines
+- All tests pass
+- New features include tests
+- Commits are clear and descriptive

@@ -1,0 +1,61 @@
+{
+  "id": "wms-proxy",
+  "service": {
+    "type": "wms",
+    "srs": ["EPSG:3857", "EPSG:4326"],
+    "image_formats": ["image/png", "image/jpeg"],
+    "layers": [
+      {
+        "sources": ["wms_cache"],
+        "name": "basemap",
+        "title": "Base WMS Layer"
+      },
+      {
+        "sources": ["wms_cache"],
+        "name": "overlay",
+        "title": "WMS Overlay Layer"
+      }
+    ],
+    "md": {
+      "title": "TileProxy WMS Service",
+      "abstract": "WMS proxy service with caching"
+    }
+  },
+  "grids": {
+    "global_webmercator": {
+      "name": "GLOBAL_WEB_MERCATOR",
+      "srs": "EPSG:3857",
+      "origin": "ul"
+    },
+    "global_geodetic": {
+      "name": "GLOBAL_GEODETIC",
+      "srs": "EPSG:4326",
+      "origin": "sw"
+    }
+  },
+  "sources": {
+    "omniscale": {
+      "type": "wms",
+      "req": {
+        "url": "https://maps.omniscale.net/osm/service",
+        "layers": "osm",
+        "srs": ["EPSG:3857"],
+        "transparent": true,
+        "format": "image/png"
+      }
+    }
+  },
+  "caches": {
+    "wms_cache": {
+      "sources": ["omniscale"],
+      "name": "wms_cache",
+      "grid": "global_webmercator",
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/wms",
+        "directory_layout": "tms"
+      }
+    }
+  }
+}

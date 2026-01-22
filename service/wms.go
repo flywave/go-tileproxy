@@ -400,7 +400,7 @@ func (s *WMSService) checkMapRequest(req request.Request) *RequestError {
 
 func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError {
 	var mapreq *request.WMSMapRequest
-	
+
 	// 根据请求类型获取MapRequest
 	switch v := req.(type) {
 	case *request.WMSFeatureInfoRequest:
@@ -415,7 +415,7 @@ func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError 
 	default:
 		return NewRequestError("invalid request type for feature info", "", &WMS130ExceptionHandler{}, req, false, nil)
 	}
-	
+
 	err := s.validateLayers(req)
 	if err != nil {
 		return err

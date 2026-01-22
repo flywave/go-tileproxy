@@ -1,0 +1,68 @@
+{
+  "id": "my-tileproxy",
+  "service": {
+    "type": "tms",
+    "layers": [
+      {
+        "source": "osm_cache",
+        "name": "osm"
+      },
+      {
+        "source": "satellite_cache",
+        "name": "satellite"
+      }
+    ]
+  },
+  "grids": {
+    "global_webmercator": {
+      "name": "GLOBAL_WEB_MERCATOR",
+      "srs": "EPSG:3857",
+      "origin": "ul"
+    },
+    "global_geodetic": {
+      "name": "GLOBAL_GEODETIC",
+      "srs": "EPSG:4326",
+      "origin": "sw"
+    }
+  },
+  "sources": {
+    "osm": {
+      "type": "tile",
+      "req": {
+        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "grid": "global_webmercator"
+      }
+    },
+    "satellite": {
+      "type": "tile",
+      "req": {
+        "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "grid": "global_webmercator"
+      }
+    }
+  },
+  "caches": {
+    "osm_cache": {
+      "sources": ["osm"],
+      "name": "osm_cache",
+      "grid": "global_webmercator",
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/osm",
+        "directory_layout": "tms"
+      }
+    },
+    "satellite_cache": {
+      "sources": ["satellite"],
+      "name": "satellite_cache",
+      "grid": "global_webmercator",
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/satellite",
+        "directory_layout": "tms"
+      }
+    }
+  }
+}

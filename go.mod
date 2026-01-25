@@ -20,7 +20,7 @@ require (
 	github.com/flywave/go-proj v0.0.0-20211220121303-46dc797a5cd0
 	github.com/flywave/go-quantized-mesh v0.0.0-20220602084751-eb72cc1f9c21
 	github.com/flywave/go-tin v0.0.0-20220223031304-eac1b215d1cb
-	github.com/flywave/go-xslt v0.0.0-20210730032627-a21173f9ee67
+	github.com/flywave/go-xslt v0.0.0-00010101000000-000000000000
 	github.com/flywave/go3d v0.0.0-20250816053852-aed5d825659f
 	github.com/flywave/imaging v1.6.5
 	github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc

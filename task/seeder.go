@@ -3,7 +3,34 @@ package task
 import (
 	"context"
 	"sync"
+	"time"
 )
+
+type RateLimiter interface {
+	Wait(ctx context.Context) error
+}
+
+type TaskRunnerConfig struct {
+	Concurrency      int
+	RateLimiter      RateLimiter
+	Timeout          time.Duration
+	RetryCount       int
+	RetryDelay       time.Duration
+	TempDir          string
+	ProgressInterval time.Duration
+}
+
+func DefaultTaskRunnerConfig() *TaskRunnerConfig {
+	return &TaskRunnerConfig{
+		Concurrency:      2,
+		RateLimiter:      nil,
+		Timeout:          0,
+		RetryCount:       0,
+		RetryDelay:       0,
+		TempDir:          "",
+		ProgressInterval: 5 * time.Second,
+	}
+}
 
 func seedTask(cancel context.CancelFunc, task *TileSeedTask, concurrency int, progress_logger ProgressLogger, seedProgress *TaskProgress) {
 	if task.GetCoverage() == nil {
@@ -42,6 +69,16 @@ func seedTask(cancel context.CancelFunc, task *TileSeedTask, concurrency int, pr
 }
 
 func Seed(cancel context.CancelFunc, tasks []*TileSeedTask, concurrency int, progress_logger ProgressLogger, cache_locker CacheLocker) {
+	config := DefaultTaskRunnerConfig()
+	config.Concurrency = concurrency
+	SeedWithConfig(cancel, tasks, config, progress_logger, cache_locker)
+}
+
+func SeedWithConfig(cancel context.CancelFunc, tasks []*TileSeedTask, config *TaskRunnerConfig, progress_logger ProgressLogger, cache_locker CacheLocker) {
+	if config == nil {
+		config = DefaultTaskRunnerConfig()
+	}
+
 	if cache_locker == nil {
 		cache_locker = &DummyCacheLocker{}
 	}
@@ -78,7 +115,7 @@ func Seed(cancel context.CancelFunc, tasks []*TileSeedTask, concurrency int, pro
 				start_progress = nil
 			}
 			seed_progress := &TaskProgress{oldLevelProgresses: start_progress}
-			seedTask(cancel, task, concurrency, progress_logger, seed_progress)
+			seedTask(cancel, task, config.Concurrency, progress_logger, seed_progress)
 		}); err != nil {
 			active_tasks = append([]*TileSeedTask{task}, active_tasks[:len(active_tasks)-1]...)
 		} else {

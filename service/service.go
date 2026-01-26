@@ -18,6 +18,9 @@ type BaseService struct {
 	Service
 	router        map[string]func(r request.Request) *Response
 	requestParser func(r *http.Request) request.Request
+	OnStart       func() error
+	OnStop        func() error
+	OnReload      func() error
 }
 
 func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -69,4 +72,25 @@ func (s *BaseService) healthCheckHandler(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(map[string]interface{}{"health": healthStatus})
+}
+
+func (s *BaseService) Start() error {
+	if s.OnStart != nil {
+		return s.OnStart()
+	}
+	return nil
+}
+
+func (s *BaseService) Stop() error {
+	if s.OnStop != nil {
+		return s.OnStop()
+	}
+	return nil
+}
+
+func (s *BaseService) Reload() error {
+	if s.OnReload != nil {
+		return s.OnReload()
+	}
+	return nil
 }

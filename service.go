@@ -1,7 +1,9 @@
 package tileproxy
 
 import (
+	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
@@ -31,6 +33,7 @@ type Service struct {
 	InfoSources   map[string]layer.InfoLayer
 	LegendSources map[string]layer.LegendLayer
 	Caches        map[string]cache.Manager
+	mu            sync.RWMutex
 }
 
 func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
@@ -133,6 +136,8 @@ func (s *Service) GetServiceType() ServiceType {
 }
 
 func (s *Service) GetGrid(name string) geo.Grid {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if g, ok := s.Grids[name]; ok {
 		return g
 	}
@@ -140,6 +145,8 @@ func (s *Service) GetGrid(name string) geo.Grid {
 }
 
 func (s *Service) GetSource(name string) layer.Layer {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if g, ok := s.Sources[name]; ok {
 		return g
 	}
@@ -147,6 +154,8 @@ func (s *Service) GetSource(name string) layer.Layer {
 }
 
 func (s *Service) GetCache(name string) cache.Manager {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if l, ok := s.Caches[name]; ok {
 		return l
 	}
@@ -154,6 +163,8 @@ func (s *Service) GetCache(name string) cache.Manager {
 }
 
 func (s *Service) GetCacheSource(name string, opt tile.TileOptions) layer.Layer {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	manager := s.GetCache(name)
 	if manager != nil {
 		tile_grid := manager.GetGrid()
@@ -174,6 +185,8 @@ func (s *Service) GetCacheSource(name string, opt tile.TileOptions) layer.Layer 
 }
 
 func (s *Service) GetInfoSource(name string) layer.InfoLayer {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if l, ok := s.InfoSources[name]; ok {
 		return l
 	}
@@ -181,6 +194,8 @@ func (s *Service) GetInfoSource(name string) layer.InfoLayer {
 }
 
 func (s *Service) GetLegendSource(name string) layer.LegendLayer {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if l, ok := s.LegendSources[name]; ok {
 		return l
 	}
@@ -195,4 +210,44 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.Service != nil {
 		s.Service.ServeHTTP(w, r)
 	}
+}
+
+func (s *Service) Reload(newConfig *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) error {
+	if newConfig == nil {
+		return fmt.Errorf("new configuration is nil")
+	}
+
+	if s.Id != newConfig.Id {
+		return fmt.Errorf("service ID mismatch: expected %s, got %s", s.Id, newConfig.Id)
+	}
+
+	if err := newConfig.Validate(); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	if err := s.stopService(); err != nil {
+		return fmt.Errorf("failed to stop service: %w", err)
+	}
+
+	s.load(newConfig, globals, fac)
+
+	if err := s.startService(); err != nil {
+		return fmt.Errorf("failed to start service: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) startService() error {
+	if srv, ok := s.Service.(interface{ Start() error }); ok {
+		return srv.Start()
+	}
+	return nil
+}
+
+func (s *Service) stopService() error {
+	if srv, ok := s.Service.(interface{ Stop() error }); ok {
+		return srv.Stop()
+	}
+	return nil
 }

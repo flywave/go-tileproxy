@@ -6,6 +6,8 @@ type ProgressStore interface {
 	Store(id string, progress interface{})
 	Get(id string) interface{}
 	Remove(id string)
+	List(prefix string) []string
+	GetProgress(id string) (*TaskProgress, error)
 }
 
 type ProgressLogger interface {
@@ -14,4 +16,5 @@ type ProgressLogger interface {
 	LogProgress(seed *TaskProgress, level int, bbox vec2d.Rect, tiles int)
 	SetCurrentTaskId(id string)
 	GetStore() ProgressStore
+	SetStore(store ProgressStore)
 }

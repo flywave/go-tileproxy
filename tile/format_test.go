@@ -18,7 +18,7 @@ func TestTileFormat_MimeType(t *testing.T) {
 		{"webp extension", "webp", "image/webp"},
 		{"json extension", "json", "application/json"},
 		{"geojson extension", "geojson", "application/json"},
-		{"terrain extension", "terrain", "application/vnd.quantized-mesh,application/octet-stream;q=1.0"},
+		{"terrain extension", "terrain", "application/vnd.quantized-mesh"},
 		{"full mimetype", "application/vnd.mapbox-vector-tile", "application/vnd.mapbox-vector-tile"},
 		{"full image mimetype", "image/png", "image/png"},
 	}

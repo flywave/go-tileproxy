@@ -153,19 +153,21 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	var sub_size [2]uint32
 	var sub_bbox vec2d.Rect
 
-	if _, ok := s.SrsExtents[mapreq.GetCrs()]; s.SrsExtents != nil && ok {
-		query_extent := &geo.MapExtent{BBox: bbox, Srs: srsProj}
-		if !s.SrsExtents[mapreq.GetCrs()].Contains(query_extent) {
-			limited_extent := s.SrsExtents[mapreq.GetCrs()].Intersection(query_extent)
-			if limited_extent == nil {
-				img_opts := s.ImageFormats[mapreq.GetFormatMimeType()]
-				img_opts.BgColor = mapreq.GetBGColor()
-				img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
-				tile := cache.GetEmptyTile(size, img_opts)
-				return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
+	if s.SrsExtents != nil {
+		if _, ok := s.SrsExtents[mapreq.GetCrs()]; ok {
+			query_extent := &geo.MapExtent{BBox: bbox, Srs: srsProj}
+			if !s.SrsExtents[mapreq.GetCrs()].Contains(query_extent) {
+				limited_extent := s.SrsExtents[mapreq.GetCrs()].Intersection(query_extent)
+				if limited_extent == nil {
+					img_opts := *s.ImageFormats[mapreq.GetFormatMimeType()]
+					img_opts.BgColor = mapreq.GetBGColor()
+					img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
+					tile := cache.GetEmptyTile(size, &img_opts)
+					return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
+				}
+				sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(bbox, size, limited_extent.BBox)
+				query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: srsProj, Format: mapreq.GetFormat()}
 			}
-			sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(bbox, size, limited_extent.BBox)
-			query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: srsProj, Format: mapreq.GetFormat()}
 		}
 	}
 
@@ -207,25 +209,26 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 		return err.Render()
 	}
 
-	img_opts, ok := s.ImageFormats[mapreq.GetFormatMimeType()]
+	base_opts, ok := s.ImageFormats[mapreq.GetFormatMimeType()]
 	if !ok {
 		return NewRequestError("unsupported image format", "", &WMS130ExceptionHandler{}, req, false, nil).Render()
 	}
+	img_opts := *base_opts
 	img_opts.BgColor = mapreq.GetBGColor()
 	img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
 	si := mapreq.GetSize()
-	result := merger.Merge(img_opts, si[:], mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs()), coverage)
+	result := merger.Merge(&img_opts, si[:], mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs()), coverage)
 
 	if !query.Eq(orig_query) {
 		imageSrc := result.(*imagery.ImageSource)
-		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], img_opts, nil)
+		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], &img_opts, nil)
 	}
 
 	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewProj(mapreq.GetCrs()), BBox: mapreq.GetBBox()})
 	imagesource := result.(*imagery.ImageSource)
 
 	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs())))
-	result_buf := result.GetBuffer(nil, img_opts)
+	result_buf := result.GetBuffer(nil, &img_opts)
 	f := img_opts.GetFormat()
 	resp := NewResponse(result_buf, 200, f.MimeType())
 
@@ -865,8 +868,8 @@ func (l *WMSGroupLayer) GetChildLayers() map[string]WMSLayer {
 		if iface, ok := lyr.(interface {
 			GetChildLayers() map[string]WMSLayer
 		}); ok {
-			new := iface.GetChildLayers()
-			for k, v := range new {
+			childLayers := iface.GetChildLayers()
+			for k, v := range childLayers {
 				layers[k] = v
 			}
 		} else if lyr.GetName() != "" {

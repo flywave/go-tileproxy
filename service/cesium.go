@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"time"
 
+	vec2d "github.com/flywave/go3d/float64/vec2"
+
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/layer"
 	"github.com/flywave/go-tileproxy/request"
 	"github.com/flywave/go-tileproxy/resource"
 	"github.com/flywave/go-tileproxy/tile"
-
-	vec2d "github.com/flywave/go3d/float64/vec2"
 )
 
 type CesiumExceptionHandler struct {
@@ -45,6 +45,10 @@ type CesiumServiceOptions struct {
 }
 
 func NewCesiumService(opts *CesiumServiceOptions) *CesiumService {
+	if opts.MaxTileAge == nil {
+		t := time.Duration(0)
+		opts.MaxTileAge = &t
+	}
 	s := &CesiumService{
 		Tilesets:   opts.Tilesets,
 		Metadata:   opts.Metadata,
@@ -262,8 +266,8 @@ func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool
 		}
 	}
 
-	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
-	if t.Source == nil {
+	t, err := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
+	if err != nil || t.Source == nil {
 		return nil, tl.emptyResponse()
 	}
 	format := tile_request.Format

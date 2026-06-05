@@ -243,7 +243,7 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 			if err != nil {
 				return err
 			}
-			for i, t := range splittedTiles.tiles {
+			for i, t := range splittedTiles.GetSliceCopy() {
 				tt, err := c.manager.ApplyTileFilter(t)
 				if err != nil {
 					return err
@@ -266,7 +266,7 @@ func (c *TileCreator) createMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
 		tiles.SetItem(NewTile(coord))
 	}
 	c.cache.LoadTiles(tiles, false)
-	return tiles.tiles, nil
+	return tiles.GetSliceCopy(), nil
 }
 
 func (c *TileCreator) createSingleMetaTile(metaTile *geo.MetaTile) ([]*Tile, error) {
@@ -394,5 +394,5 @@ func (c *TileCreator) createBulkMetaTile(meta_tile *geo.MetaTile) ([]*Tile, erro
 	}
 	c.cache.LoadTiles(ctiles, false)
 
-	return ctiles.tiles, nil
+	return ctiles.GetSliceCopy(), nil
 }

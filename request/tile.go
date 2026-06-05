@@ -12,6 +12,12 @@ import (
 	"github.com/flywave/go-tileproxy/tile"
 )
 
+var (
+	tileReqRegex         = regexp.MustCompile(`(?P<begin>/[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+	tmsCapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
+	tmsRootRequestRegex  = regexp.MustCompile(`/tiles/?$`)
+)
+
 type TiledRequest interface {
 	Request
 	GetFormat() *tile.TileFormat
@@ -62,7 +68,7 @@ func (r *TileRequest) GetRequestHandler() string {
 
 func (r *TileRequest) init() {
 	r.RequestHandlerName = "map"
-	r.TileReqRegex = regexp.MustCompile(`(?P<begin>/[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+	r.TileReqRegex = tileReqRegex
 	r.UseProfiles = false
 	r.RequestPrefix = "/tiles"
 	r.Dimensions = make(map[string][]string)
@@ -134,8 +140,8 @@ func NewTMSRequest(req *http.Request) *TMSRequest {
 
 func (r *TMSRequest) init() {
 	r.TileRequest.init()
-	r.CapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
-	r.RootRequestRegex = regexp.MustCompile(`/tiles/?$`)
+	r.CapabilitiesRegex = tmsCapabilitiesRegex
+	r.RootRequestRegex = tmsRootRequestRegex
 	r.UseProfiles = true
 	r.RequestPrefix = "/tms"
 	r.Dimensions = make(map[string][]string)

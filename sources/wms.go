@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	"image/color"
 
@@ -58,12 +59,20 @@ func (s *WMSSource) GetClient() client.MapClient {
 	return s.Client
 }
 
+func (s *WMSSource) getImageOptions() *imagery.ImageOptions {
+	opts, _ := s.Options.(*imagery.ImageOptions)
+	return opts
+}
+
 func (s *WMSSource) IsOpaque(query *layer.MapQuery) bool {
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return false
 	}
 
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return true
+	}
 
 	if imageOptions.Transparent != nil && *imageOptions.Transparent {
 		return false
@@ -84,7 +93,10 @@ func (s *WMSSource) IsOpaque(query *layer.MapQuery) bool {
 }
 
 func (s *WMSSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return nil, errors.New("invalid image options")
+	}
 
 	if s.ResRange != nil && !s.ResRange.Contains(query.BBox, query.Size, query.Srs) {
 		return imagery.NewBlankImageSource(query.Size, imageOptions, nil), nil
@@ -94,13 +106,17 @@ func (s *WMSSource) GetMap(query *layer.MapQuery) (tile.Source, error) {
 		return imagery.NewBlankImageSource(query.Size, imageOptions, nil), nil
 	}
 	resp := s.getMap(query)
-	opts := resp.GetTileOptions().(*imagery.ImageOptions)
-	opts.Opacity = s.Opacity
+	if opts, ok := resp.GetTileOptions().(*imagery.ImageOptions); ok {
+		opts.Opacity = s.Opacity
+	}
 	return resp, nil
 }
 
 func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return nil
+	}
 
 	format := imageOptions.Format
 	if format == "" {
@@ -134,7 +150,10 @@ func (s *WMSSource) getMap(query *layer.MapQuery) tile.Source {
 }
 
 func (s *WMSSource) getSubQuery(query *layer.MapQuery, format tile.TileFormat) tile.Source {
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return nil
+	}
 
 	size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, s.Extent.BBoxFor(query.Srs))
 	if size[0] == 0 || size[1] == 0 {
@@ -148,7 +167,10 @@ func (s *WMSSource) getSubQuery(query *layer.MapQuery, format tile.TileFormat) t
 }
 
 func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat) tile.Source {
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return nil
+	}
 
 	dst_srs := query.Srs
 	src_srs, _ := s.SupportedSRS.BestSrs(dst_srs)
@@ -179,8 +201,9 @@ func (s *WMSSource) getTransformed(query *layer.MapQuery, format tile.TileFormat
 	img = imagery.NewImageTransformer(src_srs, dst_srs, nil).Transform(img, src_bbox,
 		query.Size, dst_bbox, imageOptions)
 
-	opts := img.GetTileOptions().(*imagery.ImageOptions)
-	opts.Format = format
+	if opts, ok := img.GetTileOptions().(*imagery.ImageOptions); ok {
+		opts.Format = format
+	}
 	return img
 }
 
@@ -197,16 +220,21 @@ func (s *WMSSource) isCompatible(other *WMSSource, query *layer.MapQuery) bool {
 		return false
 	}
 
-	sr, sg, sb, sa := s.TransparentColor.RGBA()
-	tr, tg, tb, ta := other.TransparentColor.RGBA()
-
-	if sr != tr || sg != tg || sb != tb || sa != ta {
+	if s.TransparentColor == nil && other.TransparentColor == nil {
+	} else if s.TransparentColor == nil || other.TransparentColor == nil {
 		return false
+	} else {
+		sr, sg, sb, sa := s.TransparentColor.RGBA()
+		tr, tg, tb, ta := other.TransparentColor.RGBA()
+		if sr != tr || sg != tg || sb != tb || sa != ta {
+			return false
+		}
 	}
 
 	if (s.TransparentColorTolerance != nil && other.TransparentColorTolerance == nil) ||
 		(s.TransparentColorTolerance == nil && other.TransparentColorTolerance != nil) ||
-		(*s.TransparentColorTolerance != *other.TransparentColorTolerance) {
+		(s.TransparentColorTolerance != nil && other.TransparentColorTolerance != nil &&
+			*s.TransparentColorTolerance != *other.TransparentColorTolerance) {
 		return false
 	}
 
@@ -222,9 +250,15 @@ func (s *WMSSource) isCompatible(other *WMSSource, query *layer.MapQuery) bool {
 }
 
 func (s *WMSSource) CombinedLayer(other layer.Layer, query *layer.MapQuery) layer.Layer {
-	imageOptions := s.Options.(*imagery.ImageOptions)
+	imageOptions := s.getImageOptions()
+	if imageOptions == nil {
+		return nil
+	}
 
-	o := other.(*WMSSource)
+	o, ok := other.(*WMSSource)
+	if !ok {
+		return nil
+	}
 	if !s.isCompatible(o, query) {
 		return nil
 	}
@@ -293,12 +327,13 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 		legend = &resource.Legend{BaseResource: resource.BaseResource{StoreID: s.Identifier}, Scale: query.Scale}
 	}
 
-	var error_occured bool
 	legends := make([]tile.Source, 0)
 	if s.Cache.Load(legend) == nil {
-		error_occured = false
 		for _, client := range s.Clients {
-			legends = append(legends, client.GetLegend(query).Source)
+			lg := client.GetLegend(query)
+			if lg != nil {
+				legends = append(legends, lg.Source)
+			}
 		}
 	}
 
@@ -308,7 +343,7 @@ func (s *WMSLegendSource) GetLegend(query *layer.LegendQuery) tile.Source {
 		BaseResource: resource.BaseResource{StoreID: s.Identifier}, Scale: query.Scale,
 	}
 
-	if !error_occured {
+	if len(legends) > 0 {
 		s.Cache.Save(legend)
 	}
 	return legend.Source

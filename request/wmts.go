@@ -172,7 +172,7 @@ func (r *WMTS100TileRequest) Validate() error {
 		if r.NonStrict && r.NonStrictParams.Contains(param) {
 			continue
 		}
-		if !r.NonStrictParams.Contains(param) {
+		if _, ok := r.Params[param]; !ok {
 			missing_param = append(missing_param, param)
 		}
 	}
@@ -386,10 +386,10 @@ func (t *URLTemplateConverter) GetDimensions() []string {
 
 func (t *URLTemplateConverter) substitute_var(match string) string {
 	var var_type_re string
-	if var_, ok := t.variables[match]; ok {
-		var_type_re = var_
+	if v, ok := t.variables[match]; ok {
+		var_type_re = v
 	} else {
-		t.dimensions = append(t.dimensions, var_)
+		t.dimensions = append(t.dimensions, match)
 		var_type_re = `[\w_.,:-]+`
 	}
 
@@ -402,10 +402,10 @@ func (t *URLTemplateConverter) regexp() *regexp.Regexp {
 		return t._regexp
 	}
 	converted_re := []string{}
-	match := t.varregexp.FindStringSubmatch(t.Template)
-	for i := range match {
-		if match[i] != "" {
-			converted_re = append(converted_re, t.substitute_var(match[i]))
+	matches := t.varregexp.FindAllStringSubmatch(t.Template, -1)
+	for _, match := range matches {
+		if len(match) > 1 && match[1] != "" {
+			converted_re = append(converted_re, t.substitute_var(match[1]))
 		}
 	}
 

@@ -100,3 +100,25 @@ func (c *TileCollection) AllBlank() bool {
 	}
 	return r
 }
+
+func (c *TileCollection) Len() int {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return len(c.tiles)
+}
+
+func (c *TileCollection) ForEach(fn func(*Tile)) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	for _, t := range c.tiles {
+		fn(t)
+	}
+}
+
+func (c *TileCollection) GetSliceCopy() []*Tile {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	ret := make([]*Tile, len(c.tiles))
+	copy(ret, c.tiles)
+	return ret
+}

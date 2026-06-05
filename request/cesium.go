@@ -23,6 +23,11 @@ func (r *CesiumRequest) GetRequestHandler() string {
 	return r.RequestHandlerName
 }
 
+var (
+	cesiumLayerJSONReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/layer.json`)
+	cesiumTileReqRegex      = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+)
+
 type CesiumLayerJSONRequest struct {
 	CesiumRequest
 	LayerName string
@@ -38,7 +43,7 @@ func (r *CesiumLayerJSONRequest) init(param interface{}, url string, validate bo
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "layer.json"
 	r.Version = "1.2.0"
-	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/layer.json`)
+	r.ReqRegex = cesiumLayerJSONReqRegex
 	r.initRequest()
 }
 
@@ -104,7 +109,7 @@ func (r *CesiumTileRequest) init(param interface{}, url string, validate bool, h
 	r.BaseRequest.init(param, url, validate, http)
 	r.RequestHandlerName = "tile"
 	r.Version = "1.2.0"
-	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
+	r.ReqRegex = cesiumTileReqRegex
 	r.initRequest(query)
 }
 

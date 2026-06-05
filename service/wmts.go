@@ -210,7 +210,14 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 		return err.Render()
 	}
 
-	tile_layer := s.Layers[params.GetLayer()][params.GetTileMatrixSet()]
+	layers, ok := s.Layers[params.GetLayer()]
+	if !ok {
+		return NewRequestError(fmt.Sprintf("unknown layer: %s", params.GetLayer()), "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil).Render()
+	}
+	tile_layer, ok := layers[params.GetTileMatrixSet()]
+	if !ok {
+		return NewRequestError(fmt.Sprintf("unknown tile matrix set: %s", params.GetTileMatrixSet()), "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil).Render()
+	}
 	if params.GetFormat() == "" {
 		tf := tile.TileFormat(tile_layer.GetFormat())
 		params.SetFormat(tf)

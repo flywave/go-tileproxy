@@ -36,16 +36,14 @@ func (l *LocalCacheLocker) getTempFileName(name string) string {
 }
 
 func (l *LocalCacheLocker) Lock(name string, runf func()) error {
-	l.m.RLock()
-	var lock *flock.Flock
-	if lock_, ok := l.locks[name]; !ok {
+	l.m.Lock()
+	lock, ok := l.locks[name]
+	if !ok {
 		filaname := l.getTempFileName(name)
 		lock = flock.NewFlock(filaname)
 		l.locks[name] = lock
-	} else {
-		lock = lock_
 	}
-	l.m.RUnlock()
+	l.m.Unlock()
 
 	err := lock.Lock()
 	if err != nil {

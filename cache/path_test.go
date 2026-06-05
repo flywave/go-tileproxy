@@ -514,7 +514,7 @@ func TestLocationPaths(t *testing.T) {
 		{"TC layout", "tc", false, true, true, false},
 		{"MP layout", "mp", false, true, true, false},
 		{"TMS layout", "tms", false, true, true, false},
-		{"Reverse TMS layout", "reverse_tms", false, true, false, false},
+		{"Reverse TMS layout", "reverse_tms", false, true, true, true},
 		{"Quadkey layout", "quadkey", false, true, true, true},
 		{"ArcGIS layout", "arcgis", false, true, true, false},
 		{"Unknown layout", "unknown", true, false, false, false},
@@ -597,8 +597,8 @@ func TestLocationPathsIntegration(t *testing.T) {
 				}
 			}
 
-			// Test level function (skip quadkey as it panics)
-			if levelFunc != nil && layout != "quadkey" {
+			// Test level function (skip quadkey and reverse_tms as they panic)
+			if levelFunc != nil && layout != "quadkey" && layout != "reverse_tms" {
 				levelResult := levelFunc(coord[2], tmpDir)
 				if levelResult == "" {
 					t.Error("Level function returned empty string")

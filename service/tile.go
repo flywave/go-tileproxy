@@ -53,6 +53,10 @@ type TileServiceOptions struct {
 }
 
 func NewTileService(opts *TileServiceOptions) *TileService {
+	if opts.MaxTileAge == nil {
+		t := time.Duration(0)
+		opts.MaxTileAge = &t
+	}
 	s := &TileService{Layers: opts.Layers, Metadata: opts.Metadata, MaxTileAge: opts.MaxTileAge, UseDimensionLayers: opts.UseDimensionLayers, Origin: opts.Origin}
 	s.router = map[string]func(r request.Request) *Response{
 		"map": func(r request.Request) *Response {
@@ -629,7 +633,11 @@ func (tl *TileProvider) checkedDimensions(_ request.TiledRequest) utils.Dimensio
 func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	format := req.GetFormat()
 	if format == nil || format.Extension() != tl.GetFormat() {
-		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", tl.GetFormat(), tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
+		reqFmt := ""
+		if format != nil {
+			reqFmt = format.Extension()
+		}
+		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", reqFmt, tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
 	}
 	_, tile_coord := tl.getInternalTileCoord(req, useProfiles)
 	var tile_bbox vec2d.Rect
@@ -647,8 +655,8 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 
 	dimensions := tl.checkedDimensions(req)
 
-	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
-	if t.Source == nil {
+	t, err := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, dimensions, true)
+	if err != nil || t.Source == nil {
 		return nil, tl.emptyResponse()
 	}
 

@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -47,7 +48,7 @@ func NewMetricsCollector() MetricsCollector {
 }
 
 func (m *ServiceMetrics) getTileKey(service, layer, level int) string {
-	return "s:l:z"
+	return fmt.Sprintf("%d:%d:%d", service, layer, level)
 }
 
 func (m *ServiceMetrics) getTileStats(service, layer, level int) *TileStats {

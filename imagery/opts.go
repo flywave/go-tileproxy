@@ -3,6 +3,7 @@ package imagery
 import (
 	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/flywave/go-tileproxy/tile"
 )
@@ -67,11 +68,7 @@ func CreateImage(size [2]uint32, image_opts *ImageOptions) image.Image {
 	r := image.Rectangle{Min: image.Point{X: 0, Y: 0}, Max: image.Point{X: int(size[0]), Y: int(size[1])}}
 	img := image.NewNRGBA(r)
 
-	for y := 0; y < r.Dy(); y++ {
-		for x := 0; x < r.Dx(); x++ {
-			img.Set(x, y, bgcolor)
-		}
-	}
+	draw.Draw(img, r, &image.Uniform{bgcolor}, image.Point{}, draw.Src)
 	return img
 }
 

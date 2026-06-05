@@ -17,25 +17,19 @@ type LocalCache struct {
 	tileLocation  TileLocationFunc
 	levelLocation func(int, string) string
 	creater       tile.SourceCreater
-	readBufPool   sync.Pool
-	maxBufferSize int
 }
 
 func NewLocalCache(cache_dir string, directory_layout string, creater tile.SourceCreater) *LocalCache {
 	if !utils.FileExists(cache_dir) {
-		os.MkdirAll(cache_dir, os.ModePerm)
+		if err := os.MkdirAll(cache_dir, os.ModePerm); err != nil {
+			panic(fmt.Sprintf("failed to create cache directory %s: %v", cache_dir, err))
+		}
 	}
 	c := &LocalCache{
-		cacheDir:      cache_dir,
-		creater:       creater,
-		maxBufferSize: 10 * 1024 * 1024, // 10MB default max buffer size
+		cacheDir: cache_dir,
+		creater:  creater,
 	}
 	c.tileLocation, c.levelLocation, _ = LocationPaths(directory_layout)
-	c.readBufPool = sync.Pool{
-		New: func() interface{} {
-			return make([]byte, 0, 256*1024)
-		},
-	}
 	return c
 }
 
@@ -73,10 +67,12 @@ func (c *LocalCache) LoadTile(tile *Tile, withMetadata bool) error {
 
 func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, len(tiles.tiles)+100)
+	tileSlice := tiles.GetSliceCopy()
+	errChan := make(chan error, len(tileSlice)+100)
 	semaphore := make(chan struct{}, 10)
+	var notFoundCount int
 
-	for _, tile := range tiles.tiles {
+	for _, tile := range tileSlice {
 		if !tile.IsMissing() {
 			continue
 		}
@@ -104,7 +100,7 @@ func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 
 			data, err := os.ReadFile(location)
 			if err != nil {
-				errChan <- err
+				errChan <- fmt.Errorf("io error reading %s: %w", location, err)
 				return
 			}
 
@@ -117,13 +113,21 @@ func (c *LocalCache) LoadTiles(tiles *TileCollection, withMetadata bool) error {
 	wg.Wait()
 	close(errChan)
 
-	var errs []string
+	var ioErrors []string
 	for err := range errChan {
-		errs = append(errs, err.Error())
+		if strings.Contains(err.Error(), "not found") {
+			notFoundCount++
+		} else {
+			ioErrors = append(ioErrors, err.Error())
+		}
 	}
 
-	if len(errs) > 0 {
-		return fmt.Errorf("multiple errors encountered (%d): %s", len(errs), strings.Join(errs, "; "))
+	if len(ioErrors) > 0 || notFoundCount > 0 {
+		if len(ioErrors) > 0 {
+			return fmt.Errorf("io errors (%d): %s; not found tiles: %d",
+				len(ioErrors), strings.Join(ioErrors, "; "), notFoundCount)
+		}
+		return fmt.Errorf("not found: %d tiles", notFoundCount)
 	}
 	return nil
 }
@@ -146,10 +150,11 @@ func (c *LocalCache) store(tile *Tile, location string) error {
 
 func (c *LocalCache) StoreTiles(tiles *TileCollection) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, len(tiles.tiles)+100)
+	tileSlice := tiles.GetSliceCopy()
+	errChan := make(chan error, len(tileSlice)+100)
 	semaphore := make(chan struct{}, 10)
 
-	for _, tile := range tiles.tiles {
+	for _, tile := range tileSlice {
 		if tile.Stored {
 			continue
 		}
@@ -198,13 +203,16 @@ func (c *LocalCache) RemoveTile(tile *Tile) error {
 }
 
 func (c *LocalCache) RemoveTiles(tiles *TileCollection) error {
-	var errs error
-	for _, tile := range tiles.tiles {
+	var errs []error
+	for _, tile := range tiles.GetSliceCopy() {
 		if err := c.RemoveTile(tile); err != nil {
-			errs = err
+			errs = append(errs, err)
 		}
 	}
-	return errs
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to remove %d tiles: %v", len(errs), errs[0])
+	}
+	return nil
 }
 
 func (c *LocalCache) IsCached(tile *Tile) bool {

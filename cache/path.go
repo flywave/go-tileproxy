@@ -253,7 +253,7 @@ func LocationPaths(layout string) (TileLocationFunc, func(int, string) string, e
 	case "tms":
 		return tile_location_tms, level_location, nil
 	case "reverse_tms":
-		return tile_location_reverse_tms, nil, nil
+		return tile_location_reverse_tms, no_level_location, nil
 	case "quadkey":
 		return tile_location_quadkey, no_level_location, nil
 	case "arcgis":

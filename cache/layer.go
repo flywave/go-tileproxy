@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
 
@@ -19,6 +20,7 @@ type CacheMapLayer struct {
 	grid         *geo.TileGrid
 	maxTileLimit *int
 	emptySource  tile.Source
+	emptyOnce    sync.Once
 	reprojectSrc geo.Proj
 	reprojectDst geo.Proj
 	queryBuffer  *int
@@ -80,6 +82,13 @@ func bufferedBBox(g *geo.TileGrid, bbox vec2d.Rect, level int, queryBuffer int) 
 	return vec2d.Rect{Min: vec2d.T{minx, miny}, Max: vec2d.T{maxx, maxy}}
 }
 
+func (r *CacheMapLayer) getOrCreateEmptySource(size [2]uint32) tile.Source {
+	r.emptyOnce.Do(func() {
+		r.emptySource = GetEmptyTile(size, r.Options)
+	})
+	return r.emptySource
+}
+
 func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	bbox, srs, tileId := query.BBox, query.Srs, query.TileId
 	currentSrs := r.grid.Srs
@@ -132,15 +141,12 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	tile_collection, _ := r.tileManager.LoadTileCoords(coords, nil, query.TiledOnly)
 
 	if tile_collection == nil || tile_collection.Empty() {
-		if r.emptySource == nil {
-			r.emptySource = GetEmptyTile(query.Size, r.Options)
-		}
-		return r.emptySource, nil
+		return r.getOrCreateEmptySource(query.Size), nil
 	}
 	if query.TiledOnly {
-		if len(tile_collection.tiles) > 1 || !srs.Eq(currentSrs) {
+		if tile_collection.Len() > 1 || !srs.Eq(currentSrs) {
 			tile_sources := []tile.Source{}
-			for _, t := range tile_collection.tiles {
+			for _, t := range tile_collection.GetSliceCopy() {
 				tile_sources = append(tile_sources, t.Source)
 			}
 			src_bbox = r.grid.TilesBBox(coords)
@@ -155,7 +161,7 @@ func (r *CacheMapLayer) getSource(query *layer.MapQuery) (tile.Source, error) {
 	}
 
 	tile_sources := []tile.Source{}
-	for _, t := range tile_collection.tiles {
+	for _, t := range tile_collection.GetSliceCopy() {
 		tile_sources = append(tile_sources, t.Source)
 	}
 	return ScaleTiles(tile_sources, query.BBox, query.Srs, tile_grid, r.grid, src_bbox, r.Options)
@@ -174,27 +180,26 @@ func (r *CacheMapLayer) GetMap(query *layer.MapQuery) (tile.Source, error) {
 	var result tile.Source
 	if !query.TiledOnly && r.Extent != nil && !r.Extent.Contains(queryExtent) {
 		if !r.Extent.Intersects(queryExtent) {
-			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.Options)
-			}
-			return r.emptySource, nil
+			return r.getOrCreateEmptySource(query.Size), nil
 		}
 		size, offset, bbox := imagery.BBoxPositionInImage(query.BBox, query.Size, r.Extent.BBoxFor(query.Srs))
 		if size[0] == 0 || size[1] == 0 {
-			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.Options)
-			}
-			return r.emptySource, nil
+			return r.getOrCreateEmptySource(query.Size), nil
 		}
 		src_query := &layer.MapQuery{BBox: bbox, Size: size, Srs: query.Srs, Format: query.Format}
 		resp, err := r.getSource(src_query)
 		if err != nil {
-			if r.emptySource == nil {
-				r.emptySource = GetEmptyTile(query.Size, r.Options)
-			}
-			return r.emptySource, nil
+			return r.getOrCreateEmptySource(query.Size), nil
 		}
-		result = imagery.SubImageSource(resp.(*imagery.ImageSource), query.Size, offset[:], r.Options.(*imagery.ImageOptions), resp.GetCacheable())
+		imgSrc, ok := resp.(*imagery.ImageSource)
+		if !ok {
+			return resp, nil
+		}
+		imgOpts, ok := r.Options.(*imagery.ImageOptions)
+		if !ok {
+			return resp, nil
+		}
+		result = imagery.SubImageSource(imgSrc, query.Size, offset[:], imgOpts, resp.GetCacheable())
 	} else {
 		result, _ = r.getSource(query)
 	}

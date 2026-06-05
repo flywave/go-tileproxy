@@ -158,7 +158,7 @@ func (r *ArcGISExportRequestParams) SetImageSrs(srs string) {
 }
 
 func (r *ArcGISExportRequestParams) GetTransparent() bool {
-	str := r.params.GetOne("format", "false")
+	str := r.params.GetOne("transparent", "false")
 	return strings.ToLower(str) == "true"
 }
 
@@ -390,7 +390,7 @@ func (r *ArcGISRequest) init(param interface{}, url string, validate bool, http 
 }
 
 func (r *ArcGISRequest) QueryString() string {
-	params := r.Params.copy()
+	params := r.Params.Copy()
 	for key, value := range r.FixedParams {
 		params[key] = []string{value}
 	}
@@ -419,7 +419,7 @@ func (r *ArcGISIdentifyRequest) init(param interface{}, url string, validate boo
 }
 
 func (r *ArcGISIdentifyRequest) QueryString() string {
-	params := r.Params.copy()
+	params := r.Params.Copy()
 	for key, value := range r.FixedParams {
 		params[key] = []string{value}
 	}

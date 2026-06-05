@@ -98,19 +98,19 @@ func newMessageImage(message string, image_opts *ImageOptions) *MessageImage {
 func (m *MessageImage) GetFont() font.Face {
 	if m.font_face == nil {
 		if m.font_name == "default" || m.font_name == "DejaVu Sans Mono" || m.font_name == "DejaVu Sans" || font_paths == "" {
-			if m.font_name == "DejaVu Sans" {
-				var err error
-				m.font_face, err = gg.LoadFontFaceWithData(DejaVuSansMono, float64(m.font_size))
-				if err != nil {
-					m.font_face = nil
-				}
-			} else {
-				var err error
-				m.font_face, err = gg.LoadFontFaceWithData(DejaVuSans, float64(m.font_size))
-				if err != nil {
-					m.font_face = nil
-				}
+		if m.font_name == "DejaVu Sans Mono" {
+			var err error
+			m.font_face, err = gg.LoadFontFaceWithData(DejaVuSansMono, float64(m.font_size))
+			if err != nil {
+				m.font_face = nil
 			}
+		} else {
+			var err error
+			m.font_face, err = gg.LoadFontFaceWithData(DejaVuSans, float64(m.font_size))
+			if err != nil {
+				m.font_face = nil
+			}
+		}
 		} else {
 			var err error
 			m.font_face, err = gg.LoadFontFace(fontFile(m.font_name), float64(m.font_size))

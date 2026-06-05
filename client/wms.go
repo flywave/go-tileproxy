@@ -74,10 +74,11 @@ func (c *WMSClient) queryData(query *layer.MapQuery, format *tile.TileFormat) (u
 func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
 	req := c.queryReq(query, format)
 	if c.AccessToken != nil {
+		params := req.GetParams()
 		if c.AccessTokenName != nil {
-			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+			params.Set(*c.AccessTokenName, []string{*c.AccessToken})
 		} else {
-			req.GetParams().Set("access_token", []string{*c.AccessToken})
+			params.Set("access_token", []string{*c.AccessToken})
 		}
 	}
 	return req.CompleteUrl()
@@ -85,7 +86,7 @@ func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) str
 
 func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.WMSMapRequest {
 	req := *c.RequestTemplate
-	params := request.NewWMSMapRequestParams(req.GetParams())
+	params := request.NewWMSMapRequestParams(req.GetParams().Copy())
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetCrs(query.Srs.GetSrsCode())
@@ -184,8 +185,9 @@ func (c *WMSInfoClient) retrieve(query *layer.InfoQuery) []byte {
 }
 
 func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
-	req := c.RequestTemplate
-	params := request.NewWMSFeatureInfoRequestParams(req.GetParams())
+	req := *c.RequestTemplate
+	copiedParams := req.GetParams().Copy()
+	params := request.NewWMSFeatureInfoRequestParams(copiedParams)
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetPos(query.Pos)
@@ -193,11 +195,11 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 
 	if query.FeatureCount != nil {
 		fc := strconv.FormatInt(int64(*query.FeatureCount), 10)
-		req.GetParams().Set("feature_count", []string{fc})
+		copiedParams.Set("feature_count", []string{fc})
 	}
-	req.GetParams().Set("query_layers", []string{req.GetParams().GetOne("layers", "")})
-	if _, ok := req.GetParams()["info_format"]; !ok && query.InfoFormat != "" {
-		req.GetParams().Set("info_format", []string{query.InfoFormat})
+	copiedParams.Set("query_layers", []string{copiedParams.GetOne("layers", "")})
+	if _, ok := copiedParams["info_format"]; !ok && query.InfoFormat != "" {
+		copiedParams.Set("info_format", []string{query.InfoFormat})
 	}
 
 	if query.Format != "" {
@@ -206,15 +208,17 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 		params.SetFormat("image/png")
 	}
 
+	req.Params = copiedParams
+
 	if c.AdaptTo111 {
 		req.AdaptToWMS111()
 	}
 
 	if c.AccessToken != nil {
 		if c.AccessTokenName != nil {
-			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+			req.Params.Set(*c.AccessTokenName, []string{*c.AccessToken})
 		} else {
-			req.GetParams().Set("access_token", []string{*c.AccessToken})
+			req.Params.Set("access_token", []string{*c.AccessToken})
 		}
 	}
 	return req.CompleteUrl()
@@ -254,7 +258,8 @@ func (c *WMSLegendClient) retrieve(query *layer.LegendQuery) []byte {
 
 func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 	req := *c.RequestTemplate
-	params := request.NewWMSLegendGraphicRequestParams(req.GetParams())
+	copiedParams := req.GetParams().Copy()
+	params := request.NewWMSLegendGraphicRequestParams(copiedParams)
 
 	if query.Format != "" {
 		params.SetFormat(tile.TileFormat(query.Format))
@@ -265,11 +270,13 @@ func (c *WMSLegendClient) queryURL(query *layer.LegendQuery) string {
 		params.SetScale(query.Scale)
 	}
 
+	req.Params = copiedParams
+
 	if c.AccessToken != nil {
 		if c.AccessTokenName != nil {
-			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+			req.Params.Set(*c.AccessTokenName, []string{*c.AccessToken})
 		} else {
-			req.GetParams().Set("access_token", []string{*c.AccessToken})
+			req.Params.Set("access_token", []string{*c.AccessToken})
 		}
 	}
 	return req.CompleteUrl()

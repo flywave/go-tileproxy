@@ -27,7 +27,7 @@ type TileWalker struct {
 	pool             WorkerPool
 }
 
-func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, progressLogger ProgressLogger, taskProgress *TaskProgress, handleStale, handleUNCached bool) *TileWalker {
+func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, progressLogger ProgressLogger, taskProgress *TaskProgress, handleStale, handleUncached bool) *TileWalker {
 	ret := &TileWalker{
 		pool:            tileWorkerPool,
 		task:            task,
@@ -36,7 +36,7 @@ func NewTileWalker(task Task, tileWorkerPool WorkerPool, workOnMetatiles bool, p
 		taskProgress:    taskProgress,
 		progressLogger:  progressLogger,
 		handleStale:     handleStale,
-		handleUncached:  handleUNCached,
+		handleUncached:  handleUncached,
 	}
 
 	num_seed_levels := len(task.GetLevels())

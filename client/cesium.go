@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/flywave/go-tileproxy/resource"
 )
@@ -23,6 +24,7 @@ type CesiumClient struct {
 	Version     string
 	Extensions  []string
 	TilesURL    []string
+	mu          sync.Mutex
 }
 
 func (c *CesiumClient) buildAuthQuery() string {
@@ -77,16 +79,18 @@ func (c *CesiumTileClient) Auth() error {
 }
 
 func (c *CesiumTileClient) auth() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if !c.IsAuth() {
 		err := c.Auth()
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 	if len(c.TilesURL) == 0 {
 		json := c.getLayerJson()
 		if json == nil {
-			return nil
+			return errors.New("failed to get layer json")
 		}
 		c.json = json
 	}

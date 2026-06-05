@@ -102,7 +102,7 @@ func isValidParamName(name string) bool {
 	return true
 }
 
-func (p RequestParams) copy() RequestParams {
+func (p RequestParams) Copy() RequestParams {
 	map_copy := make(RequestParams)
 	for index, element := range p {
 		newElement := make([]string, len(element))
@@ -113,7 +113,7 @@ func (p RequestParams) copy() RequestParams {
 }
 
 func (p RequestParams) WithDefaults(defaults RequestParams) RequestParams {
-	new := p.copy()
+	new := p.Copy()
 	for key, value := range defaults {
 		if value != nil {
 			new[key] = value

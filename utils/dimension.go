@@ -140,8 +140,9 @@ func (d Dimensions) GetRawMap() map[string][]interface{} {
 	for k, d := range d {
 		if d.GetValue() != nil && len(d.GetValue()) > 0 {
 			ret[k] = d.GetValue()
+		} else {
+			ret[k] = []interface{}{d.GetDefault()}
 		}
-		ret[k] = []interface{}{d.GetDefault()}
 	}
 	return ret
 }

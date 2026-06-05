@@ -144,7 +144,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 			tt.TileWidth = t["tile_width"]
 			tt.TileHeight = t["tile_height"]
 			tt.MatrixWidth = t["matrix_width"]
-			tt.MatrixHeight = t["matrix_width"]
+			tt.MatrixHeight = t["matrix_height"]
 
 			tms.TileMatrix = append(tms.TileMatrix, tt)
 		}
@@ -251,19 +251,22 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 			tt.TopLeftCorner = t["topleft"]
 			tt.TileWidth = t["tile_width"]
 			tt.TileHeight = t["tile_height"]
-			tt.MatrixWidth = t["matrix_width"]
-			tt.MatrixHeight = t["matrix_width"]
+		tt.MatrixWidth = t["matrix_width"]
+		tt.MatrixHeight = t["matrix_height"]
 
-			tms.TileMatrix = append(tms.TileMatrix, tt)
-		}
-		contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
+		tms.TileMatrix = append(tms.TileMatrix, tt)
 	}
+	contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
+}
 
-	resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
+resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 
 	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"
 
-	si, _ := xml.MarshalIndent(resp, "", "")
+	si, err := xml.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		return []byte("<Capabilities></Capabilities>")
+	}
 
 	return si
 }

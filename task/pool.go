@@ -35,16 +35,17 @@ func (q *workerQueue) IsEmpty() bool {
 
 func (q *workerQueue) AddRequest(tiles Work) error {
 	q.mut.Lock()
-	waken := q.wake != nil
-	q.mut.Unlock()
-	if !waken {
+	if q.wake == nil {
+		q.mut.Unlock()
 		return q.storeRequest(tiles)
 	}
+	wake := q.wake
+	q.mut.Unlock()
 	err := q.storeRequest(tiles)
 	if err != nil {
 		return err
 	}
-	q.wake <- struct{}{}
+	wake <- struct{}{}
 	return nil
 }
 

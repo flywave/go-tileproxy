@@ -203,11 +203,17 @@ func (r *SRSConditional) GetMap(query *MapQuery) (tile.Source, error) {
 		return nil, errors.New("res error")
 	}
 	layer := r.selectLayer(query.Srs)
+	if layer == nil {
+		return nil, errors.New("no layer found for SRS")
+	}
 	return layer.GetMap(query)
 }
 
 func (r *SRSConditional) selectLayer(query_srs geo.Proj) Layer {
-	srs, _ := r.supportedSRS.BestSrs(query_srs)
+	srs, err := r.supportedSRS.BestSrs(query_srs)
+	if err != nil || srs == nil {
+		return nil
+	}
 	return r.srsMap[srs.GetSrsCode()]
 }
 
@@ -235,11 +241,11 @@ func MergeLayerExtents(layers []Layer) *geo.MapExtent {
 	if extent == nil {
 		return geo.MapExtentFromDefault()
 	}
-	if len(layers) > 1 {
-		layers = layers[1:]
-		for _, layer := range layers[1:] {
-			extent = extent.Add(layer.GetExtent())
+	for _, layer := range layers[1:] {
+		if layer.GetExtent() == nil {
+			continue
 		}
+		extent = extent.Add(layer.GetExtent())
 	}
 	return extent
 }

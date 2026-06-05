@@ -223,28 +223,56 @@ func (s *ImageSource) getImageOptions() *ImageOptions {
 func (s *ImageSource) GetBuffer(format *tile.TileFormat, in_image_opts tile.TileOptions) []byte {
 	var image_opts *ImageOptions
 	if in_image_opts != nil {
-		image_opts = in_image_opts.(*ImageOptions)
+		var ok bool
+		image_opts, ok = in_image_opts.(*ImageOptions)
+		if !ok {
+			return nil
+		}
 	} else {
-		image_opts = s.Options.(*ImageOptions)
-	}
-	if format != nil {
-		image_opts = s.Options.(*ImageOptions)
-		image_opts.Format = *format
-	}
-	if s.buf == nil {
-		s.buf = imageToBuf(s.GetImage(), image_opts, s.georef)
-		if len(s.getImageOptions().Format) == 0 {
-			s.getImageOptions().Format = tile.TileFormat(PeekImageFormat(string(s.buf)))
+		image_opts = s.getImageOptions()
+		if image_opts == nil {
+			return nil
 		}
-		if image_opts.Format != s.getImageOptions().Format {
-			s.SetSource(s.GetImage())
-			s.buf = nil
-			s.Options = image_opts
-			fname := s.fname
-			s.fname = ""
-			s.GetBuffer(nil, image_opts)
-			s.fname = fname
+	}
+
+	overrideFormat := format != nil
+	if overrideFormat {
+		opts := *image_opts
+		opts.Format = *format
+		image_opts = &opts
+	}
+
+	if s.buf != nil && !overrideFormat {
+		return s.buf
+	}
+
+	targetFmt := image_opts.Format
+	storedFmt := s.getImageOptions().Format
+
+	// Same format: try to return raw file bytes directly, avoiding decode→recode
+	if !overrideFormat && storedFmt == targetFmt && s.buf != nil {
+		return s.buf
+	}
+
+	if s.image == nil && s.fname != "" && !overrideFormat && storedFmt == targetFmt {
+		if data, err := os.ReadFile(s.fname); err == nil {
+			s.buf = data
+			return s.buf
 		}
+	}
+
+	img := s.GetImage()
+	if img == nil {
+		return nil
+	}
+
+	s.buf = imageToBuf(img, image_opts, s.georef)
+	if len(storedFmt) == 0 && len(s.buf) > 0 {
+		s.getImageOptions().Format = tile.TileFormat(PeekImageFormat(string(s.buf)))
+	}
+
+	if overrideFormat {
+		s.Options = image_opts
 	}
 
 	return s.buf

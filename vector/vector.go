@@ -119,6 +119,7 @@ func (s *VectorSource) GetTile() interface{} {
 			if err != nil {
 				return nil
 			}
+			defer f.Close()
 			s.buf, err = io.ReadAll(f)
 			if err != nil {
 				return nil

@@ -47,6 +47,12 @@ func (q *MapQuery) Eq(o *MapQuery) bool {
 	if !q.Dimensions.Eq(o.Dimensions) {
 		return false
 	}
+	if q.TileId != o.TileId {
+		return false
+	}
+	if q.MetaSize != o.MetaSize {
+		return false
+	}
 	return true
 }
 
@@ -110,7 +116,10 @@ func (q *InfoQuery) Eq(o *InfoQuery) bool {
 	if q.InfoFormat != o.InfoFormat {
 		return false
 	}
-	if q.FeatureCount != o.FeatureCount {
+	if q.FeatureCount == nil && o.FeatureCount == nil {
+	} else if q.FeatureCount == nil || o.FeatureCount == nil {
+		return false
+	} else if *q.FeatureCount != *o.FeatureCount {
 		return false
 	}
 	return true

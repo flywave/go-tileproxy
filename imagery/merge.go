@@ -39,7 +39,7 @@ func (l *LayerMerger) Merge(opts tile.TileOptions, size []uint32, bbox vec2d.Rec
 		}
 		layer_opts := layer_img.GetTileOptions().(*ImageOptions)
 		if ((layer_opts != nil && layer_opts.Transparent != nil && !*layer_opts.Transparent) ||
-			(layer_opts.Transparent != nil && *image_opts.Transparent)) &&
+			(layer_opts.Transparent != nil && image_opts != nil && image_opts.Transparent != nil && *image_opts.Transparent)) &&
 			(size != nil && size[0] == layer_img.GetSize()[0] && size[1] == layer_img.GetSize()[1]) &&
 			(layer_coverage != nil && !layer_coverage.IsClip()) && coverage != nil {
 			return layer_img
@@ -150,6 +150,7 @@ func NewBandMerger(mode ImageMode) *BandMerger {
 }
 
 func (l *BandMerger) AddSource(src tile.Source, cov geo.Coverage) {
+	l.Layers = append(l.Layers, src)
 }
 
 func (l *BandMerger) AddOps(dst_band, src_img, src_band int, factor float64) {
@@ -386,8 +387,8 @@ func ConcatLegends(legends []tile.Source, mode ImageMode, format tile.TileFormat
 		// Default to RGB for AUTO mode
 		img = image.NewNRGBA(image.Rect(0, 0, int(size[0]), int(size[1])))
 	}
-	for y := 0; y < int(size[0]); y++ {
-		for x := 0; x < int(size[1]); x++ {
+	for y := 0; y < int(size[1]); y++ {
+		for x := 0; x < int(size[0]); x++ {
 			switch a := img.(type) {
 			case *image.Gray:
 				a.SetGray(x, y, bgcolor.(color.Gray))

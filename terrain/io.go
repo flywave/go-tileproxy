@@ -248,7 +248,12 @@ func (d *TileData) copyFrom(src *TileData, pos [2]int) {
 }
 
 func (d *TileData) GetData() []byte {
-	return *(*[]byte)((unsafe.Pointer)(&d.Datas))
+	if len(d.Datas) == 0 {
+		return nil
+	}
+	data := make([]byte, len(d.Datas)*8)
+	copy(data, (*(*[1 << 30]byte)(unsafe.Pointer(&d.Datas[0])))[:len(data)])
+	return data
 }
 
 type RasterIO interface {

@@ -102,7 +102,7 @@ func flattenToPolygons(geometry *geos.Geometry) []*geos.Geometry {
 		for i := 0; i < num; i++ {
 			g := geometry.GetGeometryN(i)
 			if g.GetType() == geos.POLYGON {
-				geoms[i] = g
+				geoms = append(geoms, g)
 			}
 		}
 		return geoms

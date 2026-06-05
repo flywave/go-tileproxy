@@ -38,10 +38,15 @@ func NewCesiumTileSource(
 
 func (s *CesiumTileSource) GetLayerJSON(id string) *resource.LayerJson {
 	ret := &resource.LayerJson{StoreID: id}
-	if s.Cache != nil && s.Cache.Load(ret) != nil {
-		ret, _ = s.Client.GetLayerJson()
-		if ret != nil {
-			ret.StoreID = id
+	cached := s.Cache != nil && s.Cache.Load(ret) != nil
+	if !cached {
+		var err error
+		ret, err = s.Client.GetLayerJson()
+		if err != nil || ret == nil {
+			return nil
+		}
+		ret.StoreID = id
+		if s.Cache != nil {
 			s.Cache.Save(ret)
 		}
 	}

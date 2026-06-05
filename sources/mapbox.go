@@ -38,10 +38,14 @@ func NewMapboxTileSource(grid *geo.TileGrid, coverage geo.Coverage, c *client.Ma
 func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {
 	ret := &resource.TileJSON{StoreID: id}
 
-	if s.TileJSONCache != nil && s.TileJSONCache.Load(ret) != nil {
+	cached := s.TileJSONCache != nil && s.TileJSONCache.Load(ret) != nil
+	if !cached {
 		ret = s.Client.GetTileJSON()
-		if ret != nil {
-			ret.StoreID = id
+		if ret == nil {
+			return nil
+		}
+		ret.StoreID = id
+		if s.TileJSONCache != nil {
 			s.TileJSONCache.Save(ret)
 		}
 	}
@@ -51,10 +55,14 @@ func (s *MapboxTileSource) GetTileJSON(id string) *resource.TileJSON {
 func (s *MapboxTileSource) GetTileStats(id string) *resource.TileStats {
 	ret := &resource.TileStats{StoreID: id}
 
-	if s.TileStatsCache != nil && s.TileStatsCache.Load(ret) != nil {
+	cached := s.TileStatsCache != nil && s.TileStatsCache.Load(ret) != nil
+	if !cached {
 		ret = s.Client.GetTileStats()
-		if ret != nil {
-			ret.StoreID = id
+		if ret == nil {
+			return nil
+		}
+		ret.StoreID = id
+		if s.TileStatsCache != nil {
 			s.TileStatsCache.Save(ret)
 		}
 	}

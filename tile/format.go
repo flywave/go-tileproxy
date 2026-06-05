@@ -5,6 +5,7 @@ import "strings"
 var (
 	mimeMaps = map[string]string{
 		"png":     "image/png",
+		"gif":     "image/gif",
 		"tif":     "image/tiff",
 		"tiff":    "image/tiff",
 		"jpg":     "image/jpeg",
@@ -16,21 +17,25 @@ var (
 		"omv":     "application/x-protobuf",
 		"json":    "application/json",
 		"geojson": "application/json",
-		"terrain": "application/vnd.quantized-mesh,application/octet-stream;q=1.0",
+		"terrain": "application/vnd.quantized-mesh",
 	}
 )
 
 type TileFormat string
 
 func (i TileFormat) MimeType() string {
-	if strings.Contains(string(i), "/") {
-		return string(i)
+	s := string(i)
+	if strings.Contains(s, "/") {
+		return s
 	}
-	return mimeMaps[string(i)]
+	if m, ok := mimeMaps[s]; ok {
+		return m
+	}
+	return s
 }
 
-func (i *TileFormat) Extension() string {
-	ext := string(*i)
+func (i TileFormat) Extension() string {
+	ext := string(i)
 	ext = strings.Trim(ext, " ")
 	if strings.Contains(ext, "vnd.mapbox-vector-tile") {
 		return "mvt"

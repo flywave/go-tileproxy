@@ -28,7 +28,7 @@ func ShuffleStringsN(slice []string, n int) {
 
 	for i := 0; i < n; i++ {
 		j := rand.Intn(l - i)
-		slice[j], slice[n-i-1] = slice[n-i-1], slice[j]
+		slice[j], slice[l-i-1] = slice[l-i-1], slice[j]
 	}
 }
 

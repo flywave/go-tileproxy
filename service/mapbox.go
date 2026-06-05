@@ -321,8 +321,8 @@ func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool
 		}
 	}
 
-	t, _ := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
-	if t.Source == nil {
+	t, err := tl.tileManager.LoadTileCoord([3]int{tile_coord[0], tile_coord[1], tile_coord[2]}, nil, true)
+	if err != nil || t.Source == nil {
 		return nil, tl.emptyResponse()
 	}
 	format := tile_request.Format

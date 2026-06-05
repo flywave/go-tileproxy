@@ -2,8 +2,10 @@ package tileproxy
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
+	"sync/atomic"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
@@ -23,17 +25,65 @@ const (
 	CesiumService ServiceType = 4
 )
 
+func (t ServiceType) String() string {
+	switch t {
+	case MapboxService:
+		return "mapbox"
+	case WMSService:
+		return "wms"
+	case WMTSService:
+		return "wmts"
+	case TileService:
+		return "tile"
+	case CesiumService:
+		return "cesium"
+	default:
+		return "unknown"
+	}
+}
+
+type ServiceStatus int32
+
+const (
+	ServiceStatusStopped  ServiceStatus = 0
+	ServiceStatusStarting ServiceStatus = 1
+	ServiceStatusRunning  ServiceStatus = 2
+	ServiceStatusStopping ServiceStatus = 3
+	ServiceStatusError    ServiceStatus = 4
+)
+
+func (s ServiceStatus) String() string {
+	switch s {
+	case ServiceStatusStopped:
+		return "stopped"
+	case ServiceStatusStarting:
+		return "starting"
+	case ServiceStatusRunning:
+		return "running"
+	case ServiceStatusStopping:
+		return "stopping"
+	case ServiceStatusError:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
 type Service struct {
 	setting.ProxyInstance
-	Id            string
-	Type          ServiceType
-	Service       service.Service
+	Id      string
+	Type    ServiceType
+	Service service.Service
+	status  int32
+
 	Grids         map[string]geo.Grid
 	Sources       map[string]layer.Layer
 	InfoSources   map[string]layer.InfoLayer
 	LegendSources map[string]layer.LegendLayer
 	Caches        map[string]cache.Manager
-	mu            sync.RWMutex
+
+	loadErr error
+	mu      sync.RWMutex
 }
 
 func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
@@ -45,11 +95,28 @@ func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, 
 		InfoSources:   make(map[string]layer.InfoLayer),
 		LegendSources: make(map[string]layer.LegendLayer),
 	}
+	atomic.StoreInt32(&ret.status, int32(ServiceStatusStarting))
 	ret.load(dataset, globals, fac)
+	if ret.Service != nil {
+		atomic.StoreInt32(&ret.status, int32(ServiceStatusRunning))
+	} else {
+		atomic.StoreInt32(&ret.status, int32(ServiceStatusError))
+		ret.loadErr = fmt.Errorf("no supported service type configured for %s", dataset.Id)
+	}
 	return ret
 }
 
+func (s *Service) Status() ServiceStatus {
+	return ServiceStatus(atomic.LoadInt32(&s.status))
+}
+
+func (s *Service) LoadError() error {
+	return s.loadErr
+}
+
 func (s *Service) load(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.loadGrids(dataset)
 	s.loadSources(dataset, globals, fac)
 	s.loadCaches(dataset, globals, fac)
@@ -58,8 +125,10 @@ func (s *Service) load(dataset *setting.ProxyService, globals *setting.GlobalsSe
 
 func (s *Service) loadGrids(dataset *setting.ProxyService) {
 	for k, g := range dataset.Grids {
+		g := g
 		s.Grids[k] = setting.ConvertGridOpts(&g)
 	}
+	log.Printf("service %s: loaded %d grids", s.Id, len(s.Grids))
 }
 
 func (s *Service) loadSources(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
@@ -94,12 +163,6 @@ func (s *Service) loadCaches(dataset *setting.ProxyService, globals *setting.Glo
 		switch cache := c.(type) {
 		case *setting.CacheSource:
 			s.Caches[k] = setting.PreLoadCacheManager(cache, globals, s, fac)
-		}
-	}
-
-	for k, c := range dataset.Caches {
-		switch cache := c.(type) {
-		case *setting.CacheSource:
 			setting.LoadCacheManager(cache, globals, s, fac, s.Caches[k])
 		}
 	}
@@ -109,22 +172,47 @@ func (s *Service) loadService(dataset *setting.ProxyService, globals *setting.Gl
 	switch srv := dataset.Service.(type) {
 	case *setting.TMSService:
 		s.Service = setting.LoadTMSService(srv, s)
+		s.Type = TileService
 	case *setting.WMSService:
 		s.Service = setting.LoadWMSService(srv, s, globals)
+		s.Type = WMSService
 	case *setting.MapboxService:
 		s.Service = setting.LoadMapboxService(srv, globals, s, fac)
+		s.Type = MapboxService
 	case *setting.CesiumService:
 		s.Service = setting.LoadCesiumService(srv, globals, s, fac)
+		s.Type = CesiumService
 	case *setting.WMTSService:
 		if srv.Restful != nil && *srv.Restful {
 			s.Service = setting.LoadWMTSRestfulService(srv, s)
 		} else {
 			s.Service = setting.LoadWMTSService(srv, s)
 		}
+		s.Type = WMTSService
+	default:
+		log.Printf("service %s: unknown service type %T, service will be unavailable", s.Id, dataset.Service)
 	}
 }
 
 func (s *Service) Clean() {
+	atomic.StoreInt32(&s.status, int32(ServiceStatusStopping))
+
+	if err := s.stopService(); err != nil {
+		log.Printf("service %s: stop error: %v", s.Id, err)
+	}
+
+	s.mu.Lock()
+	s.Service = nil
+	s.Grids = make(map[string]geo.Grid)
+	s.Sources = make(map[string]layer.Layer)
+	s.Caches = make(map[string]cache.Manager)
+	s.InfoSources = make(map[string]layer.InfoLayer)
+	s.LegendSources = make(map[string]layer.LegendLayer)
+	s.loadErr = nil
+	s.mu.Unlock()
+
+	atomic.StoreInt32(&s.status, int32(ServiceStatusStopped))
+	log.Printf("service %s: cleaned up", s.Id)
 }
 
 func (s *Service) GetId() string {
@@ -203,12 +291,17 @@ func (s *Service) GetLegendSource(name string) layer.LegendLayer {
 }
 
 func (s *Service) GetService() service.Service {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.Service
 }
 
 func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if s.Service != nil {
-		s.Service.ServeHTTP(w, r)
+	s.mu.RLock()
+	svc := s.Service
+	s.mu.RUnlock()
+	if svc != nil {
+		svc.ServeHTTP(w, r)
 	}
 }
 
@@ -229,7 +322,15 @@ func (s *Service) Reload(newConfig *setting.ProxyService, globals *setting.Globa
 		return fmt.Errorf("failed to stop service: %w", err)
 	}
 
+	atomic.StoreInt32(&s.status, int32(ServiceStatusStarting))
 	s.load(newConfig, globals, fac)
+
+	if s.Service != nil {
+		atomic.StoreInt32(&s.status, int32(ServiceStatusRunning))
+	} else {
+		atomic.StoreInt32(&s.status, int32(ServiceStatusError))
+		return fmt.Errorf("failed to load service from new configuration")
+	}
 
 	if err := s.startService(); err != nil {
 		return fmt.Errorf("failed to start service: %w", err)

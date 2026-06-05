@@ -259,8 +259,9 @@ func TestDimensionsGetRawMap(t *testing.T) {
 
 	rawMap := dims.GetRawMap()
 
+	// width has values {256, 512}, so GetRawMap should return those values
 	expected := map[string][]interface{}{
-		"width":  {256},
+		"width":  {256, 512},
 		"height": {256},
 	}
 
@@ -272,6 +273,23 @@ func TestDimensionsGetRawMap(t *testing.T) {
 		if !reflect.DeepEqual(rawMap[key], values) {
 			t.Errorf("GetRawMap()[%s] = %v, want %v", key, rawMap[key], values)
 		}
+	}
+}
+
+func TestDimensionsGetRawMap_FallbackToDefault(t *testing.T) {
+	dims := NewDimensions(map[string]interface{}{
+		"width": "512",
+	})
+
+	rawMap := dims.GetRawMap()
+
+	// No explicit values set, should fall back to default
+	expected := map[string][]interface{}{
+		"width": {"512"},
+	}
+
+	if !reflect.DeepEqual(rawMap, expected) {
+		t.Errorf("GetRawMap() = %v, want %v", rawMap, expected)
 	}
 }
 

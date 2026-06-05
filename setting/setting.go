@@ -38,11 +38,11 @@ func CreateProxyServiceFromJSON(content []byte) (*ProxyService, error) {
 	if err := dec.Decode(set); err != nil {
 		return nil, err
 	}
-	set.Service = covertService(set.Service)
+	set.Service = CovertService(set.Service)
 	return set, nil
 }
 
-func covertService(ser interface{}) interface{} {
+func CovertService(ser interface{}) interface{} {
 	if s, ok := ser.(map[string]interface{}); ok {
 		ty := s["type"].(string)
 		data, _ := json.Marshal(ser)

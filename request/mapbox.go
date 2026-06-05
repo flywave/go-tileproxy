@@ -27,6 +27,11 @@ func (r *MapboxRequest) GetRequestHandler() string {
 	return r.RequestHandlerName
 }
 
+var (
+	mapboxSourceJSONReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<file_name>[^/]+).json`)
+	mapboxTileReqRegex       = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)(@(?P<retina>[^/]+)x)?\.(?P<format>\w+)`)
+)
+
 type MapboxSourceJSONRequest struct {
 	MapboxRequest
 	LayerName string
@@ -45,7 +50,7 @@ func (r *MapboxSourceJSONRequest) init(param interface{}, url string, validate b
 	r.RequestHandlerName = "source.json"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Secure = false
-	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<file_name>[^/]+).json`)
+	r.ReqRegex = mapboxSourceJSONReqRegex
 	r.initRequest()
 }
 
@@ -113,7 +118,7 @@ func (r *MapboxTileRequest) init(param interface{}, url string, validate bool, h
 	r.RequestHandlerName = "tile"
 	r.AccessToken = r.Params.GetOne("access_token", "")
 	r.Retina = nil
-	r.ReqRegex = regexp.MustCompile(`/(?P<layer_name>[^/]+)/(?P<zoom>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)(@(?P<retina>[^/]+)x)?\.(?P<format>\w+)`)
+	r.ReqRegex = mapboxTileReqRegex
 	r.initRequest()
 }
 

@@ -38,14 +38,16 @@ func (c *ArcGISClient) CombinedClient(other MapClient, query *layer.MapQuery) Ma
 }
 
 func (c *ArcGISClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) string {
-	req := c.RequestTemplate
-	params := request.NewArcGISExportRequestParams(req.GetParams())
+	req := *c.RequestTemplate
+	copiedParams := req.GetParams().Copy()
+	params := request.NewArcGISExportRequestParams(copiedParams)
 	params.SetFormat(*format)
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetBBoxSrs(query.Srs.GetDef())
 	params.SetImageSrs(query.Srs.GetDef())
 	params.SetTransparent(query.Transparent)
+	req.Params = copiedParams
 	return req.CompleteUrl()
 }
 
@@ -109,32 +111,34 @@ func (c *ArcGISInfoClient) GetInfo(query *layer.InfoQuery) resource.FeatureInfoD
 }
 
 func (c *ArcGISInfoClient) queryURL(query *layer.InfoQuery) string {
-	req := c.RequestTemplate
-	params := request.NewArcGISIdentifyRequestParams(req.GetParams())
+	req := *c.RequestTemplate
+	copiedParams := req.GetParams().Copy()
+	params := request.NewArcGISIdentifyRequestParams(copiedParams)
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetPos(query.Pos)
 	params.SetSrs(query.Srs.GetDef())
 
+	copiedParams.Set("F", []string{"json"})
 	if strings.HasPrefix(query.InfoFormat, "text/html") {
-		req.GetParams().Set("f", []string{"html"})
-	} else {
-		req.GetParams().Set("f", []string{"json"})
+		copiedParams.Set("F", []string{"html"})
 	}
 
-	req.GetParams().Set("tolerance", []string{strconv.FormatInt(int64(c.Tolerance), 10)})
+	copiedParams.Set("TOLERANCE", []string{strconv.FormatInt(int64(c.Tolerance), 10)})
 
 	if c.ReturnGeometries {
-		req.GetParams().Set("returnGeometry", []string{"true"})
+		copiedParams.Set("RETURNGEOMETRY", []string{"true"})
 	} else {
-		req.GetParams().Set("returnGeometry", []string{"false"})
+		copiedParams.Set("RETURNGEOMETRY", []string{"false"})
 	}
+
+	req.Params = copiedParams
 
 	if c.AccessToken != nil {
 		if c.AccessTokenName != nil {
-			req.GetParams().Set(*c.AccessTokenName, []string{*c.AccessToken})
+			req.Params.Set(*c.AccessTokenName, []string{*c.AccessToken})
 		} else {
-			req.GetParams().Set("access_token", []string{*c.AccessToken})
+			req.Params.Set("access_token", []string{*c.AccessToken})
 		}
 	}
 

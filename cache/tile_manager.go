@@ -2,6 +2,8 @@ package cache
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flywave/go-geo"
@@ -188,9 +190,8 @@ func (tm *TileManager) LoadTileCoords(tileCoords [][3]int, dimensions utils.Dime
 	rescale_till_zoom := 0
 
 	if tm.rescaleTiles != -1 {
-		for _, tile := range tiles.tiles {
+		if tile := tiles.GetItem(0); tile != nil {
 			rescale_till_zoom = tile.Coord[2] + tm.rescaleTiles
-			break
 		}
 
 		if rescale_till_zoom < 0 {
@@ -207,7 +208,7 @@ func (tm *TileManager) LoadTileCoords(tileCoords [][3]int, dimensions utils.Dime
 		return nil, err
 	}
 
-	for _, t := range tiles.tiles {
+	for _, t := range tiles.GetSliceCopy() {
 		if t.Source == RESCALE_TILE_MISSING {
 			t.Source = nil
 		}
@@ -220,16 +221,19 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 	uncached_tiles := []*Tile{}
 
 	if rescaled_tiles != nil {
-		for _, t := range tiles.tiles {
+		for _, t := range tiles.GetSliceCopy() {
 			if rescaled_tiles.Contains(t.Coord) {
 				t.Source = rescaled_tiles.GetItem(t.Coord).Source
 			}
 		}
 	}
 
-	tm.cache.LoadTiles(tiles, with_metadata)
+	loadErr := tm.cache.LoadTiles(tiles, with_metadata)
+	if loadErr != nil && !strings.HasPrefix(loadErr.Error(), "not found:") {
+		return nil, fmt.Errorf("failed to load tiles from cache: %w", loadErr)
+	}
 
-	for _, tile := range tiles.tiles {
+	for _, tile := range tiles.GetSliceCopy() {
 		if !tm.IsCached(tile.Coord, dimensions) {
 			uncached_tiles = append(uncached_tiles, tile)
 		}
@@ -298,7 +302,7 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 	}
 
 	affected_tiles := NewTileCollection(coords)
-	for _, t := range affected_tiles.tiles {
+	for _, t := range affected_tiles.GetSliceCopy() {
 		if rescaled_tiles.Contains(t.Coord) {
 			t.Source = rescaled_tiles.GetItem(t.Coord).Source
 		}
@@ -320,7 +324,7 @@ func (tm *TileManager) scaledTile(t *Tile, stop_zoom int, rescaled_tiles *TileCo
 	}
 
 	tile_sources := []tile.Source{}
-	for _, t := range tile_collection.tiles {
+	for _, t := range tile_collection.GetSliceCopy() {
 		if t.Source != nil && t.Source != RESCALE_TILE_MISSING {
 			tile_sources = append(tile_sources, t.Source)
 		}

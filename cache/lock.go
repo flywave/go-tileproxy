@@ -56,6 +56,8 @@ func (l *FileTileLocker) Lock(ctx context.Context, tile *Tile, run func() error)
 		return ctx.Err()
 	}
 
+	defer f.Unlock()
+
 	return run()
 }
 
@@ -81,14 +83,14 @@ func (l *InMemoryTileLocker) Lock(ctx context.Context, tile *Tile, run func() er
 	key := fmt.Sprintf("%d_%d_%d", tile.Coord[0], tile.Coord[1], tile.Coord[2])
 
 	l.mu.Lock()
-	_, locked := l.locks[key]
-	if locked {
+	if _, locked := l.locks[key]; locked {
 		ch := make(chan struct{})
 		l.waitChs[key] = append(l.waitChs[key], ch)
 		l.mu.Unlock()
 
 		select {
 		case <-ch:
+			l.mu.Lock()
 		case <-ctx.Done():
 			l.mu.Lock()
 			channels := l.waitChs[key]
@@ -98,14 +100,12 @@ func (l *InMemoryTileLocker) Lock(ctx context.Context, tile *Tile, run func() er
 					break
 				}
 			}
-			l.mu.Unlock()
-			return ctx.Err()
-		}
-
-		l.mu.Lock()
-		if _, locked := l.locks[key]; locked {
-			l.mu.Unlock()
-			return fmt.Errorf("inconsistent lock state for key %s", key)
+			select {
+			case <-ch:
+			default:
+				l.mu.Unlock()
+				return ctx.Err()
+			}
 		}
 	}
 	l.locks[key] = struct{}{}

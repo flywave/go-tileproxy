@@ -363,6 +363,54 @@ func TestTileCollection_AllBlank_EmptyCollection(t *testing.T) {
 	}
 }
 
+func TestTileCollection_Len(t *testing.T) {
+	empty := NewTileCollection(nil)
+	if empty.Len() != 0 {
+		t.Errorf("Expected Len 0, got %d", empty.Len())
+	}
+
+	coords := [][3]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}
+	col := NewTileCollection(coords)
+	if col.Len() != 3 {
+		t.Errorf("Expected Len 3, got %d", col.Len())
+	}
+}
+
+func TestTileCollection_GetSliceCopy(t *testing.T) {
+	coords := [][3]int{{1, 2, 3}, {4, 5, 6}}
+	col := NewTileCollection(coords)
+
+	slice := col.GetSliceCopy()
+	if len(slice) != 2 {
+		t.Fatalf("Expected slice length 2, got %d", len(slice))
+	}
+	if slice[0].Coord != [3]int{1, 2, 3} {
+		t.Errorf("Expected coord [1,2,3], got %v", slice[0].Coord)
+	}
+
+	// Verify modification of copy doesn't affect original
+	slice[0] = NewTile([3]int{9, 9, 9})
+	if col.GetItem(0).Coord != [3]int{1, 2, 3} {
+		t.Error("Modifying returned slice should not affect collection")
+	}
+}
+
+func TestTileCollection_ForEach(t *testing.T) {
+	coords := [][3]int{{1, 2, 3}, {4, 5, 6}}
+	col := NewTileCollection(coords)
+
+	var count int
+	col.ForEach(func(tile *Tile) {
+		count++
+		if tile.Coord != coords[count-1] {
+			t.Errorf("Tile %d: expected coord %v, got %v", count-1, coords[count-1], tile.Coord)
+		}
+	})
+	if count != 2 {
+		t.Errorf("ForEach visited %d tiles, expected 2", count)
+	}
+}
+
 func TestTileCollection_ConcurrentOperations(t *testing.T) {
 	collection := NewTileCollection(nil)
 

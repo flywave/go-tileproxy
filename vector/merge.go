@@ -53,15 +53,21 @@ func (l *FeatureBuilder) applyGeometryPolygon(feature *geom.Feature) {
 }
 
 func (l *FeatureBuilder) Apply(feature *geom.Feature) {
-	if feature.GeometryData.Type == "" && feature.Geometry == nil {
+	if feature.GeometryData.Type == "" && feature.Geometry != nil {
 		feature.GeometryData = *geom.NewGeometryData(feature.Geometry)
 	}
 	switch feature.GeometryData.Type {
 	case "Point":
 		l.applyGeometryPoint(feature)
+	case "MultiPoint":
+		l.applyGeometryPoint(feature)
 	case "LineString":
 		l.applyGeometryLinestring(feature)
+	case "MultiLineString":
+		l.applyGeometryLinestring(feature)
 	case "Polygon":
+		l.applyGeometryPolygon(feature)
+	case "MultiPolygon":
 		l.applyGeometryPolygon(feature)
 	default:
 		break

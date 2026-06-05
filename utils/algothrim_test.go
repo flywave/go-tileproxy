@@ -105,6 +105,49 @@ func TestShuffleStringsN(t *testing.T) {
 	}
 }
 
+func TestShuffleStringsN_Correctness(t *testing.T) {
+	data := []string{"a", "b", "c", "d", "e", "f", "g", "h"}
+	original := make([]string, len(data))
+	copy(original, data)
+
+	// Shuffle first 4 elements
+	ShuffleStringsN(data, 4)
+
+	// Length should remain unchanged
+	if len(data) != len(original) {
+		t.Fatalf("Length changed: got %d, want %d", len(data), len(original))
+	}
+
+	// All original elements should still be present
+	for _, v := range original {
+		found := false
+		for _, d := range data {
+			if d == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Element %q missing after shuffle", v)
+		}
+	}
+}
+
+func TestShuffleStringsN_RunMultiple(t *testing.T) {
+	// Run multiple shuffles to ensure the function works across all positions
+	for n := 1; n <= 5; n++ {
+		data := []string{"a", "b", "c", "d", "e"}
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("ShuffleStringsN(%d) panicked: %v", n, r)
+				}
+			}()
+			ShuffleStringsN(data, n)
+		}()
+	}
+}
+
 func TestShuffleInts(t *testing.T) {
 	tests := []struct {
 		name string

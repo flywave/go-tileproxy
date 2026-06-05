@@ -46,9 +46,27 @@ func TestMapQueryEq(t *testing.T) {
 		MetaSize:    [2]uint32{1, 1},
 	}
 
-	// 简化测试，只验证基本功能
-	_ = query1.Eq(query2)
-	_ = query1.Eq(query3)
+	if !query1.Eq(query2) {
+		t.Error("Expected identical queries to be equal")
+	}
+	if query1.Eq(query3) {
+		t.Error("Expected queries with different TileId to not be equal")
+	}
+
+	query4 := &MapQuery{
+		TileId:      [3]int{1, 2, 3},
+		BBox:        vec2d.Rect{Min: vec2d.T{0, 0}, Max: vec2d.T{10, 10}},
+		Size:        [2]uint32{256, 256},
+		Srs:         geo.NewProj(4326),
+		Format:      tile.TileFormat("png"),
+		Transparent: true,
+		TiledOnly:   false,
+		Dimensions:  utils.NewDimensions(map[string]interface{}{}),
+		MetaSize:    [2]uint32{2, 2},
+	}
+	if query1.Eq(query4) {
+		t.Error("Expected queries with different MetaSize to not be equal")
+	}
 }
 
 func TestMapQueryDimensionsForParams(t *testing.T) {

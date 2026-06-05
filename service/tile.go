@@ -632,12 +632,8 @@ func (tl *TileProvider) checkedDimensions(_ request.TiledRequest) utils.Dimensio
 
 func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	format := req.GetFormat()
-	if format == nil || format.Extension() != tl.GetFormat() {
-		reqFmt := ""
-		if format != nil {
-			reqFmt = format.Extension()
-		}
-		return NewRequestError(fmt.Sprintf("invalid format (%s). this tile set only supports (%s)", reqFmt, tl.GetFormat()), "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
+	if format == nil || !tile.IsKnownFormat(format.Extension()) {
+		return NewRequestError("invalid format", "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
 	}
 	_, tile_coord := tl.getInternalTileCoord(req, useProfiles)
 	var tile_bbox vec2d.Rect
@@ -665,7 +661,6 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 	}
 
 	if coverage_intersects {
-		format := tile.TileFormat(tl.GetFormat())
 		tile_opts := t.Source.GetTileOptions()
 		s, err := cache.MaskImageSourceFromCoverage(t.Source, tile_bbox, tl.grid.srs, coverage, tile_opts)
 		if err != nil {
@@ -673,7 +668,7 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 		}
 		nt := cache.NewTile(t.Coord)
 		nt.Source = s
-		return nil, newTileResponse(nt, &format, nil, tl.tileManager.GetTileOptions())
+		return nil, newTileResponse(nt, format, nil, tl.tileManager.GetTileOptions())
 	}
 
 	return nil, newTileResponse(t, format, nil, tl.tileManager.GetTileOptions())

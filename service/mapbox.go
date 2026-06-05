@@ -299,7 +299,7 @@ func (t *MapboxTileProvider) emptyResponse() TileResponse {
 
 func (tl *MapboxTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.MapboxTileRequest)
-	if string(*tile_request.Format) != tl.GetFormat() {
+	if tile_request.Format == nil || !tile.IsKnownFormat(tile_request.Format.Extension()) {
 		return NewRequestError("Not Found", "Not_Found", &MapboxExceptionHandler{}, tile_request, false, nil), nil
 	}
 

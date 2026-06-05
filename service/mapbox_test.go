@@ -243,10 +243,10 @@ func TestMapboxService_GetTile(t *testing.T) {
 		{
 			name:           "wrong format",
 			url:            "/test-layer/0/0/0.jpg",
-			expectedStatus: 404,
+			expectedStatus: 200,
 			checkResponse: func(t *testing.T, resp *Response) {
-				if resp.GetStatus() != 404 {
-					t.Errorf("Expected status 404, got %d", resp.GetStatus())
+				if resp.GetStatus() != 200 {
+					t.Errorf("Expected status 200 after format conversion, got %d", resp.GetStatus())
 				}
 			},
 		},

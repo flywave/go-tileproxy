@@ -245,7 +245,7 @@ func (t *CesiumTileProvider) emptyResponse() TileResponse {
 
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.CesiumTileRequest)
-	if string(*tile_request.Format) != tl.GetRequestFormat() {
+	if tile_request.Format == nil || !tile.IsKnownFormat(tile_request.Format.Extension()) {
 		return NewRequestError("Not Found", "Not_Found", &CesiumExceptionHandler{}, tile_request, false, nil), nil
 	}
 

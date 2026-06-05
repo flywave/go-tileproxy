@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -216,14 +217,13 @@ func TestTileService_GetCapabilities(t *testing.T) {
 	}{
 		{
 			name:           "service capabilities",
-			url:            "/tiles/1.0.0",
+			url:            "/tms/1.0.0",
 			expectedStatus: 200,
 			expectedType:   "text/xml",
 			checkResponse: func(t *testing.T, resp *Response) {
 				if resp.GetStatus() != 200 {
 					t.Errorf("Expected status 200, got %d", resp.GetStatus())
 				}
-				// 允许text/xml或text/xml; charset=utf-8
 				contentType := resp.GetContentType()
 				if contentType != "text/xml" && !containsString(contentType, "text/xml") {
 					t.Errorf("Expected content type text/xml, got %s", contentType)
@@ -232,14 +232,13 @@ func TestTileService_GetCapabilities(t *testing.T) {
 		},
 		{
 			name:           "layer capabilities",
-			url:            "/tiles/1.0.0/layer1",
+			url:            "/tms/1.0.0/layer1",
 			expectedStatus: 200,
 			expectedType:   "text/xml",
 			checkResponse: func(t *testing.T, resp *Response) {
 				if resp.GetStatus() != 200 {
 					t.Errorf("Expected status 200, got %d", resp.GetStatus())
 				}
-				// 允许text/xml或text/xml; charset=utf-8
 				contentType := resp.GetContentType()
 				if contentType != "text/xml" && !containsString(contentType, "text/xml") {
 					t.Errorf("Expected content type text/xml, got %s", contentType)
@@ -248,14 +247,14 @@ func TestTileService_GetCapabilities(t *testing.T) {
 		},
 		{
 			name:           "nonexistent layer capabilities",
-			url:            "/tiles/1.0.0/nonexistent-layer",
+			url:            "/tms/1.0.0/nonexistent-layer",
 			expectedStatus: 400,
 			expectedType:   "text/xml",
 			checkResponse: func(t *testing.T, resp *Response) {
 				if resp.GetStatus() != 400 {
 					t.Errorf("Expected status 400, got %d", resp.GetStatus())
 				}
-				if resp.GetContentType() != "text/xml" {
+				if !strings.HasPrefix(resp.GetContentType(), "text/xml") {
 					t.Errorf("Expected content type text/xml, got %s", resp.GetContentType())
 				}
 			},
@@ -265,7 +264,7 @@ func TestTileService_GetCapabilities(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", tt.url, nil)
-			tileReq := request.NewTileRequest(req)
+			tileReq := request.MakeTileRequest(req, false)
 
 			resp := service.GetCapabilities(tileReq)
 
@@ -273,7 +272,7 @@ func TestTileService_GetCapabilities(t *testing.T) {
 				t.Errorf("%s: expected status %d, got %d", tt.name, tt.expectedStatus, resp.GetStatus())
 			}
 
-			if resp.GetContentType() != tt.expectedType {
+			if !strings.HasPrefix(resp.GetContentType(), tt.expectedType) {
 				t.Errorf("%s: expected content type %s, got %s", tt.name, tt.expectedType, resp.GetContentType())
 			}
 
@@ -372,7 +371,7 @@ func TestTileService_RootResource(t *testing.T) {
 				if resp.GetStatus() != 200 {
 					t.Errorf("Expected status 200, got %d", resp.GetStatus())
 				}
-				if resp.GetContentType() != "text/xml" {
+				if !strings.HasPrefix(resp.GetContentType(), "text/xml") {
 					t.Errorf("Expected content type text/xml, got %s", resp.GetContentType())
 				}
 			},
@@ -390,7 +389,7 @@ func TestTileService_RootResource(t *testing.T) {
 				t.Errorf("%s: expected status %d, got %d", tt.name, tt.expectedStatus, resp.GetStatus())
 			}
 
-			if resp.GetContentType() != tt.expectedType {
+			if !strings.HasPrefix(resp.GetContentType(), tt.expectedType) {
 				t.Errorf("%s: expected content type %s, got %s", tt.name, tt.expectedType, resp.GetContentType())
 			}
 

@@ -51,6 +51,8 @@ github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
 github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc h1:J7/CqNa53Ad1hwCbh3Hh2PUlSQyesylx5mkoBqQQX54=
 github.com/flywave/ogc-osgeo v0.0.0-20220121133505-c3a428aee8fc/go.mod h1:abWx0JGCgNAmti6Bjdc1UYjzmvsLbpWWjdpI7Dn6fDM=
+github.com/flywave/ogc-osgeo v0.0.0-20260605030621-e8935fba236a h1:HAbE0VwCsnXSSechpIZsikIaIYnIiQt1O+A68VP9uh0=
+github.com/flywave/ogc-osgeo v0.0.0-20260605030621-e8935fba236a/go.mod h1:abWx0JGCgNAmti6Bjdc1UYjzmvsLbpWWjdpI7Dn6fDM=
 github.com/flywave/webp v1.1.1/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=
 github.com/flywave/webp v1.1.2 h1:fWdWHFwSF3Jkworrmr2ClJ/8gv4yeaDoCJrUxPnHa0E=
 github.com/flywave/webp v1.1.2/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=

@@ -94,11 +94,7 @@ func (s *TileService) GetMap(req request.Request) *Response {
 
 	decorateTile := func(image tile.Source) tile.Source {
 		tilelayer := layer.(*TileProvider)
-		var bbox vec2d.Rect
-		err, bbox = layer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
-		if err != nil {
-			return nil
-		}
+		_, bbox := tilelayer.GetTileBBox(tile_request, tile_request.UseProfiles, false)
 		query_extent := &geo.MapExtent{Srs: tilelayer.grid.srs, BBox: bbox}
 		return s.DecorateTile(image, "tms", []string{tilelayer.GetName()}, query_extent)
 	}
@@ -161,6 +157,8 @@ func (s *TileService) internalDimensionLayer(tile_request *request.TileRequest) 
 	return nil
 }
 
+var validLayerNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 func isValidLayerName(name string) bool {
 	if name == "" {
 		return false
@@ -170,8 +168,7 @@ func isValidLayerName(name string) bool {
 		return false
 	}
 
-	allowedPattern := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-	if !allowedPattern.MatchString(name) {
+	if !validLayerNamePattern.MatchString(name) {
 		return false
 	}
 
@@ -483,7 +480,11 @@ type tileResponse struct {
 }
 
 func newTileResponse(tile *cache.Tile, format *tile.TileFormat, timestamp *time.Time, image_opts tile.TileOptions) *tileResponse {
-	return &tileResponse{buf: tile.GetSourceBuffer(format, image_opts), tile: tile, timestamp: timestamp, size: int(tile.Size), cacheable: tile.Cacheable}
+	var fmt_str string
+	if format != nil {
+		fmt_str = string(*format)
+	}
+	return &tileResponse{buf: tile.GetSourceBuffer(format, image_opts), tile: tile, timestamp: timestamp, format: fmt_str, size: int(tile.Size), cacheable: tile.Cacheable}
 }
 
 func (r *tileResponse) getBuffer() []byte {
@@ -635,7 +636,10 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 	if format == nil || !tile.IsKnownFormat(format.Extension()) {
 		return NewRequestError("invalid format", "InvalidParameterValue", tl.errorHandler, req, false, nil), nil
 	}
-	_, tile_coord := tl.getInternalTileCoord(req, useProfiles)
+	rerr, tile_coord := tl.getInternalTileCoord(req, useProfiles)
+	if rerr != nil {
+		return rerr, nil
+	}
 	var tile_bbox vec2d.Rect
 	coverage_intersects := false
 	if coverage != nil {
@@ -657,7 +661,11 @@ func (tl *TileProvider) Render(req request.TiledRequest, useProfiles bool, cover
 	}
 
 	if decorateTile != nil {
-		t.Source = decorateTile(t.Source)
+		decorated := decorateTile(t.Source)
+		if decorated == nil {
+			return nil, tl.emptyResponse()
+		}
+		t.Source = decorated
 	}
 
 	if coverage_intersects {

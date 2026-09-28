@@ -86,14 +86,18 @@ func (c *WMSClient) queryURL(query *layer.MapQuery, format *tile.TileFormat) str
 
 func (c *WMSClient) queryReq(query *layer.MapQuery, format *tile.TileFormat) *request.WMSMapRequest {
 	req := *c.RequestTemplate
-	params := request.NewWMSMapRequestParams(req.GetParams().Copy())
+	copied := req.GetParams().Copy()
+	params := request.NewWMSMapRequestParams(copied)
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetCrs(query.Srs.GetSrsCode())
 	params.SetFormat(*format)
 	params.Update(query.DimensionsForParams(c.FWDReqParams))
+	req.Params = copied
 	if c.AdaptTo111 {
 		req.AdaptToWMS111()
+	} else {
+		req.AdaptParamsToVersion()
 	}
 	return &req
 }
@@ -191,7 +195,7 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 	params.SetBBox(query.BBox)
 	params.SetSize(query.Size)
 	params.SetPos(query.Pos)
-	params.SetCrs(query.Srs.GetDef())
+	params.SetCrs(query.Srs.GetSrsCode())
 
 	if query.FeatureCount != nil {
 		fc := strconv.FormatInt(int64(*query.FeatureCount), 10)
@@ -212,6 +216,8 @@ func (c *WMSInfoClient) queryURL(query *layer.InfoQuery) string {
 
 	if c.AdaptTo111 {
 		req.AdaptToWMS111()
+	} else {
+		req.AdaptParamsToVersion()
 	}
 
 	if c.AccessToken != nil {

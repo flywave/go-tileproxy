@@ -189,7 +189,8 @@ func (a *ArchiveImport) LoadTileCoords(t [][3]int, grid *geo.TileGrid) (*cache.T
 }
 
 func (a *ArchiveImport) TileLocation(tile *cache.Tile) (string, error) {
-	return a.tileLocation(tile, "", a.GetExtension(), false)
+	// tiles live inside the extraction directory
+	return a.tileLocation(tile, a.tempDir, a.GetExtension(), false)
 }
 
 func (a *ArchiveImport) getTileOptions(md *mbtiles.Metadata) tile.TileOptions {

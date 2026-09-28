@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
 	mapset "github.com/deckarep/golang-set"
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -19,15 +20,63 @@ import (
 	"github.com/flywave/go-tileproxy/utils"
 )
 
-func SwitchBBoxEpsgAxisOrder(rect vec2d.Rect, srs string) vec2d.Rect {
-	bbox := *rect.Array()
-	if bbox != [4]float64{0, 0, 0, 0} && srs != "" {
-		prj := geo.NewProj(srs)
-		if prj.IsAxisOrderNE() {
-			return vec2d.Rect{Min: vec2d.T{bbox[1], bbox[0]}, Max: vec2d.T{bbox[3], bbox[2]}}
+var axisOrderNECache sync.Map
+
+// srsAxisOrderNE reports whether the SRS uses northing/easting axis order.
+// Results are cached because building a proj definition is expensive.
+func srsAxisOrderNE(srs string) bool {
+	if srs == "" {
+		return false
+	}
+	if v, ok := axisOrderNECache.Load(srs); ok {
+		return v.(bool)
+	}
+	ne := false
+	if prj := geo.NewProj(srs); prj != nil {
+		if sp, ok := prj.(*geo.SRSProj4); !ok || sp != nil {
+			ne = prj.IsAxisOrderNE()
 		}
 	}
+	axisOrderNECache.Store(srs, ne)
+	return ne
+}
+
+func SwitchBBoxEpsgAxisOrder(rect vec2d.Rect, srs string) vec2d.Rect {
+	bbox := *rect.Array()
+	if bbox != [4]float64{0, 0, 0, 0} && srs != "" && srsAxisOrderNE(srs) {
+		return vec2d.Rect{Min: vec2d.T{bbox[1], bbox[0]}, Max: vec2d.T{bbox[3], bbox[2]}}
+	}
 	return rect
+}
+
+// splitLayerList splits a comma separated WMS parameter value such as
+// LAYERS=a,b into individual names.
+func splitLayerList(values []string) []string {
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		for _, part := range strings.Split(v, ",") {
+			if part != "" {
+				out = append(out, part)
+			}
+		}
+	}
+	return out
+}
+
+// normalizeWMSParams converts wire parameters into the internal form.
+// WMS 1.3.0 clients pass the SRS via "crs" and send the bbox in the axis
+// order defined by the CRS (northing first for EPSG:4326); older versions
+// always send easting first. The bbox is normalized to easting/northing.
+func normalizeWMSParams(params RequestParams) {
+	if _, ok := params.Get("crs"); !ok {
+		return
+	}
+	crs := params.GetOne("crs", "")
+	if crs == "" {
+		return
+	}
+	p := WMSMapRequestParams{params: params}
+	p.SetBBox(SwitchBBoxEpsgAxisOrder(p.GetBBox(), crs))
 }
 
 type WMSMapRequestParams struct {
@@ -35,16 +84,7 @@ type WMSMapRequestParams struct {
 }
 
 func NewWMSMapRequestParams(params RequestParams) WMSMapRequestParams {
-	ret := WMSMapRequestParams{params: params}
-	ret.switchBBox()
-	return ret
-}
-
-func (r *WMSMapRequestParams) switchBBox() {
-	srs := r.GetSrs()
-	if srs != "" {
-		r.SetBBox(SwitchBBoxEpsgAxisOrder(r.GetBBox(), r.GetSrs()))
-	}
+	return WMSMapRequestParams{params: params}
 }
 
 func (r *WMSMapRequestParams) Update(params map[string]string) {
@@ -100,7 +140,7 @@ func (r *WMSMapRequestParams) SetBBox(bbox vec2d.Rect) {
 func (r *WMSMapRequestParams) GetLayers() []string {
 	l, ok := r.params.Get("layers")
 	if ok {
-		return l
+		return splitLayerList(l)
 	}
 	return []string{}
 }
@@ -163,7 +203,14 @@ func (r *WMSMapRequestParams) SetSize(si [2]uint32) {
 }
 
 func (r *WMSMapRequestParams) GetCrs() string {
-	return r.params.GetOne("crs", "EPSG:4326")
+	if v, ok := r.params.Get("crs"); ok && len(v) > 0 && v[0] != "" {
+		return v[0]
+	}
+	// tolerate WMS 1.1.1 style requests that pass the SRS via "srs"
+	if v, ok := r.params.Get("srs"); ok && len(v) > 0 {
+		return v[0]
+	}
+	return "EPSG:4326"
 }
 
 func (r *WMSMapRequestParams) SetCrs(srs string) {
@@ -288,19 +335,23 @@ func (r *WMSMapRequest) init(param interface{}, url string, validate bool, http 
 }
 
 func (r *WMSMapRequest) AdaptToWMS111() {
+	// WMS 1.1.1 passes the SRS via "srs" and always uses easting/northing
+	// order, which is the internal order already, so only the name changes.
 	if _, ok := r.Params["CRS"]; ok {
 		r.Params["SRS"] = r.Params["CRS"]
 		delete(r.Params, "CRS")
 	}
-	r.GetRequestParams().switchBBox()
 }
 
 func (r *WMSMapRequest) AdaptParamsToVersion() {
-	r.GetRequestParams().switchBBox()
+	// convert to the WMS 1.3.0 wire format: rename "srs" to "crs" and switch
+	// the bbox to the axis order defined by the CRS
 	if _, ok := r.Params["SRS"]; ok {
 		r.Params["CRS"] = r.Params["SRS"]
 		delete(r.Params, "SRS")
 	}
+	p := r.GetRequestParams()
+	p.SetBBox(SwitchBBoxEpsgAxisOrder(p.GetBBox(), p.GetCrs()))
 }
 
 func (r *WMSMapRequest) GetRequestParams() *WMSMapRequestParams {
@@ -367,12 +418,22 @@ func (s *WMSMapRequest) ValidateStyles() error {
 
 func (s *WMSMapRequest) ValidateFormat(image_formats []string) error {
 	params := &WMSMapRequestParams{params: s.Params}
-	format := params.GetFormat()
-	if !utils.ContainsString(image_formats, string(format)) {
-		params.SetFormat("image/png")
-		return errors.New("unsupported image format: " + string(format))
+	mimetype := params.GetFormatMimeType()
+	if mimetype == "" {
+		return errors.New("missing format parameter")
 	}
-	return nil
+	if utils.ContainsString(image_formats, mimetype) {
+		return nil
+	}
+	// tolerate bare format subtypes such as "png" or "jpeg" by matching
+	// the subtype against the configured formats
+	requested := SplitMimeType(mimetype)
+	for _, f := range image_formats {
+		if strings.EqualFold(SplitMimeType(f)[1], requested[1]) {
+			return nil
+		}
+	}
+	return errors.New("unsupported image format: " + mimetype)
 }
 
 func (s *WMSMapRequest) ValidateSrs(srs []string) error {
@@ -426,17 +487,23 @@ type WMSFeatureInfoRequestParams struct {
 }
 
 func NewWMSFeatureInfoRequestParams(params RequestParams) WMSFeatureInfoRequestParams {
-	ret := WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: params}}
-	ret.switchBBox()
-	return ret
+	return WMSFeatureInfoRequestParams{WMSMapRequestParams: WMSMapRequestParams{params: params}}
+}
+
+func (r *WMSFeatureInfoRequestParams) GetQueryLayers() []string {
+	if l, ok := r.params.Get("query_layers"); ok && len(l) > 0 {
+		return splitLayerList(l)
+	}
+	return r.GetLayers()
 }
 
 func (r *WMSFeatureInfoRequestParams) GetPos() [2]float64 {
-	i, err := strconv.ParseFloat(r.params.GetOne("i", "-1"), 64)
+	// WMS 1.3.0 uses I/J, older versions use X/Y
+	i, err := strconv.ParseFloat(r.params.GetOne("i", r.params.GetOne("x", "-1")), 64)
 	if err != nil {
 		return [2]float64{-1, -1}
 	}
-	j, err := strconv.ParseFloat(r.params.GetOne("j", "-1"), 64)
+	j, err := strconv.ParseFloat(r.params.GetOne("j", r.params.GetOne("y", "-1")), 64)
 	if err != nil {
 		return [2]float64{-1, -1}
 	}
@@ -601,6 +668,10 @@ func parseWMSRequestType(req *http.Request) (string, RequestParams) {
 
 func MakeWMSRequest(req *http.Request, validate bool) Request {
 	req_type, values := parseWMSRequestType(req)
+	if values == nil {
+		return nil
+	}
+	normalizeWMSParams(values)
 	switch req_type {
 	case "featureinfo":
 		r := &WMSFeatureInfoRequest{}

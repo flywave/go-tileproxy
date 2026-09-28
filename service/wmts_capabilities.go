@@ -15,6 +15,7 @@ type WMTSCapabilities struct {
 	Layers      []WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
+	Encodings   []string
 }
 
 func formatResourceTemplate(layer WMTSTileLayer, tpl string, service *WMTSMetadata) string {
@@ -93,6 +94,11 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 		url = "http://localhost"
 	}
 
+	encodings := c.Encodings
+	if len(encodings) == 0 {
+		encodings = []string{"KVP"}
+	}
+
 	if resp.OperationsMetadata == nil {
 		resp.OperationsMetadata = &wmts100.OperationsMetadata{}
 	}
@@ -104,7 +110,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 		get := &wmts100.Get{}
 		get.Href = url
 		get.Constraint.Name = "GetEncoding"
-		get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, "KVP")
+		get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, encodings...)
 		op.DCP.HTTP.Get = get
 		resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
 	}
@@ -113,7 +119,6 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 	for _, l := range c.Layers {
 		layer := wmts100.Layer{}
 		layer.Title = l.GetTitle()
-		layer.Abstract = l.GetName()
 
 		bbox := l.LLBBox()
 		if bbox.Width() != 0 && bbox.Height() != 0 {
@@ -166,7 +171,7 @@ func (c *WMTSCapabilities) render(request *request.WMTS100CapabilitiesRequest) [
 }
 
 func newWMTSCapabilities(md *WMTSMetadata, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, infoFormats map[string]string) *WMTSCapabilities {
-	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}
+	return &WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Encodings: []string{"KVP"}}
 }
 
 type RestfulCapabilities struct {
@@ -177,6 +182,10 @@ type RestfulCapabilities struct {
 }
 
 func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest) []byte {
+	if c.Service == nil {
+		return []byte("<Capabilities></Capabilities>")
+	}
+
 	resp := wmts100.GetCapabilitiesResponse{}
 	resp.Namespaces.Xmlns = "http://www.opengis.net/wmts/1.0"
 	resp.Namespaces.XmlnsOws = "http://www.opengis.net/ows/1.1"
@@ -207,6 +216,30 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 	}
 
 	url := c.Service.URL
+	if url == "" {
+		url = "http://localhost"
+	}
+
+	encodings := c.Encodings
+	if len(encodings) == 0 {
+		encodings = []string{"REST"}
+	}
+
+	if resp.OperationsMetadata == nil {
+		resp.OperationsMetadata = &wmts100.OperationsMetadata{}
+	}
+
+	operations := []string{"GetCapabilities", "GetTile", "GetFeatureInfo"}
+	for _, opName := range operations {
+		op := wmts100.Operation{}
+		op.Name = opName
+		get := &wmts100.Get{}
+		get.Href = url
+		get.Constraint.Name = "GetEncoding"
+		get.Constraint.AllowedValues.Value = append(get.Constraint.AllowedValues.Value, encodings...)
+		op.DCP.HTTP.Get = get
+		resp.OperationsMetadata.Operation = append(resp.OperationsMetadata.Operation, op)
+	}
 
 	contents := &resp.Contents
 	for _, l := range c.Layers {
@@ -251,17 +284,17 @@ func (c *RestfulCapabilities) render(request *request.WMTS100CapabilitiesRequest
 			tt.TopLeftCorner = t["topleft"]
 			tt.TileWidth = t["tile_width"]
 			tt.TileHeight = t["tile_height"]
-		tt.MatrixWidth = t["matrix_width"]
-		tt.MatrixHeight = t["matrix_height"]
+			tt.MatrixWidth = t["matrix_width"]
+			tt.MatrixHeight = t["matrix_height"]
 
-		tms.TileMatrix = append(tms.TileMatrix, tt)
+			tms.TileMatrix = append(tms.TileMatrix, tt)
+		}
+		contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
 	}
-	contents.TileMatrixSet = append(contents.TileMatrixSet, tms)
-}
 
-resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
+	resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 
-	resp.ServiceMetadataURL.Href = url + "/1.0.0/WMTSCapabilities.xml"
+	resp.ServiceMetadataURL.Href = strings.TrimSuffix(url, "/") + "/1.0.0/WMTSCapabilities.xml"
 
 	si, err := xml.MarshalIndent(resp, "", "  ")
 	if err != nil {
@@ -272,5 +305,5 @@ resp.ServiceMetadataURL = &wmts100.ServiceMetadataURL{}
 }
 
 func newWMTSRestCapabilities(md *WMTSMetadata, layers []WMTSTileLayer, matrixSets map[string]*TileMatrixSet, urlConverter *request.URLTemplateConverter, infoUrlConverter *request.URLTemplateConverter, infoFormats map[string]string, resourceTemplate string) *RestfulCapabilities {
-	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
+	return &RestfulCapabilities{WMTSCapabilities: WMTSCapabilities{Service: md, Layers: layers, MatrixSets: matrixSets, InfoFormats: infoFormats, Encodings: []string{"REST", "KVP"}}, resourceTemplate: resourceTemplate, urlConverter: urlConverter, infoUrlConverter: infoUrlConverter}
 }

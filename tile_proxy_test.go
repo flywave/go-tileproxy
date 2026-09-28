@@ -10,8 +10,8 @@ func TestParseServiceId(t *testing.T) {
 	proxy := NewTileProxy(nil, nil, nil)
 
 	tests := []struct {
-		path    string
-		want    string
+		path string
+		want string
 	}{
 		{"/service1/tiles/1/2/3.png", "service1"},
 		{"/my-service/layer.json", "my-service"},

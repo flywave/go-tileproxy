@@ -24,7 +24,10 @@ import (
 	"github.com/flywave/go-tileproxy/cache"
 	"github.com/flywave/go-tileproxy/imagery"
 	"github.com/flywave/go-tileproxy/layer"
+	"github.com/flywave/go-tileproxy/service"
+	"github.com/flywave/go-tileproxy/setting"
 	"github.com/flywave/go-tileproxy/tile"
+	"github.com/flywave/go-tileproxy/utils"
 )
 
 // ---------------------------------------------------------------------------
@@ -96,6 +99,7 @@ func newPerfTestHarness(b *testing.B, upstreamLatency time.Duration) *perfTestHa
 		statusCode: 200,
 		body:       tileData,
 	}
+	_ = mockClient
 
 	// --- Setup: grid ---
 	opts := geo.DefaultTileGridOptions()
@@ -136,9 +140,34 @@ func newPerfTestHarness(b *testing.B, upstreamLatency time.Duration) *perfTestHa
 	}
 	tileManager := cache.NewTileManager(tmOpts)
 
+	// --- Setup: tile service mounted behind a proxy ---
+	provider := service.NewTileProvider(&service.TileProviderOptions{
+		Name:        "test-layer",
+		Title:       "Test Layer",
+		Metadata:    &service.TileProviderMetadata{Name: "test-layer", Title: "Test Layer"},
+		TileManager: tileManager,
+		Dimensions:  make(utils.Dimensions),
+	})
+	maxTileAge := time.Hour
+	tmsService := service.NewTileService(&service.TileServiceOptions{
+		Layers:     map[string]service.Provider{"test-layer": provider},
+		Metadata:   &service.TileMetadata{Title: "Perf Test", Abstract: "perf harness", URL: "http://localhost/test-service/"},
+		MaxTileAge: &maxTileAge,
+		Origin:     "nw",
+	})
+	svc := &Service{Id: "test-service", Type: TileService, Service: tmsService}
+
+	proxy := &TileProxy{
+		globals:         &setting.GlobalsSetting{},
+		Services:        map[string]*Service{"test-service": svc},
+		serviceCache:    make(map[string]*Service),
+		serviceReqRegex: serviceReqPattern,
+	}
+
 	return &perfTestHarness{
 		tileData:    tileData,
 		cacheDir:    cacheDir,
+		proxy:       proxy,
 		mockClient:  mockClient,
 		tileManager: tileManager,
 		localCache:  localCache,
@@ -580,5 +609,3 @@ func BenchmarkGC_Pressure(b *testing.B) {
 	b.ReportMetric(float64(m2.TotalAlloc-m1.TotalAlloc)/10000, "B/tile")
 	b.ReportMetric(float64(m2.Mallocs-m1.Mallocs)/10000, "alloc/tile")
 }
-
-

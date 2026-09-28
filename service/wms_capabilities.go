@@ -136,7 +136,7 @@ func (c *WMSCapabilities) render(req *request.WMSRequest) []byte {
 	cam.Namespaces.XmlnsInspireCommon = "http://inspire.ec.europa.eu/schemas/common/1.0"
 	cam.Namespaces.XmlnsInspireVs = "http://inspire.ec.europa.eu/schemas/inspire_vs/1.0"
 	cam.Namespaces.SchemaLocation = "http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd"
-	cam.Namespaces.Version = "1.0.0"
+	cam.Namespaces.Version = "1.3.0"
 
 	service := &cam.WMSService
 	service.Name = "WMS"

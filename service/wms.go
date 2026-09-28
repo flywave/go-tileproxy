@@ -114,20 +114,25 @@ func NewWMSService(opts *WMSServiceOptions) *WMSService {
 }
 
 func computeZoom(size [2]uint32, bbx vec2d.Rect, proj geo.Proj) int {
-	g := geo.NewMercTileGrid()
-	proj2 := geo.NewProj("EPSG:3857")
-
-	ret := proj.TransformRectTo(proj2, bbx, 16)
+	ret := proj.TransformRectTo(mercTileGridProj, bbx, 16)
 	res := ret.Width() / float64(size[0])
-	var z int
-	for i, r := range g.Resolutions {
+	z := 0
+	for i, r := range mercTileGrid.Resolutions {
 		if r < res {
 			z = i
 			break
 		}
+		if i == len(mercTileGrid.Resolutions)-1 {
+			z = i
+		}
 	}
 	return z
 }
+
+var (
+	mercTileGrid     = geo.NewMercTileGrid()
+	mercTileGridProj = geo.NewProj("EPSG:3857")
+)
 
 func (s *WMSService) GetMap(req request.Request) *Response {
 	err := s.checkMapRequest(req)
@@ -154,16 +159,20 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	var sub_bbox vec2d.Rect
 
 	if s.SrsExtents != nil {
-		if _, ok := s.SrsExtents[mapreq.GetCrs()]; ok {
+		if srs_extent, ok := s.SrsExtents[mapreq.GetCrs()]; ok {
 			query_extent := &geo.MapExtent{BBox: bbox, Srs: srsProj}
-			if !s.SrsExtents[mapreq.GetCrs()].Contains(query_extent) {
-				limited_extent := s.SrsExtents[mapreq.GetCrs()].Intersection(query_extent)
+			if !srs_extent.Contains(query_extent) {
+				limited_extent := srs_extent.Intersection(query_extent)
 				if limited_extent == nil {
-					img_opts := *s.ImageFormats[mapreq.GetFormatMimeType()]
+					base_opts, ok := s.ImageFormats[mapreq.GetFormatMimeType()]
+					if !ok {
+						return NewRequestError("unsupported image format", "", &WMS130ExceptionHandler{}, req, false, nil).Render()
+					}
+					img_opts := *base_opts
 					img_opts.BgColor = mapreq.GetBGColor()
 					img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
-					tile := cache.GetEmptyTile(size, &img_opts)
-					return NewResponse(tile.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
+					empty := cache.GetEmptyTile(size, &img_opts)
+					return NewResponse(empty.GetBuffer(nil, nil), 200, img_opts.Format.MimeType())
 				}
 				sub_size, offset, sub_bbox = imagery.BBoxPositionInImage(bbox, size, limited_extent.BBox)
 				query = &layer.MapQuery{BBox: sub_bbox, Size: sub_size, Srs: srsProj, Format: mapreq.GetFormat()}
@@ -173,18 +182,18 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 
 	actual_layers := make(map[string]layer.Layer)
 	s.mu.RLock()
-	defer s.mu.RUnlock()
 	for _, layer_name := range mapreq.GetLayers() {
 		l, ok := s.Layers[layer_name]
 		if !ok {
 			continue
 		}
 		if l.rendersQuery(query) {
-			for layer_name, map_layers := range l.mapLayersForQuery(query) {
-				actual_layers[layer_name] = map_layers
+			for name, map_layers := range l.mapLayersForQuery(query) {
+				actual_layers[name] = map_layers
 			}
 		}
 	}
+	s.mu.RUnlock()
 
 	var keys []string
 	for k := range actual_layers {
@@ -217,17 +226,23 @@ func (s *WMSService) GetMap(req request.Request) *Response {
 	img_opts.BgColor = mapreq.GetBGColor()
 	img_opts.Transparent = geo.NewBool(mapreq.GetTransparent())
 	si := mapreq.GetSize()
-	result := merger.Merge(&img_opts, si[:], mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs()), coverage)
+	result := merger.Merge(&img_opts, si[:], mapreq.GetBBox(), srsProj, coverage)
 
 	if !query.Eq(orig_query) {
-		imageSrc := result.(*imagery.ImageSource)
+		imageSrc, ok := result.(*imagery.ImageSource)
+		if !ok {
+			return NewRequestError("invalid render result", "", &WMS130ExceptionHandler{}, req, false, nil).Render()
+		}
 		result = imagery.SubImageSource(imageSrc, orig_query.Size, offset[:], &img_opts, nil)
 	}
 
-	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: geo.NewProj(mapreq.GetCrs()), BBox: mapreq.GetBBox()})
-	imagesource := result.(*imagery.ImageSource)
+	result = s.DecorateTile(result, "wms.map", keys, &geo.MapExtent{Srs: srsProj, BBox: mapreq.GetBBox()})
+	imagesource, ok := result.(*imagery.ImageSource)
+	if !ok {
+		return NewRequestError("invalid render result", "", &WMS130ExceptionHandler{}, req, false, nil).Render()
+	}
 
-	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), geo.NewProj(mapreq.GetCrs())))
+	imagesource.SetGeoReference(geo.NewGeoReference(mapreq.GetBBox(), srsProj))
 	result_buf := result.GetBuffer(nil, &img_opts)
 	f := img_opts.GetFormat()
 	resp := NewResponse(result_buf, 200, f.MimeType())
@@ -295,7 +310,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	var feature_count *int
 
 	if req.GetParams() != nil {
-		if v, ok := req.GetParams()["feature_count"]; ok {
+		if v, ok := req.GetParams()["feature_count"]; ok && len(v) > 0 {
 			fc, _ := strconv.Atoi(v[0])
 			feature_count = &fc
 		}
@@ -306,14 +321,14 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 
 	actual_layers := make(map[string]layer.InfoLayer)
 
-	for _, layer_name := range freq.GetLayers() {
-		layer := s.Layers[layer_name]
-		if !layer.Queryable() {
+	for _, layer_name := range freq.GetQueryLayers() {
+		l, ok := s.Layers[layer_name]
+		if !ok || !l.Queryable() {
 			resp := NewRequestError(fmt.Sprintf("layer %s is not queryable", layer_name), "InvalidParameterValue", &WMS130ExceptionHandler{}, req, false, nil)
 			return resp.Render()
 		}
-		for layer_name, map_layers := range layer.infoLayersForQuery(query) {
-			actual_layers[layer_name] = map_layers
+		for name, map_layers := range l.infoLayersForQuery(query) {
+			actual_layers[name] = map_layers
 		}
 	}
 
@@ -323,7 +338,7 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	}
 
 	authorized_layers, coverage := s.authorizedLayers("featureinfo", keys, &geo.MapExtent{BBox: freq.GetBBox(), Srs: geo.NewProj(freq.GetCrs())})
-	s.filterActualInfoLayers(actual_layers, freq.GetLayers(), authorized_layers)
+	s.filterActualInfoLayers(actual_layers, freq.GetQueryLayers(), authorized_layers)
 
 	if coverage != nil && !coverage.ContainsPoint(query.GetCoord(), query.Srs) {
 		infos = nil
@@ -341,9 +356,12 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 		}
 	}
 
-	mimetype := freq.GetFormatString()
+	mimetype := freq.GetFormatMimeType()
 
 	if len(infos) == 0 {
+		if mimetype == "" {
+			mimetype = "text/plain"
+		}
 		return NewResponse([]byte{}, 200, mimetype)
 	}
 
@@ -352,6 +370,12 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 	var actual_info_type string
 	if s.FeatureTransformers != nil {
 		if mimetype != "" {
+			info_type = request.InfotypeFromMimetype(mimetype)
+			if _, ok := s.FeatureTransformers[info_type]; !ok {
+				info_type = ""
+			}
+		}
+		if info_type == "" {
 			if _, ok := s.FeatureTransformers["xml"]; ok {
 				info_type = "xml"
 			} else if _, ok := s.FeatureTransformers["html"]; ok {
@@ -359,10 +383,8 @@ func (s *WMSService) GetFeatureInfo(req request.Request) *Response {
 			} else {
 				info_type = "text"
 			}
-			mimetype = request.MimetypeFromInfotype(info_type)
-		} else {
-			info_type = request.InfotypeFromMimetype(mimetype)
 		}
+		mimetype = request.MimetypeFromInfotype(info_type)
 		resp, actual_info_type = resource.CombineDocs(infos, s.FeatureTransformers[info_type])
 		if actual_info_type != "" && info_type != actual_info_type {
 			mimetype = request.MimetypeFromInfotype(actual_info_type)
@@ -450,10 +472,18 @@ func (s *WMSService) checkFeatureinfoRequest(req request.Request) *RequestError 
 
 func (s *WMSService) validateLayers(req request.Request) *RequestError {
 	mapparams := request.NewWMSMapRequestParams(req.GetParams())
-	query_layers := mapparams.GetLayers()
-	for _, layer := range query_layers {
+	for _, layer := range mapparams.GetLayers() {
 		if _, ok := s.Layers[layer]; !ok {
 			return NewRequestError("unknown layer: "+layer, "", &WMS130ExceptionHandler{}, req, false, nil)
+		}
+	}
+	// GetFeatureInfo requests additionally name the queried layers
+	if _, ok := req.GetParams().Get("query_layers"); ok {
+		info_params := request.NewWMSFeatureInfoRequestParams(req.GetParams())
+		for _, layer := range info_params.GetQueryLayers() {
+			if _, ok := s.Layers[layer]; !ok {
+				return NewRequestError("unknown layer: "+layer, "", &WMS130ExceptionHandler{}, req, false, nil)
+			}
 		}
 	}
 	return nil
@@ -500,15 +530,17 @@ func (s *WMSService) Legendgraphic(req request.Request) *Response {
 func (s *WMSService) serviceMetadata(tms_request request.Request, metadata *WMSMetadata) WMSMetadata {
 	md := *metadata
 
-	// 安全地获取URL
-	if baseReq, ok := tms_request.(*request.BaseRequest); ok && baseReq.Http != nil && baseReq.Http.URL != nil {
-		md.URL = baseReq.Http.URL.Host
-	} else if wmsReq, ok := tms_request.(*request.WMSRequest); ok && wmsReq.Http != nil && wmsReq.Http.URL != nil {
-		md.URL = wmsReq.Http.URL.Host
-	} else if capReq, ok := tms_request.(*request.WMSCapabilitiesRequest); ok && capReq.Http != nil && capReq.Http.URL != nil {
-		md.URL = capReq.Http.URL.Host
-	} else {
-		md.URL = "localhost"
+	switch req := tms_request.(type) {
+	case *request.WMSMapRequest:
+		md.URL = serviceBaseURL(req.Http)
+	case *request.WMSFeatureInfoRequest:
+		md.URL = serviceBaseURL(req.Http)
+	case *request.WMSCapabilitiesRequest:
+		md.URL = serviceBaseURL(req.Http)
+	case *request.WMSLegendGraphicRequest:
+		md.URL = serviceBaseURL(req.Http)
+	default:
+		md.URL = "http://localhost"
 	}
 
 	if s.RootLayer.hasLegend {
@@ -880,7 +912,14 @@ func (l *WMSGroupLayer) GetChildLayers() map[string]WMSLayer {
 }
 
 func (l *WMSGroupLayer) legend(query *layer.LegendQuery) []tile.Source {
-	panic("not implemented")
+	if l.this != nil {
+		return l.this.legend(query)
+	}
+	legend := []tile.Source{}
+	for _, lyr := range l.layers {
+		legend = append(legend, lyr.legend(query)...)
+	}
+	return legend
 }
 
 func CombinedLayers(layers []layer.Layer, query *layer.MapQuery) []layer.Layer {

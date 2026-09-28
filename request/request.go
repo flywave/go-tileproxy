@@ -191,7 +191,7 @@ func (r *BaseRequest) QueryString() string {
 		var val string
 		if len(v) > 1 {
 			val = strings.Join(v, ",")
-		} else {
+		} else if len(v) == 1 {
 			val = v[0]
 		}
 		kv_pairs = append(kv_pairs, url.QueryEscape(k)+"="+url.QueryEscape(val))

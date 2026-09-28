@@ -15,7 +15,10 @@ import (
 var (
 	tileReqRegex         = regexp.MustCompile(`(?P<begin>/[^/]+)/((?P<version>1\.0\.0)/)?(?P<layer>[^/]+)/((?P<layer_spec>[^/]+)/)?(?P<z>-?\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<format>\w+)`)
 	tmsCapabilitiesRegex = regexp.MustCompile(`^.*/1\.0\.0/?(/(?P<layer>[^/]+))?(/(?P<layer_spec>[^/]+))?$`)
-	tmsRootRequestRegex  = regexp.MustCompile(`/tiles/?$`)
+	// tileRootRequestRegex matches the bare service mount point, e.g. "/tms"
+	// or "/tiles/", which serves the TMS root resource document.
+	tileRootRequestRegex = regexp.MustCompile(`^/[^/]+/?$`)
+	tmsRootRequestRegex  = regexp.MustCompile(`^/[^/]+/?$`)
 )
 
 type TiledRequest interface {
@@ -72,6 +75,10 @@ func (r *TileRequest) init() {
 	r.UseProfiles = false
 	r.RequestPrefix = "/tiles"
 	r.Dimensions = make(map[string][]string)
+	if tileRootRequestRegex.MatchString(r.Http.URL.Path) {
+		r.RequestHandlerName = "tms_root_resource"
+		return
+	}
 	r.initRequest()
 }
 
@@ -87,10 +94,6 @@ func (r *TileRequest) initRequest() error {
 		if name != "" && match[i] != "" {
 			result[name] = match[i]
 		}
-	}
-
-	if len(match) == 0 || result["begin"] != r.RequestPrefix {
-		return fmt.Errorf("invalid request (%s)", url)
 	}
 
 	r.Layer = result["layer"]
@@ -178,7 +181,7 @@ func (r *TMSRequest) init() {
 }
 
 func MakeTileRequest(req *http.Request, validate bool) Request {
-	if strings.HasPrefix(req.URL.String(), "/tms") {
+	if strings.HasPrefix(req.URL.Path, "/tms") {
 		return NewTMSRequest(req)
 	} else {
 		return NewTileRequest(req)

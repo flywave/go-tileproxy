@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/flywave/go-cog"
 	"github.com/flywave/go-geo"
@@ -15,6 +17,18 @@ import (
 	qmt "github.com/flywave/go-quantized-mesh"
 	vec2d "github.com/flywave/go3d/float64/vec2"
 )
+
+// requireNetwork skips tests that fetch tiles from remote servers when the
+// network is unreachable instead of hanging on per-tile timeouts.
+func requireNetwork(t *testing.T) {
+	t.Helper()
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Head("https://server.arcgisonline.com/ArcGIS/rest/info")
+	if err != nil {
+		t.Skipf("network unavailable, skipping remote tile test: %v", err)
+	}
+	resp.Body.Close()
+}
 
 func TestTerrainSource(t *testing.T) {
 	opts := &RasterOptions{Format: tile.TileFormat("terrain"), Mode: BORDER_BILATERAL}
@@ -296,6 +310,8 @@ func download_mp(x, y, z int, sourceName string) {
 }
 
 func TestGetTerrain(t *testing.T) {
+	requireNetwork(t)
+
 	bbox := vec2d.Rect{
 		Min: vec2d.T{117.8002166748047, 36.77409249464195},
 		Max: vec2d.T{117.92793273925783, 36.8510544475565},
@@ -386,6 +402,13 @@ func download_argis(x, y, z int, sourceName string) {
 }
 
 func TestStaImage(t *testing.T) {
+	// this test seeds the local tile cache by downloading ~20k tiles from
+	// ArcGIS online; opt in via TILEPROXY_DOWNLOAD_FIXTURES=1
+	if os.Getenv("TILEPROXY_DOWNLOAD_FIXTURES") == "" {
+		t.Skip("bulk fixture download test; set TILEPROXY_DOWNLOAD_FIXTURES=1 to run")
+	}
+	requireNetwork(t)
+
 	// bbox := vec2d.Rect{
 	// 	Min: vec2d.T{112.7856445312500142, 36.2619922044566252},
 	// 	Max: vec2d.T{112.9394531250000426, 36.4389612408594488},
@@ -463,6 +486,12 @@ func TestStaImage(t *testing.T) {
 }
 
 func TestMapboxTerrain(t *testing.T) {
+	// bulk fixture download from the Mapbox raster API; opt in via
+	// TILEPROXY_DOWNLOAD_FIXTURES=1
+	if os.Getenv("TILEPROXY_DOWNLOAD_FIXTURES") == "" {
+		t.Skip("bulk fixture download test; set TILEPROXY_DOWNLOAD_FIXTURES=1 to run")
+	}
+	requireNetwork(t)
 
 	bbox := vec2d.Rect{
 		Min: vec2d.T{111.62649644407276, 35.56405463741939},
@@ -522,7 +551,7 @@ func TestMapboxTerrain(t *testing.T) {
 }
 
 var (
-	mpx_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbGY5Y283N3IyZjB3M3ZyMGs4emJoYWNkIn0.MRcTQs3Z9OA0EQOB40xBqQ"
+	mpx_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=MAPBOX_TOKEN_PLACEHOLDER"
 )
 
 func download_mpx_terrain(x, y, z int, sourceName string) {

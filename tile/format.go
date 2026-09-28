@@ -27,9 +27,9 @@ var (
 	TerrainFormats = []string{"terrain", "atm"}
 )
 
-func IsImageryFormat(format string) bool   { return IsFormatSupported(format, ImageryFormats) }
-func IsVectorFormat(format string) bool    { return IsFormatSupported(format, VectorFormats) }
-func IsTerrainFormat(format string) bool   { return IsFormatSupported(format, TerrainFormats) }
+func IsImageryFormat(format string) bool { return IsFormatSupported(format, ImageryFormats) }
+func IsVectorFormat(format string) bool  { return IsFormatSupported(format, VectorFormats) }
+func IsTerrainFormat(format string) bool { return IsFormatSupported(format, TerrainFormats) }
 func IsKnownFormat(format string) bool {
 	return IsImageryFormat(format) || IsVectorFormat(format) || IsTerrainFormat(format)
 }

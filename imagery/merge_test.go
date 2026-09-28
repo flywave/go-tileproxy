@@ -55,7 +55,7 @@ func TestMergeSingleCoverage(t *testing.T) {
 }
 
 const (
-	tile_url = "https://api.mapbox.com/v4/mapbox.satellite/%d/%d/%d.webp?sku=101h7nLHLyzgw&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJja3pjOXRqcWkybWY3MnVwaGxkbTgzcXAwIn0._tCv9fpOyCT4O_Tdpl6h0w"
+	tile_url = "https://api.mapbox.com/v4/mapbox.satellite/%d/%d/%d.webp?sku=101h7nLHLyzgw&access_token=MAPBOX_TOKEN_PLACEHOLDER"
 )
 
 func get_url(url string) []byte {
@@ -181,8 +181,10 @@ func TestGetGeotiff(t *testing.T) {
 	img := result.GetTile().(image.Image)
 
 	imaging.Save(img, "./test.png")
+	defer os.Remove("./test.png")
 
 	src := cog.NewSource(img, nil, cog.CTLZW)
 
 	cog.WriteTile("./satellite_taihe.tif", src, sbox, srs4326, [2]uint32{uint32(img.Bounds().Dx()), uint32(img.Bounds().Dy())}, nil)
+	defer os.Remove("./satellite_taihe.tif")
 }

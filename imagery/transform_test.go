@@ -40,12 +40,15 @@ func TestImageTransform(t *testing.T) {
 		&img_opts)
 
 	imaging.Save(result.GetTile().(image.Image), "./transform.png")
+	defer os.Remove("./transform.png")
 
 	errs := []float64{0.2, 0.5, 1, 2, 4, 6, 8, 12, 16}
 	for _, err := range errs {
 		transformer := &ImageTransformer{SrcSRS: src_srs, DstSRS: dst_srs, MaxPxErr: err}
 		result = transformer.Transform(src_img, src_bbox, dst_size, dst_bbox, &img_opts)
-		imaging.Save(result.GetTile().(image.Image), fmt.Sprintf("./transform_%d.png", int(err*10)))
+		name := fmt.Sprintf("./transform_%d.png", int(err*10))
+		imaging.Save(result.GetTile().(image.Image), name)
+		defer os.Remove(name)
 	}
 }
 
@@ -123,7 +126,7 @@ func TestMergeTransform(t *testing.T) {
 
 	os.Remove("./result.png")
 
-	if result != nil || rect.Max[0] == 0 {
+	if result == nil || rect.Max[0] == 0 {
 		t.FailNow()
 	}
 }

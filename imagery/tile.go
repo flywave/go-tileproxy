@@ -42,14 +42,18 @@ func (t *TileMerger) Merge(ordered_tiles []tile.Source, image_opts *ImageOptions
 			continue
 		}
 
-		if source.GetCacheable() == nil {
-			cacheable = source.GetCacheable()
+		if info := source.GetCacheable(); info != nil {
+			cacheable = info
 		}
 
-		tile := source.GetTile().(image.Image)
+		img, ok := source.GetTile().(image.Image)
+		if !ok {
+			// skip tiles that failed to decode instead of crashing
+			continue
+		}
 		pos := t.tileOffset(i)
-		tile = imaging.Resize(tile, int(t.Size[0]), int(t.Size[1]), imaging.Lanczos)
-		dcresult.DrawImage(tile, pos[0], pos[1])
+		img = imaging.Resize(img, int(t.Size[0]), int(t.Size[1]), imaging.Lanczos)
+		dcresult.DrawImage(img, pos[0], pos[1])
 	}
 	result = dcresult.Image()
 	return &ImageSource{image: result, size: src_size[:], Options: image_opts, cacheable: cacheable}

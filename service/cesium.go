@@ -22,8 +22,15 @@ type CesiumExceptionHandler struct {
 }
 
 func (h *CesiumExceptionHandler) Render(request_error *RequestError) *Response {
-	status_code := 500
-	return NewResponse([]byte(request_error.Message), status_code, "application/json")
+	// respond with the requested tile format so clients (e.g. CesiumJS)
+	// see the expected content type, defaulting to quantized-mesh
+	mimetype := tile.TileFormat("terrain").MimeType()
+	if creq, ok := request_error.Request.(*request.CesiumTileRequest); ok && creq.Format != nil {
+		if mt := creq.Format.MimeType(); mt != "" {
+			mimetype = mt
+		}
+	}
+	return NewResponse([]byte(request_error.Message), 404, mimetype)
 }
 
 type CesiumMetadata struct {
@@ -72,7 +79,8 @@ func (s *CesiumService) GetLayerJSON(req request.Request) *Response {
 	tilejson_request := req.(*request.CesiumLayerJSONRequest)
 	err, layer := s.getLayer(tilejson_request.LayerName, req)
 	if err != nil {
-		return err.Render()
+		// layer.json is a JSON endpoint, render errors as JSON
+		return (&MapboxExceptionHandler{}).Render(err)
 	}
 	tilelayer := layer.(*CesiumTileProvider)
 
@@ -132,7 +140,7 @@ func (s *CesiumService) getLayer(id string, req request.Request) (*RequestError,
 	if l, ok := s.Tilesets[id]; ok {
 		return nil, l
 	}
-	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &MapboxExceptionHandler{}, req, false, nil), nil
+	return NewRequestError(fmt.Sprintf("Tileset %s does not exist", id), "Tileset_Not_Exist", &CesiumExceptionHandler{}, req, false, nil), nil
 }
 
 type CesiumLayerMetadata struct {
@@ -246,6 +254,10 @@ func (t *CesiumTileProvider) emptyResponse() TileResponse {
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {
 	tile_request := req.(*request.CesiumTileRequest)
 	if tile_request.Format == nil || !tile.IsKnownFormat(tile_request.Format.Extension()) {
+		return NewRequestError("Not Found", "Not_Found", &CesiumExceptionHandler{}, tile_request, false, nil), nil
+	}
+	// only serve tiles in the format this tileset was built for
+	if tile_request.Format.Extension() != tl.GetRequestFormat() {
 		return NewRequestError("Not Found", "Not_Found", &CesiumExceptionHandler{}, tile_request, false, nil), nil
 	}
 

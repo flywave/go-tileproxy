@@ -348,6 +348,12 @@ func MakeWMTSRequest(req *http.Request, validate bool) Request {
 	return nil
 }
 
+var templateVarRegex = regexp.MustCompile(`\{(\w+)\}`)
+
+// restCapabilitiesPathRegex matches RESTful GetCapabilities URLs such as
+// "/wmts/1.0.0/WMTSCapabilities.xml" for any service mount point.
+var restCapabilitiesPathRegex = regexp.MustCompile(`^/[^/]+/1\.0\.0/WMTSCapabilities\.xml$`)
+
 type URLTemplateConverter struct {
 	Template   string
 	varregexp  *regexp.Regexp
@@ -358,21 +364,22 @@ type URLTemplateConverter struct {
 	_regexp    *regexp.Regexp
 }
 
+var wmtsTemplateVariables = map[string]string{
+	"TileMatrixSet": `[\w_.:-]+`,
+	"TileMatrix":    `\d+`,
+	"TileRow":       `-?\d+`,
+	"TileCol":       `-?\d+`,
+	"I":             `\d+`,
+	"J":             `\d+`,
+	"Style":         `[\w_.:-]+`,
+	"Layer":         `[\w_.:-]+`,
+	"Format":        `\w+`,
+	"InfoFormat":    `\w+`,
+}
+
 func NewURLTemplateConverter(template string) *URLTemplateConverter {
-	tpl := &URLTemplateConverter{Template: template, _regexp: nil}
-	tpl.varregexp = regexp.MustCompile(`(?:\\{)?\\{(\w+)\\}(?:\\})?`)
-	tpl.variables = map[string]string{
-		"TileMatrixSet": `[\w_.:-]+`,
-		"TileMatrix":    `\d+`,
-		"TileRow":       `-?\d+`,
-		"TileCol":       `-?\d+`,
-		"I":             `\d+`,
-		"J":             `\d+`,
-		"Style":         `[\w_.:-]+`,
-		"Layer":         `[\w_.:-]+`,
-		"Format":        `\w+`,
-		"InfoFormat":    `\w+`,
-	}
+	tpl := &URLTemplateConverter{Template: template, _regexp: nil, variables: wmtsTemplateVariables}
+	tpl.varregexp = templateVarRegex
 	tpl.required = []string{
 		"TileCol", "TileRow", "TileMatrix", "TileMatrixSet", "Layer",
 	}
@@ -397,42 +404,121 @@ func (t *URLTemplateConverter) substitute_var(match string) string {
 	return fmt.Sprintf("(?P<%s>%s)", strings.ToLower(match), var_type_re)
 }
 
+// regexp builds a matcher for RESTful URLs. The leading path segment is the
+// service mount point, the remaining path follows the template.
 func (t *URLTemplateConverter) regexp() *regexp.Regexp {
 	if t._regexp != nil {
 		return t._regexp
 	}
-	converted_re := []string{}
-	matches := t.varregexp.FindAllStringSubmatch(t.Template, -1)
-	for _, match := range matches {
-		if len(match) > 1 && match[1] != "" {
-			converted_re = append(converted_re, t.substitute_var(match[1]))
+	pattern := "^/[^/]+"
+	last := 0
+	for _, loc := range templateVarRegex.FindAllStringIndex(t.Template, -1) {
+		pattern += regexp.QuoteMeta(t.Template[last:loc[0]])
+		pattern += t.substitute_var(t.Template[loc[0]+1 : loc[1]-1])
+		last = loc[1]
+	}
+	pattern += regexp.QuoteMeta(t.Template[last:])
+	pattern += "/?$"
+
+	t._regexp = regexp.MustCompile(pattern)
+	return t._regexp
+}
+
+// Match parses a URL path against the template and returns the variables
+// keyed by their lower-case names, or nil when the path does not match.
+func (t *URLTemplateConverter) Match(path string) map[string]string {
+	re := t.regexp()
+	m := re.FindStringSubmatch(path)
+	if m == nil {
+		return nil
+	}
+	result := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if name != "" && i < len(m) {
+			result[name] = m[i]
 		}
 	}
-
-	wmts_re := regexp.MustCompile("/wmts" + strings.Join(converted_re, ""))
-
-	t._regexp = wmts_re
-	return wmts_re
+	return result
 }
 
 func NewFeatureInfoURLTemplateConverter(template string) *URLTemplateConverter {
-	tpl := &URLTemplateConverter{Template: template, _regexp: nil}
-	tpl.varregexp = regexp.MustCompile(`(?:\\{)?\\{(\w+)\\}(?:\\})?`)
-	tpl.variables = map[string]string{
-		"TileMatrixSet": `[\w_.:-]+`,
-		"TileMatrix":    `\d+`,
-		"TileRow":       `-?\d+`,
-		"TileCol":       `-?\d+`,
-		"I":             `\d+`,
-		"J":             `\d+`,
-		"Style":         `[\w_.:-]+`,
-		"Layer":         `[\w_.:-]+`,
-		"Format":        `\w+`,
-		"InfoFormat":    `\w+`,
-	}
+	tpl := &URLTemplateConverter{Template: template, _regexp: nil, variables: wmtsTemplateVariables}
+	tpl.varregexp = templateVarRegex
 	tpl.required = []string{
 		"TileCol", "TileRow", "TileMatrix", "TileMatrixSet", "Layer", "I", "J",
 	}
 	tpl.regexp()
 	return tpl
+}
+
+// MakeWMTSRestRequest parses a RESTful WMTS URL (path parameters instead of
+// KVP query parameters) using the given URL templates.
+func MakeWMTSRestRequest(req *http.Request, urlConverter *URLTemplateConverter, infoConverter *URLTemplateConverter, validate bool) Request {
+	if req.URL == nil {
+		return nil
+	}
+
+	if restCapabilitiesPathRegex.MatchString(req.URL.Path) {
+		r := &WMTS100CapabilitiesRequest{}
+		r.init(RequestParams{}, req.URL.String(), validate, req)
+		return r
+	}
+
+	if urlConverter != nil {
+		if m := urlConverter.Match(req.URL.Path); m != nil {
+			params := make(RequestParams)
+			setRestParams(params, m)
+			r := &WMTS100TileRequest{}
+			r.init(params, req.URL.String(), validate, req)
+			return r
+		}
+	}
+
+	if infoConverter != nil {
+		if m := infoConverter.Match(req.URL.Path); m != nil {
+			params := make(RequestParams)
+			setRestParams(params, m)
+			if v, ok := m["i"]; ok {
+				params.Set("i", []string{v})
+			}
+			if v, ok := m["j"]; ok {
+				params.Set("j", []string{v})
+			}
+			if v, ok := m["infoformat"]; ok {
+				params.Set("infoformat", []string{v})
+			}
+			r := &WMTS100FeatureInfoRequest{}
+			r.init(params, req.URL.String(), validate, req)
+			return r
+		}
+	}
+	return nil
+}
+
+func setRestParams(params RequestParams, m map[string]string) {
+	if v, ok := m["layer"]; ok {
+		params.Set("layer", []string{v})
+	}
+	if v, ok := m["style"]; ok {
+		params.Set("style", []string{v})
+	}
+	if v, ok := m["tilematrixset"]; ok {
+		params.Set("tilematrixset", []string{v})
+	}
+	if v, ok := m["tilematrix"]; ok {
+		params.Set("tilematrix", []string{v})
+	}
+	if v, ok := m["tilecol"]; ok {
+		params.Set("tilecol", []string{v})
+	}
+	if v, ok := m["tilerow"]; ok {
+		params.Set("tilerow", []string{v})
+	}
+	if v, ok := m["format"]; ok && v != "" {
+		if mime := tile.TileFormat(v).MimeType(); mime != "" {
+			params.Set("format", []string{mime})
+		} else {
+			params.Set("format", []string{v})
+		}
+	}
 }

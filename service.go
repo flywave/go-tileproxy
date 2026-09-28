@@ -302,7 +302,12 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mu.RUnlock()
 	if svc != nil {
 		svc.ServeHTTP(w, r)
+		return
 	}
+	if err := s.LoadError(); err != nil {
+		log.Printf("service %s unavailable: %v", s.Id, err)
+	}
+	http.Error(w, "service unavailable", http.StatusServiceUnavailable)
 }
 
 func (s *Service) Reload(newConfig *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) error {

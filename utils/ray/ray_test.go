@@ -90,7 +90,10 @@ func TestConvert(t *testing.T) {
 	vertices := [][3]float64{{0, 0, 0}}
 	vvecs := *(*[]vec3d.T)(unsafe.Pointer(&vertices))
 
-	if vvecs != nil {
-		t.FailNow()
+	if vvecs == nil {
+		t.Fatal("converted slice shouldn't be nil")
+	}
+	if len(vvecs) != 1 || vvecs[0] != (vec3d.T{0, 0, 0}) {
+		t.Fatalf("unexpected conversion result: %v", vvecs)
 	}
 }

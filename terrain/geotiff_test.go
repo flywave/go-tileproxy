@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	tile_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=pk.eyJ1IjoiYW5pbmdnbyIsImEiOiJjbWY2Mjc1ejIwYmpkMmlxcW1vcmNldmFnIn0.4KMSdkV8JFAZjOYRhqCAhg"
+	tile_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=MAPBOX_TOKEN_PLACEHOLDER"
 )
 
 func get_url(url string) []byte {

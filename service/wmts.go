@@ -92,14 +92,16 @@ func (s *WMTSService) getMatrixSets(tlayers map[string]Provider) (map[string]WMT
 
 func (s *WMTSService) serviceMetadata(tms_request request.Request) WMTSMetadata {
 	md := *s.Metadata
+	var http_req *http.Request
 	switch req := tms_request.(type) {
 	case *request.WMTS100CapabilitiesRequest:
-		md.URL = req.Http.URL.Host
+		http_req = req.Http
 	case *request.WMTS100TileRequest:
-		md.URL = req.Http.URL.Host
+		http_req = req.Http
 	case *request.WMTS100FeatureInfoRequest:
-		md.URL = req.Http.URL.Host
+		http_req = req.Http
 	}
+	md.URL = serviceBaseURL(http_req)
 	return md
 }
 
@@ -125,7 +127,10 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 		resp := NewRequestError("invalid WMTS tile request", "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 		return resp.Render()
 	}
-	s.checkRequest(tile_request, nil)
+	err := s.checkRequest(tile_request, nil)
+	if err != nil {
+		return err.Render()
+	}
 
 	params := request.NewWMTSTileRequestParams(tile_request.Params)
 
@@ -152,7 +157,7 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	tp := tile_layer.(*TileProvider)
 
-	err := s.checkRequestDimensions(tp, tile_request)
+	err = s.checkRequestDimensions(tp, tile_request)
 
 	if err != nil {
 		return err.Render()
@@ -169,23 +174,26 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 		return s.DecorateTile(image, "wmts", []string{tile_layer.GetName()}, query_extent)
 	}
 
-	err, tile := tile_layer.Render(tile_request, false, limited_to, decorateTile)
-	if err != nil {
-		return err.Render()
+	rerr, tresp := tile_layer.Render(tile_request, false, limited_to, decorateTile)
+	if rerr != nil {
+		return rerr.Render()
+	}
+	if tresp == nil {
+		return NewRequestError("tile not available", "TileOutOfRange", &WMTS100ExceptionHandler{}, req, false, nil).Render()
 	}
 
-	resp := NewResponse(tile.getBuffer(), -1, tile.GetFormatMime())
+	resp := NewResponse(tresp.getBuffer(), -1, tresp.GetFormatMime())
 
 	if s.MaxTileAge != nil {
 		timestrs := []string{}
 
-		if tile.getTimestamp() != nil {
-			timestrs = append(timestrs, tile.getTimestamp().String())
+		if tresp.getTimestamp() != nil {
+			timestrs = append(timestrs, tresp.getTimestamp().String())
 		}
 
-		timestrs = append(timestrs, strconv.Itoa(tile.getSize()))
+		timestrs = append(timestrs, strconv.Itoa(tresp.getSize()))
 
-		resp.cacheHeaders(tile.getTimestamp(), timestrs, int(s.MaxTileAge.Seconds()))
+		resp.cacheHeaders(tresp.getTimestamp(), timestrs, int(s.MaxTileAge.Seconds()))
 	}
 
 	resp.makeConditional(tile_request.Http)
@@ -209,7 +217,6 @@ func (s *WMTSService) GetFeatureInfo(req request.Request) *Response {
 	if err != nil {
 		return err.Render()
 	}
-
 	layers, ok := s.Layers[params.GetLayer()]
 	if !ok {
 		return NewRequestError(fmt.Sprintf("unknown layer: %s", params.GetLayer()), "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil).Render()
@@ -290,7 +297,7 @@ func (s *WMTSService) checkRequestDimensions(_ *TileProvider, _ request.Request)
 	return nil
 }
 
-func (s *WMTSService) checkRequest(req request.Request, _ *string) *RequestError {
+func (s *WMTSService) checkRequest(req request.Request, infoformat *string) *RequestError {
 	switch wreq := req.(type) {
 	case *request.WMTS100TileRequest:
 		{
@@ -310,17 +317,24 @@ func (s *WMTSService) checkRequest(req request.Request, _ *string) *RequestError
 	case *request.WMTS100FeatureInfoRequest:
 		{
 			params := request.NewWMTSFeatureInfoRequestParams(wreq.Params)
-			infoformat := params.GetInfoformat()
-			if infoformat != "" {
-				if strings.Contains(infoformat, "/") {
-					if _, ok := s.InfoFormats[infoformat]; !ok {
-						return NewRequestError("unknown infoformat: "+infoformat, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+			infoformat_raw := params.GetInfoformat()
+			if infoformat_raw != "" {
+				if strings.Contains(infoformat_raw, "/") {
+					if _, ok := s.InfoFormats[infoformat_raw]; !ok {
+						return NewRequestError("unknown infoformat: "+infoformat_raw, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+					}
+					if infoformat != nil {
+						*infoformat = infoformat_raw
 					}
 				} else {
-					if _, ok := s.InfoFormats[infoformat]; !ok {
-						return NewRequestError("unknown infoformat: "+infoformat, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+					mapped, ok := s.InfoFormats[infoformat_raw]
+					if !ok {
+						return NewRequestError("unknown infoformat: "+infoformat_raw, "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
 					}
-					params.SetInfoformat(s.InfoFormats[infoformat])
+					params.SetInfoformat(mapped)
+					if infoformat != nil {
+						*infoformat = mapped
+					}
 				}
 			}
 		}
@@ -355,7 +369,7 @@ type WMTSRestServiceOptions struct {
 func NewWMTSRestService(opts *WMTSRestServiceOptions) *WMTSRestService {
 	ret := &WMTSRestService{
 		names:          []string{"wmts"},
-		requestMethods: []string{"tile", "capabilities"},
+		requestMethods: []string{"tile", "featureinfo", "capabilities"},
 		WMTSService: WMTSService{
 			InfoFormats: opts.InfoFormats,
 			MaxTileAge:  opts.MaxTileAge,
@@ -392,9 +406,29 @@ func NewWMTSRestService(opts *WMTSRestServiceOptions) *WMTSRestService {
 		},
 	}
 	ret.requestParser = func(r *http.Request) request.Request {
+		if rest_req := request.MakeWMTSRestRequest(r, ret.urlConverter, ret.infoUrlConverter, false); rest_req != nil {
+			return rest_req
+		}
+		// fall back to KVP so that clients using query parameters keep working
 		return request.MakeWMTSRequest(r, false)
 	}
 	return ret
+}
+
+func (s *WMTSRestService) GetCapabilities(req request.Request) *Response {
+	req_params, ok := req.(*request.WMTS100CapabilitiesRequest)
+	if !ok || req_params == nil {
+		resp := NewRequestError("invalid WMTS capabilities request", "InvalidParameterValue", &WMTS100ExceptionHandler{}, req, false, nil)
+		return resp.Render()
+	}
+
+	service := s.serviceMetadata(req_params)
+	layers := s.authorizedTileLayers()
+
+	cap := newWMTSRestCapabilities(&service, layers, s.MatrixSets, s.urlConverter, s.infoUrlConverter, s.InfoFormats, s.template)
+	result := cap.render(req_params)
+
+	return NewResponse(result, 200, "application/xml")
 }
 
 type WMTSTileLayer map[string]Provider

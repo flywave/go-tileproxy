@@ -23,6 +23,16 @@ type BaseService struct {
 	OnReload      func() error
 }
 
+// capEntry caches a rendered capabilities document per base URL.
+type capEntry struct {
+	body []byte
+	etag string
+}
+
+// capabilitiesMaxAge bounds how long intermediaries may serve a cached
+// capabilities document; clients can always revalidate with ETag.
+const capabilitiesMaxAge = 60
+
 func (s *BaseService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")

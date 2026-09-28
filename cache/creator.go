@@ -139,7 +139,8 @@ func (c *TileCreator) createSingleTile(t *Tile) (*Tile, error) {
 			if err != nil {
 				return err
 			}
-			if source.GetCacheable() != nil {
+			// bypass mode consults the sources but never persists
+			if shouldStoreFor(c.manager) && source.GetCacheable() != nil {
 				return c.cache.StoreTile(t)
 			}
 		} else {

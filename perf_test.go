@@ -160,7 +160,6 @@ func newPerfTestHarness(b *testing.B, upstreamLatency time.Duration) *perfTestHa
 	proxy := &TileProxy{
 		globals:         &setting.GlobalsSetting{},
 		Services:        map[string]*Service{"test-service": svc},
-		serviceCache:    make(map[string]*Service),
 		serviceReqRegex: serviceReqPattern,
 	}
 

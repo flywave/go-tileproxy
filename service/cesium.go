@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -127,7 +128,12 @@ func (s *CesiumService) GetTile(req request.Request) *Response {
 	}
 	resp := NewResponse(t.getBuffer(), 200, tile_format.MimeType())
 	if t.getCacheable() {
-		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, int(s.MaxTileAge.Seconds()))
+		// unset MaxTileAge means negotiation only (ETag/Last-Modified)
+		maxAge := -1
+		if s.MaxTileAge != nil && *s.MaxTileAge > 0 {
+			maxAge = int(s.MaxTileAge.Seconds())
+		}
+		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, maxAge)
 	} else {
 		resp.noCacheHeaders()
 	}
@@ -156,6 +162,7 @@ type CesiumTileProvider struct {
 	metadata        *CesiumLayerMetadata
 	tileManager     cache.Manager
 	extent          *geo.MapExtent
+	emptyMu         sync.Mutex
 	empty_tile      []byte
 	zoomRange       [2]int
 	extensions      []string
@@ -243,12 +250,15 @@ func (t *CesiumTileProvider) GetTileBBox(req request.TiledRequest, useProfiles b
 
 func (t *CesiumTileProvider) emptyResponse() TileResponse {
 	format := t.GetFormat()
+	t.emptyMu.Lock()
 	if t.empty_tile == nil {
 		si := t.GetGrid().TileSize
 		tile := cache.GetEmptyTile([2]uint32{si[0], si[1]}, t.tileManager.GetTileOptions())
 		t.empty_tile = tile.GetBuffer(nil, nil)
 	}
-	return newImageResponse(t.empty_tile, format, time.Now())
+	buf := t.empty_tile
+	t.emptyMu.Unlock()
+	return newImageResponse(buf, format, time.Now())
 }
 
 func (tl *CesiumTileProvider) Render(req request.TiledRequest, use_profiles bool, coverage geo.Coverage, decorateTile func(image tile.Source) tile.Source) (*RequestError, TileResponse) {

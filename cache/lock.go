@@ -13,11 +13,16 @@ type TileLocker interface {
 	Lock(ctx context.Context, tile *Tile, run func() error) error
 }
 
+type flockEntry struct {
+	f    *flock.Flock
+	refs int
+}
+
 type FileTileLocker struct {
 	TileLocker
 	basePath   string
 	retryDelay time.Duration
-	lockMap    map[string]*flock.Flock
+	lockMap    map[string]*flockEntry
 	mu         sync.Mutex
 }
 
@@ -28,7 +33,7 @@ func NewFileTileLocker(basePath string, retryDelay time.Duration) TileLocker {
 	return &FileTileLocker{
 		basePath:   basePath,
 		retryDelay: retryDelay,
-		lockMap:    make(map[string]*flock.Flock),
+		lockMap:    make(map[string]*flockEntry),
 	}
 }
 
@@ -41,22 +46,38 @@ func (l *FileTileLocker) Lock(ctx context.Context, tile *Tile, run func() error)
 	lockPath := l.basePath + "-" + key + ".lock"
 
 	l.mu.Lock()
-	f, exists := l.lockMap[key]
+	entry, exists := l.lockMap[key]
 	if !exists {
-		f = flock.NewFlock(lockPath)
-		l.lockMap[key] = f
+		entry = &flockEntry{f: flock.NewFlock(lockPath)}
+		l.lockMap[key] = entry
 	}
+	entry.refs++
 	l.mu.Unlock()
 
-	locked, err := f.TryLockContext(ctx, l.retryDelay)
+	release := func() {
+		l.mu.Lock()
+		entry.refs--
+		if entry.refs <= 0 {
+			// drop the entry so the map does not grow with every tile
+			delete(l.lockMap, key)
+		}
+		l.mu.Unlock()
+	}
+
+	locked, err := entry.f.TryLockContext(ctx, l.retryDelay)
 	if err != nil {
+		release()
 		return fmt.Errorf("failed to acquire file lock: %w", err)
 	}
 	if !locked {
+		release()
 		return ctx.Err()
 	}
 
-	defer f.Unlock()
+	defer func() {
+		entry.f.Unlock()
+		release()
+	}()
 
 	return run()
 }
@@ -114,10 +135,14 @@ func (l *InMemoryTileLocker) Lock(ctx context.Context, tile *Tile, run func() er
 	defer func() {
 		l.mu.Lock()
 		delete(l.locks, key)
-		for _, ch := range l.waitChs[key] {
-			close(ch)
+		if chans := l.waitChs[key]; len(chans) > 0 {
+			// wake exactly the first waiter; waking all of them would let
+			// every one of them take the lock at once
+			close(chans[0])
+			l.waitChs[key] = chans[1:]
+		} else {
+			delete(l.waitChs, key)
 		}
-		delete(l.waitChs, key)
 		l.mu.Unlock()
 	}()
 

@@ -318,6 +318,18 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		request_format_ext = string(opts.GetFormat())
 	}
 
+	policy := cache.DefaultPolicy()
+	if c.CachePolicy != nil {
+		ttl := 0
+		if c.CachePolicy.TtlHours != nil {
+			ttl = *c.CachePolicy.TtlHours
+		}
+		parsed, perr := cache.ParseCachePolicy(c.CachePolicy.Mode, ttl)
+		if perr == nil {
+			policy = parsed
+		}
+	}
+
 	topts := &cache.TileManagerOptions{
 		Sources:              nil,
 		Grid:                 tilegrid,
@@ -332,6 +344,7 @@ func PreLoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance Proxy
 		PreStoreFilter:       pre_store_filter,
 		RescaleTiles:         rescale_tiles,
 		CacheRescaledTiles:   cache_rescaled_tiles,
+		Policy:               policy,
 		MetaBuffer:           meta_buffer,
 		MetaSize:             meta_size,
 		ReprojectSrcSrs:      reprojectSrcSrs,

@@ -25,6 +25,7 @@ type TileManager struct {
 	sources              []layer.Layer
 	minimizeMetaRequests bool
 	expireTimestamp      *time.Time
+	policy               CachePolicy
 	preStoreFilter       []Filter
 	rescaleTiles         int
 	cacheRescaledTiles   bool
@@ -57,6 +58,7 @@ type TileManagerOptions struct {
 	ReprojectDstSrs      geo.Proj
 	QueryBuffer          *int
 	SiteURL              string
+	Policy               CachePolicy
 }
 
 func NewTileManager(opts *TileManagerOptions) *TileManager {
@@ -73,6 +75,10 @@ func NewTileManager(opts *TileManagerOptions) *TileManager {
 	ret.rescaleTiles = opts.RescaleTiles
 	ret.cacheRescaledTiles = opts.CacheRescaledTiles
 	ret.locker = opts.Locker
+	ret.policy = opts.Policy
+	if ret.policy.Mode == "" {
+		ret.policy = DefaultPolicy()
+	}
 	ret.bulkMetaTiles = false
 	ret.reprojectSrcSrs = opts.ReprojectSrcSrs
 	ret.reprojectDstSrs = opts.ReprojectDstSrs
@@ -228,15 +234,32 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 		}
 	}
 
-	loadErr := tm.cache.LoadTiles(tiles, with_metadata)
-	if loadErr != nil && !strings.HasPrefix(loadErr.Error(), "not found:") {
-		return nil, fmt.Errorf("failed to load tiles from cache: %w", loadErr)
+	if tm.policy.Mode != PolicyBypass {
+		loadErr := tm.cache.LoadTiles(tiles, with_metadata)
+		if loadErr != nil && !strings.HasPrefix(loadErr.Error(), "not found:") {
+			return nil, fmt.Errorf("failed to load tiles from cache: %w", loadErr)
+		}
 	}
 
+	// stale tiles physically exist in the cache but are no longer servable
+	// under the policy
+	stale := []*Tile{}
 	for _, tile := range tiles.GetSliceCopy() {
+		if tm.policy.Mode == PolicyRevalidate && tile.Source != nil &&
+			tm.cache.IsCached(tile) && !tm.IsCached(tile.Coord, dimensions) {
+			stale = append(stale, tile)
+			continue
+		}
 		if !tm.IsCached(tile.Coord, dimensions) {
 			uncached_tiles = append(uncached_tiles, tile)
 		}
+	}
+
+	// stale-while-revalidate: serve the cached value now and refresh it in
+	// the background so the origin never delays the response
+	for _, t := range stale {
+		coord := t.Coord
+		go tm.refreshTile(coord, dimensions)
 	}
 
 	if len(uncached_tiles) > 0 {
@@ -265,6 +288,26 @@ func (tm *TileManager) loadTileCoords(tiles *TileCollection, dimensions utils.Di
 	}
 
 	return tiles, nil
+}
+
+// refreshTile re-fetches one stale tile from the sources and updates the
+// cache. Failures are silent: the previously served value stays in place.
+func (tm *TileManager) refreshTile(coord [3]int, dimensions utils.Dimensions) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	err := tm.Lock(ctx, NewTile(coord), func() error {
+		if tm.IsCached(coord, dimensions) {
+			// another refresher already updated this tile
+			return nil
+		}
+		creator := tm.Creator(dimensions)
+		_, err := creator.CreateTiles([]*Tile{NewTile(coord)})
+		return err
+	})
+	if err != nil {
+		_ = err // keep serving the stale value
+	}
 }
 
 var (
@@ -357,16 +400,40 @@ func (tm *TileManager) StoreTiles(tiles *TileCollection) error {
 
 func (tm *TileManager) IsCached(tile_coord [3]int, dimensions utils.Dimensions) bool {
 	tile := NewTile(tile_coord)
-	cached := tm.cache.IsCached(tile)
-	max_mtime := tm.ExpireTimestamp(tile)
-	if cached && max_mtime != nil {
+	if !tm.cache.IsCached(tile) {
+		return false
+	}
+
+	if tm.policy.Mode == PolicyBypass {
+		return false
+	}
+
+	// the global bulk-refresh threshold applies to every policy: it marks
+	// the moment before which cached tiles are considered outdated
+	if max_mtime := tm.ExpireTimestamp(tile); max_mtime != nil {
 		tm.cache.LoadTileMetadata(tile)
-		stale := tile.Timestamp.Before(*max_mtime)
-		if stale {
-			cached = false
+		if tile.Timestamp.Before(*max_mtime) {
+			return false
 		}
 	}
-	return cached
+
+	switch tm.policy.Mode {
+	case PolicyCacheFirst:
+		return true
+	case PolicyTTL, PolicyRevalidate:
+		tm.cache.LoadTileMetadata(tile)
+		if tm.policy.expired(tile.Timestamp, time.Now()) {
+			return false
+		}
+		return true
+	}
+	return true
+}
+
+// ShouldStoreToCache reports whether freshly created tiles should be written
+// to the cache (bypass mode never writes).
+func (tm *TileManager) ShouldStoreToCache() bool {
+	return tm.policy.Mode != PolicyBypass
 }
 
 func (tm *TileManager) IsStale(tile_coord [3]int, dimensions utils.Dimensions) bool {

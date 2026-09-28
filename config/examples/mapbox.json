@@ -7,13 +7,19 @@
         "source": "mapbox_raster_cache",
         "name": "raster",
         "tilejson": "raster",
-        "zoom_range": [0, 18]
+        "zoom_range": [
+          0,
+          18
+        ]
       },
       {
         "source": "mapbox_vector_cache",
         "name": "streets",
         "tilejson": "streets",
-        "zoom_range": [0, 18]
+        "zoom_range": [
+          0,
+          18
+        ]
       }
     ]
   },
@@ -27,26 +33,28 @@
   "sources": {
     "mapbox_raster": {
       "type": "mapbox",
-      "req": {
-        "url": "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.pngraw",
-        "grid": "global_webmercator",
+      "url": "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.pngraw",
+      "grid": "global_webmercator",
+      "options": {
+        "type": "image",
         "format": "png"
-      },
-      "transparent": false
+      }
     },
     "mapbox_vector": {
       "type": "mapbox",
-      "req": {
-        "url": "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
-        "grid": "global_webmercator",
+      "url": "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf",
+      "grid": "global_webmercator",
+      "options": {
+        "type": "vector",
         "format": "mvt"
-      },
-      "transparent": true
+      }
     }
   },
   "caches": {
     "mapbox_raster_cache": {
-      "sources": ["mapbox_raster"],
+      "sources": [
+        "mapbox_raster"
+      ],
       "name": "mapbox_raster_cache",
       "grid": "global_webmercator",
       "format": "png",
@@ -54,10 +62,19 @@
       "cache": {
         "directory": "./cache/mapbox/raster",
         "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "image",
+        "format": "png"
+      },
+      "cache_policy": {
+        "mode": "cache_first"
       }
     },
     "mapbox_vector_cache": {
-      "sources": ["mapbox_vector"],
+      "sources": [
+        "mapbox_vector"
+      ],
       "name": "mapbox_vector_cache",
       "grid": "global_webmercator",
       "format": "mvt",
@@ -65,6 +82,14 @@
       "cache": {
         "directory": "./cache/mapbox/vector",
         "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "vector",
+        "format": "mvt"
+      },
+      "cache_policy": {
+        "mode": "revalidate",
+        "ttl_hours": 12
       }
     }
   }

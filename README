@@ -37,6 +37,36 @@ A high-performance tile proxy server written in Go, supporting multiple tile ser
 go get github.com/flywave/go-tileproxy
 ```
 
+## Configuration Validation & Hot Reload
+
+Configuration can be validated and hot-reloaded without restarting the server:
+
+- `setting.ValidateConfigJSON(data)` returns a structured, front-end friendly report (field-level errors/warnings per service) — see [docs/config-validation.md](docs/config-validation.md) for the full flywave-server integration guide.
+- `proxy.ReloadFromFile(path, nil)` / `proxy.ReloadServices(services, nil)` apply a new configuration atomically; an invalid configuration never affects running services.
+- `tileproxy serve --watch` watches the config file and hot-reloads on change; `tileproxy validate -c config.json` checks a config from the command line.
+
+## HTTP Caching
+
+Tile and capabilities responses are cache-friendly out of the box:
+
+- Tile responses (TMS/WMTS/Cesium) carry `ETag` and `Last-Modified` and answer
+  `If-None-Match` / `If-Modified-Since` with `304 Not Modified`.
+- Setting `max_tile_age` additionally emits `Cache-Control: public, max-age=N, s-maxage=N`
+  for CDN/browser freshness; without it clients revalidate instead.
+- WMS/WMTS capabilities documents are rendered once per base URL, cached and
+  revalidated via ETag, so repeated GetCapabilities requests are cheap.
+- Concurrent cache-miss fetches for the same tile are collapsed by the tile
+  locker (in-memory or file based), preventing thundering-herd upstream hits.
+
+## Cache Policies
+
+Per-cache policies decide when cached tiles are served and when the origin
+sources are consulted: `cache_first` (default: serve whatever is cached until
+it is cleaned), `ttl` (refresh after `ttl_hours`), `revalidate` (serve the
+stale tile and refresh in the background) and `bypass` (origin only). See
+[docs/cache-policy.md](docs/cache-policy.md) for the full behaviour matrix
+and configuration examples.
+
 ## Usage
 
 ### Basic Example

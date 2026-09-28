@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	vec2d "github.com/flywave/go3d/float64/vec2"
@@ -36,6 +37,9 @@ type WMTSService struct {
 	Layers      map[string]WMTSTileLayer
 	MatrixSets  map[string]*TileMatrixSet
 	InfoFormats map[string]string
+	// capabilities render cache, invalidated together with the service
+	// instance on hot reload
+	capCache sync.Map
 }
 
 type WMTSServiceOptions struct {
@@ -113,12 +117,26 @@ func (s *WMTSService) GetCapabilities(req request.Request) *Response {
 	}
 
 	service := s.serviceMetadata(req_params)
-	layers := s.authorizedTileLayers()
 
-	cap := newWMTSCapabilities(&service, layers, s.MatrixSets, s.InfoFormats)
-	result := cap.render(req_params)
+	// render once per base URL and let clients revalidate via ETag/304
+	var ce *capEntry
+	if v, cached := s.capCache.Load(service.URL); cached {
+		ce = v.(*capEntry)
+	} else {
+		layers := s.authorizedTileLayers()
+		cap := newWMTSCapabilities(&service, layers, s.MatrixSets, s.InfoFormats)
+		body := cap.render(req_params)
+		ce = &capEntry{body: body, etag: etagFor(body)}
+		s.capCache.Store(service.URL, ce)
+	}
 
-	return NewResponse(result, 200, "application/xml")
+	resp := NewResponse(ce.body, 200, "application/xml")
+	resp.SetETag(ce.etag)
+	resp.cacheHeaders(nil, []string{ce.etag}, capabilitiesMaxAge)
+	if req_params.Http != nil {
+		resp.makeConditional(req_params.Http)
+	}
+	return resp
 }
 
 func (s *WMTSService) GetTile(req request.Request) *Response {
@@ -184,17 +202,18 @@ func (s *WMTSService) GetTile(req request.Request) *Response {
 
 	resp := NewResponse(tresp.getBuffer(), -1, tresp.GetFormatMime())
 
-	if s.MaxTileAge != nil {
-		timestrs := []string{}
-
-		if tresp.getTimestamp() != nil {
-			timestrs = append(timestrs, tresp.getTimestamp().String())
-		}
-
-		timestrs = append(timestrs, strconv.Itoa(tresp.getSize()))
-
-		resp.cacheHeaders(tresp.getTimestamp(), timestrs, int(s.MaxTileAge.Seconds()))
+	// always allow conditional revalidation; max-age is only sent when
+	// MaxTileAge is configured, otherwise clients negotiate with ETag
+	maxAge := -1
+	if s.MaxTileAge != nil && *s.MaxTileAge > 0 {
+		maxAge = int(s.MaxTileAge.Seconds())
 	}
+	timestrs := []string{}
+	if tresp.getTimestamp() != nil {
+		timestrs = append(timestrs, tresp.getTimestamp().String())
+	}
+	timestrs = append(timestrs, strconv.Itoa(tresp.getSize()))
+	resp.cacheHeaders(tresp.getTimestamp(), timestrs, maxAge)
 
 	resp.makeConditional(tile_request.Http)
 	return resp

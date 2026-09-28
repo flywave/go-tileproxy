@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kennygrant/sanitize"
@@ -110,13 +111,23 @@ func (s *TileService) GetMap(req request.Request) *Response {
 	}
 	resp := NewResponse(t.getBuffer(), -1, tile_format.MimeType())
 	if t.getCacheable() {
-		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, int(s.MaxTileAge.Seconds()))
+		resp.cacheHeaders(t.getTimestamp(), []string{t.getTimestamp().String(), strconv.Itoa(t.getSize())}, s.cacheMaxAge())
 	} else {
 		resp.noCacheHeaders()
 	}
 
 	resp.makeConditional(tile_request.Http)
 	return resp
+}
+
+// cacheMaxAge returns the Cache-Control max-age for tile responses.
+// An unset MaxTileAge means "negotiation only": the response still carries
+// ETag/Last-Modified for 304 revalidation but no freshness directive.
+func (s *TileService) cacheMaxAge() int {
+	if s.MaxTileAge == nil || *s.MaxTileAge <= 0 {
+		return -1
+	}
+	return int(s.MaxTileAge.Seconds())
 }
 
 func (s *TileService) internalLayer(tile_request *request.TileRequest) Provider {
@@ -529,6 +540,7 @@ type TileProvider struct {
 	dimensions   utils.Dimensions
 	grid         *TileServiceGrid
 	extent       *geo.MapExtent
+	emptyMu      sync.Mutex
 	emptyTile    []byte
 	errorHandler ExceptionHandler
 }
@@ -607,12 +619,15 @@ func (t *TileProvider) getInternalTileCoord(tileRequest request.TiledRequest, us
 
 func (t *TileProvider) emptyResponse() TileResponse {
 	format := t.GetFormat()
+	t.emptyMu.Lock()
 	if t.emptyTile == nil {
 		si := t.grid.grid.TileSize
 		tile := cache.GetEmptyTile([2]uint32{si[0], si[1]}, t.tileManager.GetTileOptions())
 		t.emptyTile = tile.GetBuffer(nil, nil)
 	}
-	return newImageResponse(t.emptyTile, format, time.Now())
+	buf := t.emptyTile
+	t.emptyMu.Unlock()
+	return newImageResponse(buf, format, time.Now())
 }
 
 func (tl *TileProvider) GetTileBBox(req request.TiledRequest, useProfiles bool, limit bool) (*RequestError, vec2d.Rect) {

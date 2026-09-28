@@ -1,7 +1,7 @@
 package service
 
 import (
-	"crypto/sha512"
+	"crypto/sha1"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -129,7 +129,8 @@ func (r *Response) GetETag() string {
 }
 
 func etagFor(data []byte) string {
-	return fmt.Sprintf("%X", sha512.Sum512(data))
+	// sha1 is plenty for a cache validator and keeps the header short
+	return fmt.Sprintf("%X", sha1.Sum(data))
 }
 
 func (r *Response) noCacheHeaders() {
@@ -157,9 +158,13 @@ func (r *Response) makeConditional(req *http.Request) {
 		not_modified = true
 	} else if r.timestamp != nil {
 		if date := req.Header.Get("If-Modified-Since"); date != "" {
-			timestamp, _ := utils.ParseDateTime(date)
-			if r.timestamp.Before(timestamp) {
-				not_modified = true
+			// If-Modified-Since is always an HTTP-date
+			if timestamp, err := utils.ParseHTTPDate(date); err == nil {
+				// per RFC 7232 the resource counts as unmodified when
+				// Last-Modified <= If-Modified-Since
+				if !r.timestamp.After(timestamp) {
+					not_modified = true
+				}
 			}
 		}
 	}

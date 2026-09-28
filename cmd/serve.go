@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,23 +16,23 @@ import (
 )
 
 const (
-	maxConfigSize    = 10 * 1024 * 1024
-	defaultShutdown  = 30 * time.Second
-	configReloadFile = "config.json"
+	defaultShutdown = 30 * time.Second
 )
 
 var (
-	configFile string
-	port       int
-	host       string
-	logLevel   string
+	configFile  string
+	port        int
+	host        string
+	logLevel    string
+	watchConfig bool
 )
 
 func init() {
-	serveCmd.Flags().StringVarP(&configFile, "config", "c", "config.json", "Path to configuration file (JSON or YAML)")
+	serveCmd.Flags().StringVarP(&configFile, "config", "c", "config.json", "Path to configuration file (JSON)")
 	serveCmd.Flags().IntVarP(&port, "port", "p", 8000, "Server port")
 	serveCmd.Flags().StringVarP(&host, "host", "H", "0.0.0.0", "Server host")
 	serveCmd.Flags().StringVarP(&logLevel, "log-level", "l", "info", "Log level (debug, info, warn, error)")
+	serveCmd.Flags().BoolVar(&watchConfig, "watch", true, "Watch the config file and hot-reload on change")
 
 	rootCmd.AddCommand(serveCmd)
 }
@@ -43,16 +40,12 @@ func init() {
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start tile proxy server",
-	Long:  `Start the tile proxy server using a configuration file. Supports JSON format.`,
+	Long:  `Start the tile proxy server using a configuration file. The configuration is hot-reloaded when the file changes or on SIGHUP; a broken configuration never takes the server down.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := runServer(); err != nil {
 			log.Fatalf("server error: %v", err)
 		}
 	},
-}
-
-type multiServiceConfig struct {
-	Services []*setting.ProxyService `json:"services"`
 }
 
 func runServer() error {
@@ -68,7 +61,14 @@ func runServer() error {
 
 	log.Printf("starting tileproxy server on %s", srv.Addr)
 	log.Printf("services: %v", proxy.GetServiceIDs())
-	log.Printf("send SIGHUP to reload config, SIGINT/SIGTERM to shutdown")
+	log.Printf("config hot-reload enabled: send SIGHUP or edit %s", configFile)
+
+	var watcher *tileproxy.ConfigWatcher
+	if watchConfig {
+		watcher = tileproxy.NewConfigWatcher(proxy, configFile, nil, 2*time.Second, 1*time.Second)
+		watcher.Start()
+		defer watcher.Stop()
+	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -80,15 +80,20 @@ func runServer() error {
 		switch sig {
 		case syscall.SIGHUP:
 			log.Println("received SIGHUP, reloading configuration...")
-			newProxy := loadAndBuildProxy(configFile)
-			proxy.Shutdown(context.Background())
-			proxy = newProxy
-			srv.Handler = proxy
+			// a broken configuration keeps the current services running
+			if err := proxy.ReloadFromFile(configFile, nil); err != nil {
+				log.Printf("reload failed: %v", err)
+				continue
+			}
 			log.Printf("reloaded %d services: %v", len(proxy.GetServiceIDs()), proxy.GetServiceIDs())
 
 		case syscall.SIGINT, syscall.SIGTERM:
 			log.Println("shutting down...")
 			signal.Stop(sigCh)
+
+			if watcher != nil {
+				watcher.Stop()
+			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), defaultShutdown)
 			defer cancel()
@@ -108,54 +113,11 @@ func runServer() error {
 }
 
 func loadAndBuildProxy(path string) *tileproxy.TileProxy {
-	proxyServices, err := loadConfig(path)
+	// the initial configuration must be valid, otherwise there is nothing
+	// sensible to serve
+	services, err := setting.LoadProxyServicesFromFile(path)
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
-	proxy := tileproxy.NewTileProxy(&setting.GlobalsSetting{}, proxyServices, nil)
-	return proxy
-}
-
-func loadConfig(path string) ([]*setting.ProxyService, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to stat config file: %w", err)
-	}
-
-	if info.Size() > maxConfigSize {
-		return nil, errors.New("config file too large (max 10MB)")
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	if isJSON(data) {
-		return parseConfigJSON(data)
-	}
-
-	return nil, fmt.Errorf("unsupported config format, expected JSON")
-}
-
-func parseConfigJSON(data []byte) ([]*setting.ProxyService, error) {
-	var multi multiServiceConfig
-	if err := json.Unmarshal(data, &multi); err == nil && len(multi.Services) > 0 {
-		return multi.Services, nil
-	}
-
-	var single setting.ProxyService
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&single); err == nil {
-		single.Service = setting.CovertService(single.Service)
-		return []*setting.ProxyService{&single}, nil
-	}
-
-	return nil, errors.New("invalid config: expected {\"services\":[...]} or single service object")
-}
-
-func isJSON(data []byte) bool {
-	var js map[string]interface{}
-	return json.Unmarshal(data, &js) == nil
+	return tileproxy.NewTileProxy(&setting.GlobalsSetting{}, services, nil)
 }

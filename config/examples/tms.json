@@ -28,22 +28,30 @@
   "sources": {
     "osm": {
       "type": "tile",
-      "req": {
-        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "grid": "global_webmercator"
+      "url_template": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "grid": "global_webmercator",
+      "request_format": "png",
+      "options": {
+        "type": "image",
+        "format": "png"
       }
     },
     "satellite": {
       "type": "tile",
-      "req": {
-        "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        "grid": "global_webmercator"
+      "url_template": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      "grid": "global_webmercator",
+      "request_format": "png",
+      "options": {
+        "type": "image",
+        "format": "png"
       }
     }
   },
   "caches": {
     "osm_cache": {
-      "sources": ["osm"],
+      "sources": [
+        "osm"
+      ],
       "name": "osm_cache",
       "grid": "global_webmercator",
       "format": "png",
@@ -51,10 +59,20 @@
       "cache": {
         "directory": "./cache/osm",
         "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "image",
+        "format": "png"
+      },
+      "cache_policy": {
+        "mode": "revalidate",
+        "ttl_hours": 6
       }
     },
     "satellite_cache": {
-      "sources": ["satellite"],
+      "sources": [
+        "satellite"
+      ],
       "name": "satellite_cache",
       "grid": "global_webmercator",
       "format": "png",
@@ -62,6 +80,13 @@
       "cache": {
         "directory": "./cache/satellite",
         "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "image",
+        "format": "png"
+      },
+      "cache_policy": {
+        "mode": "cache_first"
       }
     }
   }

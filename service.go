@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/flywave/go-geo"
 	"github.com/flywave/go-tileproxy/cache"
@@ -82,8 +83,10 @@ type Service struct {
 	LegendSources map[string]layer.LegendLayer
 	Caches        map[string]cache.Manager
 
-	loadErr error
-	mu      sync.RWMutex
+	loadErr  error
+	mu       sync.RWMutex
+	loadMu   sync.Mutex
+	inflight sync.WaitGroup
 }
 
 func NewService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) *Service {
@@ -115,8 +118,13 @@ func (s *Service) LoadError() error {
 }
 
 func (s *Service) load(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// serialize (re)loads of this instance. The construction callbacks
+	// (setting.LoadTileSource etc.) call back into the read helpers such as
+	// GetGrid, which take s.mu.RLock — holding s.mu for the write here
+	// would deadlock on every source that references a grid.
+	s.loadMu.Lock()
+	defer s.loadMu.Unlock()
+
 	s.loadGrids(dataset)
 	s.loadSources(dataset, globals, fac)
 	s.loadCaches(dataset, globals, fac)
@@ -201,8 +209,15 @@ func (s *Service) Clean() {
 		log.Printf("service %s: stop error: %v", s.Id, err)
 	}
 
+	// detach first so no new request picks up this instance, then wait for
+	// the requests already holding it before releasing shared resources
 	s.mu.Lock()
 	s.Service = nil
+	s.mu.Unlock()
+
+	s.drain(drainTimeout)
+
+	s.mu.Lock()
 	s.Grids = make(map[string]geo.Grid)
 	s.Sources = make(map[string]layer.Layer)
 	s.Caches = make(map[string]cache.Manager)
@@ -213,6 +228,22 @@ func (s *Service) Clean() {
 
 	atomic.StoreInt32(&s.status, int32(ServiceStatusStopped))
 	log.Printf("service %s: cleaned up", s.Id)
+}
+
+// drain waits for requests that already acquired this service instance to
+// complete, bounded by timeout.
+func (s *Service) drain(timeout time.Duration) {
+	done := make(chan struct{})
+	go func() {
+		s.inflight.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(timeout):
+		log.Printf("service %s: requests still in flight after %v, cleaning up anyway",
+			s.Id, timeout)
+	}
 }
 
 func (s *Service) GetId() string {
@@ -299,17 +330,22 @@ func (s *Service) GetService() service.Service {
 func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	svc := s.Service
-	s.mu.RUnlock()
-	if svc != nil {
-		svc.ServeHTTP(w, r)
+	if svc == nil {
+		s.mu.RUnlock()
+		if err := s.LoadError(); err != nil {
+			log.Printf("service %s unavailable: %v", s.Id, err)
+		}
+		http.Error(w, "service unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	if err := s.LoadError(); err != nil {
-		log.Printf("service %s unavailable: %v", s.Id, err)
-	}
-	http.Error(w, "service unavailable", http.StatusServiceUnavailable)
-}
+	// register while still holding the read lock so that a concurrent Clean
+	// cannot detach the service between the nil check and the registration
+	s.inflight.Add(1)
+	s.mu.RUnlock()
+	defer s.inflight.Done()
 
+	svc.ServeHTTP(w, r)
+}
 func (s *Service) Reload(newConfig *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) error {
 	if newConfig == nil {
 		return fmt.Errorf("new configuration is nil")
@@ -323,19 +359,30 @@ func (s *Service) Reload(newConfig *setting.ProxyService, globals *setting.Globa
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	// build the new instance state separately and swap it in under the lock,
+	// so requests already in flight are never exposed to half-built maps
+	built := NewService(newConfig, globals, fac)
+	if built.Service == nil {
+		return fmt.Errorf("failed to load service from new configuration")
+	}
+
 	if err := s.stopService(); err != nil {
 		return fmt.Errorf("failed to stop service: %w", err)
 	}
 
 	atomic.StoreInt32(&s.status, int32(ServiceStatusStarting))
-	s.load(newConfig, globals, fac)
 
-	if s.Service != nil {
-		atomic.StoreInt32(&s.status, int32(ServiceStatusRunning))
-	} else {
-		atomic.StoreInt32(&s.status, int32(ServiceStatusError))
-		return fmt.Errorf("failed to load service from new configuration")
-	}
+	s.mu.Lock()
+	s.Service = built.Service
+	s.Grids = built.Grids
+	s.Sources = built.Sources
+	s.InfoSources = built.InfoSources
+	s.LegendSources = built.LegendSources
+	s.Caches = built.Caches
+	s.loadErr = nil
+	s.mu.Unlock()
+
+	atomic.StoreInt32(&s.status, int32(ServiceStatusRunning))
 
 	if err := s.startService(); err != nil {
 		return fmt.Errorf("failed to start service: %w", err)

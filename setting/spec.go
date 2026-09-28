@@ -197,27 +197,35 @@ type Reproject struct {
 	DestSrs string `json:"dest_srs,omitempty"`
 }
 
+// CachePolicyOpts configures when cached tiles are served and when the
+// origin sources are consulted again.
+type CachePolicyOpts struct {
+	Mode     string `json:"mode,omitempty"`      // cache_first (default) | ttl | revalidate | bypass
+	TtlHours *int   `json:"ttl_hours,omitempty"` // required for ttl/revalidate
+}
+
 type CacheSource struct {
-	Type                 SourceType    `json:"type,omitempty"`
-	Sources              []string      `json:"sources,omitempty"`
-	Name                 string        `json:"name,omitempty"`
-	Grid                 string        `json:"grid,omitempty"`
-	LockDir              string        `json:"lock_dir,omitempty"`
-	LockRetryDelay       int           `json:"lock_retry_delay,omitempty"`
-	MetaSize             []uint32      `json:"meta_size,omitempty"`
-	MetaBuffer           *int          `json:"meta_buffer,omitempty"`
-	BulkMetaTiles        *bool         `json:"bulk_meta_tiles,omitempty"`
-	MinimizeMetaRequests *bool         `json:"minimize_meta_requests,omitempty"`
-	Format               string        `json:"format,omitempty"`
-	RequestFormat        string        `json:"request_format,omitempty"`
-	CacheRescaledTiles   *bool         `json:"cache_rescaled_tiles,omitempty"`
-	UpscaleTiles         *int          `json:"upscale_tiles,omitempty"`
-	DownscaleTiles       *int          `json:"downscale_tiles,omitempty"`
-	Filters              []interface{} `json:"filters,omitempty"`
-	CacheInfo            *CacheInfo    `json:"cache,omitempty"`
-	ReprojectSrs         *Reproject    `json:"reproject,omitempty"`
-	QueryBuffer          *int          `json:"query_buffer,omitempty"`
-	TileOptions          interface{}   `json:"tile_options,omitempty"`
+	Type                 SourceType       `json:"type,omitempty"`
+	CachePolicy          *CachePolicyOpts `json:"cache_policy,omitempty"`
+	Sources              []string         `json:"sources,omitempty"`
+	Name                 string           `json:"name,omitempty"`
+	Grid                 string           `json:"grid,omitempty"`
+	LockDir              string           `json:"lock_dir,omitempty"`
+	LockRetryDelay       int              `json:"lock_retry_delay,omitempty"`
+	MetaSize             []uint32         `json:"meta_size,omitempty"`
+	MetaBuffer           *int             `json:"meta_buffer,omitempty"`
+	BulkMetaTiles        *bool            `json:"bulk_meta_tiles,omitempty"`
+	MinimizeMetaRequests *bool            `json:"minimize_meta_requests,omitempty"`
+	Format               string           `json:"format,omitempty"`
+	RequestFormat        string           `json:"request_format,omitempty"`
+	CacheRescaledTiles   *bool            `json:"cache_rescaled_tiles,omitempty"`
+	UpscaleTiles         *int             `json:"upscale_tiles,omitempty"`
+	DownscaleTiles       *int             `json:"downscale_tiles,omitempty"`
+	Filters              []interface{}    `json:"filters,omitempty"`
+	CacheInfo            *CacheInfo       `json:"cache,omitempty"`
+	ReprojectSrs         *Reproject       `json:"reproject,omitempty"`
+	QueryBuffer          *int             `json:"query_buffer,omitempty"`
+	TileOptions          interface{}      `json:"tile_options,omitempty"`
 }
 
 func (c *CacheSource) FromJson(data []byte) error {
@@ -340,6 +348,10 @@ func (c *TileSource) FromJson(data []byte) error {
 
 	if cerr := json.Unmarshal(data, &tmp); cerr != nil {
 		return cerr
+	}
+
+	if tmp.Options == nil {
+		return nil
 	}
 
 	opt, err := TileOptionUnmarshal(tmp.Options)

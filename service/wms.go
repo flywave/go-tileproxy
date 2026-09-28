@@ -52,6 +52,10 @@ type WMSService struct {
 	MaxTileAge          *time.Duration
 	FeatureTransformers map[string]*resource.XSLTransformer
 	mu                  sync.RWMutex
+	// capabilities are rendered once per base URL and re-validated with
+	// ETag/304; the cache lives with the service instance, so a hot reload
+	// naturally invalidates it
+	capCache sync.Map
 }
 
 type WMSServiceOptions struct {
@@ -290,13 +294,41 @@ func (s *WMSService) GetCapabilities(req request.Request) *Response {
 		image_formats = append(image_formats, k)
 	}
 
-	cap := newCapabilities(&service, root_layer, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
+	// the document only depends on the service configuration, so render it
+	// once per base URL and let clients revalidate with ETag/304
+	entry, cached := s.capCache.Load(service.URL)
+	if !cached {
+		cap := newCapabilities(&service, root_layer, image_formats, info_formats, s.Srs, s.SrsExtents, s.MaxOutputPixels)
 
-	// 创建一个新的WMSRequest用于渲染
-	map_request := &request.WMSRequest{}
-	result := cap.render(map_request)
+		map_request := &request.WMSRequest{}
+		body := cap.render(map_request)
+		entry = &capEntry{body: body, etag: etagFor(body)}
+		s.capCache.Store(service.URL, entry)
+	}
+	ce := entry.(*capEntry)
 
-	return NewResponse(result, 200, "application/xml")
+	resp := NewResponse(ce.body, 200, "application/xml")
+	resp.SetETag(ce.etag)
+	resp.cacheHeaders(nil, []string{ce.etag}, capabilitiesMaxAge)
+	if httpReq := requestHttp(req); httpReq != nil {
+		resp.makeConditional(httpReq)
+	}
+	return resp
+}
+
+// requestHttp extracts the underlying *http.Request when available.
+func requestHttp(req request.Request) *http.Request {
+	switch r := req.(type) {
+	case *request.WMSMapRequest:
+		return r.Http
+	case *request.WMSFeatureInfoRequest:
+		return r.Http
+	case *request.WMSCapabilitiesRequest:
+		return r.Http
+	case *request.WMSLegendGraphicRequest:
+		return r.Http
+	}
+	return nil
 }
 
 func (s *WMSService) GetFeatureInfo(req request.Request) *Response {

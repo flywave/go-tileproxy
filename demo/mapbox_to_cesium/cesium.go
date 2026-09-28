@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"log"
 	"net/http"
 
@@ -9,9 +10,9 @@ import (
 	"github.com/flywave/go-tileproxy/setting"
 )
 
-const (
+var (
 	MAPBOX_TILE_URL    = "https://api.mapbox.com"
-	MAPBOX_ACCESSTOKEN = "MAPBOX_TOKEN_PLACEHOLDER"
+	MAPBOX_ACCESSTOKEN = os.Getenv("MAPBOX_ACCESS_TOKEN")
 )
 
 var (

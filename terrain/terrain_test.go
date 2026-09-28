@@ -551,7 +551,7 @@ func TestMapboxTerrain(t *testing.T) {
 }
 
 var (
-	mpx_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=MAPBOX_TOKEN_PLACEHOLDER"
+	mpx_url = "https://api.mapbox.com/raster/v1/mapbox.mapbox-terrain-dem-v1/%d/%d/%d.webp?sku=101XxiLvoFYxL&access_token=" + mapboxAccessToken()
 )
 
 func download_mpx_terrain(x, y, z int, sourceName string) {

@@ -23,6 +23,10 @@ import (
 	"github.com/flywave/go-geos"
 )
 
+func mapboxAccessToken() string {
+	return os.Getenv("MAPBOX_ACCESS_TOKEN")
+}
+
 func TestMergeSingleCoverage(t *testing.T) {
 	img_opts := *PNG_FORMAT
 	img_opts.Transparent = geo.NewBool(true)
@@ -54,8 +58,8 @@ func TestMergeSingleCoverage(t *testing.T) {
 	}
 }
 
-const (
-	tile_url = "https://api.mapbox.com/v4/mapbox.satellite/%d/%d/%d.webp?sku=101h7nLHLyzgw&access_token=MAPBOX_TOKEN_PLACEHOLDER"
+var (
+	tile_url = "https://api.mapbox.com/v4/mapbox.satellite/%d/%d/%d.webp?sku=101h7nLHLyzgw&access_token=" + mapboxAccessToken()
 )
 
 func get_url(url string) []byte {

@@ -364,8 +364,7 @@ func LoadCacheManager(c *CacheSource, globals *GlobalsSetting, instance ProxyIns
 		if l != nil {
 			layers = append(layers, l)
 		} else {
-			mng := instance.GetCache(c.Name)
-			l := instance.GetCacheSource(c.Sources[i], mng.GetTileOptions())
+			l := instance.GetCacheSource(c.Sources[i], manager.GetTileOptions())
 			if l != nil {
 				layers = append(layers, l)
 			}

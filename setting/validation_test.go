@@ -233,3 +233,22 @@ func TestValidateConfigJSON_ReportShape(t *testing.T) {
 		t.Fatal("expected errors for empty service")
 	}
 }
+
+func TestValidateCustomDatumSRS(t *testing.T) {
+	for _, srs := range []string{"EPSG:GCJ02", "EPSG:GCJ02MC", "EPSG:BD09", "EPSG:BDMC", "EPSG:BD09MC", "GCJ02:3857"} {
+		t.Run(srs, func(t *testing.T) {
+			if !IsValidSRS(srs) {
+				t.Fatalf("supported SRS rejected: %s", srs)
+			}
+			doc := strings.Replace(fullValidConfig, "EPSG:3857", srs, 1)
+			if report := ValidateConfigJSON([]byte(doc)); !report.Valid {
+				t.Fatal(report.Error())
+			}
+		})
+	}
+	for _, srs := range []string{"EPSG:", "EPSG:INVALID", "GCJ02:bad", "GCJ02:3857oops", "EPSG:GCJ02oops"} {
+		if IsValidSRS(srs) {
+			t.Fatalf("unknown SRS accepted: %s", srs)
+		}
+	}
+}

@@ -453,6 +453,11 @@ func IsValidSRS(srs string) bool {
 		return false
 	}
 	srs = strings.ToUpper(strings.TrimSpace(srs))
+	switch srs {
+	case "EPSG:GCJ02", "GCJ02", "EPSG:GCJ02MC", "GCJ02MC", "EPSG:BD09", "BD09", "EPSG:BDMC", "EPSG:BD09MC", "BD09MC", "GCJ02:3857":
+		return true
+	}
+
 	if strings.HasPrefix(srs, "EPSG:") {
 		num := strings.TrimPrefix(srs, "EPSG:")
 		if num == "" {

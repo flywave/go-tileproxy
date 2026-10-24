@@ -171,9 +171,16 @@ func (s *Service) loadCaches(dataset *setting.ProxyService, globals *setting.Glo
 		switch cache := c.(type) {
 		case *setting.CacheSource:
 			s.Caches[k] = setting.PreLoadCacheManager(cache, globals, s, fac)
+		}
+	}
+	// Cache definitions are unordered. Allocate every manager before resolving
+	// references so a cache can use a cache declared anywhere in the map.
+	for k, c := range dataset.Caches {
+		if cache, ok := c.(*setting.CacheSource); ok {
 			setting.LoadCacheManager(cache, globals, s, fac, s.Caches[k])
 		}
 	}
+
 }
 
 func (s *Service) loadService(dataset *setting.ProxyService, globals *setting.GlobalsSetting, fac setting.CacheFactory) {

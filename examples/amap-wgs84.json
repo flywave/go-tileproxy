@@ -1,0 +1,91 @@
+{
+  "id": "tiles",
+  "service": {
+    "type": "tms",
+    "origin": "nw",
+    "layers": [
+      {
+        "name": "amap",
+        "source": "corrected"
+      }
+    ]
+  },
+  "grids": {
+    "amap_gcj": {
+      "name": "AMAP_GCJ",
+      "srs": "GCJ02:3857",
+      "bbox": [
+        -20037508.342789244,
+        -20037508.342789244,
+        20037508.342789244,
+        20037508.342789244
+      ],
+      "origin": "ul",
+      "num_levels": 19
+    },
+    "wgs": {
+      "name": "WGS_WEB",
+      "srs": "EPSG:3857",
+      "origin": "ul",
+      "num_levels": 19
+    }
+  },
+  "sources": {
+    "amap_origin": {
+      "type": "tile",
+      "url_template": "https://tiles.example.invalid/{z}/{x}/{y}.png",
+      "grid": "amap_gcj",
+      "request_format": "png",
+      "options": {
+        "type": "image",
+        "format": "png"
+      }
+    }
+  },
+  "caches": {
+    "raw": {
+      "grid": "amap_gcj",
+      "sources": [
+        "amap_origin"
+      ],
+      "meta_size": [
+        1,
+        1
+      ],
+      "meta_buffer": 0,
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/amap-raw",
+        "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "image",
+        "format": "png",
+        "resampling_method": "bilinear"
+      }
+    },
+    "corrected": {
+      "grid": "wgs",
+      "sources": [
+        "raw"
+      ],
+      "meta_size": [
+        1,
+        1
+      ],
+      "meta_buffer": 0,
+      "format": "png",
+      "request_format": "png",
+      "cache": {
+        "directory": "./cache/amap-corrected",
+        "directory_layout": "tms"
+      },
+      "tile_options": {
+        "type": "image",
+        "format": "png",
+        "resampling_method": "bilinear"
+      }
+    }
+  }
+}
